@@ -2,10 +2,21 @@ import type { BetterAuthOptions } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { oAuthProxy, organization, twoFactor } from "better-auth/plugins";
+import {
+  admin,
+  multiSession,
+  oAuthProxy,
+  organization,
+  twoFactor,
+} from "better-auth/plugins";
 
 import { db } from "@tutly/db/client";
-import { sendPasswordResetEmail, sendVerificationEmail } from "@tutly/emails";
+import {
+  sendInvitationEmail,
+  sendOTPEmail,
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "@tutly/emails";
 
 import { env } from "../env";
 
@@ -14,12 +25,40 @@ export const config = {
     provider: "pg",
   }),
   secret: env.AUTH_SECRET,
-  plugins: [oAuthProxy(), expo(), organization(), twoFactor()],
+  plugins: [
+    oAuthProxy(),
+    expo(),
+    organization(),
+    twoFactor(),
+    admin(),
+    multiSession(),
+    organization({
+      async sendInvitationEmail(data) {
+        await sendInvitationEmail({
+          email: data.email,
+          invitedByUsername: data.inviter.user.name,
+          invitedByEmail: data.inviter.user.email,
+          teamName: data.organization.name,
+          inviteLink: `${env.APPLICATION_BASE_URL}/accept-invitation/${data.id}`,
+        });
+      },
+    }),
+    twoFactor({
+      otpOptions: {
+        async sendOTP({ user, otp }) {
+          await sendOTPEmail({
+            email: user.email,
+            otp,
+          });
+        },
+      },
+    }),
+  ],
   emailVerification: {
     async sendVerificationEmail({ user, url }) {
       await sendVerificationEmail({
         email: user.email,
-        username: user.name ?? user.email,
+        name: user.name,
         url,
       });
     },
@@ -29,7 +68,6 @@ export const config = {
     async sendResetPassword({ user, url }) {
       await sendPasswordResetEmail({
         email: user.email,
-        username: user.name ?? user.email,
         resetLink: url,
       });
     },

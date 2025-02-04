@@ -1,48 +1,47 @@
 import { Resend } from "resend";
 
+import { env } from "../env";
 import { reactInvitationEmail } from "./templates/invitation";
+import { reactOTPEmail } from "./templates/otp";
 import { reactResetPasswordEmail } from "./templates/reset-password";
 import { reactVerificationEmail } from "./templates/verify-email";
 
-const resendInstance = new Resend(process.env.RESEND_API_KEY);
+const resendInstance = new Resend(env.RESEND_API_KEY);
 
 export const sendVerificationEmail = async ({
   email,
-  username,
+  name,
   url,
 }: {
   email: string;
-  username: string;
+  name: string;
   url: string;
 }) => {
   return resendInstance.emails.send({
     from: "Tutly <no-reply@mail.tutly.in>",
     to: [email],
     subject: "Verify your email address",
-    react: reactVerificationEmail({ username, url }),
+    react: reactVerificationEmail({ name, url }),
   });
 };
 
 export const sendPasswordResetEmail = async ({
   email,
-  username,
   resetLink,
 }: {
   email: string;
-  username: string;
   resetLink: string;
 }) => {
   return resendInstance.emails.send({
     from: "Tutly <no-reply@mail.tutly.in>",
     to: [email],
     subject: "Reset your password",
-    react: reactResetPasswordEmail({ username, resetLink }),
+    react: reactResetPasswordEmail({ resetLink }),
   });
 };
 
 export const sendInvitationEmail = async ({
   email,
-  username,
   invitedByUsername,
   invitedByEmail,
   teamName,
@@ -50,7 +49,6 @@ export const sendInvitationEmail = async ({
   inviteLink,
 }: {
   email: string;
-  username?: string;
   invitedByUsername?: string;
   invitedByEmail?: string;
   teamName?: string;
@@ -62,7 +60,6 @@ export const sendInvitationEmail = async ({
     to: [email],
     subject: "Join a team on Tutly",
     react: reactInvitationEmail({
-      username,
       invitedByUsername,
       invitedByEmail,
       teamName,
@@ -72,21 +69,37 @@ export const sendInvitationEmail = async ({
   });
 };
 
-export const sendCustomEmail = async ({
+export const sendOTPEmail = async ({
   email,
-  subject,
-  component,
-  props,
+  otp,
 }: {
   email: string;
-  subject: string;
-  component: (props: any) => JSX.Element;
-  props: Record<string, any>;
+  otp: string;
 }) => {
   return resendInstance.emails.send({
     from: "Tutly <no-reply@mail.tutly.in>",
     to: [email],
-    subject,
-    react: component(props),
+    subject: "Your OTP for Tutly",
+    react: reactOTPEmail({ otp }),
   });
 };
+
+// todo: replace the whole emaile logic to be reusbale with proper types
+// export const sendCustomEmail = async ({
+//   email,
+//   subject,
+//   component,
+//   props,
+// }: {
+//   email: string;
+//   subject: string;
+//   component: (props: any) => JSX.Element;
+//   props: Record<string, any>;
+// }) => {
+//   return resendInstance.emails.send({
+//     from: "Tutly <no-reply@mail.tutly.in>",
+//     to: [email],
+//     subject,
+//     react: component(props),
+//   });
+// };

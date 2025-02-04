@@ -14,11 +14,11 @@ import {
 } from "@react-email/components";
 
 interface VerifyEmailProps {
-  username: string;
+  name: string;
   url: string;
 }
 
-const VerifyEmail = ({ username, url }: VerifyEmailProps) => {
+const VerifyEmail = ({ name, url }: VerifyEmailProps) => {
   const previewText = "Verify your email address for Tutly";
 
   return (
@@ -32,7 +32,7 @@ const VerifyEmail = ({ username, url }: VerifyEmailProps) => {
               Verify your email address
             </Heading>
             <Text className="text-[14px] leading-[24px] text-black">
-              Hello {username},
+              Hello {name},
             </Text>
             <Text className="text-[14px] leading-[24px] text-black">
               Please verify your email address by clicking the button below:
