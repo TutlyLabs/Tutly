@@ -16,6 +16,10 @@
     "./schema": {
       "types": "./dist/schema.d.ts",
       "default": "./src/schema.ts"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": "./src/types.ts"
     }
   },
   "scripts": {
