@@ -1,10 +1,10 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   pgTable,
   text,
   timestamp,
   uniqueIndex,
-  varchar,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
@@ -13,14 +13,11 @@ import { bookmarkCategoryEnum, noteCategoryEnum } from "./enums";
 export const bookmarks = pgTable(
   "bookmarks",
   {
-    id: varchar("id", { length: 255 })
-      .notNull()
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+    id: uuid("id").primaryKey().defaultRandom(),
     category: bookmarkCategoryEnum("category").notNull(),
-    objectId: varchar("object_id", { length: 255 }).notNull(),
+    objectId: uuid("object_id").notNull(),
     causedObjects: text("caused_objects").default("{}"),
-    userId: varchar("user_id", { length: 255 })
+    userId: uuid("user_id")
       .notNull()
       .references(() => user.id),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -38,18 +35,19 @@ export const bookmarks = pgTable(
   }),
 );
 
+export const bookmarksRelations = relations(bookmarks, ({ one }) => ({
+  user: one(user, { fields: [bookmarks.userId], references: [user.id] }),
+}));
+
 export const notes = pgTable(
   "notes",
   {
-    id: varchar("id", { length: 255 })
-      .notNull()
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    userId: varchar("user_id", { length: 255 })
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
       .notNull()
       .references(() => user.id),
     category: noteCategoryEnum("category").notNull(),
-    objectId: varchar("object_id", { length: 255 }).notNull(),
+    objectId: uuid("object_id").notNull(),
     causedObjects: text("caused_objects").default("{}"),
     description: text("description"),
     tags: text("tags").array(),
@@ -67,3 +65,7 @@ export const notes = pgTable(
     ),
   }),
 );
+
+export const notesRelations = relations(notes, ({ one }) => ({
+  user: one(user, { fields: [notes.userId], references: [user.id] }),
+}));

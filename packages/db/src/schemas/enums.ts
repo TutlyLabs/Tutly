@@ -77,5 +77,3 @@ export const eventAttachmentTypeEnum = pgEnum("event_attachment_type", [
   "DOCUMENT",
   "OTHER",
 ]);
-
-// ... rest of the enums

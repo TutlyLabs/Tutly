@@ -1,17 +1,11 @@
-import { sql } from "drizzle-orm";
-import {
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import { pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
 
 export const profiles = pgTable("profile", {
-  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
-  userId: varchar("user_id", { length: 255 })
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
     .notNull()
     .references(() => user.id)
     .unique(),
@@ -37,3 +31,10 @@ export const profiles = pgTable("profile", {
     .default(sql`CURRENT_TIMESTAMP`)
     .$onUpdate(() => new Date()),
 });
+
+export const profilesRelations = relations(profiles, ({ one }) => ({
+  user: one(user, {
+    fields: [profiles.userId],
+    references: [user.id],
+  }),
+}));

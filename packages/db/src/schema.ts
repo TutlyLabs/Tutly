@@ -10,7 +10,7 @@ export * from "./schemas/attachment";
 export * from "./schemas/doubt";
 export * from "./schemas/event";
 export * from "./schemas/bookmark";
-
+export * from "./schemas/profile";
 export * from "./schemas/enums";
 
 // /**

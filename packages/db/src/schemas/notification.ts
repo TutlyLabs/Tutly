@@ -1,18 +1,15 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import { pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
 import { notificationEventEnum, notificationMediumEnum } from "./enums";
 
 export const pushSubscriptions = pgTable("push_subscription", {
-  id: varchar("id", { length: 255 })
-    .notNull()
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+  id: uuid("id").primaryKey().defaultRandom(),
   endpoint: varchar("endpoint", { length: 255 }).notNull().unique(),
   p256dh: varchar("p256dh", { length: 255 }).notNull(),
   auth: varchar("auth", { length: 255 }).notNull(),
-  userId: varchar("user_id", { length: 255 })
+  userId: uuid("user_id")
     .notNull()
     .references(() => user.id),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -23,19 +20,24 @@ export const pushSubscriptions = pgTable("push_subscription", {
     .$onUpdate(() => new Date()),
 });
 
+export const pushSubscriptionsRelations = relations(
+  pushSubscriptions,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [pushSubscriptions.userId],
+      references: [user.id],
+    }),
+  }),
+);
+
 export const notifications = pgTable("notification", {
-  id: varchar("id", { length: 255 })
-    .notNull()
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  intendedForId: varchar("intended_for_id", { length: 255 })
+  id: uuid("id").primaryKey().defaultRandom(),
+  intendedForId: uuid("intended_for_id")
     .notNull()
     .references(() => user.id),
   mediumSent: notificationMediumEnum("medium_sent").default("PUSH"),
   customLink: varchar("custom_link", { length: 255 }),
-  causedById: varchar("caused_by_id", { length: 255 }).references(
-    () => user.id,
-  ),
+  causedById: uuid("caused_by_id").references(() => user.id),
   eventType: notificationEventEnum("event_type").notNull(),
   message: text("message"),
   causedObjects: text("caused_objects").default("{}"),
@@ -47,3 +49,16 @@ export const notifications = pgTable("notification", {
     .default(sql`CURRENT_TIMESTAMP`)
     .$onUpdate(() => new Date()),
 });
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  intendedFor: one(user, {
+    fields: [notifications.intendedForId],
+    references: [user.id],
+    relationName: "notificationIntendedFor",
+  }),
+  causedBy: one(user, {
+    fields: [notifications.causedById],
+    references: [user.id],
+    relationName: "notificationCausedBy",
+  }),
+}));

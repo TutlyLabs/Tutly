@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -6,9 +6,10 @@ import {
   text,
   timestamp,
   uniqueIndex,
-  varchar,
+  uuid,
 } from "drizzle-orm/pg-core";
 
+import { submissions } from "./attachment";
 import { user } from "./auth";
 import { classes } from "./class";
 import { courses } from "./course";
@@ -16,21 +17,16 @@ import { courses } from "./course";
 export const enrolledUsers = pgTable(
   "enrolled_users",
   {
-    id: varchar("id", { length: 255 })
-      .notNull()
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    userId: varchar("userId", { length: 255 })
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
       .notNull()
       .references(() => user.id),
-    mentorId: varchar("mentorId", { length: 255 }).references(() => user.id),
+    mentorId: uuid("mentor_id").references(() => user.id),
     startDate: timestamp("start_date", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     endDate: timestamp("end_date", { withTimezone: true }),
-    courseId: varchar("course_id", { length: 255 }).references(
-      () => courses.id,
-    ),
+    courseId: uuid("course_id").references(() => courses.id),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -47,17 +43,35 @@ export const enrolledUsers = pgTable(
   }),
 );
 
+export const enrolledUsersRelations = relations(
+  enrolledUsers,
+  ({ one, many }) => ({
+    user: one(user, {
+      relationName: "user",
+      fields: [enrolledUsers.userId],
+      references: [user.id],
+    }),
+    mentor: one(user, {
+      relationName: "mentor",
+      fields: [enrolledUsers.mentorId],
+      references: [user.id],
+    }),
+    course: one(courses, {
+      fields: [enrolledUsers.courseId],
+      references: [courses.id],
+    }),
+    submissions: many(submissions),
+  }),
+);
+
 export const attendance = pgTable(
   "attendance",
   {
-    id: varchar("id", { length: 255 })
-      .notNull()
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    userId: varchar("userId", { length: 255 })
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("userId")
       .notNull()
       .references(() => user.id),
-    classId: varchar("class_id", { length: 255 })
+    classId: uuid("class_id")
       .notNull()
       .references(() => classes.id),
     attendedDuration: integer("attended_duration"),
@@ -77,3 +91,14 @@ export const attendance = pgTable(
     ),
   }),
 );
+
+export const attendanceRelations = relations(attendance, ({ one }) => ({
+  user: one(user, {
+    fields: [attendance.userId],
+    references: [user.id],
+  }),
+  class: one(classes, {
+    fields: [attendance.classId],
+    references: [classes.id],
+  }),
+}));
