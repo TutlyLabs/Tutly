@@ -16,7 +16,9 @@ export const bookmarks = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     category: bookmarkCategoryEnum("category").notNull(),
     objectId: uuid("object_id").notNull(),
-    causedObjects: text("caused_objects").default("{}"),
+    causedObjects: text("caused_objects")
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id),
