@@ -1,8 +1,9 @@
+import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
+
+import { classes, folders, videos } from "@tutly/db/schema";
+
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { eq } from "drizzle-orm";
-import { classes, videos, folders } from "@tutly/db/schema";
-import { sql } from "drizzle-orm";
 
 export const classesRouter = createTRPCRouter({
   createClass: protectedProcedure
@@ -17,14 +18,17 @@ export const classesRouter = createTRPCRouter({
         createdAt: z.string().optional(),
         folderId: z.string().optional(),
         folderName: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const [video] = await ctx.db.insert(videos).values({
-          videoLink: input.videoLink,
-          videoType: input.videoType,
-        }).returning();
+        const [video] = await ctx.db
+          .insert(videos)
+          .values({
+            videoLink: input.videoLink,
+            videoType: input.videoType,
+          })
+          .returning();
 
         if (!video?.id) throw new Error("Failed to create video");
 
@@ -36,29 +40,43 @@ export const classesRouter = createTRPCRouter({
         };
 
         if (input.folderId) {
-          const [newClass] = await ctx.db.insert(classes).values({
-            ...classData,
-            folderId: input.folderId,
-          }).returning();
+          const [newClass] = await ctx.db
+            .insert(classes)
+            .values({
+              ...classData,
+              folderId: input.folderId,
+            })
+            .returning();
           return newClass;
         }
 
         if (input.folderName) {
-          const [folder] = await ctx.db.insert(folders).values({
-            title: input.folderName,
-            createdAt: input.createdAt ? new Date(input.createdAt) : new Date(),
-          }).returning();
+          const [folder] = await ctx.db
+            .insert(folders)
+            .values({
+              title: input.folderName,
+              createdAt: input.createdAt
+                ? new Date(input.createdAt)
+                : new Date(),
+            })
+            .returning();
 
           if (!folder?.id) throw new Error("Failed to create folder");
 
-          const [newClass] = await ctx.db.insert(classes).values({
-            ...classData,
-            folderId: folder.id,
-          }).returning();
+          const [newClass] = await ctx.db
+            .insert(classes)
+            .values({
+              ...classData,
+              folderId: folder.id,
+            })
+            .returning();
           return newClass;
         }
 
-        const [newClass] = await ctx.db.insert(classes).values(classData).returning();
+        const [newClass] = await ctx.db
+          .insert(classes)
+          .values(classData)
+          .returning();
         return newClass;
       } catch {
         throw new Error("Error creating class");
@@ -76,23 +94,27 @@ export const classesRouter = createTRPCRouter({
         folderId: z.string().optional(),
         folderName: z.string().optional(),
         createdAt: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       let newFolderId: string | undefined = input.folderId;
 
       if (input.folderId && input.folderName) {
-        await ctx.db.update(folders)
+        await ctx.db
+          .update(folders)
           .set({
             title: input.folderName,
             createdAt: new Date(input.createdAt ?? ""),
           })
           .where(eq(folders.id, input.folderId));
       } else if (input.folderName) {
-        const [folder] = await ctx.db.insert(folders).values({
-          title: input.folderName,
-          createdAt: new Date(input.createdAt ?? ""),
-        }).returning();
+        const [folder] = await ctx.db
+          .insert(folders)
+          .values({
+            title: input.folderName,
+            createdAt: new Date(input.createdAt ?? ""),
+          })
+          .returning();
         if (!folder?.id) throw new Error("Failed to create folder");
         newFolderId = folder.id;
       }
@@ -100,11 +122,12 @@ export const classesRouter = createTRPCRouter({
       try {
         const classData = await ctx.db.query.classes.findFirst({
           where: eq(classes.id, input.classId),
-          columns: { videoId: true }
+          columns: { videoId: true },
         });
 
         if (classData?.videoId) {
-          await ctx.db.update(videos)
+          await ctx.db
+            .update(videos)
             .set({
               videoLink: input.videoLink,
               videoType: input.videoType,
@@ -112,7 +135,8 @@ export const classesRouter = createTRPCRouter({
             .where(eq(videos.id, classData.videoId));
         }
 
-        const [myClass] = await ctx.db.update(classes)
+        const [myClass] = await ctx.db
+          .update(classes)
           .set({
             title: input.classTitle,
             createdAt: new Date(input.createdAt ?? ""),
@@ -131,8 +155,7 @@ export const classesRouter = createTRPCRouter({
     .input(z.object({ classId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.db.delete(classes)
-          .where(eq(classes.id, input.classId));
+        await ctx.db.delete(classes).where(eq(classes.id, input.classId));
         return { success: true };
       } catch {
         throw new Error("Failed to delete class");
@@ -140,7 +163,8 @@ export const classesRouter = createTRPCRouter({
     }),
 
   totalNumberOfClasses: protectedProcedure.query(async ({ ctx }) => {
-    const [res] = await ctx.db.select({ count: sql<number>`count(*)` })
+    const [res] = await ctx.db
+      .select({ count: sql<number>`count(*)` })
       .from(classes);
 
     if (!res) throw new Error("Failed to get total number of classes");

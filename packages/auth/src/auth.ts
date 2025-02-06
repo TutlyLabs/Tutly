@@ -8,6 +8,7 @@ import {
   oAuthProxy,
   organization,
   twoFactor,
+  // customSession
 } from "better-auth/plugins";
 
 import { db } from "@tutly/db/client";
@@ -70,6 +71,15 @@ export const config = {
         },
       },
     }),
+    // customSession(async ({ user, session }) => {
+    //   return {
+    //     user: {
+    //       ...user,
+    //       // role: "INSTRUCTOR",
+    //     },
+    //     session
+    //   };
+    // }),
   ],
   emailVerification: {
     async sendVerificationEmail({ user, url }) {

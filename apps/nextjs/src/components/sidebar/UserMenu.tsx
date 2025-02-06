@@ -4,7 +4,7 @@ import { useState } from "react";
 import { LockIcon, LogOut, UserIcon } from "lucide-react";
 import { FaCaretDown } from "react-icons/fa";
 
-import type { User } from "@tutly/db/types";
+import type { SessionUser } from "@tutly/auth";
 import { authClient } from "@tutly/auth/client";
 import {
   AlertDialog,
@@ -28,7 +28,7 @@ import {
 } from "@tutly/ui/dropdown-menu";
 
 interface UserMenuProps {
-  user: User;
+  user: SessionUser;
 }
 
 export function UserMenu({ user }: UserMenuProps) {
@@ -36,6 +36,7 @@ export function UserMenu({ user }: UserMenuProps) {
   const [showOpenInAppDialog, setShowOpenInAppDialog] = useState(false);
 
   const handleOpenInApp = () => {
+    // eslint-disable-next-line no-self-assign
     window.location.href = window.location.href;
     setShowOpenInAppDialog(false);
   };
@@ -61,7 +62,7 @@ export function UserMenu({ user }: UserMenuProps) {
             <Avatar className="h-7 w-7 cursor-pointer rounded-full">
               <AvatarImage
                 src={user.image ?? "/placeholder.jpg"}
-                alt={user.name ?? user.username}
+                alt={user.name}
               />
               <AvatarFallback className="rounded-full">
                 {user.name
@@ -69,7 +70,7 @@ export function UserMenu({ user }: UserMenuProps) {
                       .split(" ")
                       .map((n) => n[0])
                       .join("")
-                  : user.username}
+                  : user.email}
               </AvatarFallback>
             </Avatar>
             <div
@@ -95,7 +96,7 @@ export function UserMenu({ user }: UserMenuProps) {
                 />
                 <AvatarFallback className="rounded-full">
                   {user.name
-                    ?.split(" ")
+                    .split(" ")
                     .map((n) => n[0])
                     .join("")}
                 </AvatarFallback>

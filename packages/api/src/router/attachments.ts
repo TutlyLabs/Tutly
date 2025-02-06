@@ -1,7 +1,13 @@
-import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { submissionModeEnum, attachmentTypeEnum, attachments } from "@tutly/db/schema";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
+
+import {
+  attachments,
+  attachmentTypeEnum,
+  submissionModeEnum,
+} from "@tutly/db/schema";
+
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const attachmentsRouter = createTRPCRouter({
   createAttachment: protectedProcedure
@@ -16,11 +22,12 @@ export const attachmentsRouter = createTRPCRouter({
         classId: z.string(),
         maxSubmissions: z.number().optional(),
         submissionMode: z.enum(submissionModeEnum.enumValues),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const attachment = await ctx.db.insert(attachments)
+        const attachment = await ctx.db
+          .insert(attachments)
           .values({
             title: input.title,
             classId: input.classId,
@@ -44,7 +51,7 @@ export const attachmentsRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const attachment = await ctx.db.query.attachments.findFirst({
@@ -61,10 +68,11 @@ export const attachmentsRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-      const attachment = await ctx.db.delete(attachments)
+      const attachment = await ctx.db
+        .delete(attachments)
         .where(eq(attachments.id, input.id))
         .returning();
 
@@ -82,16 +90,22 @@ export const attachmentsRouter = createTRPCRouter({
         details: z.string().optional(),
         link: z.string().optional(),
         dueDate: z.date().optional(),
-        attachmentType: z.enum(["ASSIGNMENT", "GITHUB", "ZOOM", "OTHERS"] as const),
+        attachmentType: z.enum([
+          "ASSIGNMENT",
+          "GITHUB",
+          "ZOOM",
+          "OTHERS",
+        ] as const),
         courseId: z.string(),
         classId: z.string(),
         maxSubmissions: z.number().optional(),
         submissionMode: z.enum(["HTML_CSS_JS", "REACT", "EXTERNAL_LINK"]),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const attachment = await ctx.db.update(attachments)
+        const attachment = await ctx.db
+          .update(attachments)
           .set({
             title: input.title,
             classId: input.classId,

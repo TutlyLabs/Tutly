@@ -1,7 +1,9 @@
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
+
+import { bookmarkCategoryEnum, bookmarks } from "@tutly/db/schema";
+
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { eq, and, sql } from "drizzle-orm";
-import { bookmarks, bookmarkCategoryEnum } from "@tutly/db/schema";
 
 export const bookmarksRouter = createTRPCRouter({
   toggleBookmark: protectedProcedure
@@ -10,7 +12,7 @@ export const bookmarksRouter = createTRPCRouter({
         category: z.enum(bookmarkCategoryEnum.enumValues),
         objectId: z.string(),
         causedObjects: z.record(z.string()).optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
@@ -19,19 +21,20 @@ export const bookmarksRouter = createTRPCRouter({
         where: and(
           eq(bookmarks.userId, userId),
           eq(bookmarks.objectId, input.objectId),
-          eq(bookmarks.category, input.category)
+          eq(bookmarks.category, input.category),
         ),
       });
 
       if (existingBookmark) {
-        await ctx.db.delete(bookmarks)
+        await ctx.db
+          .delete(bookmarks)
           .where(eq(bookmarks.id, existingBookmark.id));
       } else {
         await ctx.db.insert(bookmarks).values({
           category: input.category,
           objectId: input.objectId,
           userId,
-          causedObjects: input.causedObjects 
+          causedObjects: input.causedObjects
             ? sql`${JSON.stringify(input.causedObjects)}::jsonb`
             : undefined,
         });
@@ -46,14 +49,14 @@ export const bookmarksRouter = createTRPCRouter({
       return ctx.db.query.bookmarks.findFirst({
         where: and(
           eq(bookmarks.objectId, input.objectId),
-          eq(bookmarks.userId, input.userId)
+          eq(bookmarks.userId, input.userId),
         ),
       });
     }),
 
   getUserBookmarks: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
-    
+
     return ctx.db.query.bookmarks.findMany({
       where: eq(bookmarks.userId, userId),
     });

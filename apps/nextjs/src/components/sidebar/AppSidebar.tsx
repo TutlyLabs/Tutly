@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
-import type { Role, User } from "@tutly/db/types";
+import type { SessionUser } from "@tutly/auth";
 import { cn } from "@tutly/ui";
 import {
   Collapsible,
@@ -40,20 +40,20 @@ export interface SidebarItem {
 }
 
 interface AppSidebarProps {
-  user: User;
+  user: SessionUser;
   forceClose?: boolean;
   className?: string;
 }
 
 export function AppSidebar({
-  user,
+  // user,
   forceClose = false,
   className,
 }: AppSidebarProps) {
   const organizationName = "Tutly";
   const pathname = usePathname();
-
-  const sidebarItems = getDefaultSidebarItems(user.role as Role);
+  // TODO: Remove this once we have a proper role system
+  const sidebarItems = getDefaultSidebarItems("INSTRUCTOR");
   const [isOpen, setIsOpen] = useState(() => {
     if (typeof window === "undefined") return true;
     const saved = localStorage.getItem("sidebarOpen");
@@ -106,7 +106,8 @@ export function AppSidebar({
                     <span className="truncate font-semibold">
                       {organizationName}
                     </span>
-                    <span className="truncate text-xs">{user.role}</span>
+                    {/* TODO: Remove this once we have a proper role system */}
+                    <span className="truncate text-xs">INSTRUCTOR</span>
                   </div>
                 </SidebarMenuButton>
                 {!forceClose && <SidebarTrigger className="h-5 w-4" />}
@@ -120,18 +121,17 @@ export function AppSidebar({
               {sidebarItems.map((item) => {
                 const ItemIcon = item.icon;
                 const isSubItemActive =
-                  item.items?.some((subItem) => pathname === subItem.url) ||
+                  item.items?.some((subItem) => pathname === subItem.url) ??
                   false;
                 return (
                   <Collapsible
                     key={item.title}
                     asChild
                     defaultOpen={
-                      item.isActive ||
-                      pathname.startsWith(item.url) ||
-                      isSubItemActive
+                      item.isActive ??
+                      (pathname.startsWith(item.url) || isSubItemActive)
                     }
-                    className={`group/collapsible ${item.className || ""}`}
+                    className={`group/collapsible ${item.className ?? ""}`}
                   >
                     <SidebarMenuItem>
                       {item.items ? (
@@ -163,7 +163,7 @@ export function AppSidebar({
                               <SidebarMenuSubItem key={subItem.title}>
                                 <SidebarMenuSubButton
                                   asChild
-                                  className={`${pathname === subItem.url ? "bg-primary text-primary-foreground" : ""} m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base hover:bg-primary/90 hover:text-primary-foreground ${subItem.className || ""}`}
+                                  className={`${pathname === subItem.url ? "bg-primary text-primary-foreground" : ""} m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base hover:bg-primary/90 hover:text-primary-foreground ${subItem.className ?? ""}`}
                                 >
                                   <a href={subItem.url}>
                                     <span>{subItem.title}</span>

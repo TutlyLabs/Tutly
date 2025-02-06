@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-import type { User } from "@tutly/db/types";
+import type { SessionUser } from "@tutly/auth";
 import { Separator } from "@tutly/ui/separator";
 
 import { useIsMobile } from "~/hooks/use-mobile";
@@ -12,7 +12,7 @@ import { DynamicBreadcrumbs } from "./DynamicBreadcrumbs";
 import { UserMenu } from "./UserMenu";
 
 interface AppHeaderProps {
-  user: User;
+  user: SessionUser;
   crumbReplacement?: Record<string, string>;
 }
 
@@ -33,7 +33,8 @@ export function AppHeader({ user, crumbReplacement = {} }: AppHeaderProps) {
           />
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-md font-medium max-sm:hidden">{user.role}</span>
+          {/* TODO: Remove this once we have a proper role system */}
+          <span className="text-md font-medium max-sm:hidden">INSTRUCTOR</span>
           {/* <ModeToggle />
           <Notifications user={user} /> */}
           <UserMenu user={user} />
