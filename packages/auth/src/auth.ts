@@ -19,6 +19,14 @@ import {
 } from "@tutly/emails";
 
 import { env } from "../env";
+import {
+  ac,
+  admin as admin_role,
+  instructor,
+  mentor,
+  student,
+  super_admin,
+} from "./permissions";
 
 export const config = {
   database: drizzleAdapter(db, {
@@ -28,7 +36,16 @@ export const config = {
   plugins: [
     oAuthProxy(),
     expo(),
-    organization(),
+    organization({
+      ac: ac,
+      roles: {
+        super_admin,
+        admin: admin_role,
+        instructor,
+        student,
+        mentor,
+      },
+    }),
     twoFactor(),
     admin(),
     multiSession(),
