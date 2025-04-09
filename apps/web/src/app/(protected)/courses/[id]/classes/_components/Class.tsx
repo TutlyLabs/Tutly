@@ -380,6 +380,7 @@ export default function Class({
                                   setIsEditDialogOpen(true);
                                 }}
                               >
+                                {/* Fix the issue here */}
                                 <div className="flex items-center gap-2">
                                   <FaPencilAlt className="h-4 w-4" />
                                   Edit
