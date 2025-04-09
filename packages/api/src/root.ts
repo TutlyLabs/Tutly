@@ -1,3 +1,5 @@
+import { generateOpenApiDocument } from "trpc-openapi";
+
 import { assignmentsRouter } from "./router/assignments";
 import { attachmentsRouter } from "./router/attachments";
 import { attendanceRouter } from "./router/attendance";
@@ -45,6 +47,38 @@ export const appRouter = createTRPCRouter({
   statistics: statisticsRouter,
   submissions: submissionRouter,
   users: usersRouter,
+});
+
+export const openApiDocument = generateOpenApiDocument(appRouter, {
+  title: "Tutly API",
+  description: "OpenAPI compliant REST API for Tutly",
+  version: "1.0.0",
+  baseUrl: "http://localhost:3000/api",
+  docsUrl: "https://docs.tutly.com",
+  tags: [
+    "assignments",
+    "attachments",
+    "attendance",
+    "bookmarks",
+    "classes",
+    "coding-platforms",
+    "courses",
+    "doubts",
+    "file-upload",
+    "folders",
+    "leaderboard",
+    "holidays",
+    "mentors",
+    "notes",
+    "notifications",
+    "points",
+    "report",
+    "reset-password",
+    "schedule",
+    "statistics",
+    "submissions",
+    "users",
+  ],
 });
 
 // export type definition of API

@@ -24,6 +24,7 @@
     "@tutly/db": "workspace:*",
     "@tutly/validators": "workspace:*",
     "superjson": "2.2.2",
+    "trpc-openapi": "^1.2.0",
     "zod": "catalog:"
   },
   "devDependencies": {

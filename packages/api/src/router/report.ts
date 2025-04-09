@@ -16,6 +16,16 @@ export interface ReportData {
 
 export const reportRouter = createTRPCRouter({
   generateReport: protectedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: "/report/generate",
+        tags: ["report"],
+        summary: "Generate course report",
+        description:
+          "Generates a comprehensive report for a course including student submissions, assignments, and attendance",
+      },
+    })
     .input(
       z.object({
         courseId: z.string(),

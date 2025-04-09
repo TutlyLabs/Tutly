@@ -1,0 +1,135 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Tutly API",
+    "description": "OpenAPI compliant REST API for Tutly",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api"
+    }
+  ],
+  "paths": {},
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT Authorization header using the Bearer scheme"
+      }
+    },
+    "responses": {
+      "error": {
+        "description": "Error response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "issues": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "message"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "message",
+                "code"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "assignments"
+    },
+    {
+      "name": "attachments"
+    },
+    {
+      "name": "attendance"
+    },
+    {
+      "name": "bookmarks"
+    },
+    {
+      "name": "classes"
+    },
+    {
+      "name": "coding-platforms"
+    },
+    {
+      "name": "courses"
+    },
+    {
+      "name": "doubts"
+    },
+    {
+      "name": "file-upload"
+    },
+    {
+      "name": "folders"
+    },
+    {
+      "name": "leaderboard"
+    },
+    {
+      "name": "holidays"
+    },
+    {
+      "name": "mentors"
+    },
+    {
+      "name": "notes"
+    },
+    {
+      "name": "notifications"
+    },
+    {
+      "name": "points"
+    },
+    {
+      "name": "report"
+    },
+    {
+      "name": "reset-password"
+    },
+    {
+      "name": "schedule"
+    },
+    {
+      "name": "statistics"
+    },
+    {
+      "name": "submissions"
+    },
+    {
+      "name": "users"
+    }
+  ],
+  "externalDocs": {
+    "url": "https://docs.tutly.com"
+  }
+}

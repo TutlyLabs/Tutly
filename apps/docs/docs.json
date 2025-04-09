@@ -1,0 +1,81 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Tutly Documentation",
+  "colors": {
+    "primary": "#000000",
+    "light": "#000000",
+    "dark": "#ffffff"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "development"
+            ]
+          },
+          {
+            "group": "Essentials",
+            "pages": [
+              "essentials/markdown",
+              "essentials/code",
+              "essentials/images",
+              "essentials/settings",
+              "essentials/navigation",
+              "essentials/reusable-snippets"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "openapi": "api-reference/openapi.json"
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "API Reference",
+          "href": "https://docs.tutly.com/api-reference",
+          "icon": "api"
+        },
+        {
+          "anchor": "Community",
+          "href": "https://discord.gg/tutly",
+          "icon": "users"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/tutly"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "https://docs.tutly.com/quickstart"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://twitter.com/tutly",
+      "github": "https://github.com/tutly",
+      "linkedin": "https://linkedin.com/company/tutly"
+    }
+  }
+}

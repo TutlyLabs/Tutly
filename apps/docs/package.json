@@ -1,0 +1,20 @@
+{
+  "name": "@tutly/docs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "mintlify dev",
+    "build": "mintlify build",
+    "generate-openapi": "tsx scripts/generate-openapi.ts"
+  },
+  "dependencies": {
+    "@tutly/api": "workspace:*",
+    "mintlify": "latest",
+    "trpc-openapi": "^1.2.0",
+    "tsx": "^4.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.11",
+    "typescript": "catalog:"
+  }
+}

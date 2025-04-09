@@ -9,6 +9,16 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const resetPasswordRouter = createTRPCRouter({
   sendOTP: publicProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: "/reset-password/send-otp",
+        tags: ["reset-password"],
+        summary: "Send OTP for password reset",
+        description:
+          "Sends a one-time password to the user's email for password reset",
+      },
+    })
     .input(
       z.object({
         email: z.string().email(),
@@ -115,6 +125,15 @@ export const resetPasswordRouter = createTRPCRouter({
     }),
 
   verifyOTP: publicProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: "/reset-password/verify-otp",
+        tags: ["reset-password"],
+        summary: "Verify OTP for password reset",
+        description: "Verifies the one-time password sent to the user's email",
+      },
+    })
     .input(
       z.object({
         email: z.string().email(),
@@ -156,6 +175,15 @@ export const resetPasswordRouter = createTRPCRouter({
     }),
 
   resetPassword: publicProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: "/reset-password/reset",
+        tags: ["reset-password"],
+        summary: "Reset password using OTP",
+        description: "Resets the user's password using the verified OTP",
+      },
+    })
     .input(
       z.object({
         email: z.string().email(),

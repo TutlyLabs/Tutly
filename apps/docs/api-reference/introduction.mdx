@@ -1,0 +1,80 @@
+---
+title: "API Reference"
+description: "Learn how to use the Tutly API"
+---
+
+# API Reference
+
+Welcome to the Tutly API documentation. This API allows you to interact with Tutly's platform programmatically.
+
+## Authentication
+
+All API requests must be authenticated using a JWT token. Include the token in the Authorization header:
+
+```bash
+Authorization: Bearer <your-token>
+```
+
+## Base URL
+
+The base URL for all API requests is:
+
+```
+http://localhost:3000/api
+```
+
+## Rate Limiting
+
+API requests are limited to 100 requests per minute per IP address. If you exceed this limit, you'll receive a 429 Too Many Requests response.
+
+## Error Handling
+
+The API uses standard HTTP status codes to indicate success or failure:
+
+- 200: Success
+- 400: Bad Request
+- 401: Unauthorized
+- 403: Forbidden
+- 404: Not Found
+- 429: Too Many Requests
+- 500: Internal Server Error
+
+Error responses include a JSON body with details:
+
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable error message"
+  }
+}
+```
+
+## API Endpoints
+
+The API is organized into the following sections:
+
+- Assignments
+- Attachments
+- Attendance
+- Bookmarks
+- Classes
+- Coding Platforms
+- Courses
+- Doubts
+- File Upload
+- Folders
+- Leaderboard
+- Holidays
+- Mentors
+- Notes
+- Notifications
+- Points
+- Report
+- Reset Password
+- Schedule
+- Statistics
+- Submissions
+- Users
+
+Use the navigation menu to explore each section in detail.
