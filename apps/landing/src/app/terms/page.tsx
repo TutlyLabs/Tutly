@@ -19,8 +19,8 @@ function Page() {
       <div className="py-20 text-lg font-light">
         <p>
           Welcome to Tutly! These Terms and Conditions{" "}
-          <span className="font-semibold">("Terms")</span> govern your use of
-          Tutly and its learning platform (
+          <span className="font-semibold">(&ldquo;Terms&rdquo;)</span> govern
+          your use of Tutly and its learning platform (
           <Link className="text-blue-500" href="https://learn.tutly.in">
             learn.tutly.in
           </Link>
@@ -104,7 +104,7 @@ function Page() {
             instructors. Payment terms will be specified at the time of
             purchase. Payments are securely processed via third-party gateways.
             Tutly does not store financial information. Refund requests are
-            subject to Tutly’s refund policy, which varies based on service
+            subject to Tutly&apos;s refund policy, which varies based on service
             agreements.
           </p>
         </div>
@@ -120,8 +120,8 @@ function Page() {
                 Use Tutly for fraudulent, illegal, or unethical activities.
               </li>
               <li>
-                Attempt to hack, reverse-engineer, or disrupt Tutly’s security,
-                data, or services.
+                Attempt to hack, reverse-engineer, or disrupt Tutly&apos;s
+                security, data, or services.
               </li>
               <li>Upload offensive, misleading, or harmful content.</li>
               <li>Share or sell access to courses, materials, or accounts.</li>
@@ -135,9 +135,9 @@ function Page() {
             6. Liability and Disclaimers
           </h1>
           <div>
-            Tutly provides services "AS IS" without warranties regarding
-            uninterrupted access, accuracy, or suitability for specific learning
-            needs. We are not responsible for:
+            Tutly provides services &quot;AS IS&quot; without warranties
+            regarding uninterrupted access, accuracy, or suitability for
+            specific learning needs. We are not responsible for:
             <ul className="list-disc pl-8">
               <li>Incorrect information uploaded by instructors.</li>
               <li>

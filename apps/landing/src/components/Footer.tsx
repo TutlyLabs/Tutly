@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { FaArrowCircleUp, FaLinkedinIn } from "react-icons/fa";
 import { FaInstagram, FaTelegram, FaTwitter } from "react-icons/fa6";

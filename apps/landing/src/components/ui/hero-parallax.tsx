@@ -2,7 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {
   motion,
   MotionValue,
@@ -21,7 +20,6 @@ export const HeroParallax = ({
 }) => {
   const firstRow = products.slice(0, 5);
   const secondRow = products.slice(5, 10);
-  const thirdRow = products.slice(10, 15);
   const ref = React.useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
