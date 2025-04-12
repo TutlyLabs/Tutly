@@ -128,7 +128,7 @@ export const ProductCard = ({
       style={{
         x: translate,
       }}
-      key={product.title}
+      
       className="group/product relative h-80 w-[30rem] flex-shrink-0"
     >
       <div className="block group-hover/product:shadow-2xl">
