@@ -38,7 +38,7 @@ function Navbar() {
             alt="logo"
           />
           <div>
-            <h1 className="text-xl font-black">Tutly</h1>
+            <h1 className="text-2xl text-white font-extrabold">Tutly</h1>
           </div>
         </Link>
         <div className="flex items-center gap-12 max-lg:hidden">
