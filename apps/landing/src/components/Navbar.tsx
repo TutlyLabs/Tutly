@@ -5,7 +5,7 @@ import Link from "next/link";
 const links = [
   {
     name: "About",
-    link: "#",
+    link: "#home",
   },
   {
     name: "Clients",
@@ -46,7 +46,7 @@ function Navbar() {
             link.link.startsWith("#") ? (
               <Link
                 key={link.name}
-                href={link.link.substring(1)}
+                href={link.link}
                 // smooth={true}
                 // duration={500}
                 className="cursor-pointer font-semibold tracking-wider text-gray-500 hover:text-white"

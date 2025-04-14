@@ -76,7 +76,7 @@ const faqs = [
 
 export function FAQs() {
   return (
-    <div className="mx-auto my-8 grid max-w-7xl grid-flow-row grid-cols-2 gap-4">
+    <div className="mx-auto my-8 grid max-w-7xl grid-cols-1 sm:grid-cols-2 gap-4">
       {faqs.map(({ question, answer, icon }) => (
         <Card question={question} answer={answer} icon={icon} key={question} />
       ))}
