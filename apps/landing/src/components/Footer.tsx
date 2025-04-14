@@ -65,7 +65,7 @@ export default function Footer() {
             <Link href="/privacy">Privacy Policy</Link>
           </div>
         </div>
-        <Link href="#home">
+        <Link href="#">
           <FaArrowCircleUp className="cursor-pointer text-3xl duration-500 hover:-translate-y-4" />
         </Link>
       </div>

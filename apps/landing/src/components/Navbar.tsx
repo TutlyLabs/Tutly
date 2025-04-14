@@ -5,7 +5,7 @@ import Link from "next/link";
 const links = [
   {
     name: "About",
-    link: "#home",
+    link: "#",
   },
   {
     name: "Clients",
@@ -42,25 +42,15 @@ function Navbar() {
           </div>
         </Link>
         <div className="flex items-center gap-12 max-lg:hidden">
-          {links.map((link) =>
-            link.link.startsWith("#") ? (
-              <Link
-                key={link.name}
-                href={link.link}
-                // smooth={true}
-                // duration={500}
-                className="cursor-pointer font-semibold tracking-wider text-gray-500 hover:text-white"
-              >
-                {link.name}
-              </Link>
-            ) : (
-              <Link key={link.name} href={link.link}>
-                <h1 className="font-semibold tracking-wider text-gray-500 hover:text-white">
-                  {link.name}
-                </h1>
-              </Link>
-            ),
-          )}
+          {links.map((link) => (
+            <Link
+              key={link.name}
+              href={link.link}
+              className="cursor-pointer font-semibold tracking-wider text-gray-500 hover:text-white"
+            >
+              {link.name}
+            </Link>
+          ))}
         </div>
       </div>
       <div className="flex items-center gap-6">
