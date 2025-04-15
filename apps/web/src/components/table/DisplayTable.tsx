@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  Download,
   Filter,
+  ImportIcon,
   LayoutGrid,
   Plus,
   Table as TableIcon,
@@ -34,6 +34,7 @@ import { DeleteConfirmation } from "./DeleteConfirmationDialog";
 import ViewModal from "./ViewModal";
 import TableList from "./TableList";
 import GridView from "./GridView";
+import { ExportIcon } from "@codesandbox/sandpack-react";
 
 export interface IAction {
   label: string;
@@ -258,9 +259,9 @@ export default function DisplayTable({
     return (
       <Popover open={filterMenuOpen} onOpenChange={setFilterMenuOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="py-4.5 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm flex items-center gap-1">
             <Filter className="h-4 w-4" />
-            <span>Filter</span>
+            <span className="hidden lg:inline">Filter</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80">
@@ -465,19 +466,33 @@ export default function DisplayTable({
     }
   };
 
+    const [showInput, setShowInput] = useState(false);
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        // Trigger page reload
+        window.location.reload();
+      }
+    };
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">{title}</h2>
-        <div className="flex gap-2 items-center">
-          {searchable && (
-            <Input
-              placeholder="Search..."
-              value={localSearchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="max-w-sm"
-            />
-          )}
+      <h2 className="text-2xl font-bold">{title}</h2>
+        <div className="flex flex-wrap items-center gap-2 w-full md:justify-between">
+          <div>
+            {searchable && (
+              <div className="relative">
+                <div className="block w-[200px]">
+                  <Input
+                    placeholder="Search..."
+                    value={localSearchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
           {filterable && <FilterMenu />}
           <Button
             variant="outline"
@@ -485,17 +500,17 @@ export default function DisplayTable({
             onClick={() => {
               void setView(viewMode === "table" ? "grid" : "table");
             }}
-            className="flex items-center gap-2 px-3"
+            className="px-3 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm flex items-center gap-1 py-4.5"
           >
             {viewMode === "table" ? (
               <>
-                <TableIcon className="h-4 w-4" />
-                <span>Table View</span>
+                <TableIcon className="h-5 w-5" />
+                <span className="hidden lg:inline">Table View</span>
               </>
             ) : (
               <>
-                <LayoutGrid className="h-4 w-4" />
-                <span>Grid View</span>
+                <LayoutGrid className="h-5 w-5" />
+                <span className="hidden lg:inline">Grid View</span>
               </>
             )}
           </Button>
@@ -503,12 +518,13 @@ export default function DisplayTable({
             <Button
               variant="outline"
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-2"
+              className="bg-transparent hover:bg-gray-100 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm flex items-center gap-1"
             >
               <Plus className="h-4 w-4" />
-              <span>New</span>
+              <span className="hidden lg:inline">New</span>
             </Button>
           )}
+
           {onBulkImport && (
             <BulkImport
               columns={columns}
@@ -516,13 +532,18 @@ export default function DisplayTable({
               onImport={handleBulkImport}
             />
           )}
+
           {exportable && (
-            <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              <span>Export</span>
+            <Button
+              onClick={exportToCSV}
+              variant="outline"
+              className="bg-transparent hover:bg-gray-100 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm flex items-center gap-1"
+            >
+              <ImportIcon size={20} className="rotate-180" />
+              <span className="hidden lg:inline">Export</span>
             </Button>
           )}
-        </div>
+          </div>
       </div>
 
       {activeFilters.length > 0 && (

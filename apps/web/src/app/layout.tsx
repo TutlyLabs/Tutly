@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
 import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -33,10 +34,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TRPCReactProvider>
+          <NuqsAdapter>
             <PageLoader />
             <Toaster />
             <Crisp />
             {children}
+          </NuqsAdapter>
           </TRPCReactProvider>
         </ThemeProvider>
       </body>

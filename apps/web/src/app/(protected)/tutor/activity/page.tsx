@@ -97,6 +97,9 @@ export default async function ActivityPage({
     }),
   ]);
 
+  const currentPage = Number(page) || 1;
+  const pageLimit = Number(limit) || 10;
+
   const enrolledUsers = await db.enrolledUsers.findMany({
     where,
     include: {
@@ -118,15 +121,19 @@ export default async function ActivityPage({
     orderBy: [
       {
         user: {
-          lastSeen: {
-            sort: "desc",
-            nulls: "last",
-          },
+          // lastSeen: {
+          //   sort: "desc",
+          //   // nulls: "last",
+          // },
+          lastSeen:"desc"
         },
       },
     ],
-    skip: (Number(page) - 1) * Number(limit),
-    take: Number(limit),
+    // skip: (Number(page) - 1) * Number(limit),
+    // take: Number(limit),
+    // distinct: ["username"],
+    skip: (currentPage - 1) * pageLimit,
+    take: pageLimit,
     distinct: ["username"],
   });
 
