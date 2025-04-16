@@ -229,7 +229,6 @@ const AttendanceClient = ({ courses, role, attendance }: AttendanceClientProps) 
     }
   };
 
-  // combine the duplicate users duration
   const aggregatedStudents = (Array.isArray(fileData) ? fileData : []).reduce(
     (acc: any, student: Student) => {
       if (!student?.username) return acc;
@@ -273,7 +272,6 @@ const AttendanceClient = ({ courses, role, attendance }: AttendanceClientProps) 
     return usernameA.localeCompare(usernameB);
   });
 
-  // only enrolled students are marked present if present
   const modifiedAggregatedStudents = sortedAggregatedStudents.map((student: any) => {
     if (role === "MENTOR") {
       const matchedUser = Array.isArray(users)
@@ -307,18 +305,14 @@ const AttendanceClient = ({ courses, role, attendance }: AttendanceClientProps) 
     }
   });
 
-  // Separate present and absent students
   const combinedStudents = modifiedAggregatedStudents.map((student: any) => ({
     ...student,
     Name: student.ActualName,
     username: student.username,
   }));
-  // Enrolled students
   const presentStudents = combinedStudents.filter((student: any) => student.Present === true);
-  // Unenrolled students
   const absentStudents = combinedStudents.filter((student: any) => !student.Present);
 
-  // For the attendance table counts
   const allStudents = [...presentStudents];
   if (role === "MENTOR") {
     const absentAssignedStudents = users
@@ -334,7 +328,6 @@ const AttendanceClient = ({ courses, role, attendance }: AttendanceClientProps) 
     allStudents.push(...absentStudents);
   }
 
-  // edit student join name
   const [username, setUsername] = useState<string>("");
   const [openEditName, setOpenEditName] = useState<number>(0);
   const handleEditUsername = (from: any, to: any) => {
@@ -400,7 +393,6 @@ const AttendanceClient = ({ courses, role, attendance }: AttendanceClientProps) 
             setMaxInstructionDuration={setMaxInstructionDuration}
           />
 
-          {/* Table */}
           {fileData && selectedFile && pastpresentStudents.length == 0 && (
             <AttendanceTable
               presentStudents={presentStudents}
@@ -500,7 +492,6 @@ const AttendanceTable = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  // Combine all attended and not attended enrolled students
   const allStudents = [
     ...presentStudents,
     ...users

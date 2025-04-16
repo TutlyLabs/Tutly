@@ -189,7 +189,6 @@ export default function AttendanceHeader({
     await deleteAttendance.mutateAsync({ classId: x });
   };
 
-  // Update default value to 40 instead of 60
   const [clientMaxDuration, setClientMaxDuration] = useState<number>(
     isNaN(maxInstructionDuration) ? 40 : Math.max(40, Math.floor(maxInstructionDuration))
   );
@@ -202,7 +201,6 @@ export default function AttendanceHeader({
           maxDuration = student.Duration;
         }
       });
-      // Use 40 as minimum default, ensure integer value with Math.floor
       const validDuration = isNaN(maxDuration) || maxDuration < 40 ? 40 : Math.floor(maxDuration);
       setClientMaxDuration(validDuration);
       setMaxInstructionDuration(validDuration);
@@ -214,7 +212,6 @@ export default function AttendanceHeader({
   }, [fileData, setMaxInstructionDuration]);
 
   const handleClientUpload = async () => {
-    // Ensure integer value with minimum of 40
     const duration = isNaN(clientMaxDuration) ? 40 : Math.max(40, Math.floor(clientMaxDuration));
     setMaxInstructionDuration(duration);
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -224,21 +221,16 @@ export default function AttendanceHeader({
   const handleClientMaxDuration = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     
-    // Handle empty string case
     if (value === "") {
       setClientMaxDuration(40);
       setMaxInstructionDuration(40);
       return;
     }
     
-    // Parse as integer and enforce minimum value
     const newDuration = parseInt(value);
     
-    // Only update if it's a valid number
     if (!isNaN(newDuration)) {
-      // Ensure it's an integer with minimum value of 40
       const validDuration = Math.max(40, Math.floor(newDuration));
-      // Add these lines to actually update the state
       setClientMaxDuration(validDuration);
       setMaxInstructionDuration(validDuration);
     }
@@ -248,7 +240,6 @@ export default function AttendanceHeader({
     <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-5 border-b border-border bg-background/90">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex flex-col lg:flex-row gap-4 lg:items-end lg:justify-between">
-          {/* Course & Class Selection */}
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <div className="w-full sm:w-1/2 lg:w-auto">
               <Select
@@ -312,16 +303,13 @@ export default function AttendanceHeader({
             </div>
           </div>
 
-          {/* Action Panel - Right aligned on md/lg */}
           {role === "INSTRUCTOR" && (
             <div className="w-full lg:w-auto mt-2 lg:mt-0">
               {pastpresentStudents.length === 0 ? (
                 <div className="flex flex-col md:flex-row md:justify-end gap-3">
-                  {/* Duration input and upload button - Left on md/lg screens */}
                   <div className="order-3 md:order-1 flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     {fileData && selectedFile && (
                       <>
-                        {/* Reduced width for duration input */}
                         <div className="w-full sm:w-[140px]">
                           <input
                             type="number"
@@ -330,7 +318,6 @@ export default function AttendanceHeader({
                             value={isNaN(clientMaxDuration) ? 40 : clientMaxDuration}
                             onChange={handleClientMaxDuration}
                             onBlur={() => {
-                              // On blur, ensure the value is at least 40
                               if (isNaN(clientMaxDuration) || clientMaxDuration < 40) {
                                 setClientMaxDuration(40);
                                 setMaxInstructionDuration(40);
@@ -358,7 +345,6 @@ export default function AttendanceHeader({
                     )}
                   </div>
 
-                  {/* File input and bulk import - Right on md/lg screens */}
                   <div className="order-1 md:order-2 md:ml-auto">
                     <div className="flex flex-col sm:flex-row gap-3">
                       <div className="w-full sm:w-auto">
@@ -379,7 +365,7 @@ export default function AttendanceHeader({
                               if (!currentClass) {
                                 toast.error("Please select a class first");
                               } else if (files && files.length > 0) {
-                                const file = files[0]; // Create a local variable for type safety
+                                const file = files[0];
                                 onSelectFile(file as Blob);
                                 toast.success(`File selected`);
                               }

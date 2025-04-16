@@ -80,11 +80,9 @@ const OverallAttendanceTable = ({ studentsAttendance }: OverallAttendanceTablePr
             Overall Attendance
           </h1>
           
-          {/* Control Panel - Rearranges based on screen size */}
           <div className="flex flex-col xs:flex-col sm:flex-row w-full sm:w-auto items-start sm:items-center 
                          gap-3 xs:gap-3 sm:gap-4 md:gap-5 lg:gap-6">
             
-            {/* Search and Reset - First on mobile */}
             <div className="flex w-full sm:w-auto items-center gap-2 order-1 mb-2 sm:mb-0">
               <div className="relative flex-1 sm:flex-none w-full sm:w-40 md:w-48 lg:w-64">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
@@ -105,7 +103,6 @@ const OverallAttendanceTable = ({ studentsAttendance }: OverallAttendanceTablePr
               </Button>
             </div>
             
-            {/* Legend - Status indicators - Second on mobile */}
             <div className="flex flex-wrap items-center justify-start sm:justify-end gap-3 sm:gap-4 md:gap-5 order-2 w-full sm:w-auto">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 rounded-full bg-emerald-500" />
@@ -120,7 +117,6 @@ const OverallAttendanceTable = ({ studentsAttendance }: OverallAttendanceTablePr
         </div>
       </div>
 
-      {/* Table Container with dynamic responsive behavior */}
       <div className="relative w-full mt-3 sm:mt-4 md:mt-5 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
         <div className="min-w-full inline-block align-middle">
           <div className="overflow-hidden">
@@ -258,7 +254,6 @@ const OverallAttendanceTable = ({ studentsAttendance }: OverallAttendanceTablePr
         </div>
       </div>
       
-      {/* Show summary info when there is data */}
       {sortedData.length > 0 && (
         <div className="mt-3 sm:mt-4 md:mt-5 text-xs sm:text-sm text-muted-foreground flex justify-between items-center flex-wrap gap-2">
           <span>Showing {sortedData.length} {sortedData.length === 1 ? "student" : "students"}</span>
