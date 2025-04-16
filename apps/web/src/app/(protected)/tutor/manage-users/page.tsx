@@ -6,7 +6,7 @@ import UserPage from "./_components/UserPage";
 export default async function ManageUsersPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const session = await getServerSession();
   const user = session?.user;
@@ -15,16 +15,14 @@ export default async function ManageUsersPage({
     redirect("/404");
   }
 
-  const { search, sort, direction, filter, page = "1", limit = "10" } = searchParams;
+  const { search, sort, direction, filter, page, limit } = await searchParams;
   const searchTerm = search as string || "";
   const sortField = sort as string || "name";
   const sortDirection = direction as string || "asc";
-  const currentPage = Number(page) || 1;
-  const itemsPerPage = Number(limit) || 10;
-  const filters = Array.isArray(filter) ? filter : filter ? [filter as string] : [];
+  const filters = Array.isArray(filter) ? filter : [];
   const activeFilters = filters
     .map((f) => {
-      const [column, operator, value] = (f as string).split(":");
+      const [column, operator, value] = f.split(":");
       return { column, operator, value };
     })
     .filter((f) => f.column && f.operator && f.value);
@@ -125,8 +123,8 @@ export default async function ManageUsersPage({
         [sortField]: sortDirection,
       },
     },
-    skip: (currentPage - 1) * itemsPerPage,
-    take: itemsPerPage,
+    skip: (Number(page) - 1) * Number(limit),
+    take: Number(limit),
     distinct: ["username"],
   });
 
@@ -144,4 +142,4 @@ export default async function ManageUsersPage({
       isAdmin={user.isAdmin}
     />
   );
-}
+} 

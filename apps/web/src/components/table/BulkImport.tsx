@@ -321,7 +321,7 @@ export default function BulkImport({ columns, data, onImport }: BulkImportProps)
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-transparent hover:bg-gray-100 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm flex items-center gap-1"> 
+        <Button variant="outline" className="flex items-center gap-1">
           <ImportIcon size={16} className="inline" />
           <span className="hidden lg:inline lg:w-[80px] lg:ml-auto">Bulk Import</span>
         </Button>

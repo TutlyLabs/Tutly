@@ -259,7 +259,7 @@ export default function DisplayTable({
     return (
       <Popover open={filterMenuOpen} onOpenChange={setFilterMenuOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="py-4.5 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm flex items-center gap-1">
+          <Button variant="outline" size="sm" className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             <span className="hidden lg:inline">Filter</span>
           </Button>
@@ -466,13 +466,7 @@ export default function DisplayTable({
     }
   };
 
-    const [showInput, setShowInput] = useState(false);
-    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        // Trigger page reload
-        window.location.reload();
-      }
-    };
+    
 
   return (
     <div className="space-y-4">
@@ -486,7 +480,6 @@ export default function DisplayTable({
                     placeholder="Search..."
                     value={localSearchTerm}
                     onChange={(e) => handleSearch(e.target.value)}
-                    onKeyDown={handleKeyPress}
                   />
                 </div>
               </div>
@@ -500,7 +493,7 @@ export default function DisplayTable({
             onClick={() => {
               void setView(viewMode === "table" ? "grid" : "table");
             }}
-            className="px-3 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm flex items-center gap-1 py-4.5"
+            className="flex items-center gap-2 px-3"
           >
             {viewMode === "table" ? (
               <>
@@ -518,7 +511,7 @@ export default function DisplayTable({
             <Button
               variant="outline"
               onClick={() => setIsCreateModalOpen(true)}
-              className="bg-transparent hover:bg-gray-100 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm flex items-center gap-1"
+              className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
               <span className="hidden lg:inline">New</span>
@@ -537,7 +530,7 @@ export default function DisplayTable({
             <Button
               onClick={exportToCSV}
               variant="outline"
-              className="bg-transparent hover:bg-gray-100 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm flex items-center gap-1"
+              className="flex items-center gap-1"
             >
               <ImportIcon size={20} className="rotate-180" />
               <span className="hidden lg:inline">Export</span>
