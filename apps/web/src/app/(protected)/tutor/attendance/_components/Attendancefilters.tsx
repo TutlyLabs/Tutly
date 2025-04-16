@@ -348,13 +348,13 @@ const AttendanceClient = ({ courses, role, attendance }: AttendanceClientProps) 
   const [maxInstructionDuration, setMaxInstructionDuration] = useState(0);
 
   return (
-    <div className="p-4 text-center">
+    <div className="p-2 sm:p-4 text-center">
       <div>
-        <h1 className="mx-auto mb-2 mt-4 w-60 bg-gradient-to-r text-4xl uppercase font-black text-primary">
+        <h1 className="mx-auto mb-2 mt-4 w-60 bg-gradient-to-r text-3xl sm:text-4xl uppercase font-black text-primary">
           Attendance
         </h1>
       </div>
-      <h1 className="text-md text-center tracking-widest font-semibold text-secondary-400">
+      <h1 className="text-sm sm:text-md text-center tracking-widest font-semibold text-secondary-foreground">
         {" "}
         ~ Mark and Monitor Students Attendance
       </h1>
@@ -363,17 +363,19 @@ const AttendanceClient = ({ courses, role, attendance }: AttendanceClientProps) 
           variant="outline"
           size="sm"
           onClick={() => setShowOverallAttendance(!showOverallAttendance)}
-          className="gap-2"
+          className="gap-1 sm:gap-2 text-xs sm:text-sm"
         >
           {showOverallAttendance ? (
             <>
-              <List className="h-4 w-4" />
-              Show Class Attendance
+              <List className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Show Class Attendance</span>
+              <span className="sm:hidden">Class View</span>
             </>
           ) : (
             <>
-              <LayoutGrid className="h-4 w-4" />
-              Show Overall Attendance
+              <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Show Overall Attendance</span>
+              <span className="sm:hidden">Overall View</span>
             </>
           )}
         </Button>
@@ -435,39 +437,39 @@ const AttendanceClient = ({ courses, role, attendance }: AttendanceClientProps) 
       )}
 
       <Dialog open={!!selectedStudent} onOpenChange={() => setSelectedStudent(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="text-lg font-medium">
+            <DialogTitle className="text-base sm:text-lg font-medium">
               Attendance Details for {selectedStudent?.Name || selectedStudent?.user?.name || "Unknown"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="w-full text-sm">
-            <table className="w-full">
+          <div className="w-full text-sm overflow-x-auto">
+            <table className="w-full min-w-[400px]">
               <thead>
                 <tr>
-                  <th className="border bg-muted/30 px-3 py-1.5">Actual Name</th>
-                  <th className="border bg-muted/30 px-3 py-1.5">Join Time</th>
-                  <th className="border bg-muted/30 px-3 py-1.5">Leave Time</th>
-                  <th className="border bg-muted/30 px-3 py-1.5">Duration</th>
+                  <th className="border bg-muted/30 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Actual Name</th>
+                  <th className="border bg-muted/30 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Join Time</th>
+                  <th className="border bg-muted/30 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Leave Time</th>
+                  <th className="border bg-muted/30 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Duration</th>
                 </tr>
               </thead>
               <tbody>
                 {(selectedStudent?.Joins || selectedStudent?.data)?.map(
                   (join: any, index: number) => (
                     <tr key={index}>
-                      <td className="border px-3 py-1.5">{join.ActualName}</td>
-                      <td className="border px-3 py-1.5">{join.JoinTime}</td>
-                      <td className="border px-3 py-1.5">{join.LeaveTime}</td>
-                      <td className="border px-3 py-1.5">{join.Duration}</td>
+                      <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{join.ActualName}</td>
+                      <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{join.JoinTime}</td>
+                      <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{join.LeaveTime}</td>
+                      <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{join.Duration}</td>
                     </tr>
                   )
                 )}
                 <tr className="bg-muted/30">
-                  <td className="border px-3 py-1.5">Total Duration</td>
-                  <td className="border px-3 py-1.5"></td>
-                  <td className="border px-3 py-1.5"></td>
-                  <td className="border px-3 py-1.5">
+                  <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium">Total Duration</td>
+                  <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm"></td>
+                  <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm"></td>
+                  <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium">
                     {selectedStudent?.Duration || selectedStudent?.attendedDuration}
                   </td>
                 </tr>
@@ -538,20 +540,25 @@ const AttendanceTable = ({
     }
   });
   return (
-    <div className="mx-auto mt-8 w-[95%] space-y-4">
-      <div className="flex items-center justify-between">
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all" className="gap-2">
+    <div className="mx-auto mt-4 sm:mt-8 w-full px-1 sm:w-[95%] space-y-2 sm:space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+        <Tabs 
+          defaultValue="all" 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="w-full sm:w-auto overflow-x-auto pb-1"
+        >
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="all" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               All
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs">
                 {allStudents.length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="present" className="gap-2">
-              <div className="h-2 w-2 rounded-full bg-emerald-500" />
+            <TabsTrigger value="present" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-500" />
               Present
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs">
                 {
                   presentStudents.filter((p: any) =>
                     flag ? p.attended : p.Duration >= maxInstructionDuration
@@ -559,10 +566,10 @@ const AttendanceTable = ({
                 }
               </span>
             </TabsTrigger>
-            <TabsTrigger value="absent" className="gap-2">
-              <div className="h-2 w-2 rounded-full bg-red-500" />
+            <TabsTrigger value="absent" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-red-500" />
               Absent
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs">
                 {flag
                   ? users.filter(
                     (u: any) =>
@@ -577,10 +584,10 @@ const AttendanceTable = ({
                   ).length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="short" className="gap-2">
-              <div className="h-2 w-2 rounded-full bg-yellow-500" />
+            <TabsTrigger value="short" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-yellow-500" />
               {"<"}60min
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs">
                 {
                   presentStudents.filter(
                     (s: any) =>
@@ -593,7 +600,7 @@ const AttendanceTable = ({
           </TabsList>
         </Tabs>
 
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full sm:max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search students..."
@@ -604,106 +611,117 @@ const AttendanceTable = ({
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50">
-            <TableHead className="w-16">S.No</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Username</TableHead>
-            <TableHead>Duration</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Times Joined</TableHead>
-            <TableHead className="w-16">View</TableHead>
-            {absentStudents.length > 0 && <TableHead className="w-16">Edit</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredStudents.map((student: any, index: number) => (
-            <TableRow
-              key={index}
-              className={`hover:bg-muted/50 ${student.isAbsent ? "bg-muted/30" : ""}`}
-            >
-              <TableCell>{index + 1}</TableCell>
-              <TableCell className="font-medium">
-                {student.ActualName || student.user?.name}
-              </TableCell>
-              <TableCell>
-                {openEditName === index + 1 ? (
-                  <Input
-                    type="text"
-                    onChange={(e) => setUsername(e.target.value)}
-                    defaultValue={student.username}
-                  />
-                ) : (
-                  student.username
-                )}
-              </TableCell>
-              <TableCell>
-                {student.Duration > 0 || student.attendedDuration > 0 ? (
-                  <Badge
-                    variant="outline"
-                    className={`${(flag ? !student.attended : student.Duration < Number(maxInstructionDuration))
-                      ? "bg-red-500/10 text-red-400 hover:bg-red-500/10"
-                      : (!flag ? student.Duration < 60 : student.attendedDuration < 60)
-                        ? "bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/10"
-                        : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10"
-                      }`}
-                  >
-                    {flag ? student.attendedDuration : student.Duration}
-                  </Badge>
-                ) : (
-                  "-"
-                )}
-              </TableCell>
-              <TableCell>
-                {flag
-                  ? student.data?.[0]?.JoinTime
-                    ? student.data[0].JoinTime.split("T")[0]
-                    : "-"
-                  : student.Joins?.[0]?.JoinTime
-                    ? student.Joins[0].JoinTime.split(" ")[0]
-                    : "-"}
-              </TableCell>
-              <TableCell>
-                {flag ? student.data?.length || "-" : student.Joins?.length || "-"}
-              </TableCell>
-              <TableCell>
-                <Button variant="ghost" size="sm" onClick={() => handleStudentClick(student)}>
-                  View
-                </Button>
-              </TableCell>
-              {absentStudents.length > 0 && (
-                <TableCell>
-                  {student.isUnknown && (
-                    <>
-                      {openEditName !== index + 1 ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setOpenEditName(index + 1)}
-                        >
-                          Edit
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setOpenEditName(0);
-                            handleEditUsername(student.username, username);
-                          }}
-                        >
-                          Save
-                        </Button>
-                      )}
-                    </>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="w-10 sm:w-16">S.No</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead className="hidden sm:table-cell">Username</TableHead>
+              <TableHead>Duration</TableHead>
+              <TableHead className="hidden sm:table-cell">Date</TableHead>
+              <TableHead className="hidden sm:table-cell">Times</TableHead>
+              <TableHead className="w-14 sm:w-16">View</TableHead>
+              {absentStudents.length > 0 && <TableHead className="w-14 sm:w-16">Edit</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredStudents.map((student: any, index: number) => (
+              <TableRow
+                key={index}
+                className={`hover:bg-muted/50 ${student.isAbsent ? "bg-muted/30" : ""}`}
+              >
+                <TableCell className="text-xs sm:text-sm py-2 sm:py-4">{index + 1}</TableCell>
+                <TableCell className="font-medium text-xs sm:text-sm py-2 sm:py-4">
+                  {student.ActualName || student.user?.name}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell text-xs sm:text-sm py-2 sm:py-4">
+                  {openEditName === index + 1 ? (
+                    <Input
+                      type="text"
+                      onChange={(e) => setUsername(e.target.value)}
+                      defaultValue={student.username}
+                      className="text-xs sm:text-sm"
+                    />
+                  ) : (
+                    student.username
                   )}
                 </TableCell>
-              )}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                <TableCell className="text-xs sm:text-sm py-2 sm:py-4">
+                  {student.Duration > 0 || student.attendedDuration > 0 ? (
+                    <Badge
+                      variant="outline"
+                      className={`${(flag ? !student.attended : student.Duration < Number(maxInstructionDuration))
+                        ? "bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-500/10"
+                        : (!flag ? student.Duration < 60 : student.attendedDuration < 60)
+                          ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 hover:bg-yellow-500/10"
+                          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-500 hover:bg-emerald-500/10"
+                        }`}
+                    >
+                      {flag ? student.attendedDuration : student.Duration}
+                    </Badge>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell text-xs sm:text-sm py-2 sm:py-4">
+                  {flag
+                    ? student.data?.[0]?.JoinTime
+                      ? student.data[0].JoinTime.split("T")[0]
+                      : "-"
+                    : student.Joins?.[0]?.JoinTime
+                      ? student.Joins[0].JoinTime.split(" ")[0]
+                      : "-"}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell text-xs sm:text-sm py-2 sm:py-4">
+                  {flag ? student.data?.length || "-" : student.Joins?.length || "-"}
+                </TableCell>
+                <TableCell className="text-xs sm:text-sm py-2 sm:py-4">
+                  <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => handleStudentClick(student)}>
+                    View
+                  </Button>
+                </TableCell>
+                {absentStudents.length > 0 && (
+                  <TableCell className="text-xs sm:text-sm py-2 sm:py-4">
+                    {student.isUnknown && (
+                      <>
+                        {openEditName !== index + 1 ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs px-2"
+                            onClick={() => setOpenEditName(index + 1)}
+                          >
+                            Edit
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs px-2"
+                            onClick={() => {
+                              setOpenEditName(0);
+                              handleEditUsername(student.username, username);
+                            }}
+                          >
+                            Save
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {filteredStudents.length === 0 && (
+        <div className="py-8 text-center text-muted-foreground">
+          No students match your search criteria
+        </div>
+      )}
     </div>
   );
 };
