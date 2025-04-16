@@ -46,19 +46,20 @@ export default function ProfilePage({ userProfile }: { userProfile: UserWithProf
 
   return (
     <div className="p-3 md:p-6">
-
       <Tabs defaultValue="basic" className="space-y-4">
-        <div className="overflow-x-auto">
-          <TabsList className="mb-2 w-max min-w-full md:grid md:grid-cols-4 lg:grid-cols-8">
-            <TabsTrigger value="basic" className="text-sm md:text-base">Basic Details</TabsTrigger>
-            <TabsTrigger value="personal" className="text-sm md:text-base">Personal</TabsTrigger>
-            <TabsTrigger value="professional" className="text-sm md:text-base">Professional</TabsTrigger>
-            <TabsTrigger value="address" className="text-sm md:text-base">Address</TabsTrigger>
-            <TabsTrigger value="academic" className="text-sm md:text-base">Academic</TabsTrigger>
-            <TabsTrigger value="social" className="text-sm md:text-base">Social</TabsTrigger>
-            <TabsTrigger value="experience" className="text-sm md:text-base">Experience</TabsTrigger>
-            <TabsTrigger value="documents" className="text-sm md:text-base">Documents</TabsTrigger>
-          </TabsList>
+        <div className="flex h-12 items-center justify-center">
+          <div className="overflow-x-auto w-full">
+            <TabsList className="mb-2 w-max min-w-full h-10 md:grid md:grid-cols-4 lg:grid-cols-8">
+              <TabsTrigger value="basic" className="text-sm md:text-base">Basic Details</TabsTrigger>
+              <TabsTrigger value="personal" className="text-sm md:text-base">Personal</TabsTrigger>
+              <TabsTrigger value="professional" className="text-sm md:text-base">Professional</TabsTrigger>
+              <TabsTrigger value="address" className="text-sm md:text-base">Address</TabsTrigger>
+              <TabsTrigger value="academic" className="text-sm md:text-base">Academic</TabsTrigger>
+              <TabsTrigger value="social" className="text-sm md:text-base">Social</TabsTrigger>
+              <TabsTrigger value="experience" className="text-sm md:text-base">Experience</TabsTrigger>
+              <TabsTrigger value="documents" className="text-sm md:text-base">Documents</TabsTrigger>
+            </TabsList>
+          </div>
         </div>
 
         <TabsContent value="basic">
