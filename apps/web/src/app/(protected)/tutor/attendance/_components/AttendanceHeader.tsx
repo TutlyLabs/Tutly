@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BiSolidCloudUpload } from "react-icons/bi";
 import { MdDeleteOutline } from "react-icons/md";
-import { LuUpload } from "react-icons/lu";
 
 import {
   AlertDialog,
