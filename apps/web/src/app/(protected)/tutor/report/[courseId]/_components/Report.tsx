@@ -285,7 +285,7 @@ const Report = ({
             <p className="mb-5 mt-20 flex items-center justify-center text-xl font-semibold">
               No data available to generate report!
             </p>
-            <NoDataFound message="No data available to generate report!" />
+            <NoDataFound message="No data available to generate report!" additionalMessage="The report’s taking a nap — no data to wake it up!"/>
           </div>
         </div>
       ) : (
