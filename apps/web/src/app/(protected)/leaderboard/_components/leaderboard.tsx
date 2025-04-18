@@ -114,7 +114,7 @@ export default function Leaderboard({
       </div>
       {/* Leaderboard */}
       {leaderboardData.length === 0 ? (
-        <NoDataFound message="No data found!" />
+        <NoDataFound message="No data found!" additionalMessage="Nothing here… like a to-do list after exams!" />
       ) : (
         <table>
           <thead className="bg-slate-600 text-white">

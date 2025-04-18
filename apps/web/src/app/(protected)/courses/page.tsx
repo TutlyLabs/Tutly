@@ -24,7 +24,7 @@ export default async function CoursesPage() {
             {session.user.role === "INSTRUCTOR" && !session.user.isAdmin ? (
               <AddCourse />
             ) : (
-              <NoDataFound message="No courses found!" />
+              <NoDataFound message="No courses found!" additionalMessage="No courses here… maybe they’re on vacation?"/>
             )}
           </div>
         )}
