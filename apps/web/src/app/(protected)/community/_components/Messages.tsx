@@ -198,12 +198,12 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
   const addDoubtRef = useRef<HTMLTextAreaElement>(null);
 
   return (
-    <div className="w-full md:min-w-[800px]">
-      <div className="flex flex-col items-center text-sm font-medium">
-        <div className="flex w-full flex-row-reverse">
+    <div className="w-full px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto md:min-w-[800px]">
+      <div className="flex flex-col items-center text-sm font-medium space-y-4">
+        <div className="flex w-full justify-center mb-4 sticky top-0 z-10 py-2">
           <AlertDialog open={show} onOpenChange={setShow}>
-            <AlertDialogTrigger>
-              <Button className="rounded-md px-4 py-3 bg-gray-500 hover:bg-gray-600">
+            <AlertDialogTrigger className="w-full sm:w-auto">
+              <Button className=" rounded-md px-4 py-3 text-white bg-gray-500 hover:bg-gray-600">
                 {currentUser.role === "STUDENT" ? "Ask a Doubt" : "Raise a Query"}
               </Button>
             </AlertDialogTrigger>
@@ -219,7 +219,8 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                     onKeyDown={handleCtrlEnterDown}
                     rows={4}
                     value={message}
-                    className="w-full font-semibold p-3 text-gray-300 border-gray-300 border my-2"
+                    className="w-full resize-none font-semibold p-3 text-gray-300 border border-gray-300 my-2 rounded-md
+  focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent"
                   />
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -236,16 +237,16 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
         <Card
           id="accordion-color"
           data-accordion="collapse"
-          className="text-gray-700 mt-5 cursor-pointer"
+          className="text-gray-700 mt-5 cursor-pointer w-full space-y-4"
         >
           {doubts?.map((qa, index) => (
             <div
               key={index}
-              className={`relative m-3 bg-white cursor-pointer rounded-md ${openAccordion === index ? "shadow-xl" : "shadow-3xl"
-                }`}
+              className={`relative p-4 bg-white transition-shadow duration-300 ease-in-out bg-white rounded-md ${openAccordion === index ? "shadow-xl" : "shadow-md"
+                }w-full`}
             >
-              <div className="flex w-full flex-wrap items-center justify-between gap-3 p-3 font-medium">
-                <div className="relative ml-2 flex items-center justify-start space-x-5">
+              <div className="flex flex-col sm:flex-row justify-between gap-4 p-2">
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                   {qa.user.role === "STUDENT" && (
                     <Image
                       src={qa.user?.image || "/placeholder.jpg"}
@@ -280,18 +281,18 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                     </div>
                   )}
                   <div className="flex flex-col justify-start gap-1">
-                    <div className="flex flex-row justify-start gap-3">
-                      <p className="text-xs font-semibold">{qa?.user?.name} </p>
-                      <p className="text-xs font-medium"> [ {qa.user?.username} ]</p>
+                    <div className="flex flex-row justify-end items-center gap-3 flex-wrap">
+                      <p className="text-xs font-semibold truncate max-w-[150px] sm:max-w-xs">{qa?.user?.name} </p>
+                      <p className="text-xs test-gray-500 font-medium"> [ {qa.user?.username} ]</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium">
+                      <p className="text-xs text-gray-400 font-medium">
                         Posted on {formatDateTime(qa?.createdAt)}
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-end p-2 gap-4">
+                <div className="flex text-sm items-center justify-end p-2 gap-4">
                   <div onClick={() => toggleAccordion(index)} className="text-sm font-medium">
                     <div className="flex items-center gap-2 p-1">
                       <LuMessageCircleMore className="h-5 w-5" />

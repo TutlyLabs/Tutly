@@ -32,7 +32,7 @@ export default async function CommunityPage() {
   });
 
   return (
-    <main className="m-2 mx-5 flex flex-col items-center justify-center">
+    <main className="p-4 sm:px-6 lg:px-12 max-w-screen-xl mx-auto w-full flex flex-col items-center justify-center">
       <Community allDoubts={allDoubts} currentUser={session.user} />
     </main>
   );
