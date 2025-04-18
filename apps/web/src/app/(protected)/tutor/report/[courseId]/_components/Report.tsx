@@ -257,160 +257,184 @@ const Report = ({
   };
 
   return (
-    <div>
-      <div className="flex items-center gap-3 p-8">
-        <Link
-          href="/tutor/report/all"
-          className={`rounded p-2 ${isAllView ? "border border-blue-500" : ""}`}
-        >
-          All Courses
-        </Link>
-        {allCourses?.map(
-          (course: any) =>
-            course.isPublished === true && (
-              <Link
-                href={`/tutor/report/${course.id}`}
-                className={`w-20 rounded p-2 sm:w-auto ${!isAllView && currentCourse?.id === course?.id ? "border border-blue-500" : ""
+    <div className="flex flex-col w-full">
+      {/* Course navigation bar - horizontally scrollable on small screens */}
+      <div className="w-full overflow-x-auto py-3 px-2 sm:px-6 bg-white dark:bg-gray-800">
+        <div className="flex items-center gap-2 min-w-max">
+          <Link
+            href="/tutor/report/all"
+            className={`rounded px-2 py-1.5 text-sm whitespace-nowrap ${
+              isAllView 
+                ? "border border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400" 
+                : "hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            All Courses
+          </Link>
+          {allCourses?.map(
+            (course: any) =>
+              course.isPublished === true && (
+                <Link
+                  href={`/tutor/report/${course.id}`}
+                  className={`rounded px-2 py-1.5 text-sm whitespace-nowrap ${
+                    !isAllView && currentCourse?.id === course?.id
+                      ? "border border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
-                key={course?.id}
-              >
-                <h1 className="max-w-xs truncate text-sm font-medium">{course.title}</h1>
-              </Link>
-            )
-        )}
+                  key={course?.id}
+                >
+                  <h1 className="max-w-[140px] sm:max-w-xs truncate font-medium">
+                    {course.title}
+                  </h1>
+                </Link>
+              )
+          )}
+        </div>
       </div>
+
       {data.length === 0 ? (
-        <div>
-          <div>
-            <p className="mb-5 mt-20 flex items-center justify-center text-xl font-semibold">
-              No data available to generate report!
-            </p>
-            <NoDataFound message="No data available to generate report!" />
-          </div>
+        <div className="flex flex-col items-center justify-center p-4 dark:text-gray-200">
+          <p className="mb-5 mt-10 text-xl font-semibold">
+            No data available to generate report!
+          </p>
+          <NoDataFound message="No data available to generate report!" />
         </div>
       ) : (
-        <div className="relative overflow-x-auto p-6 shadow-md sm:rounded-lg">
-          <div className="mb-4 flex justify-between">
-            {isMentor ? (
-              <div className="flex items-center">
-                <span className="mr-2">Mentor:</span>
-                <div className="rounded-lg border  p-2 text-sm text-white">
-                  {uniqueMentors.map((mentor) => (
-                    <span key={mentor}>{mentor}</span>
-                  ))}
+        <div className="w-full p-2 sm:p-4 md:p-6">
+          <div className="relative overflow-x-auto shadow-md sm:rounded-lg border dark:border-gray-700">
+            {/* Filter and control section */}
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-3 p-3 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+              {/* Mentor filter */}
+              {isMentor ? (
+                <div className="flex items-center text-sm dark:text-gray-200">
+                  <span className="mr-2 font-medium">Mentor:</span>
+                  <div className="rounded-lg border dark:border-gray-600 p-1.5">
+                    {uniqueMentors.map((mentor) => (
+                      <span key={mentor}>{mentor}</span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full sm:w-auto">
+                  <select
+                    id="mentor-select"
+                    title="mentor name"
+                    value={selectedMentor}
+                    onChange={handleMentorChange}
+                    className="w-full sm:w-auto rounded-lg border p-1.5 text-sm bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  >
+                    <option value="">All Mentors</option>
+                    {uniqueMentors.map((mentor) => (
+                      <option key={mentor} value={mentor ?? ""}>
+                        {mentor ?? "No Mentor"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Export controls */}
+              <div className="flex flex-col xs:flex-row gap-2 sm:items-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="w-full xs:w-auto rounded-lg border bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-600">
+                    View Columns
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="dark:bg-gray-800 dark:border-gray-700">
+                    {Object.keys(visibleColumns)
+                      .filter((col) => col !== "Mentor" || !isMentor)
+                      .map((column) => (
+                        <DropdownMenuCheckboxItem
+                          key={column}
+                          checked={visibleColumns[column]}
+                          onCheckedChange={(checked: boolean) =>
+                            setVisibleColumns((prev) => ({
+                              ...prev,
+                              [column]: checked,
+                            }))
+                          }
+                          className="dark:text-gray-200 dark:focus:bg-gray-700 dark:hover:bg-gray-700"
+                        >
+                          {column}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <div className="flex w-full xs:w-auto">
+                  <select
+                    id="format-select"
+                    title="select format"
+                    value={selectedFormat}
+                    onChange={handleFormatChange}
+                    className="rounded-l-lg border bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 py-1.5 px-2 text-sm flex-1 xs:flex-none"
+                  >
+                    <option value="pdf">PDF</option>
+                    <option value="csv">CSV</option>
+                  </select>
+                  <button
+                    onClick={handleDownload}
+                    className="rounded-r-lg bg-blue-500 py-1.5 px-3 text-sm text-white hover:bg-blue-600 whitespace-nowrap"
+                  >
+                    Download
+                  </button>
                 </div>
               </div>
-            ) : (
-              <div>
-                <select
-                  id="mentor-select"
-                  title="mentor name"
-                  value={selectedMentor}
-                  onChange={handleMentorChange}
-                  className="rounded-lg border p-2 text-sm text-gray-900"
-                >
-                  <option value="">All Mentors</option>
-                  {uniqueMentors.map((mentor) => (
-                    <option key={mentor} value={mentor ?? ""}>
-                      {mentor ?? "No Mentor"}
-                    </option>
+            </div>
+
+            {/* Table section */}
+            <div className="overflow-x-auto w-full">
+              <table className="w-full border-collapse text-sm text-left dark:text-gray-200">
+                <thead className="bg-blue-500 text-xs uppercase text-white">
+                  <tr>
+                    <th className="cursor-pointer truncate border-b border-blue-600 px-3 py-2 sm:px-4 sm:py-3">
+                      S.No
+                    </th>
+                    {Object.keys(columnMapping).map(
+                      (column) =>
+                        visibleColumns[column] && (
+                          <th
+                            key={column}
+                            onClick={() => handleSort(column)}
+                            className="cursor-pointer truncate border-b border-blue-600 px-3 py-2 sm:px-4 sm:py-3"
+                          >
+                            {column}
+                            {sortColumn === columnMapping[column] &&
+                              (sortOrder === "asc" ? " ↑" : " ↓")}
+                          </th>
+                        )
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredData.map((row, index) => (
+                    <tr
+                      key={index}
+                      className={`${
+                        index % 2 === 0 
+                          ? "bg-white dark:bg-gray-800" 
+                          : "bg-gray-50 dark:bg-gray-700"
+                      } hover:bg-gray-100 dark:hover:bg-gray-600`}
+                    >
+                      <td className="border-b border-gray-300 dark:border-gray-700 px-3 py-2 sm:px-4 sm:py-3">
+                        {index + 1}
+                      </td>
+                      {Object.entries(columnMapping).map(
+                        ([column, key]) =>
+                          visibleColumns[column] && (
+                            <td
+                              key={column}
+                              className="border-b border-gray-300 dark:border-gray-700 px-3 py-2 sm:px-4 sm:py-3"
+                            >
+                              {column === "Attendance" ? formatAttendance(row[key]) : row[key]}
+                            </td>
+                          )
+                      )}
+                    </tr>
                   ))}
-                </select>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger className="rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 hover:bg-gray-50">
-                  View Columns
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {Object.keys(visibleColumns)
-                    .filter((col) => col !== "Mentor" || !isMentor)
-                    .map((column) => (
-                      <DropdownMenuCheckboxItem
-                        key={column}
-                        checked={visibleColumns[column]}
-                        onCheckedChange={(checked: boolean) =>
-                          setVisibleColumns((prev) => ({
-                            ...prev,
-                            [column]: checked,
-                          }))
-                        }
-                      >
-                        {column}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <div>
-                <select
-                  id="format-select"
-                  title="select format"
-                  value={selectedFormat}
-                  onChange={handleFormatChange}
-                  className="rounded-l-lg border bg-white p-2 text-sm text-gray-900"
-                >
-                  <option value="pdf">PDF</option>
-                  <option value="csv">CSV</option>
-                </select>
-                <button
-                  onClick={handleDownload}
-                  className="rounded-r-lg bg-blue-500 p-2 text-sm text-white"
-                >
-                  Download Report
-                </button>
-              </div>
+                </tbody>
+              </table>
             </div>
           </div>
-          <table className="w-full border-collapse text-sm">
-            <thead className="rounded-t-lg bg-blue-500 text-xs uppercase text-white">
-              <tr>
-                <th className="cursor-pointer truncate border-b border-gray-300 px-5 py-3 dark:border-gray-500">
-                  S.No
-                </th>
-                {Object.keys(columnMapping).map(
-                  (column) =>
-                    visibleColumns[column] && (
-                      <th
-                        key={column}
-                        onClick={() => handleSort(column)}
-                        className="cursor-pointer truncate border-b border-gray-300 px-5 py-3 dark:border-gray-500"
-                      >
-                        {column}
-                        {sortColumn === columnMapping[column] &&
-                          (sortOrder === "asc" ? " ↑" : " ↓")}
-                      </th>
-                    )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((row, index) => (
-                <tr
-                  key={index}
-                  className={`bg-gray-50 ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                    } dark:bg-gray-800`}
-                >
-                  <td className="truncate border-b border-gray-300 px-5 py-3 dark:border-gray-700">
-                    {index + 1}
-                  </td>
-                  {Object.entries(columnMapping).map(
-                    ([column, key]) =>
-                      visibleColumns[column] && (
-                        <td
-                          key={column}
-                          className="truncate border-b border-gray-300 px-5 py-3 dark:border-gray-700"
-                        >
-                          {column === "Attendance" ? formatAttendance(row[key]) : row[key]}
-                        </td>
-                      )
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       )}
     </div>
