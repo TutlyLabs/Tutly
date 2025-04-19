@@ -78,7 +78,12 @@ const Bookmarks = ({ bookmarks }: { bookmarks: BookMarks[] }) => {
                   return (
                     <Card key={bookmark.id}>
                       <CardHeader className="flex flex-row items-center gap-4">
-                        <div className={`p-2 rounded-full bg-muted ${details.style}`}>
+                        <div
+                          className={`p-2 rounded-full bg-muted ${details.style} ${
+                            // Smaller icon for mobile view
+                            "sm:p-1 sm:h-7 sm:w-7"
+                          }`}
+                        >
                           <Icon className="h-6 w-6" />
                         </div>
                         <div>

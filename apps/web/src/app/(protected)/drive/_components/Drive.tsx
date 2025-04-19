@@ -3,7 +3,7 @@
 import type { File } from "@prisma/client";
 import { formatDistanceToNow } from "date-fns";
 import { Download, FileText, Plus, Trash2 } from "lucide-react";
-import { type ChangeEvent, useRef, useState, useEffect } from "react";
+import { type ChangeEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -131,20 +131,20 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">My Drive</h1>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Upload File
-          </Button>
-          <Input ref={fileInputRef} type="file" onChange={handleUpload} className="hidden" />
-        </div>
+    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+      <h1 className="text-3xl font-bold">My Drive</h1>
+      <div className="flex items-center gap-2">
+        <Button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Upload File
+        </Button>
+        <Input ref={fileInputRef} type="file" onChange={handleUpload} className="hidden" />
       </div>
+    </div>
 
       {isUploading && (
         <div className="mb-4">
@@ -155,13 +155,19 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
       )}
 
       <Tabs defaultValue="ALL" className="w-full">
-        <TabsList className="mb-4">
-          {fileTypes.map((type) => (
-            <TabsTrigger key={type} value={type}>
-              {type.charAt(0) + type.slice(1).toLowerCase()}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="overflow-x-auto pb-2">
+          <TabsList className="mb-4 flex w-full min-w-max">
+            {fileTypes.map((type) => (
+              <TabsTrigger 
+                key={type} 
+                value={type}
+                className="flex-1 whitespace-nowrap px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm"
+              >
+                {type.charAt(0) + type.slice(1).toLowerCase()}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         {fileTypes.map((fileType) => {
           const filteredFiles =
@@ -171,7 +177,7 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
 
           return (
             <TabsContent key={fileType} value={fileType}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredFiles.map((file) => (
                   <FileCard key={file.id} file={file} />
                 ))}
