@@ -97,23 +97,26 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
   // completed events
   const completedEvents = otherEvents?.filter((event) => dayjs(event.endDate).isBefore(now));
 
+  const renderEmptyState = (message: string) => (
+    <div className="flex items-center justify-center text-muted-foreground py-1">
+      <span className="text-xs">{message}</span>
+    </div>
+  );
+
   const renderEventSection = (
     title: string,
     eventList: any[],
     emptyMessage: string,
     defaultOpen = false
   ) => (
-    <Collapsible defaultOpen={defaultOpen} className="space-y-2">
+    <Collapsible defaultOpen={defaultOpen} className="space-y-1">
       <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md p-2 text-left hover:bg-accent">
         <h2 className="text-base font-bold text-foreground">{title}</h2>
         <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
       </CollapsibleTrigger>
-      <CollapsibleContent className="space-y-2">
+      <CollapsibleContent className="space-y-1">
         {eventList.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-muted-foreground my-5">
-            <MdEventRepeat className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground/50" />
-            <p className="mt-4 text-sm">{emptyMessage}</p>
-          </div>
+          renderEmptyState(emptyMessage)
         ) : (
           eventList.map(renderEventItem)
         )}
@@ -122,17 +125,14 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
   );
 
   const renderAssignmentSection = (assignments: any[], defaultOpen = false) => (
-    <Collapsible defaultOpen={defaultOpen} className="space-y-2">
+    <Collapsible defaultOpen={defaultOpen} className="space-y-1">
       <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md p-2 text-left hover:bg-accent">
         <h2 className="text-base font-bold text-foreground">Assignments</h2>
         <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
       </CollapsibleTrigger>
-      <CollapsibleContent className="space-y-2">
+      <CollapsibleContent className="space-y-1">
         {assignments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-muted-foreground my-5">
-            <MdEventRepeat className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground/50" />
-            <p className="mt-4 text-sm">No assignments available</p>
-          </div>
+          renderEmptyState("No assignments available")
         ) : (
           assignments.map(renderAssignmentItem)
         )}
@@ -140,16 +140,28 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
     </Collapsible>
   );
 
+  // Determine if we have content for the sidebar
+  const hasEvents = liveEvents.length > 0 || upcomingEvents.length > 0 || completedEvents.length > 0 || assignments.length > 0;
+
   return (
-    <div>
-      <ScrollArea className="h-[85vh] overflow-y-auto">
-        <Card className="w-full h-[85vh] rounded-lg bg-background p-4 shadow-md md:w-[260px]">
-          {renderEventSection("Live Events", liveEvents, "No live events", true)}
-          {renderEventSection("Upcoming Events", upcomingEvents, "No upcoming events", true)}
-          {renderAssignmentSection(assignments, false)}
-          {renderEventSection("Completed Events", completedEvents, "No completed events", false)}
-        </Card>
-      </ScrollArea>
+    <div className="w-full md:w-[260px]">
+      <Card className="w-full rounded-lg bg-background p-3 shadow-md">
+        <ScrollArea className="max-h-[calc(100vh-10rem)]">
+          <div className="space-y-2 pb-1">
+            {renderEventSection("Live Events", liveEvents, "No live events", true)}
+            {renderEventSection("Upcoming Events", upcomingEvents, "No upcoming events", true)}
+            {renderAssignmentSection(assignments, false)}
+            {renderEventSection("Completed Events", completedEvents, "No completed events", false)}
+            
+            {!hasEvents && (
+              <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
+                <MdEventRepeat className="h-8 w-8 text-muted-foreground/50" />
+                <p className="mt-2 text-sm text-center">No events scheduled</p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </Card>
 
       {selectedEvent && (
         <EventDetails event={selectedEvent} onClose={() => setSelectedEvent(null)} />
