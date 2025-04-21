@@ -54,6 +54,40 @@ export function SignIn() {
       window.history.replaceState({}, "", url.toString());
     }
   }, []);
+  const handleSubmit = async (values: SignInInput) => {
+    try {
+      setIsLoading(true);
+
+      const formData = new FormData();
+      formData.append("email", values.email);
+      formData.append("password", values.password);
+
+      const res = await fetch("/api/auth/signin/credentials", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.redirected) {
+        // NextResponse.redirect is handled this way on client
+        window.location.href = res.url;
+        return;
+      }
+
+      const data = await res.json();
+      toast.error(data?.error || "Failed to sign in", {
+        position: "top-center",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast.error("Unexpected error occurred", {
+        position: "top-center",
+        duration: 3000,
+      });
+      console.error("Error during sign in:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // const handleGoogleSignIn = async () => {
   //   try {
@@ -85,11 +119,8 @@ export function SignIn() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form
-              className="flex flex-col gap-2"
-              action="/api/auth/signin/credentials"
-              method="POST"
-            >
+            <form className="flex flex-col gap-2" onSubmit={form.handleSubmit(handleSubmit)}>
+
               <FormField
                 control={form.control}
                 name="email"
@@ -164,6 +195,6 @@ export function SignIn() {
           </Form>
         </CardContent>
       </Card>
-    </div>
+    </div >
   );
 }

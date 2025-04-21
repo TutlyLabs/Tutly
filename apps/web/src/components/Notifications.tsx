@@ -485,9 +485,9 @@ export default function Notifications({ user }: { user: SessionUser }) {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="p-0 rounded-lg w-[440px]">
+      <PopoverContent align="end" className="p-0 rounded-lg w-[95vw] max-w-[440px] sm:w-[440px]">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-          <div className="flex justify-between items-center px-4 py-1 border-b">
+          <div className="flex flex-wrap gap-2 justify-between items-center px-4 py-1 border-b">
             <TabsList className="bg-transparent p-0">
               <TabsTrigger value="all">
                 <Bell className="mr-2 w-4 h-4" />
@@ -503,7 +503,7 @@ export default function Notifications({ user }: { user: SessionUser }) {
                 )}
               </TabsTrigger>
             </TabsList>
-            <div className="float-right flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
               <Button
                 variant="ghost"
                 size="sm"
