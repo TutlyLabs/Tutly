@@ -1,0 +1,122 @@
+---
+title: "Reusable Content"
+description: "How to create and use reusable content in Tutly documentation"
+icon: "recycle"
+---
+
+## Why Use Reusable Content?
+
+Reusable content helps maintain consistency across Tutly's documentation and makes updates easier. Common use cases include:
+
+- Feature descriptions
+- Setup instructions
+- Code examples
+- Configuration templates
+- Common warnings or notes
+
+## Creating Reusable Content
+
+### Basic Snippet
+
+1. Create your snippet in the `snippets` directory:
+
+```mdx snippets/feature-intro.mdx
+# Live Classes
+
+Tutly's built-in live class system provides:
+
+- Unlimited attendees
+- Real-time engagement tracking
+- Automatic attendance
+- Recording capabilities
+```
+
+2. Import and use the snippet:
+
+```mdx features/live-classes.mdx
+---
+title: "Live Classes"
+description: "Host interactive live sessions"
+---
+
+import FeatureIntro from "/snippets/feature-intro.mdx";
+
+<FeatureIntro />
+
+## Additional Details
+
+...
+```
+
+### Reusable Variables
+
+1. Create a file with shared variables:
+
+```mdx snippets/constants.mdx
+export const apiBaseUrl = "https://api.tutly.in/v1";
+export const maxFileSize = "5MB";
+export const supportedFormats = ["PNG", "JPG", "SVG", "GIF"];
+
+;
+```
+
+2. Use the variables in your documentation:
+
+```mdx features/assignments.mdx
+---
+title: "Assignments"
+description: "Create and manage assignments"
+---
+
+import { maxFileSize, supportedFormats } from "/snippets/constants.mdx";
+
+## File Upload Guidelines
+
+- Maximum file size: {maxFileSize}
+- Supported formats: {supportedFormats.join(', ')}
+```
+
+### Reusable Components
+
+1. Create a component for repeated UI elements:
+
+```mdx snippets/feature-card.mdx
+export const FeatureCard = ({ title, description, icon }) => (
+  <Card title={title} icon={icon}>
+    {description}
+  </Card>
+);
+
+;
+```
+
+2. Use the component in your pages:
+
+```mdx features/index.mdx
+---
+title: "Features"
+description: "Tutly platform features"
+---
+
+import { FeatureCard } from "/snippets/feature-card.mdx";
+
+<FeatureCard
+  title="Live Classes"
+  icon="video"
+  description="Host interactive sessions with unlimited attendees"
+/>
+
+<FeatureCard
+  title="Assignments"
+  icon="code"
+  description="Create test case-based assignments with auto-evaluation"
+/>
+```
+
+## Best Practices
+
+1. Keep snippets focused and single-purpose
+2. Use clear, descriptive names
+3. Document any required props or variables
+4. Keep the `snippets` directory organized
+5. Update all instances when making changes to shared content

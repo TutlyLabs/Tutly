@@ -1,0 +1,82 @@
+---
+title: "Code Examples"
+description: "How to write and format code examples in Tutly documentation"
+icon: "code"
+---
+
+## Code Blocks
+
+### Basic Syntax
+
+Use fenced code blocks with language specification for syntax highlighting:
+
+```python
+def calculate_grade(score):
+    if score >= 90:
+        return 'A'
+    elif score >= 80:
+        return 'B'
+    else:
+        return 'C'
+```
+
+### API Examples
+
+Show API requests and responses:
+
+```bash
+# Create a new course
+curl -X POST https://api.tutly.in/v1/courses \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Introduction to Programming",
+    "code": "CS101",
+    "description": "Basic programming concepts"
+  }'
+```
+
+### Configuration Examples
+
+Show configuration files:
+
+```yaml
+# tutly-config.yaml
+institution:
+  name: "Example University"
+  domain: "example.edu"
+features:
+  live_classes: true
+  assignments: true
+  portfolios: true
+```
+
+### Command Line Examples
+
+Show CLI commands:
+
+```bash
+# Install Tutly CLI
+npm install -g @tutly/cli
+
+# Login to your institution
+tutly login
+
+# Create a new course
+tutly courses create --name "Web Development" --code "CS201"
+```
+
+## Inline Code
+
+Use backticks for inline code references:
+
+The `tutly-cli` tool provides command-line access to Tutly's features.
+
+## Code Groups
+
+Use code groups to show multiple related examples:
+
+<CodeGroup>
+  ```bash npm npm install @tutly/cli ``` ```bash yarn yarn global add @tutly/cli
+  ```
+</CodeGroup>

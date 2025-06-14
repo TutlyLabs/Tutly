@@ -1,0 +1,121 @@
+---
+title: "Configuration"
+description: "Configure Tutly documentation settings"
+icon: "gear"
+---
+
+## Configuration File
+
+Tutly's documentation is configured using the `docs.json` file. Here are the key settings:
+
+## Core Settings
+
+<ResponseField name="name" type="string" required>
+The name of your Tutly instance.
+
+Example: `Tutly - Example University`
+
+</ResponseField>
+
+<ResponseField name="colors" type="Colors" required>
+  Your institution's brand colors
+  <Expandable title="Colors">
+    <ResponseField name="primary" type="string" required>
+      Primary brand color (used for buttons, links)
+    </ResponseField>
+    <ResponseField name="light" type="string">
+      Light mode accent color
+    </ResponseField>
+    <ResponseField name="dark" type="string">
+      Dark mode accent color
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Branding
+
+<ResponseField name="logo" type="object" required>
+  Your institution's logo
+  <Expandable title="Logo">
+    <ResponseField name="light" type="string">
+      Path to light mode logo
+    </ResponseField>
+    <ResponseField name="dark" type="string">
+      Path to dark mode logo
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="favicon" type="string" required>
+  Path to your favicon
+</ResponseField>
+
+## Navigation
+
+<ResponseField name="navigation" type="Navigation[]" required>
+  Documentation structure
+  <Expandable title="Navigation">
+    <ResponseField name="tab" type="string">
+      Main navigation tab
+    </ResponseField>
+    <ResponseField name="groups" type="Group[]">
+      Groups of related pages
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Social Links
+
+<ResponseField name="footer" type="Footer">
+  Social media and external links
+  <Expandable title="Footer">
+    <ResponseField name="socials" type="object">
+      Social media links (github, linkedin, etc.)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Configuration
+
+```json
+{
+  "name": "Tutly - Example University",
+  "colors": {
+    "primary": "#2563EB",
+    "light": "#3B82F6",
+    "dark": "#1D4ED8"
+  },
+  "logo": {
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["introduction", "quickstart"]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/tutly",
+      "linkedin": "https://linkedin.com/company/tutly"
+    }
+  }
+}
+```
+
+## Best Practices
+
+1. Use your institution's brand colors
+2. Keep navigation structure clear and logical
+3. Include all necessary social links
+4. Use high-quality logo images
+5. Test both light and dark mode appearances

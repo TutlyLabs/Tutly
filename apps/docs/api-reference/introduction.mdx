@@ -1,0 +1,49 @@
+---
+title: "API Reference"
+description: "Tutly API documentation and integration guide"
+---
+
+<Note>
+  Tutly provides a comprehensive API for institutions to integrate with their
+  existing systems and build custom solutions.
+</Note>
+
+## Overview
+
+Tutly's API allows you to:
+
+- Manage courses and classes
+- Handle student enrollments
+- Create and grade assignments
+- Manage events and registrations
+- Access analytics and reports
+- Integrate with external systems
+
+## Authentication
+
+All API endpoints require authentication using Bearer tokens. You can obtain your API key from your institution's admin dashboard.
+
+```json
+"security": [
+  {
+    "bearerAuth": []
+  }
+]
+```
+
+## Base URL
+
+The base URL for all API requests is:
+
+```
+https://api.tutly.in/v1
+```
+
+## Rate Limits
+
+- Standard tier: 100 requests per minute
+- Enterprise tier: Custom limits based on your needs
+
+<Card title="API Playground" icon="code" href="https://api.tutly.in/playground">
+  Try out our API endpoints in our interactive playground
+</Card>

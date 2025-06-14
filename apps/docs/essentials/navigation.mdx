@@ -1,0 +1,103 @@
+---
+title: "Navigation Structure"
+description: "How to organize and structure Tutly documentation"
+icon: "map"
+---
+
+## Documentation Structure
+
+Tutly's documentation is organized into logical sections to help users find information quickly.
+
+## Navigation Syntax
+
+The navigation menu is defined in `docs.json`. Here's how to structure it:
+
+<CodeGroup>
+
+```json Basic Structure
+"navigation": {
+  "tabs": [
+    {
+      "tab": "Guides",
+      "groups": [
+        {
+          "group": "Getting Started",
+          "pages": ["introduction", "quickstart"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+```json Advanced Structure
+"navigation": {
+  "tabs": [
+    {
+      "tab": "Guides",
+      "groups": [
+        {
+          "group": "Getting Started",
+          "pages": [
+            "introduction",
+            "quickstart",
+            {
+              "group": "Core Features",
+              "pages": [
+                "features/live-classes",
+                "features/assignments"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+</CodeGroup>
+
+## Recommended Structure
+
+For Tutly documentation, we recommend organizing content as follows:
+
+1. **Getting Started**
+
+   - Introduction
+   - Quickstart
+   - Development Setup
+
+2. **Core Features**
+
+   - Live Classes
+   - Assignments
+   - Portfolios
+   - Events
+   - Analytics
+
+3. **API Reference**
+
+   - Authentication
+   - Endpoints
+   - Webhooks
+
+4. **Guides**
+   - Best Practices
+   - Troubleshooting
+   - Security
+
+## File Organization
+
+- Keep related content in the same directory
+- Use clear, descriptive filenames
+- Follow a consistent naming convention
+- Group feature-specific documentation in feature folders
+
+<Warning>
+  Avoid using `api` as a top-level folder name. Use `api-reference` instead.
+</Warning>
+
+## Hidden Pages
+
+Pages not included in `docs.json` won't appear in the navigation but can still be accessed via direct links or search.

@@ -1,0 +1,71 @@
+---
+title: "Images and Media"
+description: "Guidelines for using images and media in Tutly documentation"
+icon: "image"
+---
+
+## Image Guidelines
+
+### Supported Formats
+
+- PNG (preferred for screenshots)
+- JPG (for photographs)
+- SVG (for icons and logos)
+- GIF (for demonstrations)
+
+### Image Size Limits
+
+- Maximum file size: 5MB
+- Recommended dimensions:
+  - Screenshots: 1200-1600px wide
+  - Icons: 64x64px or 128x128px
+  - Banners: 1200x400px
+
+### Adding Images
+
+#### Using Markdown
+
+```md
+![Alt text](/path/to/image.png)
+```
+
+#### Using HTML
+
+```html
+<img
+  src="/path/to/image.png"
+  alt="Description"
+  style={{ width: '100%', borderRadius: '0.5rem' }}
+/>
+```
+
+## Media Examples
+
+### Screenshot
+
+<img
+  style={{ borderRadius: "0.5rem" }}
+  src="/images/dashboard.png"
+  alt="Tutly Dashboard"
+/>
+
+### Video Embed
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/example"
+  title="Tutly Platform Overview"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+  style={{ width: "100%", borderRadius: "0.5rem" }}
+></iframe>
+
+## Best Practices
+
+1. Always provide meaningful alt text
+2. Optimize images for web
+3. Use consistent styling
+4. Host large files externally
+5. Include image dimensions

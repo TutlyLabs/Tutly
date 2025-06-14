@@ -1,0 +1,123 @@
+---
+title: "Development"
+description: "Set up and run Tutly documentation locally"
+---
+
+<Info>**Prerequisites**: - Node.js (version specified in .nvmrc) - pnpm</Info>
+
+## Local Development
+
+Follow these steps to set up and run Tutly documentation locally:
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/tutly.git
+cd tutly
+```
+
+### Step 2: Set Up Development Environment
+
+Run the following command to set up your development environment:
+
+```bash
+make up
+```
+
+This will:
+
+- Copy the example environment file to `.env`
+- Install all dependencies
+- Set up local Docker services
+- Initialize the database schema
+- Load initial dummy data
+
+### Step 3: Start Development Server
+
+```bash
+make dev
+```
+
+The development server will be running at `http://localhost:3000`
+
+## Useful Commands
+
+```bash
+# Start the development server
+make dev
+
+# Open Prisma Studio for database management
+make studio
+
+# Stop all services
+make down
+
+# Clean all services, volumes, and .env
+make clean
+
+# Re-initialize the project (after cleaning)
+make init
+```
+
+## Project Structure
+
+```text
+.github
+  └─ workflows
+        └─ CI with pnpm cache setup
+.vscode
+  └─ Recommended extensions and settings for VSCode users
+apps
+  ├─ web
+  ├─ api
+  └─ docs
+packages
+  ├─ auth
+  ├─ db
+  ├─ ui
+  └─ validators
+tooling
+  ├─ eslint
+  ├─ prettier
+  ├─ tailwind
+  └─ typescript
+```
+
+## Code Formatting
+
+We recommend using the following VSCode extensions for development:
+
+- [MDX VSCode extension](https://marketplace.visualstudio.com/items?itemName=unifiedjs.vscode-mdx) for syntax highlighting
+- [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for code formatting
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Error: Could not load the 'sharp' module">
+    This may be due to an outdated version of Node.js. Try the following:
+    1. Check your Node.js version matches the one in .nvmrc
+    2. Run `make clean` to clean the environment
+    3. Run `make up` to reinitialize the project
+  </Accordion>
+
+  <Accordion title="Docker-related issues">
+    If you encounter Docker-related issues:
+    1. Run `make down` to stop all services
+    2. Run `make clean` to clean up Docker resources
+    3. Run `make up` to reinitialize the environment
+  </Accordion>
+</AccordionGroup>
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0. See the [LICENSE](LICENSE) file for details.
+
+Key points of the license:
+
+- You are free to use and modify the software for personal use
+- Distribution of the software is not permitted
+- You must preserve the license and copyright notices
+- You must state significant changes made to the code
+- The license applies to the entire work, including all its parts
+
+For more information about the license, visit [https://www.gnu.org/licenses/agpl-3.0.html](https://www.gnu.org/licenses/agpl-3.0.html)
