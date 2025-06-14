@@ -1,27 +1,29 @@
 import React from "react";
 import Link from "next/link";
+import { Metadata } from "next";
 
-import { metadata } from "../layout";
-
-metadata.title = "Tutly | Terms of Service";
+export const metadata: Metadata = {
+  title: "Tutly | Terms of Service",
+  description: "Terms of Service for Tutly",
+};
 
 function Page() {
   return (
-    <div className="min-h-screen">
-      <div className="flex h-80 flex-col items-center justify-center gap-12 border-b-2 border-gray-500">
-        <h1 className="text-center text-5xl font-bold tracking-widest uppercase">
-          Tutly Terms of <br /> Service
+    <div className="min-h-screen mx-auto px-4 container">
+      <div className="flex h-64 flex-col items-center justify-center gap-8 border-b border-gray-200">
+        <h1 className="text-center text-4xl font-bold tracking-wider uppercase">
+          Terms of Service
         </h1>
-        <h1 className="text-md text-center font-bold tracking-wide text-gray-500">
-          Effective Date: February 25, 2025
-        </h1>
+        <h2 className="text-sm text-center font-medium text-gray-500">
+          Last Updated: February 25, 2025
+        </h2>
       </div>
-      <div className="py-20 text-lg font-light">
-        <p>
+      <div className="py-12 text-base font-light space-y-8">
+        <p className="leading-relaxed">
           Welcome to Tutly! These Terms and Conditions{" "}
           <span className="font-semibold">(&ldquo;Terms&rdquo;)</span> govern
           your use of Tutly and its learning platform (
-          <Link className="text-blue-500" href="https://learn.tutly.in">
+          <Link className="text-blue-500 hover:underline" href="https://learn.tutly.in">
             learn.tutly.in
           </Link>
           ). By accessing or using our services, you agree to these Terms. If
@@ -31,16 +33,16 @@ function Page() {
           Students interact with courses through assignments, quizzes, and other
           materials provided by their instructors.
         </p>
-        <div className="pt-8">
-          <h1 className="text-xl font-bold tracking-wider uppercase">
+        <div>
+          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
             1. Account Registration and Responsibilities
-          </h1>
-          <div className="pl-8">
-            <div className="pt-4">
-              <h1 className="text-xl font-bold tracking-wider uppercase">
+          </h2>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-bold tracking-wide uppercase mb-3">
                 1.1 Instructor Accounts
-              </h1>
-              <p>
+              </h3>
+              <p className="leading-relaxed">
                 Clients who wish to use Tutly will be provided with an
                 instructor account, allowing them to create courses and manage
                 students. Instructors must ensure that all course content,
@@ -52,11 +54,11 @@ function Page() {
                 to the assigned instructor.
               </p>
             </div>
-            <div className="pt-4">
-              <h1 className="text-xl font-bold tracking-wider uppercase">
+            <div>
+              <h3 className="text-lg font-bold tracking-wide uppercase mb-3">
                 1.2 Student Accounts
-              </h1>
-              <p>
+              </h3>
+              <p className="leading-relaxed">
                 Students are enrolled in courses by their respective
                 instructors. They are responsible for completing assignments and
                 adhering to academic integrity policies. Students must not share
@@ -67,11 +69,11 @@ function Page() {
             </div>
           </div>
         </div>
-        <div className="pt-8">
-          <h1 className="text-xl font-bold tracking-wider uppercase">
+        <div>
+          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
             2. Course Content and Intellectual Property
-          </h1>
-          <p>
+          </h2>
+          <p className="leading-relaxed">
             Instructors retain ownership of their course materials but grant
             Tutly a non-exclusive, royalty-free license to host, display, and
             distribute the content within the platform. Students do not have
@@ -81,11 +83,11 @@ function Page() {
             right to remove or restrict access to such content.
           </p>
         </div>
-        <div className="pt-8">
-          <h1 className="text-xl font-bold tracking-wider uppercase">
+        <div>
+          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
             3. User Management and Data Access
-          </h1>
-          <p>
+          </h2>
+          <p className="leading-relaxed">
             Instructors have full control over their enrolled students,
             including the ability to manage enrollments, track attendance, and
             view assignment submissions. Tutly provides detailed analytics such
@@ -95,11 +97,11 @@ function Page() {
             administrators.
           </p>
         </div>
-        <div className="pt-8">
-          <h1 className="text-xl font-bold tracking-wider uppercase">
+        <div>
+          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
             4. Payments and Refunds
-          </h1>
-          <p>
+          </h2>
+          <p className="leading-relaxed">
             Tutly may offer subscription-based or one-time fee services for
             instructors. Payment terms will be specified at the time of
             purchase. Payments are securely processed via third-party gateways.
@@ -108,11 +110,11 @@ function Page() {
             agreements.
           </p>
         </div>
-        <div className="pt-8">
-          <h1 className="text-xl font-bold tracking-wider uppercase">
+        <div>
+          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
             5. Prohibited Activities
-          </h1>
-          <div>
+          </h2>
+          <div className="leading-relaxed">
             Users must not:
             <ul className="list-disc pl-8">
               <li>Violate intellectual property rights or copyrights.</li>
@@ -130,11 +132,11 @@ function Page() {
             violating these rules.
           </div>
         </div>
-        <div className="pt-8">
-          <h1 className="text-xl font-bold tracking-wider uppercase">
+        <div>
+          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
             6. Liability and Disclaimers
-          </h1>
-          <div>
+          </h2>
+          <div className="leading-relaxed">
             Tutly provides services &quot;AS IS&quot; without warranties
             regarding uninterrupted access, accuracy, or suitability for
             specific learning needs. We are not responsible for:
@@ -153,23 +155,23 @@ function Page() {
             liable for any losses.
           </div>
         </div>
-        <div className="pt-8">
-          <h1 className="text-xl font-bold tracking-wider uppercase">
+        <div>
+          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
             7. Changes to Terms
-          </h1>
-          <p>
+          </h2>
+          <p className="leading-relaxed">
             We may update these Terms periodically. Any changes will be
             communicated via email or notifications. Continued use of Tutly
             implies acceptance of the modified Terms.
           </p>
         </div>
-        <div className="py-8">
-          <h1 className="text-xl font-bold tracking-wider uppercase">
+        <div>
+          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
             8. Contact Us
-          </h1>
-          <p>
+          </h2>
+          <p className="leading-relaxed">
             If you have any questions or concerns regarding these Terms, please
-            contact us at <span className="text-blue-500">sales@tutly.in</span>
+            contact us at <span className="text-blue-500">support@tutly.in</span>
           </p>
         </div>
       </div>

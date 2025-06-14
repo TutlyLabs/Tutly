@@ -1,74 +1,92 @@
 import Link from "next/link";
-import { FaArrowCircleUp, FaLinkedinIn } from "react-icons/fa";
+import { FaLinkedinIn } from "react-icons/fa";
 import { FaInstagram, FaTelegram, FaTwitter } from "react-icons/fa6";
+
+const defaultSections = [
+  {
+    title: "Explore",
+    links: [
+      { name: "Contribute", href: "https://github.com/tutlyLabs/" },
+      { name: "Pricing", href: "#" },
+      { name: "Reviews", href: "#testimonials" },
+    ],
+  },
+  {
+    title: "Learn",
+    links: [
+      { name: "Courses", href: "https://learn.tutly.in/courses" },
+      { name: "About us", href: "#" },
+    ],
+  },
+  {
+    title: "Contact",
+    links: [
+      { name: "sales@tutly.in", href: "mailto:sales@tutly.in" },
+      { name: "Office: Hyderabad, Telangana India. 500090", href: "#" },
+    ],
+  },
+];
+
+const defaultSocialLinks = [
+  { icon: <FaTwitter className="size-5" />, href: "https://x.com/tutlydotin", label: "Twitter" },
+  { icon: <FaTelegram className="size-5" />, href: "https://t.me/tutlydotin", label: "Telegram" },
+  { icon: <FaInstagram className="size-5" />, href: "https://www.instagram.com/tutlydotin", label: "Instagram" },
+  { icon: <FaLinkedinIn className="size-5" />, href: "https://www.linkedin.com/company/tutly/", label: "LinkedIn" },
+];
+
+const defaultLegalLinks = [
+  { name: "Terms of Service", href: "/terms" },
+  { name: "Privacy Policy", href: "/privacy" },
+];
 
 export default function Footer() {
   return (
-    <div
-      id="about"
-      className="animate-gradient bg-gradient-to-r from-black to-blue-950/50 bg-[length:200%_200%] px-2 pt-4 text-gray-300 max-sm:text-xs sm:py-8 md:px-24"
-    >
-      <div className="flex flex-wrap justify-between">
-        <div className="flex w-2/5 flex-col gap-8 max-sm:w-full max-sm:pb-6">
-          <h1 className="text-3xl font-black sm:text-5xl">Tutly</h1>
-          <p className="max-sm:hidden">
-            Tutly is a cutting-edge Learning Management System (LMS) designed to
-            revolutionize education. We provide instructors with powerful tools
-            to create courses, manage students, track progress, and analyze
-            performance, all in one seamless platform. Tutly transforms
-            traditional education into an engaging and efficient experience.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4">
-          <h1 className="font-semibold text-white">Explore</h1>
-          <Link href={"/developers"}>Contribute</Link>
-          <h1>Pricing</h1>
-          <h1>Reviews</h1>
-        </div>
-        <div className="flex flex-col gap-4">
-          <h1 className="font-semibold text-white">Learn</h1>
-          <h1>Courses</h1>
-          <h1>About us</h1>
-        </div>
-        <div className="flex flex-col gap-4">
-          <h1 className="font-semibold text-white">Contact</h1>
-          <h1>sales@tutly.in</h1>
-          <div>
-            <h1>Office:</h1>
-            <h1>Hyderabad, Telangana</h1>
-            <h1>India. 500090</h1>
+    <section className="animate-gradient bg-gradient-to-r from-black to-blue-950/50 bg-[length:200%_200%] py-12">
+      <div className="container mx-auto px-4">
+        <div className="flex w-full flex-col justify-between gap-8 lg:flex-row lg:items-start lg:text-left">
+          <div className="flex w-full flex-col justify-between gap-4 lg:items-start">
+            <div className="flex items-center gap-2 lg:justify-start">
+              <h2 className="text-3xl font-black sm:text-5xl">Tutly</h2>
+            </div>
+            <p className="max-w-[70%] text-sm text-gray-300 max-sm:hidden">
+              A cutting-edge Learning Management System (LMS) that revolutionizes education by providing powerful tools for course creation, student management, and performance analytics.
+            </p>
+            <ul className="flex items-center space-x-6 text-gray-300">
+              {defaultSocialLinks.map((social, idx) => (
+                <li key={idx} className="font-medium hover:text-white">
+                  <a href={social.href} target="_blank" aria-label={social.label}>
+                    {social.icon}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="flex gap-4 text-lg">
-            <Link href="https://x.com/tutlydotin" target="_blank">
-              <FaTwitter />
-            </Link>
-            <Link href="https://t.me/tutlydotin" target="_blank">
-              <FaTelegram />
-            </Link>
-            <Link href="https://www.instagram.com/tutlydotin" target="_blank">
-              <FaInstagram />
-            </Link>
-            <Link
-              href="https://www.linkedin.com/company/tutly/"
-              target="_blank"
-            >
-              <FaLinkedinIn />
-            </Link>
+          <div className="grid w-full gap-6 md:grid-cols-3 lg:gap-12">
+            {defaultSections.map((section, sectionIdx) => (
+              <div key={sectionIdx}>
+                <h3 className="mb-3 font-semibold text-white">{section.title}</h3>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  {section.links.map((link, linkIdx) => (
+                    <li key={linkIdx} className="font-medium hover:text-white">
+                      <a href={link.href}>{link.name}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
+        </div>
+        <div className="mt-6 flex flex-col justify-between gap-4 border-t border-gray-700 py-6 text-xs font-medium text-gray-300 md:flex-row md:items-center md:text-left">
+          <p className="order-2 lg:order-1">Copyright ©2025 Tutly. All rights reserved.</p>
+          <ul className="order-1 flex flex-col gap-2 md:order-2 md:flex-row">
+            {defaultLegalLinks.map((link, idx) => (
+              <li key={idx} className="hover:text-white">
+                <Link href={link.href}>{link.name}</Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
-      <div className="flex items-center justify-between sm:pt-14">
-        <div>
-          <div className="flex gap-4 py-4">
-            <h1>Copyright ©2025 Tutly. All rights reserved.</h1>
-            <Link href="/terms">Terms of Service</Link>
-            <Link href="/privacy">Privacy Policy</Link>
-          </div>
-        </div>
-        <Link href="#">
-          <FaArrowCircleUp className="cursor-pointer text-3xl duration-500 hover:-translate-y-4" />
-        </Link>
-      </div>
-    </div>
+    </section>
   );
 }
