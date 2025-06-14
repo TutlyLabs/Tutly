@@ -13,23 +13,27 @@ import { cn } from "@/lib/utils";
 
 import ManageFolders from "./ManageFolders";
 import NewClassDialog from "./newClass";
+import { api } from "@/trpc/react";
+import { usePathname } from "next/navigation";
 
 function ClassSidebar({
   courseId,
-  classes,
   title,
   currentUser,
   isCourseAdmin = false,
 }: {
   courseId: string;
-  classes: (Class & { Folder: Folder | null })[];
   title: string;
   currentUser: SessionUser;
   isCourseAdmin: boolean;
 }) {
   const [openFolders, setOpenFolders] = useState<string[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const pathname = window.location.pathname;
+  const pathname = usePathname()
+
+  const { data } = api.classes.getClassesByCourseId.useQuery({ courseId });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const classes = data?.data ?? [];
 
   // Open folder of current class on mount
   useEffect(() => {

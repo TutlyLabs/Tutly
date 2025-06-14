@@ -1,18 +1,24 @@
+"use client";
+
+import { api } from "@/trpc/react";
+
 const Header = ({
-  data,
   courseId,
   userRole,
+  username,
 }: {
-  data: any;
   courseId: string;
   userRole: "INSTRUCTOR" | "MENTOR";
+  username: string;
 }) => {
+  const { data: courses } = api.courses.getAllCourses.useQuery();
+
   return (
     <div className="flex justify-between mx-4 md:mx-8 mb-4">
       <div className="flex flex-wrap gap-2 items-center">
-        {data?.data?.map((course: any) => (
+        {courses?.data?.map((course) => (
           <a
-            href={`/tutor/statistics/${course.id}${userRole === "MENTOR" ? "?mentor=" + data.username : ""}`}
+            href={`/tutor/statistics/${course.id}${userRole === "MENTOR" ? "?mentor=" + username : ""}`}
             className={`p-2 px-4 border rounded-lg transition-colors hover:bg-accent ${course.id === courseId ? "border-primary bg-accent" : ""
               }`}
             key={course.id}

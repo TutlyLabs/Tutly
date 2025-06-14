@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { db } from "@tutly/db";
 import type { Course, Class } from "@prisma/client";
 import AttendanceClient from "./_components/Attendancefilters";
-import { api } from "@/trpc/server";
 
 export default async function AttendancePage() {
   const session = await getServerSessionOrRedirect();
@@ -13,8 +12,6 @@ export default async function AttendancePage() {
   }
 
   const currentUser = session.user;
-
-  const { data: attendance } = await api.attendances.getAttendanceOfAllStudents();
 
   let courses = await db.course.findMany({
     where: {
@@ -72,7 +69,6 @@ export default async function AttendancePage() {
   return (
     <div>
       <AttendanceClient
-        attendance={attendance ?? ""}
         courses={courses}
         role={currentUser?.role ?? ""}
       />

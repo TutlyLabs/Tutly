@@ -14,19 +14,19 @@ type UserWithMentor = User & {
   mentorUsername?: string;
 };
 
-const TabView = ({
-  mentees,
-  mentorName,
-  menteeName,
-  courseId,
-  userRole,
-}: {
-  mentees: UserWithMentor[];
+interface TabViewProps {
   mentorName: string;
   menteeName: string;
   courseId: string;
   userRole: "INSTRUCTOR" | "MENTOR";
-}) => {
+}
+
+export default function TabView({
+  mentorName,
+  menteeName,
+  courseId,
+  userRole,
+}: TabViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState(mentorName ? "students" : "mentors");
 
@@ -39,17 +39,24 @@ const TabView = ({
     }
   );
 
+  const { data: mentees } = api.statistics.getAllMentees.useQuery({
+    courseId,
+    mentorUsername: mentorName,
+  });
+
+  const menteesArray = Array.isArray(mentees) ? mentees : [];
+
   const filteredMentors = Array.isArray(mentors)
     ? mentors.filter((mentor: UserWithMentor) =>
       mentor.username.toLowerCase().includes(searchQuery.toLowerCase())
     )
     : [];
 
-  const filteredMentees = mentees.filter(
+  const filteredMentees = menteesArray.filter(
     (mentee) =>
       mentee.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (mentee.mobile || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) as UserWithMentor[];
 
   const getHref = (type: "mentor" | "student", username: string) => {
     const baseUrl = `/tutor/statistics/${courseId}`;
@@ -304,6 +311,4 @@ const TabView = ({
       </div>
     </div>
   );
-};
-
-export default TabView;
+}

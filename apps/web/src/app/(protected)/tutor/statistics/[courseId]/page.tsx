@@ -1,5 +1,4 @@
 import { notFound, redirect } from "next/navigation";
-import { api } from "@/trpc/server";
 import { Barchart } from "../_components/barchart";
 import { Linechart } from "../_components/linechart";
 import { Piechart } from "../_components/piechart";
@@ -12,6 +11,7 @@ import { getServerSessionOrRedirect } from "@tutly/auth";
 import { db } from "@tutly/db";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import MenteeCount from "../_components/MenteeCount";
 
 export default async function StatisticsDetailPage({
   params,
@@ -49,22 +49,12 @@ export default async function StatisticsDetailPage({
     return notFound();
   }
 
-  const [courses, mentees] = await Promise.all([
-    api.courses.getAllCourses(),
-    api.statistics.getAllMentees({
-      courseId: courseId,
-      mentorUsername,
-    }),
-  ]);
-
-  const menteesArray = Array.isArray(mentees) ? mentees : [];
-
   return (
     <>
       <Header
-        data={courses}
         courseId={courseId}
         userRole={currentUser.role as "INSTRUCTOR" | "MENTOR"}
+        username={currentUser.username}
       />
       {studentUsername ? (
         <Suspense fallback={<StatisticsLoadingSkeleton />}>
@@ -90,7 +80,7 @@ export default async function StatisticsDetailPage({
                       Total Students
                     </h1>
                     <h1 className="flex items-baseline justify-between text-2xl font-bold text-primary-500 md:text-4xl">
-                      {menteesArray.length}
+                      <MenteeCount courseId={courseId} mentorUsername={mentorUsername} />
                     </h1>
                   </div>
                   <div className="relative rounded-xl border-4 p-4">
@@ -123,7 +113,6 @@ export default async function StatisticsDetailPage({
           <div className="mt-8">
             <Suspense fallback={<TabViewLoadingSkeleton />}>
               <TabView
-                mentees={menteesArray}
                 mentorName={mentorUsername || ""}
                 menteeName={studentUsername || ""}
                 courseId={courseId}

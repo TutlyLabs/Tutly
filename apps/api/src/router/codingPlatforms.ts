@@ -36,7 +36,7 @@ export const codingPlatformsRouter = createTRPCRouter({
         codeforces,
         hackerrank,
         interviewbit,
-      }).filter(([_, value]) => value !== undefined) as [string, string][],
+      }).filter(([_, value]) => value !== undefined),
     );
 
     const result = await getPlatformScores(platformHandles);

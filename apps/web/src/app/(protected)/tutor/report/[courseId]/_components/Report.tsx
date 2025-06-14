@@ -3,8 +3,9 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import type { Styles, UserOptions } from "jspdf-autotable";
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useState, useEffect } from "react";
 import Link from "next/link";
+import { api } from "@/trpc/react";
 
 import {
   DropdownMenu,
@@ -36,18 +37,23 @@ export interface DataItem {
 
 const Report = ({
   isMentor = false,
-  intitialdata = [],
   allCourses = [],
   courseId,
 }: {
   isMentor?: boolean;
-  intitialdata?: DataItem[];
   allCourses?: (Course | null)[];
   courseId: string;
 }) => {
-  const [data, setData] = useState<DataItem[]>(() => {
-    return [...intitialdata].sort((a, b) => b.submissionLength - a.submissionLength);
-  });
+  const { data: reportData } = api.report.generateReport.useQuery({ courseId });
+  const [data, setData] = useState<DataItem[]>([]);
+
+  useEffect(() => {
+    if (reportData) {
+      const sortedData = reportData.data?.sort((a, b) => a.username.localeCompare(b.username)) || [];
+      setData(sortedData);
+    }
+  }, [reportData]);
+
   const [sortColumn, setSortColumn] = useState<string>("submissionLength");
   const [sortOrder, setSortOrder] = useState<string>("desc");
   const [selectedMentor, setSelectedMentor] = useState<string>("");

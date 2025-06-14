@@ -2,7 +2,6 @@ import { getServerSession } from "@tutly/auth";
 import { redirect } from "next/navigation";
 
 import ClassSidebar from "./_components/classSidebar";
-import { api } from "@/trpc/server";
 
 export default async function ClassesPage({
   params,
@@ -13,13 +12,10 @@ export default async function ClassesPage({
   if (!session?.user) return redirect("/sign-in");
 
   const { id } = await params;
-  const classes = await api.classes.getClassesByCourseId({ courseId: id });
-
   return (
     <div className="flex items-start w-full">
       <ClassSidebar
         courseId={id}
-        classes={classes.data ?? []}
         title="Assignments"
         currentUser={session.user}
         isCourseAdmin={session.user.role === "INSTRUCTOR"}

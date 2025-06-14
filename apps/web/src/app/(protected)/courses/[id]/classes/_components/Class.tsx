@@ -56,48 +56,55 @@ import EditClassDialog from "./EditClassDialog";
 import NewAttachmentPage from "./NewAssignments";
 
 interface ClassProps {
-  classes: (Class & { Folder: { id: string; title: string } | null })[];
-  classId: string;
   courseId: string;
+  classId: string;
   currentUser: {
     id: string;
     role: string;
     adminForCourses?: { id: string }[];
   };
-  details:
-  | (Class & {
-    video: Video | null;
-    attachments: Attachment[];
-  })
-  | null;
-  isBookmarked: boolean;
-  initialNote?: Notes | null;
 }
 
 export default function Class({
-  classes,
-  classId,
   courseId,
+  classId,
   currentUser,
-  details,
-  isBookmarked,
-  initialNote,
 }: ClassProps) {
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [notes, setNotes] = useState(initialNote?.description ?? "");
+  const [notes, setNotes] = useState("");
   const [debouncedNotes] = useDebounce(notes, 1000);
   const [notesStatus, setNotesStatus] = useState("");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [tags, setTags] = useState<string[]>(initialNote?.tags ?? []);
+  const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [isClearNotesDialogOpen, setIsClearNotesDialogOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  const { data: classes } = api.classes.getClassesByCourseId.useQuery({ courseId });
+  const { data: classDetails } = api.classes.getClassDetails.useQuery({ id: classId });
+  const { data: notesData } = api.notes.getNote.useQuery({
+    userId: currentUser.id,
+    objectId: classId,
+  });
+  const { data: bookmarkData } = api.bookmarks.getBookmark.useQuery({
+    userId: currentUser.id,
+    objectId: classId,
+  });
+
+  useEffect(() => {
+    if (notesData?.data) {
+      setNotes(notesData.data.description ?? "");
+      setTags(notesData.data.tags ?? []);
+    }
+  }, [notesData]);
+
+
   const updateNote = api.notes.updateNote.useMutation();
   const toggleBookmark = api.bookmarks.toggleBookmark.useMutation();
   const deleteAttachment = api.attachments.deleteAttachment.useMutation();
+
 
   useEffect(() => {
     if (isInitialLoad) {
@@ -107,25 +114,23 @@ export default function Class({
 
     const timer = setTimeout(() => {
       const saveNotes = async () => {
-        if (!debouncedNotes && notes === "") {
+        if (!debouncedNotes && debouncedNotes === "") {
           return;
         }
 
-        if (debouncedNotes !== undefined) {
-          try {
-            setNotesStatus("Saving...");
-            updateNote.mutate({
-              objectId: classId,
-              category: "CLASS",
-              description: debouncedNotes,
-              tags: tags,
-              causedObjects: { classId: classId, courseId: courseId },
-            });
-            setLastSaved(new Date());
-            setNotesStatus("Saved");
-          } catch (error) {
-            setNotesStatus("Failed to save");
-          }
+        try {
+          setNotesStatus("Saving...");
+          updateNote.mutate({
+            objectId: classId,
+            category: "CLASS",
+            description: debouncedNotes,
+            tags: tags,
+            causedObjects: { classId: classId, courseId: courseId },
+          });
+          setLastSaved(new Date());
+          setNotesStatus("Saved");
+        } catch (error) {
+          setNotesStatus("Failed to save");
         }
       };
 
@@ -133,14 +138,15 @@ export default function Class({
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [debouncedNotes, classId, tags, isInitialLoad, notes, updateNote, courseId]);
+  }, [debouncedNotes, classId, tags, isInitialLoad, updateNote, courseId]);
 
-  if (!details) {
+  if (!classDetails?.data) {
     return <div className="flex items-center justify-center p-8">Loading...</div>;
   }
 
-  const { video, title, createdAt, attachments } = details;
+  const { video, title, createdAt, attachments } = classDetails.data;
   const { videoLink, videoType } = video ?? {};
+  const isBookmarked = !!bookmarkData?.data;
 
   const isCourseAdmin = currentUser?.adminForCourses?.some(
     (course: { id: string }) => course.id === courseId
@@ -477,7 +483,7 @@ export default function Class({
         isOpen={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         courseId={courseId}
-        classDetails={details}
+        classDetails={classDetails.data}
       />
 
       {/* Delete Alert Dialog */}

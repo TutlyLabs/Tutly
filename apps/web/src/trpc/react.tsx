@@ -9,7 +9,7 @@ import SuperJSON from "superjson";
 
 import { type AppRouter } from "@tutly/api";
 import { createQueryClient } from "./query-client";
-import { NODE_ENV, PORT, VERCEL_URL } from "@/lib/constants";
+import { NODE_ENV } from "@/lib/constants";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {
@@ -52,17 +52,18 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         }),
         httpBatchStreamLink({
           transformer: SuperJSON,
-          url: getBaseUrl() + "/api/trpc",
+          url: getBaseUrl() + "/trpc",
           fetch(url, options) {
             return fetch(url, {
               ...options,
               credentials: "include",
+              headers: {
+                ...options?.headers,
+                "x-trpc-source": "nextjs-react",
+                "trpc-accept": "application/jsonl",
+                "Content-Type": "application/json",
+              },
             });
-          },
-          headers: () => {
-            const headers = new Headers();
-            headers.set("x-trpc-source", "nextjs-react");
-            return headers;
           },
         }),
       ],
@@ -79,7 +80,8 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 }
 
 function getBaseUrl() {
-  if (typeof window !== "undefined") return window.location.origin;
-  if (VERCEL_URL) return `https://${VERCEL_URL}`;
-  return `http://localhost:${PORT ?? 3000}`;
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:3001";
+  }
+  return "https://api.tutly.in";
 }

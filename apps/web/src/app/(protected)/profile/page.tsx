@@ -1,13 +1,13 @@
-import { api } from "@/trpc/server";
+import { api } from "@/trpc/react";
 import ProfilePage from "./_components/ProfilePage";
 import type { Profile } from "@prisma/client";
 
-export default async function Profile() {
-  const userProfile = await api.users.getUserProfile();
+export default function Profile() {
+  const userProfile = api.users.getUserProfile.useQuery();
 
   if (!userProfile) {
     return <div>User not found</div>;
   }
 
-  return <ProfilePage userProfile={userProfile} />;
+  return <ProfilePage userProfile={userProfile.data!} />;
 } 

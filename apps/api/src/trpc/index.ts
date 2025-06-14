@@ -3,20 +3,37 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import type { SessionWithUser } from "@tutly/auth";
-import { getServerSession, validateSessionToken } from "@tutly/auth";
+import { validateSessionToken } from "@tutly/auth";
 import { db } from "@tutly/db/client";
 
 /**
- * Session validation for API requests from both Next.js and Expo
+ * Session validation for API requests
  */
-const isomorphicGetSession = async (headers: Headers) => {
+const getSessionFromHeaders = async (headers: Headers) => {
+  // Check for Authorization header first
   const authToken = headers.get("Authorization") ?? null;
   if (authToken) {
     const result = await validateSessionToken(authToken);
     return result.session;
   }
-  const result = await getServerSession();
-  return result?.session ?? null;
+
+  // Then check for cookie
+  const cookieHeader = headers.get("cookie");
+  if (cookieHeader) {
+    const cookies = Object.fromEntries(
+      cookieHeader.split("; ").map((c) => {
+        const [key, value] = c.split("=");
+        return [key, value];
+      }),
+    );
+    const sessionId = cookies.tutly_session;
+    if (sessionId) {
+      const result = await validateSessionToken(sessionId);
+      return result.session;
+    }
+  }
+
+  return null;
 };
 
 /**
@@ -27,16 +44,14 @@ export const createTRPCContext = async (opts: {
   headers: Headers;
   session: SessionWithUser | null;
 }) => {
-  const authToken = opts.headers.get("Authorization") ?? null;
-  const session = await isomorphicGetSession(opts.headers);
-
+  const session = await getSessionFromHeaders(opts.headers);
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
   console.log(">>> tRPC Request from", source, "by", session?.user);
 
   return {
     session,
     db,
-    token: authToken,
+    token: opts.headers.get("Authorization") ?? null,
   };
 };
 
@@ -99,7 +114,7 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
-    if (!ctx.session?.user || !ctx.session.user.organization) {
+    if (!ctx.session?.user?.organization) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
     return next({

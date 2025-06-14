@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
-import { api } from "@/trpc/server";
+import { api } from "@/trpc/react";
 import NoDataFound from "@/components/NoDataFound";
 
-export default async function StatisticsPage() {
-  const { data } = await api.courses.getAllCourses();
-  if (!data) return null;
+export default function StatisticsPage() {
+  const { data } = api.courses.getAllCourses.useQuery();
 
-  if (data.length > 0) {
-    redirect(`/tutor/statistics/${data[0]?.id}`);
+  const courses = data?.data ?? [];
+
+  if (courses.length > 0) {
+    redirect(`/tutor/statistics/${courses[0]?.id}`);
   }
 
   return (

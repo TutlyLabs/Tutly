@@ -48,10 +48,11 @@ interface PastPresentStudent {
 interface AttendanceClientProps {
   courses: any[];
   role: string;
-  attendance: any;
 }
 
-const AttendanceClient = ({ courses, role, attendance }: AttendanceClientProps) => {
+export default function AttendanceClient({ courses, role }: AttendanceClientProps) {
+  const { data: attendanceData } = api.attendances.getAttendanceOfAllStudents.useQuery();
+  const attendance: any = attendanceData?.data ?? [];
   const [fileData, setFileData] = useState<any>([]);
   const [selectedFile, setSelectedFile] = useState<any>();
   const [currentCourse, setCurrentCourse] = useState<any>(null);
@@ -473,8 +474,6 @@ const AttendanceClient = ({ courses, role, attendance }: AttendanceClientProps) 
     </div>
   );
 };
-
-export default AttendanceClient;
 
 const AttendanceTable = ({
   presentStudents,
