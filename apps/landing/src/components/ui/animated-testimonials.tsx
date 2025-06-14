@@ -49,7 +49,7 @@ export const AnimatedTestimonials = ({
   }, [autoplay]);
 
   return (
-    <div className="mx-auto max-w-sm px-4 py-20 font-sans antialiased md:max-w-4xl md:px-8 lg:px-12">
+    <div className="mx-auto max-w-sm px-4 py-10 font-sans antialiased md:max-w-4xl md:px-8 lg:px-12">
       <div className="relative grid grid-cols-1 gap-20 md:grid-cols-2">
         <div>
           <div className="relative h-80 w-full">
@@ -69,7 +69,7 @@ export const AnimatedTestimonials = ({
                     z: isActive(index) ? 0 : -100,
                     rotate: isActive(index) ? 0 : randomRotation[index] || 0,
                     zIndex: isActive(index)
-                      ? 999
+                      ? 10
                       : testimonials.length + 2 - index,
                     y: isActive(index) ? [0, -80, 0] : 0,
                   }}

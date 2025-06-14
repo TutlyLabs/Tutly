@@ -17,5 +17,9 @@ export function Testimonials() {
       src: "/images/testimonials/pvp-logo.png",
     },
   ];
-  return <AnimatedTestimonials testimonials={testimonials} />;
+  return (
+    <div className="px-4 sm:px-6">
+      <AnimatedTestimonials testimonials={testimonials} />
+    </div>
+  );
 }

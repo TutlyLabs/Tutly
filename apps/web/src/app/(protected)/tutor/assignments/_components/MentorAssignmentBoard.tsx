@@ -200,7 +200,7 @@ const MentorAssignmentBoard = ({
             </div>
           ))
       ) : (
-        <NoDataFound message="No students found!" />
+        <NoDataFound message="No students found!" additionalMessage="It’s a ghost town in here — not a student in sight!" />
       )}
     </div>
   );

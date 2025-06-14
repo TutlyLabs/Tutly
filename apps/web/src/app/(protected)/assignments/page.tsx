@@ -98,7 +98,7 @@ export default async function AssignmentsPage() {
     <div className="mx-2 flex flex-col gap-4 px-2 py-2 md:px-6">
       {!courses || courses.length === 0 ? (
         <div className="mt-20 p-4 text-center font-semibold">
-          <NoDataFound message="No Assignments available" />
+          <NoDataFound message="No Assignments available" additionalMessage="Assignment-free moment!"/>
         </div>
       ) : (
         <AssignmentBoard reviewed={true} courses={courses} assignments={assignments} />

@@ -12,7 +12,7 @@ export default async function StatisticsPage() {
 
   return (
     <div className="flex h-screen items-center justify-center">
-      <NoDataFound message="Oops! No enrolled courses found" />
+      <NoDataFound message="No enrolled courses found" additionalMessage="You haven’t joined any courses yet — hop on in!" />
     </div>
   );
 } 

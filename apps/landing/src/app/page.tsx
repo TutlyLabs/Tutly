@@ -8,7 +8,7 @@ metadata.title = "Tutly";
 
 export default function Page() {
   return (
-    <div>
+    <div className="space-y-8 sm:space-y-16">
       <div id="home">
         <Home />
       </div>

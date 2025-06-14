@@ -76,7 +76,7 @@ const faqs = [
 
 export function FAQs() {
   return (
-    <div className="mx-auto my-8 grid max-w-7xl grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="mx-auto my-4 sm:my-8 grid max-w-7xl grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 px-4 sm:px-6">
       {faqs.map(({ question, answer, icon }) => (
         <Card question={question} answer={answer} icon={icon} key={question} />
       ))}
@@ -94,15 +94,15 @@ function Card({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="group flex items-start gap-2 rounded-lg p-8 shadow-md">
-      <div className="rounded border border-gray-600 p-2 duration-500 group-hover:border-blue-500 group-hover:text-blue-500">
+    <div className="group flex items-start gap-2 rounded-lg p-4 sm:p-8 shadow-md">
+      <div className="rounded border border-gray-600 p-1.5 sm:p-2 duration-500 group-hover:border-blue-500 group-hover:text-blue-500">
         {icon}
       </div>
       <div className="">
-        <h1 className="text-lg font-semibold tracking-wide transition-transform duration-500 group-hover:translate-x-4">
+        <h1 className="text-base sm:text-lg font-semibold tracking-wide transition-transform duration-500 group-hover:translate-x-4">
           {question}
         </h1>
-        <p className="mt-4 text-gray-500">{answer}</p>
+        <p className="mt-2 sm:mt-4 text-sm sm:text-base text-gray-500">{answer}</p>
       </div>
     </div>
   );

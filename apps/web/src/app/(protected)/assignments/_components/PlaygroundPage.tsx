@@ -6,7 +6,7 @@ import Playground from "../../playgrounds/_components/Playground";
 import EvaluateSubmission from "./evaluateSubmission";
 
 const PlaygroundPage = ({ submission }: { submission: any }) => {
-  if (!submission) return <NoDataFound message="No submission found" />;
+  if (!submission) return <NoDataFound message="No submission found" additionalMessage="Submission? Still on its way!"/>;
   return (
     <div>
       <EvaluateSubmission submission={submission} />

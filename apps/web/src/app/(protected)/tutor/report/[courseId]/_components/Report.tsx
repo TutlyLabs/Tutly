@@ -293,11 +293,13 @@ const Report = ({
       </div>
 
       {data.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-4 dark:text-gray-200">
-          <p className="mb-5 mt-10 text-xl font-semibold">
-            No data available to generate report!
-          </p>
-          <NoDataFound message="No data available to generate report!" />
+        <div>
+          <div>
+            <p className="mb-5 mt-20 flex items-center justify-center text-xl font-semibold">
+              No data available to generate report!
+            </p>
+            <NoDataFound message="No data available to generate report!" additionalMessage="The report’s taking a nap — no data to wake it up!"/>
+          </div>
         </div>
       ) : (
         <div className="w-full p-2 sm:p-4 md:p-6">
