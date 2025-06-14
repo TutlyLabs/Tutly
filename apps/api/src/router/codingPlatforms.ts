@@ -29,15 +29,15 @@ export const codingPlatformsRouter = createTRPCRouter({
     const { codechef, leetcode, codeforces, hackerrank, interviewbit } =
       profile?.professionalProfiles as Record<string, string>;
 
-    const platformHandles: Record<string, string> = Object.fromEntries(
+    const platformHandles = Object.fromEntries(
       Object.entries({
         codechef,
         leetcode,
         codeforces,
         hackerrank,
         interviewbit,
-      }).filter(([_, value]) => value !== undefined),
-    );
+      }).filter(([_, value]) => value !== ""),
+    ) as Record<string, string>;
 
     const result = await getPlatformScores(platformHandles);
     return { success: true, data: result };

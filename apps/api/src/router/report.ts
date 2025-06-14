@@ -161,16 +161,21 @@ export const reportRouter = createTRPCRouter({
       });
 
       submissions.forEach((submission) => {
-        const userObj = obj[submission.enrolledUser.username];
-        if (userObj) {
-          userObj.submissions.add(submission.id);
-          userObj.submissionsLength++;
-          if (submission.attachmentId) {
-            userObj.assignments.add(submission.attachmentId);
-          }
-          userObj.assignmentLength = userObj.assignments.size;
-          userObj.mentorUsername = submission.enrolledUser.mentorUsername;
+        const username = submission.enrolledUser.username;
+        const userObj = obj[username] as {
+          submissions: Set<string>;
+          submissionsLength: number;
+          assignments: Set<string>;
+          assignmentLength: number;
+          mentorUsername: string | null;
+        };
+        userObj.submissions.add(submission.id);
+        userObj.submissionsLength++;
+        if (submission.attachmentId) {
+          userObj.assignments.add(submission.attachmentId);
         }
+        userObj.assignmentLength = userObj.assignments.size;
+        userObj.mentorUsername = submission.enrolledUser.mentorUsername;
       });
 
       const points = await ctx.db.point.findMany({
@@ -202,9 +207,7 @@ export const reportRouter = createTRPCRouter({
 
           ob.score = userPoints.reduce((acc, curr) => acc + curr.score, 0);
           ob.submissionEvaluatedLength = new Set(
-            userPoints
-              .map((point) => point.submissions?.id)
-              .filter((id): id is string => id !== undefined),
+            userPoints.map((point) => point.submissions?.id).filter(Boolean),
           ).size;
         } catch (e) {
           console.log("Error while generating report : ", e);

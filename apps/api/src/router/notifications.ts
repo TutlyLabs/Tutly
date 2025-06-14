@@ -225,16 +225,17 @@ export const notificationsRouter = createTRPCRouter({
       );
 
       await Promise.all(
-        enrolledUsers.map(async (enrolled, index) => {
-          const notification = notifications[index];
-          if (!notification) {
-            throw new Error("Notification not found");
-          }
-          await sendPushNotification(
-            enrolled.user.id,
-            input.message,
-            notification.id,
+        enrolledUsers.map(async (enrolled) => {
+          const notification = notifications.find(
+            (n) => n.intendedForId === enrolled.user.id,
           );
+          if (notification) {
+            await sendPushNotification(
+              enrolled.user.id,
+              input.message,
+              notification.id,
+            );
+          }
         }),
       );
 

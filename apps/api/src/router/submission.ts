@@ -8,7 +8,7 @@ import type {
 import type { InputJsonValue } from "@prisma/client/runtime/library";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc/index.js";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export interface AssignmentDetails {
   id: string;
@@ -253,8 +253,9 @@ export const submissionRouter = createTRPCRouter({
 
     const submissionsByAssignment = filteredSubmissions.reduce(
       (acc, submission) => {
-        acc[submission.attachmentId] ??= [];
-        acc[submission.attachmentId].push(submission);
+        const attachmentId = submission.attachmentId;
+        acc[attachmentId] = acc[attachmentId] ?? [];
+        acc[attachmentId].push(submission);
         return acc;
       },
       {} as Record<string, SubmissionWithDetails[]>,

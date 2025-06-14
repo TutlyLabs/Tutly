@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 // todo: fix overall attendance for mentor exceeding 100%
 import type { Prisma, Role } from "@prisma/client";
 import { z } from "zod";
@@ -98,7 +99,10 @@ export const attendanceRouter = createTRPCRouter({
       const classes: string[] = [];
       const attendanceInEachClass: number[] = [];
       getAllClasses.forEach((classData) => {
-        classes.push(classData.createdAt.toISOString().split("T")[0] ?? "");
+        const dateStr = classData.createdAt
+          .toISOString()
+          .split("T")[0] as string;
+        classes.push(dateStr);
         const tem = attendance.filter(
           (attendanceData) => attendanceData.classId === classData.id,
         );
@@ -163,7 +167,10 @@ export const attendanceRouter = createTRPCRouter({
       const classes: string[] = [];
       const attendanceInEachClass: number[] = [];
       getAllClasses.forEach((classData) => {
-        classes.push(classData.createdAt.toISOString().split("T")[0] ?? "");
+        const dateStr = classData.createdAt
+          .toISOString()
+          .split("T")[0] as string;
+        classes.push(dateStr);
         const tem = attendance.filter(
           (attendanceData) => attendanceData.classId === classData.id,
         );
@@ -219,9 +226,10 @@ export const attendanceRouter = createTRPCRouter({
 
       const attendanceDates: string[] = [];
       attendance.forEach((attendanceData) => {
-        attendanceDates.push(
-          attendanceData.class.createdAt.toISOString().split("T")[0] ?? "",
-        );
+        const dateStr = attendanceData.class.createdAt
+          .toISOString()
+          .split("T")[0] as string;
+        attendanceDates.push(dateStr);
       });
 
       const getAllClasses = await ctx.db.class.findMany({
@@ -239,12 +247,11 @@ export const attendanceRouter = createTRPCRouter({
 
       const classes: string[] = [];
       getAllClasses.forEach((classData) => {
-        if (
-          !attendanceDates.includes(
-            classData.createdAt.toISOString().split("T")[0] ?? "",
-          )
-        ) {
-          classes.push(classData.createdAt.toISOString().split("T")[0] ?? "");
+        const dateStr = classData.createdAt
+          .toISOString()
+          .split("T")[0] as string;
+        if (!attendanceDates.includes(dateStr)) {
+          classes.push(dateStr);
         }
       });
 
@@ -318,22 +325,24 @@ export const attendanceRouter = createTRPCRouter({
 
     attendance.forEach((attendanceData) => {
       if (attendanceData.attended && attendanceData.username) {
-        const existingRecord = groupByTotalAttendance[attendanceData.username];
-        if (existingRecord) {
-          groupByTotalAttendance[attendanceData.username] = {
-            ...existingRecord,
-            count: existingRecord.count + 1,
-          };
-        } else {
-          groupByTotalAttendance[attendanceData.username] = {
-            username: attendanceData.username,
-            name: attendanceData.user.name,
-            mail: attendanceData.user.email,
-            image: attendanceData.user.image,
-            role: attendanceData.user.role,
-            count: 1,
-          };
-        }
+        const existingRecord = groupByTotalAttendance[
+          attendanceData.username
+        ] ?? {
+          count: 0,
+          username: attendanceData.username,
+          name: attendanceData.user.name,
+          mail: attendanceData.user.email,
+          image: attendanceData.user.image,
+          role: attendanceData.user.role,
+        };
+        groupByTotalAttendance[attendanceData.username] = {
+          username: attendanceData.username,
+          name: attendanceData.user.name,
+          mail: attendanceData.user.email,
+          image: attendanceData.user.image,
+          role: attendanceData.user.role,
+          count: existingRecord.count + 1,
+        };
       }
     });
 
@@ -515,22 +524,24 @@ export async function serverActionOfgetTotalNumberOfClassesAttended(
 
   attendance.forEach((attendanceData) => {
     if (attendanceData.attended && attendanceData.username) {
-      const existingRecord = groupByTotalAttendance[attendanceData.username];
-      if (existingRecord) {
-        groupByTotalAttendance[attendanceData.username] = {
-          ...existingRecord,
-          count: existingRecord.count + 1,
-        };
-      } else {
-        groupByTotalAttendance[attendanceData.username] = {
-          username: attendanceData.username,
-          name: attendanceData.user.name,
-          mail: attendanceData.user.email,
-          image: attendanceData.user.image,
-          role: attendanceData.user.role,
-          count: 1,
-        };
-      }
+      const existingRecord = groupByTotalAttendance[
+        attendanceData.username
+      ] ?? {
+        count: 0,
+        username: attendanceData.username,
+        name: attendanceData.user.name,
+        mail: attendanceData.user.email,
+        image: attendanceData.user.image,
+        role: attendanceData.user.role,
+      };
+      groupByTotalAttendance[attendanceData.username] = {
+        username: attendanceData.username,
+        name: attendanceData.user.name,
+        mail: attendanceData.user.email,
+        image: attendanceData.user.image,
+        role: attendanceData.user.role,
+        count: existingRecord.count + 1,
+      };
     }
   });
 

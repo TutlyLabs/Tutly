@@ -6,9 +6,9 @@ import { cors } from "hono/cors";
 
 import { AUTH_COOKIE_NAME, validateSessionToken } from "@tutly/auth";
 
-import type { AppRouter } from "./trpc/root.js";
-import { createTRPCContext } from "./trpc/index.js";
-import { appRouter } from "./trpc/root.js";
+import type { AppRouter } from "./trpc/root";
+import { createTRPCContext } from "./trpc";
+import { appRouter } from "./trpc/root";
 
 const app = new Hono();
 
@@ -33,9 +33,7 @@ app.get("/", async (c) => {
   if (sessionId) {
     try {
       const result = await validateSessionToken(sessionId);
-      if (result && "session" in result) {
-        session = result.session;
-      }
+      session = result.session;
     } catch (error) {
       console.error("Session validation error:", error);
     }
@@ -60,9 +58,7 @@ app.all("/trpc/*", async (c) => {
   if (sessionId) {
     try {
       const result = await validateSessionToken(sessionId);
-      if (result && "session" in result) {
-        session = result.session;
-      }
+      session = result.session;
     } catch (error) {
       console.error("Session validation error:", error);
     }
