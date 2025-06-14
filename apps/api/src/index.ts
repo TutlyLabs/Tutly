@@ -7,12 +7,11 @@ import { cors } from "hono/cors";
 import { AUTH_COOKIE_NAME, validateSessionToken } from "@tutly/auth";
 
 import type { AppRouter } from "./trpc/root.js";
-import { createCallerFactory, createTRPCContext } from "./trpc/index.js";
+import { createTRPCContext } from "./trpc/index.js";
 import { appRouter } from "./trpc/root.js";
 
 const app = new Hono();
 
-// Enable CORS
 app.use(
   "/*",
   cors({
@@ -23,12 +22,6 @@ app.use(
   }),
 );
 
-// Add OPTIONS handler for preflight requests
-app.options("*", () => {
-  return new Response(null, { status: 204 });
-});
-
-// check api status
 app.get("/", async (c) => {
   const cookieStore = c.req.raw.headers.get("cookie");
   const sessionId = cookieStore
@@ -51,12 +44,11 @@ app.get("/", async (c) => {
   return c.text(
     JSON.stringify({
       status: "ok",
-      session,
+      user: session?.user,
     }),
   );
 });
 
-// tRPC endpoint
 app.all("/trpc/*", async (c) => {
   const cookieStore = c.req.raw.headers.get("cookie");
   const sessionId = cookieStore
@@ -88,13 +80,7 @@ app.all("/trpc/*", async (c) => {
   });
 });
 
-// Create a server-side caller for the tRPC API
-const createCaller = createCallerFactory(appRouter);
-
-// Inference helpers for input types
 type RouterInputs = inferRouterInputs<AppRouter>;
-
-// Inference helpers for output types
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
@@ -119,5 +105,5 @@ serve(
   }
 });
 
-export { createTRPCContext, appRouter, createCaller };
+export { createTRPCContext, appRouter };
 export type { AppRouter, RouterInputs, RouterOutputs };
