@@ -2,7 +2,7 @@ export type {
   SessionUser,
   SessionWithUser,
   SessionValidationResult,
-} from "./config";
+} from "./config.js";
 
 export {
   AUTH_COOKIE_NAME,
@@ -10,8 +10,8 @@ export {
   validateSessionToken,
   validateCredentials,
   signInWithCredentials,
-} from "./config";
+} from "./config.js";
 
-export { generateRandomPassword } from "./utils";
+export { generateRandomPassword } from "./utils.js";
 
-export { getServerSession, getServerSessionOrRedirect } from "./config";
+export { getServerSession, getServerSessionOrRedirect } from "./config.js";
