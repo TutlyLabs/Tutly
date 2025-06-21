@@ -15,7 +15,7 @@ RUN corepack prepare pnpm@10.6.3 --activate
 RUN pnpm install --frozen-lockfile
 
 # Build the API service
-RUN pnpm turbo build --filter=@tutly/api
+RUN pnpm turbo build --filter=@tutly/api...
 
 # Expose the port the API will run on
 EXPOSE 3001
