@@ -19,13 +19,18 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.645.0",
+    "@aws-sdk/s3-request-presigner": "^3.645.0",
     "@hono/node-server": "^1.14.4",
     "@trpc/server": "catalog:",
     "@tutly/auth": "workspace:*",
     "@tutly/db": "workspace:*",
     "@tutly/validators": "workspace:*",
+    "cheerio": "^1.0.0-rc.12",
     "hono": "^4.7.11",
+    "resend": "^3.5.0",
     "superjson": "2.2.2",
+    "web-push": "^3.6.7",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -33,6 +38,7 @@
     "@tutly/prettier-config": "workspace:*",
     "@tutly/tsconfig": "workspace:*",
     "@types/node": "^22.13.11",
+    "@types/web-push": "^3.6.4",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tsx": "^4.7.1",

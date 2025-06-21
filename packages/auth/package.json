@@ -5,13 +5,18 @@
   "type": "module",
   "exports": {
     ".": {
-      "react-server": "./src/index.rsc.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "react-server": "./dist/index.rsc.js",
+      "default": "./dist/index.js"
     },
-    "./env": "./env.ts"
+    "./env": {
+      "types": "./dist/env.d.ts",
+      "default": "./dist/env.js"
+    }
   },
   "license": "AGPL-3.0",
   "scripts": {
+    "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
