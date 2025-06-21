@@ -2,9 +2,10 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import type { SessionWithUser } from "@tutly/auth";
-import { validateSessionToken } from "@tutly/auth";
 import { db } from "@tutly/db/client";
+
+import type { SessionWithUser } from "../lib/auth";
+import { validateSessionToken } from "../lib/auth";
 
 /**
  * Session validation for API requests

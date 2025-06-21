@@ -4,9 +4,8 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-import { AUTH_COOKIE_NAME, validateSessionToken } from "@tutly/auth";
-
 import type { AppRouter } from "./trpc/root";
+import { AUTH_COOKIE_NAME, validateSessionToken } from "./lib/auth";
 import { createTRPCContext } from "./trpc";
 import { appRouter } from "./trpc/root";
 
