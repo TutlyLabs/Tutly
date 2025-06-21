@@ -4,8 +4,8 @@ import { ZodError } from "zod";
 
 import { db } from "@tutly/db/client";
 
-import type { SessionWithUser } from "../lib/auth";
-import { validateSessionToken } from "../lib/auth";
+import type { SessionWithUser } from "../lib/auth/index.js";
+import { validateSessionToken } from "../lib/auth/index.js";
 
 /**
  * Session validation for API requests

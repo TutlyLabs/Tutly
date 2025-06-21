@@ -4,10 +4,10 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-import type { AppRouter } from "./trpc/root";
-import { AUTH_COOKIE_NAME, validateSessionToken } from "./lib/auth";
-import { createTRPCContext } from "./trpc";
-import { appRouter } from "./trpc/root";
+import type { AppRouter } from "./trpc/root.js";
+import { AUTH_COOKIE_NAME, validateSessionToken } from "./lib/auth/index.js";
+import { createTRPCContext } from "./trpc/index.js";
+import { appRouter } from "./trpc/root.js";
 
 const app = new Hono();
 

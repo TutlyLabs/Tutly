@@ -2,9 +2,9 @@ import type { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
-import { generateRandomPassword } from "@tutly/auth";
 import { db } from "@tutly/db";
 
+import { generateRandomPassword } from "../lib/auth/index.js";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 export const usersRouter = createTRPCRouter({
