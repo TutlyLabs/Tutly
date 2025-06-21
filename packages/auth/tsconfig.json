@@ -1,5 +1,5 @@
 {
   "extends": "@tutly/tsconfig/base.json",
-  "include": ["src", "*.ts"],
+  "include": ["src", "."],
   "exclude": ["node_modules"]
 }

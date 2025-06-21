@@ -18,7 +18,7 @@
     "prisma:generate": "pnpm with-env prisma generate",
     "build": "pnpm prisma:generate && tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "dev": "tsc",
+    "dev": "tsc --watch",
     "format": "prettier --write . --ignore-path ../../.gitignore",
     "lint": "pnpm prisma:generate && eslint",
     "push": "pnpm with-env prisma db push",
