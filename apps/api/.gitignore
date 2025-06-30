@@ -13,5 +13,4 @@ npm-debug.log*
 *.env
 
 prisma/generated
-trpc-api-export/dist/schema/libquery_engine-darwin-arm64.dylib.node
-trpc-api-export/dist/schema/schema.prisma
+trpc-api-export/dist/*

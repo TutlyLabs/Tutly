@@ -2,8 +2,27 @@
   "name": "@tutly/api",
   "version": "1.0.0",
   "type": "module",
+  "main": "./trpc-api-export/dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./trpc-api-export/dist/index.js",
+      "types": "./trpc-api-export/dist/index.d.ts"
+    },
+    "./schema": {
+      "import": "./trpc-api-export/dist/schema/index.js",
+      "types": "./trpc-api-export/dist/schema/index.d.ts"
+    }
+  },
+  "types": "./trpc-api-export/dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "trpc-api-export/dist",
+    "README.md"
+  ],
   "scripts": {
     "prisma:generate": "npx prisma generate || true",
+    "export-prisma-schema": "npm run prisma:generate && mkdir -p trpc-api-export/dist/schema && cp -r ../../node_modules/.prisma/client/* trpc-api-export/dist/schema/",
+    "trpc-api-export": "tsup --config trpc-api-export/builder/tsup.config.ts && npm run export-prisma-schema && npm run format:fix",
     "prepare": "husky",
     "build": "rm -rf build && tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
@@ -14,6 +33,7 @@
     "tsc": "tsc -p tsconfig.json",
     "format:check": "prettier --config .prettierrc --check --ignore-unknown .",
     "format:fix": "prettier --config .prettierrc --write --ignore-unknown -l .",
+    "release": "semantic-release --branches main",
     "postinstall": "npm run prisma:generate",
     "seed": "tsx prisma/seed/index.ts"
   },
@@ -50,6 +70,8 @@
     "lint-staged": "16.1.0",
     "prettier": "^3.5.3",
     "prisma": "^6.5.0",
+    "semantic-release": "24.2.5",
+    "tsup": "8.5.0",
     "tsx": "^4.7.1",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.27.0"
