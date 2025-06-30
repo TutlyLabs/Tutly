@@ -1,11 +1,9 @@
-import type { Role } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
+import type { Role } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import { z } from 'zod';
 
-import { generateRandomPassword } from "@tutly/auth";
-import { db } from "@tutly/db";
-
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { generateRandomPassword } from '../lib/auth';
+import { createTRPCRouter, protectedProcedure, publicProcedure } from '../trpc';
 
 export const usersRouter = createTRPCRouter({
   getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
@@ -33,11 +31,11 @@ export const usersRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (!currentUser.organization) {
-        throw new Error("Organization not found");
+        throw new Error('Organization not found');
       }
       const enrolledUsers = await ctx.db.user.findMany({
         where: {
-          role: "STUDENT",
+          role: 'STUDENT',
           organizationId: currentUser.organization.id,
           enrolledUsers: {
             some: {
@@ -66,7 +64,7 @@ export const usersRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (!currentUser.organization) {
-        throw new Error("Organization not found");
+        throw new Error('Organization not found');
       }
 
       const globalUsers = await ctx.db.user.findMany({
@@ -111,9 +109,7 @@ export const usersRouter = createTRPCRouter({
             secondaryEmail: z.string(),
             dateOfBirth: z
               .union([z.date(), z.string()])
-              .transform((val) =>
-                typeof val === "string" ? new Date(val) : val,
-              )
+              .transform((val) => (typeof val === 'string' ? new Date(val) : val))
               .nullable(),
             hobbies: z.array(z.string()),
             aboutMe: z.string(),
@@ -158,9 +154,7 @@ export const usersRouter = createTRPCRouter({
         ),
       };
 
-      const updateData = Object.fromEntries(
-        Object.entries(input.profile).map(([key, value]) => [key, value]),
-      );
+      const updateData = Object.fromEntries(Object.entries(input.profile).map(([key, value]) => [key, value]));
 
       const updatedProfile = await ctx.db.profile.upsert({
         where: { userId: currentUser.id },
@@ -201,27 +195,38 @@ export const usersRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         if (!ctx.session.user.organization) {
-          throw new Error("Organization not found");
+          throw new Error('Organization not found');
         }
 
-        const hashedPassword = await bcrypt.hash(input.password, 10);
+        const user = await ctx.db.$transaction(async (tx) => {
+          const createdUser = await tx.user.create({
+            data: {
+              name: input.name,
+              username: input.username,
+              email: input.email,
+              role: input.role as Role,
+              organization: { connect: { id: ctx.session.user.organization?.id } },
+              oneTimePassword: generateRandomPassword(8),
+            },
+          });
 
-        const user = await ctx.db.user.create({
-          data: {
-            name: input.name,
-            username: input.username,
-            email: input.email,
-            password: hashedPassword,
-            role: input.role as Role,
-            organization: { connect: { id: ctx.session.user.organization.id } },
+          const hashedPassword = await bcrypt.hash(input.password, 10);
 
-            oneTimePassword: generateRandomPassword(8),
-          },
+          await tx.account.create({
+            data: {
+              accountId: createdUser.id,
+              userId: createdUser.id,
+              providerId: 'credential',
+              password: hashedPassword,
+            },
+          });
+
+          return createdUser;
         });
 
         return user;
       } catch {
-        throw new Error("Failed to create user");
+        throw new Error('Failed to create user');
       }
     }),
 
@@ -238,7 +243,7 @@ export const usersRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         if (!ctx.session.user.organization) {
-          throw new Error("Organization not found");
+          throw new Error('Organization not found');
         }
 
         const user = await ctx.db.user.update({
@@ -252,7 +257,7 @@ export const usersRouter = createTRPCRouter({
         });
         return user;
       } catch {
-        throw new Error("Failed to update user");
+        throw new Error('Failed to update user');
       }
     }),
 
@@ -266,7 +271,7 @@ export const usersRouter = createTRPCRouter({
       try {
         await ctx.db.user.delete({ where: { id: input.id } });
       } catch {
-        throw new Error("Failed to delete user");
+        throw new Error('Failed to delete user');
       }
     }),
 
@@ -290,12 +295,12 @@ export const usersRouter = createTRPCRouter({
         });
 
         if (!user) {
-          throw new Error("User not found");
+          throw new Error('User not found');
         }
 
         return user;
       } catch {
-        throw new Error("Failed to get user");
+        throw new Error('Failed to get user');
       }
     }),
 
@@ -314,90 +319,73 @@ export const usersRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         if (!ctx.session.user.organization) {
-          throw new Error("Organization not found");
+          throw new Error('Organization not found');
         }
 
         const results = await Promise.all(
-          input.map(async (user) => {
+          input.map(async (userData) => {
             const existingUser = await ctx.db.user.findFirst({
               where: {
-                email: user.email,
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                organizationId: ctx.session.user.organization!.id,
+                email: userData.email,
+                organizationId: ctx.session.user.organization?.id,
               },
             });
 
-            const hashedPassword = user.password
-              ? await bcrypt.hash(user.password, 10)
-              : null;
+            const hashedPassword =
+              'password' in userData && userData.password ? await bcrypt.hash(userData.password, 10) : null;
 
             if (existingUser) {
-              return db.user.update({
-                where: { id: existingUser.id },
-                data: {
-                  name: user.name,
-                  username: user.username,
-                  password: hashedPassword,
-                  role: user.role as Role,
-                },
+              return ctx.db.$transaction(async (tx) => {
+                const updatedUser = await tx.user.update({
+                  where: { id: existingUser.id },
+                  data: {
+                    name: userData.name,
+                    username: userData.username,
+                    role: userData.role as Role,
+                  },
+                });
+                if (hashedPassword) {
+                  await tx.account.updateMany({
+                    where: { userId: existingUser.id, providerId: 'credential' },
+                    data: { password: hashedPassword },
+                  });
+                }
+                return updatedUser;
               });
             }
 
-            return db.user.create({
-              data: {
-                ...user,
-                password: hashedPassword,
-                organization: {
-                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  connect: { id: ctx.session.user.organization!.id },
+            return ctx.db.$transaction(async (tx) => {
+              const createdUser = await tx.user.create({
+                data: {
+                  name: userData.name,
+                  username: userData.username,
+                  email: userData.email,
+                  organization: {
+                    connect: { id: ctx.session.user.organization?.id },
+                  },
+                  role: userData.role as Role,
+                  oneTimePassword: generateRandomPassword(8),
                 },
-                role: user.role as Role,
+              });
 
-                oneTimePassword: generateRandomPassword(8),
-              },
+              if (hashedPassword) {
+                await tx.account.create({
+                  data: {
+                    accountId: createdUser.id,
+                    userId: createdUser.id,
+                    providerId: 'credential',
+                    password: hashedPassword,
+                  },
+                });
+              }
+              return createdUser;
             });
           }),
         );
 
         return results;
       } catch {
-        throw new Error("Failed to bulk upsert users");
-      }
-    }),
-
-  deleteSession: protectedProcedure
-    .input(
-      z.object({
-        sessionId: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-
-      const session = await ctx.db.session.findUnique({
-        where: {
-          id: input.sessionId,
-          userId: currentUser.id,
-        },
-      });
-
-      if (!session) {
-        throw new Error("Session not found");
-      }
-
-      if (ctx.session.id === input.sessionId) {
-        throw new Error("Cannot delete current session");
-      }
-
-      try {
-        await ctx.db.session.delete({
-          where: {
-            id: input.sessionId,
-            userId: currentUser.id,
-          },
-        });
-      } catch {
-        throw new Error("Failed to delete session");
+        throw new Error('Failed to bulk upsert users');
       }
     }),
 
@@ -413,11 +401,11 @@ export const usersRouter = createTRPCRouter({
       });
 
       if (!user) {
-        throw new Error("User not found");
+        throw new Error('User not found');
       }
 
-      await ctx.db.user.update({
-        where: { id: user.id },
+      await ctx.db.account.updateMany({
+        where: { userId: user.id, providerId: 'credential' },
         data: {
           password: null,
         },
@@ -431,14 +419,8 @@ export const usersRouter = createTRPCRouter({
       z.object({
         email: z.string(),
         oldPassword: z.string().optional(),
-        newPassword: z
-          .string()
-          .min(1, "Password is required")
-          .min(8, "Password must have than 8 characters"),
-        confirmPassword: z
-          .string()
-          .min(1, "Password is required")
-          .min(8, "Password must have than 8 characters"),
+        newPassword: z.string().min(1, 'Password is required').min(8, 'Password must have than 8 characters'),
+        confirmPassword: z.string().min(1, 'Password is required').min(8, 'Password must have than 8 characters'),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -454,36 +436,37 @@ export const usersRouter = createTRPCRouter({
         where: {
           email: input.email,
         },
-        select: {
-          password: true,
-        },
       });
 
       if (!userExists) {
         return {
           error: {
-            message: "User does not exist",
+            message: 'User does not exist',
           },
         };
       }
 
-      if (userExists.password !== null) {
+      const account = await ctx.db.account.findFirst({
+        where: {
+          userId: userExists.id,
+          providerId: 'credential',
+        },
+      });
+
+      if (account?.password) {
         if (!input.oldPassword) {
           return {
             error: {
-              message: "Please provide old password",
+              message: 'Please provide old password',
             },
           };
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          input.oldPassword,
-          userExists.password,
-        );
+        const isPasswordValid = await bcrypt.compare(input.oldPassword, account.password);
         if (!isPasswordValid) {
           return {
             error: {
-              message: "Old password is incorrect",
+              message: 'Old password is incorrect',
             },
           };
         }
@@ -491,18 +474,29 @@ export const usersRouter = createTRPCRouter({
 
       const password = await bcrypt.hash(input.newPassword, 10);
 
-      await ctx.db.user.update({
-        where: {
-          email: input.email,
-        },
-        data: {
-          password: password,
-        },
+      const existingAccount = await ctx.db.account.findFirst({
+        where: { userId: userExists.id, providerId: 'credential' },
       });
+
+      if (existingAccount) {
+        await ctx.db.account.update({
+          where: { id: existingAccount.id },
+          data: { password: password },
+        });
+      } else {
+        await ctx.db.account.create({
+          data: {
+            accountId: userExists.id,
+            userId: userExists.id,
+            providerId: 'credential',
+            password: password,
+          },
+        });
+      }
 
       return {
         success: true,
-        message: "User updated successfully",
+        message: 'User updated successfully',
       };
     }),
 
@@ -515,10 +509,10 @@ export const usersRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") {
+      if (currentUser.role !== 'INSTRUCTOR') {
         return {
           error: {
-            message: "Unauthorized",
+            message: 'Unauthorized',
           },
         };
       }
@@ -530,21 +524,36 @@ export const usersRouter = createTRPCRouter({
       if (!user) {
         return {
           error: {
-            message: "User not found",
+            message: 'User not found',
           },
         };
       }
 
       const hashedPassword = await bcrypt.hash(input.newPassword, 10);
 
-      await ctx.db.user.update({
-        where: { id: user.id },
-        data: { password: hashedPassword },
+      const existingAccountForInstructorReset = await ctx.db.account.findFirst({
+        where: { userId: user.id, providerId: 'credential' },
       });
+
+      if (existingAccountForInstructorReset) {
+        await ctx.db.account.update({
+          where: { id: existingAccountForInstructorReset.id },
+          data: { password: hashedPassword },
+        });
+      } else {
+        await ctx.db.account.create({
+          data: {
+            accountId: user.id,
+            userId: user.id,
+            providerId: 'credential',
+            password: hashedPassword,
+          },
+        });
+      }
 
       return {
         success: true,
-        message: "Password reset successfully",
+        message: 'Password reset successfully',
       };
     }),
 
@@ -560,40 +569,55 @@ export const usersRouter = createTRPCRouter({
       const user = ctx.session.user;
       try {
         if (input.password !== input.confirmPassword) {
-          throw new Error("Passwords do not match");
+          throw new Error('Passwords do not match');
         }
 
-        const dbUser = await ctx.db.user.findUnique({
-          where: { id: user.id },
-          select: {
-            password: true,
-          },
+        const account = await ctx.db.account.findFirst({
+          where: { userId: user.id, providerId: 'credential' },
         });
 
-        if (!dbUser) {
-          throw new Error("User not found");
-        }
-
         if (input.oldPassword) {
-          if (!dbUser.password) {
-            throw new Error("User does not have a password");
+          if (!account?.password) {
+            throw new Error('User does not have a password');
           }
-          const isOldPasswordCorrect = await bcrypt.compare(
-            input.oldPassword,
-            dbUser.password,
-          );
+          const isOldPasswordCorrect = await bcrypt.compare(input.oldPassword, account.password);
 
           if (!isOldPasswordCorrect) {
-            throw new Error("Old password is incorrect");
+            throw new Error('Old password is incorrect');
           }
         }
 
         const hashedPassword = await bcrypt.hash(input.password, 10);
 
-        await ctx.db.user.update({
-          where: { id: user.id },
-          data: { password: hashedPassword },
+        const existingAccountForChange = await ctx.db.account.findFirst({
+          where: { userId: user.id, providerId: 'credential' },
         });
+
+        if (existingAccountForChange) {
+          if (input.oldPassword) {
+            if (!existingAccountForChange.password) {
+              throw new Error('User does not have a password');
+            }
+            const isOldPasswordCorrect = await bcrypt.compare(input.oldPassword, existingAccountForChange.password);
+
+            if (!isOldPasswordCorrect) {
+              throw new Error('Old password is incorrect');
+            }
+          }
+          await ctx.db.account.update({
+            where: { id: existingAccountForChange.id },
+            data: { password: hashedPassword },
+          });
+        } else {
+          await ctx.db.account.create({
+            data: {
+              accountId: user.id,
+              userId: user.id,
+              providerId: 'credential',
+              password: hashedPassword,
+            },
+          });
+        }
 
         await ctx.db.session.deleteMany({
           where: {
@@ -603,15 +627,11 @@ export const usersRouter = createTRPCRouter({
 
         return {
           success: true,
-          message: "Password changed successfully",
+          message: 'Password changed successfully',
         };
       } catch (error) {
-        console.error("Error changing password:", error);
-        throw new Error(
-          error instanceof Error
-            ? error.message
-            : "An error occurred while changing password",
-        );
+        console.error('Error changing password:', error);
+        throw new Error(error instanceof Error ? error.message : 'An error occurred while changing password');
       }
     }),
 
@@ -629,4 +649,382 @@ export const usersRouter = createTRPCRouter({
 
     return userProfile;
   }),
+
+  checkUserPassword: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const currentUser = ctx.session.user;
+
+      const userWithPassword = await ctx.db.account.findUnique({
+        where: {
+          id: currentUser.id,
+          providerId: 'credential',
+        },
+        select: {
+          password: true,
+        },
+      });
+      const isPasswordExists = userWithPassword?.password !== null;
+
+      return {
+        success: true,
+        data: {
+          isPasswordExists,
+          email: currentUser.email,
+        },
+      };
+    } catch (error) {
+      console.error('Error checking user password:', error);
+      return {
+        success: false,
+        error: 'Failed to check user password',
+        details: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }),
+
+  getUserSessions: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const currentUser = ctx.session.user;
+
+      const sessions = await ctx.db.session.findMany({
+        where: { userId: currentUser.id },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const accounts = await ctx.db.account.findMany({
+        where: { userId: currentUser.id },
+      });
+
+      return {
+        success: true,
+        data: {
+          sessions,
+          accounts,
+          currentSessionId: ctx.session.session.id,
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching user sessions:', error);
+      return {
+        success: false,
+        error: 'Failed to fetch user sessions',
+        details: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }),
+
+  getTutorActivityData: protectedProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        filter: z.array(z.string()).optional(),
+        page: z.number().default(1),
+        limit: z.number().default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const currentUser = ctx.session.user;
+        const { search, filter, page, limit } = input;
+
+        if (currentUser.role !== 'INSTRUCTOR' && currentUser.role !== 'MENTOR') {
+          return { success: false, error: 'Unauthorized access' };
+        }
+
+        const searchTerm = search ?? '';
+        const filters = filter ?? [];
+        const onlineCutoff = new Date(Date.now() - 2 * 60 * 1000);
+
+        const activeFilters = filters
+          .map((f) => {
+            const [column, operator, value] = f.split(':');
+            return { column, operator, value };
+          })
+          .filter((f) => f.column && f.operator && f.value);
+
+        const enrolledCourses = await ctx.db.enrolledUsers.findMany({
+          where: {
+            username: currentUser.username,
+            courseId: {
+              not: null,
+            },
+          },
+          select: {
+            courseId: true,
+          },
+        });
+
+        const courseIds = enrolledCourses.map((enrolled) => enrolled.courseId).filter(Boolean);
+        const uniqueCourseIds = [...new Set(courseIds)];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const where: Record<string, any> = {
+          courseId: {
+            in: uniqueCourseIds,
+          },
+          user: {
+            role: {
+              in: ['STUDENT', 'MENTOR'],
+            },
+            organizationId: currentUser.organizationId,
+          },
+        };
+
+        if (currentUser.role === 'MENTOR') {
+          where.mentorUsername = currentUser.username;
+        }
+
+        if (searchTerm) {
+          where.user.OR = [
+            { name: { contains: searchTerm, mode: 'insensitive' } },
+            { username: { contains: searchTerm, mode: 'insensitive' } },
+            { email: { contains: searchTerm, mode: 'insensitive' } },
+          ];
+        }
+
+        activeFilters.forEach((filter) => {
+          const { column, operator, value } = filter;
+
+          if (typeof column === 'string') {
+            switch (operator) {
+              case 'contains':
+                where.user[column] = { contains: value, mode: 'insensitive' };
+                break;
+              case 'equals':
+                where.user[column] = value;
+                break;
+              case 'online':
+                where.user.lastSeen = { gte: onlineCutoff };
+                break;
+            }
+          }
+        });
+
+        const [totalItems, activeCount] = await Promise.all([
+          ctx.db.enrolledUsers.count({ where }),
+          ctx.db.enrolledUsers.count({
+            where: {
+              ...where,
+              user: {
+                ...where.user,
+                lastSeen: { gte: onlineCutoff },
+              },
+            },
+          }),
+        ]);
+
+        const enrolledUsers = await ctx.db.enrolledUsers.findMany({
+          where,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                email: true,
+                mobile: true,
+                image: true,
+                role: true,
+                lastSeen: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
+          orderBy: [
+            {
+              user: {
+                lastSeen: {
+                  sort: 'desc',
+                  nulls: 'last',
+                },
+              },
+            },
+          ],
+          skip: (page - 1) * limit,
+          take: limit,
+          distinct: ['username'],
+        });
+
+        const users = enrolledUsers.map((enrolled) => ({
+          ...enrolled.user,
+          courseId: enrolled.courseId,
+          mentorUsername: enrolled.mentorUsername,
+        }));
+
+        return {
+          success: true,
+          data: {
+            users,
+            totalItems,
+            activeCount,
+          },
+        };
+      } catch (error) {
+        console.error('Error fetching tutor activity data:', error);
+        return {
+          success: false,
+          error: 'Failed to fetch tutor activity data',
+          details: error instanceof Error ? error.message : String(error),
+        };
+      }
+    }),
+
+  getTutorManageUsersData: protectedProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        sort: z.string().default('name'),
+        direction: z.string().default('asc'),
+        filter: z.array(z.string()).optional(),
+        page: z.number().default(1),
+        limit: z.number().default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const currentUser = ctx.session.user;
+        const { search, sort, direction, filter, page, limit } = input;
+
+        if (currentUser.role !== 'INSTRUCTOR' && currentUser.role !== 'MENTOR') {
+          return { success: false, error: 'Unauthorized access' };
+        }
+
+        const searchTerm = search ?? '';
+        const sortField = sort || 'name';
+        const sortDirection = direction || 'asc';
+        const filters = filter ?? [];
+        const activeFilters = filters
+          .map((f) => {
+            const [column, operator, value] = f.split(':');
+            return { column, operator, value };
+          })
+          .filter((f) => f.column && f.operator && f.value);
+
+        const courses = await ctx.db.course.findMany({
+          where:
+            currentUser.role === 'INSTRUCTOR'
+              ? {
+                  enrolledUsers: {
+                    some: {
+                      username: currentUser.username,
+                    },
+                  },
+                }
+              : {
+                  enrolledUsers: {
+                    some: {
+                      mentorUsername: currentUser.username,
+                    },
+                  },
+                },
+          select: {
+            id: true,
+          },
+        });
+
+        const courseIds = courses.map((course) => course.id);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const where: Record<string, any> = {
+          courseId: {
+            in: courseIds,
+          },
+          user: {
+            role: {
+              in: ['STUDENT', 'MENTOR'],
+            },
+            organizationId: currentUser.organizationId,
+          },
+        };
+
+        if (currentUser.role === 'MENTOR') {
+          where.mentorUsername = currentUser.username;
+        }
+
+        if (searchTerm) {
+          where.user.OR = [
+            { name: { contains: searchTerm, mode: 'insensitive' } },
+            { username: { contains: searchTerm, mode: 'insensitive' } },
+            { email: { contains: searchTerm, mode: 'insensitive' } },
+          ];
+        }
+
+        activeFilters.forEach((filter) => {
+          const { column, operator, value } = filter;
+
+          if (typeof column === 'string') {
+            switch (operator) {
+              case 'contains':
+                where.user[column] = { contains: value, mode: 'insensitive' };
+                break;
+              case 'equals':
+                where.user[column] = value;
+                break;
+              case 'startsWith':
+                where.user[column] = { startsWith: value, mode: 'insensitive' };
+                break;
+              case 'endsWith':
+                where.user[column] = { endsWith: value, mode: 'insensitive' };
+                break;
+              case 'greaterThan':
+                where.user[column] = { gt: Number(value) };
+                break;
+              case 'lessThan':
+                where.user[column] = { lt: Number(value) };
+                break;
+            }
+          }
+        });
+
+        const totalItems = await ctx.db.enrolledUsers.count({ where });
+
+        const enrolledUsers = await ctx.db.enrolledUsers.findMany({
+          where,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                email: true,
+                role: true,
+                oneTimePassword: true,
+              },
+            },
+          },
+          orderBy: {
+            user: {
+              [sortField]: sortDirection,
+            },
+          },
+          skip: (page - 1) * limit,
+          take: limit,
+          distinct: ['username'],
+        });
+
+        const allUsers = enrolledUsers.map((enrolled) => ({
+          ...enrolled.user,
+          courseId: enrolled.courseId,
+          mentorUsername: enrolled.mentorUsername,
+        }));
+
+        return {
+          success: true,
+          data: {
+            users: allUsers,
+            totalItems,
+            userRole: currentUser.role,
+            isAdmin: currentUser.isAdmin,
+          },
+        };
+      } catch (error) {
+        console.error('Error fetching tutor manage users data:', error);
+        return {
+          success: false,
+          error: 'Failed to fetch tutor manage users data',
+          details: error instanceof Error ? error.message : String(error),
+        };
+      }
+    }),
 });

@@ -16,23 +16,30 @@ interface AttendanceData {
 function StudentStats({
   courseId,
   studentUsername,
-  mentorUsername
+  mentorUsername,
 }: {
   courseId: string;
   studentUsername: string;
   mentorUsername?: string;
 }) {
-  const { data: studentData, isLoading: studentDataLoading } = api.statistics.studentBarchartData.useQuery({
-    courseId,
-    studentUsername,
-  });
+  const { data: studentData, isLoading: studentDataLoading } =
+    api.statistics.studentBarchartData.useQuery({
+      courseId,
+      studentUsername,
+    });
 
-  const { data: attendanceData, isLoading: attendanceDataLoading } = api.statistics.studentHeatmapData.useQuery({
-    courseId,
-    studentUsername,
-  });
+  const { data: attendanceData, isLoading: attendanceDataLoading } =
+    api.statistics.studentHeatmapData.useQuery({
+      courseId,
+      studentUsername,
+    });
 
-  if (studentDataLoading || attendanceDataLoading || !studentData || !attendanceData) {
+  if (
+    studentDataLoading ||
+    attendanceDataLoading ||
+    !studentData ||
+    !attendanceData
+  ) {
     return null;
   }
 
@@ -53,19 +60,20 @@ function StudentStats({
     return inputDate >= startOfWeek && inputDate <= endOfWeek;
   }
 
-  const thisWeekAttended = typedAttendanceData.attendanceDates.filter((date: string) =>
-    isDateInCurrentWeek(date)
+  const thisWeekAttended = typedAttendanceData.attendanceDates.filter(
+    (date: string) => isDateInCurrentWeek(date),
   ).length;
   const thisWeekClasses = typedAttendanceData.classes.filter((date: string) =>
-    isDateInCurrentWeek(date)
+    isDateInCurrentWeek(date),
   ).length;
   const uptoLastWeek =
     typedAttendanceData.classes.length - thisWeekClasses == 0
       ? 0
       : (
-        ((typedAttendanceData.attendanceDates.length - thisWeekAttended) * 100) /
-        (typedAttendanceData.classes.length - thisWeekClasses)
-      ).toFixed(2);
+          ((typedAttendanceData.attendanceDates.length - thisWeekAttended) *
+            100) /
+          (typedAttendanceData.classes.length - thisWeekClasses)
+        ).toFixed(2);
 
   return (
     <div className="mx-4 flex flex-col gap-4 md:mx-8 md:gap-6">
@@ -79,17 +87,23 @@ function StudentStats({
         <div className="flex w-full flex-col gap-4 rounded-xl shadow-xl shadow-blue-500/5 md:w-3/4 md:flex-row md:gap-2">
           <div className="flex w-full flex-col justify-between text-gray-500 md:w-1/2 md:px-14 md:py-10">
             <div className="relative mb-4 rounded-xl border p-4 md:mb-0">
-              <h1 className="absolute -top-3 bg-background px-1 text-sm"># Rank</h1>
+              <h1 className="bg-background absolute -top-3 px-1 text-sm">
+                # Rank
+              </h1>
               <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-primary-500 md:text-4xl">NA</h1>
+                <h1 className="text-primary-500 text-3xl font-bold md:text-4xl">
+                  NA
+                </h1>
                 <h1>
                   <FaRankingStar className="text-3xl md:text-4xl" />
                 </h1>
               </div>
             </div>
             <div className="relative rounded-xl border p-4">
-              <h1 className="absolute -top-3 bg-background px-1 text-sm">Score</h1>
-              <h1 className="text-3xl font-bold text-primary-500 md:text-4xl">
+              <h1 className="bg-background absolute -top-3 px-1 text-sm">
+                Score
+              </h1>
+              <h1 className="text-primary-500 text-3xl font-bold md:text-4xl">
                 {studentData.totalPoints}
               </h1>
               <h1 className="text-xs text-gray-500 md:text-sm">
@@ -99,7 +113,11 @@ function StudentStats({
           </div>
           <div className="md:w-2/3">
             <StudentBarchart
-              data={[studentData.evaluated, studentData.unreviewed, studentData.unsubmitted]}
+              data={[
+                studentData.evaluated,
+                studentData.unreviewed,
+                studentData.unsubmitted,
+              ]}
             />
           </div>
         </div>

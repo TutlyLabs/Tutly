@@ -1,11 +1,17 @@
 "use client";
 
-import type { BookMarkCategory, BookMarks } from "@prisma/client";
+import type { BookMarkCategory, BookMarks } from "@tutly/api/schema";
 import { formatDistanceToNow } from "date-fns";
 import { Bell, BookOpen, FileQuestion, ScrollText } from "lucide-react";
 import Link from "next/link";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CausedObjects {
@@ -16,7 +22,7 @@ interface CausedObjects {
 const getBookmarkDetails = (
   category: BookMarkCategory,
   objectId: string,
-  causedObjects: CausedObjects
+  causedObjects: CausedObjects,
 ) => {
   const config = {
     ASSIGNMENT: {
@@ -64,14 +70,17 @@ const Bookmarks = ({ bookmarks }: { bookmarks: BookMarks[] }) => {
 
         {categories.map((category) => (
           <TabsContent key={category} value={category}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {bookmarks
-                .filter((bookmark) => category === "ALL" || bookmark.category === category)
+                .filter(
+                  (bookmark) =>
+                    category === "ALL" || bookmark.category === category,
+                )
                 .map((bookmark) => {
                   const details = getBookmarkDetails(
                     bookmark.category,
                     bookmark.objectId,
-                    bookmark.causedObjects as unknown as CausedObjects
+                    bookmark.causedObjects as unknown as CausedObjects,
                   );
                   const Icon = details.icon;
 
@@ -79,9 +88,9 @@ const Bookmarks = ({ bookmarks }: { bookmarks: BookMarks[] }) => {
                     <Card key={bookmark.id}>
                       <CardHeader className="flex flex-row items-center gap-4">
                         <div
-                          className={`p-2 rounded-full bg-muted ${details.style} ${
+                          className={`bg-muted rounded-full p-2 ${details.style} ${
                             // Smaller icon for mobile view
-                            "sm:p-1 sm:h-7 sm:w-7"
+                            "sm:h-7 sm:w-7 sm:p-1"
                           }`}
                         >
                           <Icon className="h-6 w-6" />
@@ -89,14 +98,16 @@ const Bookmarks = ({ bookmarks }: { bookmarks: BookMarks[] }) => {
                         <div>
                           <CardTitle>{details.label}</CardTitle>
                           <CardDescription>
-                            {formatDistanceToNow(bookmark.createdAt, { addSuffix: true })}
+                            {formatDistanceToNow(bookmark.createdAt, {
+                              addSuffix: true,
+                            })}
                           </CardDescription>
                         </div>
                       </CardHeader>
                       <CardContent>
                         <Link
                           href={details.href}
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                          className="text-muted-foreground hover:text-primary text-sm transition-colors"
                         >
                           View {details.label}
                         </Link>

@@ -20,7 +20,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Slider } from "@/components/ui/slider";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface VideoPlayerProps {
   videoId: string;
@@ -48,7 +53,10 @@ interface YouTubePlayerEvent {
 declare global {
   interface Window {
     YT: {
-      Player: new (elementId: string | HTMLElement, config: YouTubePlayerConfig) => YouTubePlayer;
+      Player: new (
+        elementId: string | HTMLElement,
+        config: YouTubePlayerConfig,
+      ) => YouTubePlayer;
       PlayerState: {
         PLAYING: number;
         BUFFERING: number;
@@ -257,13 +265,13 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
   return (
     <div
       ref={playerContainerRef}
-      className="relative group aspect-video bg-black rounded-lg overflow-hidden"
+      className="group relative aspect-video overflow-hidden rounded-lg bg-black"
     >
       <div ref={videoRef} className="absolute inset-0" />
 
       {/* Custom Controls - Only show for YouTube videos */}
       {videoType === "YOUTUBE" && (
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 transition-opacity group-hover:opacity-100">
           <Slider
             value={[currentTime]}
             min={0}
@@ -284,7 +292,11 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
                       className="text-white hover:bg-white/20"
                       onClick={togglePlay}
                     >
-                      {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                      {isPlaying ? (
+                        <Pause className="h-5 w-5" />
+                      ) : (
+                        <Play className="h-5 w-5" />
+                      )}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -329,7 +341,7 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
                 </Tooltip>
               </TooltipProvider>
 
-              <span className="text-white text-sm">
+              <span className="text-sm text-white">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             </div>
@@ -342,7 +354,11 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
                   className="text-white hover:bg-white/20"
                   onClick={toggleMute}
                 >
-                  {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                  {isMuted ? (
+                    <VolumeX className="h-5 w-5" />
+                  ) : (
+                    <Volume2 className="h-5 w-5" />
+                  )}
                 </Button>
                 <Slider
                   value={[isMuted ? 0 : volume]}
@@ -356,7 +372,11 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20"
+                  >
                     <Settings className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -364,19 +384,27 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
                   <DropdownMenuItem onClick={() => changePlaybackSpeed(0.25)}>
                     0.25x
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changePlaybackSpeed(0.5)}>0.5x</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => changePlaybackSpeed(0.5)}>
+                    0.5x
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => changePlaybackSpeed(0.75)}>
                     0.75x
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changePlaybackSpeed(1)}>Normal</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => changePlaybackSpeed(1)}>
+                    Normal
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => changePlaybackSpeed(1.25)}>
                     1.25x
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changePlaybackSpeed(1.5)}>1.5x</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => changePlaybackSpeed(1.5)}>
+                    1.5x
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => changePlaybackSpeed(1.75)}>
                     1.75x
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changePlaybackSpeed(2)}>2x</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => changePlaybackSpeed(2)}>
+                    2x
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -395,7 +423,7 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
 
       {isBuffering && videoType === "YOUTUBE" && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent" />
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-white border-t-transparent" />
         </div>
       )}
     </div>

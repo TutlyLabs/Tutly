@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@prisma/client";
+import type { Profile } from "@tutly/api/schema";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ const formSchema = z.object({
     .string()
     .refine(
       (val) => !val.includes("/") && !val.includes("github.com"),
-      "Please enter only username"
+      "Please enter only username",
     )
     .optional()
     .or(z.literal("")),
@@ -39,7 +39,7 @@ const formSchema = z.object({
     .string()
     .refine(
       (val) => !val.includes("/") && !val.includes("interviewbit.com"),
-      "Please enter only username"
+      "Please enter only username",
     )
     .optional()
     .or(z.literal("")),
@@ -47,7 +47,7 @@ const formSchema = z.object({
     .string()
     .refine(
       (val) => !val.includes("/") && !val.includes("leetcode.com"),
-      "Please enter only username"
+      "Please enter only username",
     )
     .optional()
     .or(z.literal("")),
@@ -55,7 +55,7 @@ const formSchema = z.object({
     .string()
     .refine(
       (val) => !val.includes("/") && !val.includes("codechef.com"),
-      "Please enter only username"
+      "Please enter only username",
     )
     .optional()
     .or(z.literal("")),
@@ -63,7 +63,7 @@ const formSchema = z.object({
     .string()
     .refine(
       (val) => !val.includes("/") && !val.includes("codeforces.com"),
-      "Please enter only username"
+      "Please enter only username",
     )
     .optional()
     .or(z.literal("")),
@@ -71,7 +71,7 @@ const formSchema = z.object({
     .string()
     .refine(
       (val) => !val.includes("/") && !val.includes("hackerrank.com"),
-      "Please enter only username"
+      "Please enter only username",
     )
     .optional()
     .or(z.literal("")),
@@ -79,7 +79,9 @@ const formSchema = z.object({
 
 interface ProfessionalProfilesProps {
   professionalProfiles: Record<string, string>;
-  onUpdate: (profile: { professionalProfiles: Record<string, string> }) => Promise<void>;
+  onUpdate: (profile: {
+    professionalProfiles: Record<string, string>;
+  }) => Promise<void>;
 }
 
 export default function ProfessionalProfiles({
@@ -88,22 +90,23 @@ export default function ProfessionalProfiles({
 }: ProfessionalProfilesProps) {
   const [isEditing, setIsEditing] = useState(false);
 
-  const { mutate: validateHandles } = api.codingPlatforms.validatePlatformHandles.useMutation({
-    onSuccess: async (data) => {
-      if (!data.valid) {
-        toast.error(`Invalid handles: ${data.invalidFields.join(", ")}`);
-        return;
-      }
-      toast.dismiss();
-      await onUpdate({
-        professionalProfiles: form.getValues(),
-      });
-      setIsEditing(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Something went wrong");
-    },
-  });
+  const { mutate: validateHandles } =
+    api.codingPlatforms.validatePlatformHandles.useMutation({
+      onSuccess: async (data) => {
+        if (!data.valid) {
+          toast.error(`Invalid handles: ${data.invalidFields.join(", ")}`);
+          return;
+        }
+        toast.dismiss();
+        await onUpdate({
+          professionalProfiles: form.getValues(),
+        });
+        setIsEditing(false);
+      },
+      onError: (error) => {
+        toast.error(error.message || "Something went wrong");
+      },
+    });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -120,7 +123,9 @@ export default function ProfessionalProfiles({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const validationValues = Object.fromEntries(
-        Object.entries(values).filter(([_, value]) => value !== "" && value !== undefined)
+        Object.entries(values).filter(
+          ([_, value]) => value !== "" && value !== undefined,
+        ),
       );
       toast.loading("Validating handles...");
       validateHandles({
@@ -133,7 +138,7 @@ export default function ProfessionalProfiles({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Professional Profiles</h2>
         <Button
           variant={isEditing ? "outline" : "default"}
@@ -145,7 +150,7 @@ export default function ProfessionalProfiles({
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <FormField
               control={form.control}
               name="leetcode"
@@ -156,7 +161,11 @@ export default function ProfessionalProfiles({
                     LeetCode Username
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="username" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="username"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -173,7 +182,11 @@ export default function ProfessionalProfiles({
                     CodeChef Username
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="username" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="username"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -190,7 +203,11 @@ export default function ProfessionalProfiles({
                     Codeforces Username
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="username" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="username"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -207,7 +224,11 @@ export default function ProfessionalProfiles({
                     HackerRank Username
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="username" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="username"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -224,7 +245,11 @@ export default function ProfessionalProfiles({
                     InterviewBit Username
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="username" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="username"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -241,7 +266,11 @@ export default function ProfessionalProfiles({
                     GitHub Username
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="username" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="username"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

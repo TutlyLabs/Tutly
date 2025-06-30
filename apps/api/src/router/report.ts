@@ -1,9 +1,9 @@
-import { Role } from "@prisma/client";
-import { z } from "zod";
+import { Role } from '@prisma/client';
+import { z } from 'zod';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
-export interface ReportData {
+export type ReportData = {
   username: string;
   name: string | null;
   submissionLength: number;
@@ -12,7 +12,7 @@ export interface ReportData {
   submissionEvaluatedLength: number;
   attendance: string;
   mentorUsername: string | null;
-}
+};
 
 export const reportRouter = createTRPCRouter({
   generateReport: protectedProcedure
@@ -24,8 +24,8 @@ export const reportRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
 
-      if (currentUser.role !== "INSTRUCTOR" && currentUser.role !== "MENTOR") {
-        return { error: "You are not authorized to generate report" };
+      if (currentUser.role !== 'INSTRUCTOR' && currentUser.role !== 'MENTOR') {
+        return { error: 'You are not authorized to generate report' };
       }
 
       // First, get the courses the current user is enrolled in
@@ -41,9 +41,7 @@ export const reportRouter = createTRPCRouter({
         },
       });
 
-      const courseIds = enrolledCourses
-        .map((enrolled) => enrolled.courseId)
-        .filter((id): id is string => id !== null);
+      const courseIds = enrolledCourses.map((enrolled) => enrolled.courseId).filter((id): id is string => id !== null);
 
       // Base where clause for enrolled users
       const whereClause = {
@@ -53,10 +51,8 @@ export const reportRouter = createTRPCRouter({
             id: currentUser.organization?.id,
           },
         },
-        courseId: input.courseId === "all" ? { in: courseIds } : input.courseId,
-        ...(currentUser.role === "MENTOR"
-          ? { mentorUsername: currentUser.username }
-          : {}),
+        courseId: input.courseId === 'all' ? { in: courseIds } : input.courseId,
+        ...(currentUser.role === 'MENTOR' ? { mentorUsername: currentUser.username } : {}),
       };
 
       const enrolledUsers = await ctx.db.enrolledUsers.findMany({
@@ -75,11 +71,8 @@ export const reportRouter = createTRPCRouter({
             },
             role: Role.STUDENT,
           },
-          courseId:
-            input.courseId === "all" ? { in: courseIds } : input.courseId,
-          ...(currentUser.role === "MENTOR"
-            ? { mentorUsername: currentUser.username }
-            : {}),
+          courseId: input.courseId === 'all' ? { in: courseIds } : input.courseId,
+          ...(currentUser.role === 'MENTOR' ? { mentorUsername: currentUser.username } : {}),
         },
       };
 
@@ -102,12 +95,9 @@ export const reportRouter = createTRPCRouter({
       const attendanceWhereClause = {
         attended: true,
         class: {
-          courseId:
-            input.courseId === "all" ? { in: courseIds } : input.courseId,
+          courseId: input.courseId === 'all' ? { in: courseIds } : input.courseId,
         },
-        ...(currentUser.role === "MENTOR"
-          ? { username: { in: enrolledUsers.map((eu) => eu.username) } }
-          : {}),
+        ...(currentUser.role === 'MENTOR' ? { username: { in: enrolledUsers.map((eu) => eu.username) } } : {}),
       };
 
       const attendance = await ctx.db.attendance.findMany({
@@ -117,19 +107,15 @@ export const reportRouter = createTRPCRouter({
         },
       });
 
-      const groupedAttendance = attendance.reduce(
-        (acc: Record<string, number>, curr) => {
-          const username = curr.username;
-          acc[username] = (acc[username] ?? 0) + 1;
-          return acc;
-        },
-        {},
-      );
+      const groupedAttendance = attendance.reduce((acc: Record<string, number>, curr) => {
+        const username = curr.username;
+        acc[username] = (acc[username] || 0) + 1;
+        return acc;
+      }, {});
 
       const totalClasses = await ctx.db.class.count({
         where: {
-          courseId:
-            input.courseId === "all" ? { in: courseIds } : input.courseId,
+          courseId: input.courseId === 'all' ? { in: courseIds } : input.courseId,
         },
       });
 
@@ -182,11 +168,8 @@ export const reportRouter = createTRPCRouter({
         where: {
           submissions: {
             enrolledUser: {
-              courseId:
-                input.courseId === "all" ? { in: courseIds } : input.courseId,
-              ...(currentUser.role === "MENTOR"
-                ? { mentorUsername: currentUser.username }
-                : {}),
+              courseId: input.courseId === 'all' ? { in: courseIds } : input.courseId,
+              ...(currentUser.role === 'MENTOR' ? { mentorUsername: currentUser.username } : {}),
             },
           },
         },
@@ -201,53 +184,103 @@ export const reportRouter = createTRPCRouter({
 
       Object.values(obj).forEach((ob) => {
         try {
-          const userPoints = points.filter(
-            (point) => point.submissions?.enrolledUser.username === ob.username,
-          );
+          const userPoints = points.filter((point) => point.submissions?.enrolledUser.username === ob.username);
 
           ob.score = userPoints.reduce((acc, curr) => acc + curr.score, 0);
-          ob.submissionEvaluatedLength = new Set(
-            userPoints.map((point) => point.submissions?.id).filter(Boolean),
-          ).size;
+          ob.submissionEvaluatedLength = new Set(userPoints.map((point) => point.submissions?.id).filter(Boolean)).size;
         } catch (e) {
-          console.log("Error while generating report : ", e);
+          console.log('Error while generating report : ', e);
         }
       });
 
       Object.values(obj).forEach((ob) => {
-        if (input.courseId === "all") {
-          const userAttendance = attendance.filter(
-            (a) => a.username === ob.username,
-          ).length;
+        if (input.courseId === 'all') {
+          const userAttendance = attendance.filter((a) => a.username === ob.username).length;
           const totalClassesForUser = totalClasses;
-          ob.attendance =
-            totalClassesForUser === 0
-              ? 0
-              : (userAttendance * 100) / totalClassesForUser;
+          ob.attendance = totalClassesForUser === 0 ? 0 : (userAttendance * 100) / totalClassesForUser;
         } else {
-          ob.attendance =
-            ((groupedAttendance[ob.username] ?? 0) * 100) / totalClasses;
+          ob.attendance = ((groupedAttendance[ob.username] ?? 0) * 100) / totalClasses;
         }
       });
 
-      const SelectedFields: ReportData[] = Object.values(obj).map((ob) => ({
+      const SelectedFields: Array<ReportData> = Object.values(obj).map((ob) => ({
         username: ob.username,
         name: ob.name,
         submissionLength: ob.submissionsLength,
         assignmentLength: ob.assignmentLength,
         score: ob.score ?? 0,
         submissionEvaluatedLength: ob.submissionEvaluatedLength ?? 0,
-        attendance:
-          typeof ob.attendance === "number" ? ob.attendance.toFixed(2) : "0.00",
-        mentorUsername: ob.mentorUsername ?? "",
+        attendance: typeof ob.attendance === 'number' ? ob.attendance.toFixed(2) : '0.00',
+        mentorUsername: ob.mentorUsername ?? '',
       }));
 
-      SelectedFields.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+      SelectedFields.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
       SelectedFields.sort((a, b) => b.score - a.score);
-      SelectedFields.sort((a, b) =>
-        (a.mentorUsername ?? "").localeCompare(b.mentorUsername ?? ""),
-      );
+      SelectedFields.sort((a, b) => (a.mentorUsername ?? '').localeCompare(b.mentorUsername ?? ''));
 
       return { success: true, data: SelectedFields };
+    }),
+
+  getReportPageData: protectedProcedure
+    .input(
+      z.object({
+        courseId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const currentUser = ctx.session.user;
+        const { courseId } = input;
+
+        if (!courseId) {
+          return {
+            success: false,
+            error: 'Invalid course ID or user not authenticated',
+            redirectTo: '/404',
+          };
+        }
+
+        // Check if user has appropriate role
+        if (currentUser.role !== 'INSTRUCTOR' && currentUser.role !== 'MENTOR') {
+          return {
+            success: false,
+            error: 'Unauthorized access',
+            redirectTo: '/404',
+          };
+        }
+
+        // Fetch enrolled courses for the user
+        const enrolledCourses = await ctx.db.enrolledUsers.findMany({
+          where: {
+            username: currentUser.username,
+            courseId: {
+              not: null,
+            },
+          },
+          include: {
+            course: true,
+          },
+        });
+
+        const courses = enrolledCourses.map((enrolled) => enrolled.course);
+        const isMentor = currentUser.role === 'MENTOR';
+
+        return {
+          success: true,
+          data: {
+            courseId,
+            courses,
+            isMentor,
+            user: currentUser,
+          },
+        };
+      } catch (error) {
+        console.error('Error fetching report page data:', error);
+        return {
+          success: false,
+          error: 'Failed to fetch report page data',
+          details: error instanceof Error ? error.message : String(error),
+        };
+      }
     }),
 });

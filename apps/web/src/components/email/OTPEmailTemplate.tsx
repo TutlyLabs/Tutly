@@ -3,7 +3,10 @@ interface OTPEmailTemplateProps {
   name?: string;
 }
 
-const OTPEmailTemplate = ({ otp, name = "User" }: Readonly<OTPEmailTemplateProps>) => {
+const OTPEmailTemplate = ({
+  otp,
+  name = "User",
+}: Readonly<OTPEmailTemplateProps>) => {
   return (
     <div
       style={{
@@ -104,7 +107,8 @@ const OTPEmailTemplate = ({ otp, name = "User" }: Readonly<OTPEmailTemplateProps
             }}
           >
             <p style={{ margin: "0" }}>
-              <strong>Note:</strong> This OTP will expire in 10 minutes for security reasons.
+              <strong>Note:</strong> This OTP will expire in 10 minutes for
+              security reasons.
             </p>
           </div>
         </div>
@@ -131,7 +135,9 @@ const OTPEmailTemplate = ({ otp, name = "User" }: Readonly<OTPEmailTemplateProps
           }}
         >
           <p style={{ margin: "0" }}>&copy; 2025 Tutly. All rights reserved.</p>
-          <p style={{ margin: "5px 0 0 0" }}>Terms of Service | Privacy Policy</p>
+          <p style={{ margin: "5px 0 0 0" }}>
+            Terms of Service | Privacy Policy
+          </p>
         </div>
       </div>
     </div>

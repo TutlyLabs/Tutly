@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Attachment } from "@prisma/client";
-import type { attachmentType, submissionMode } from "@prisma/client";
-import { FileType } from "@prisma/client";
+import type { Attachment } from "@tutly/api/schema";
+import type { attachmentType, submissionMode } from "@tutly/api/schema";
+import { FileType } from "@tutly/api/schema";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -55,6 +55,7 @@ interface NewAttachmentPageProps {
   classId: string;
   isEditing?: boolean;
   attachment?: Attachment;
+  onCancel?: () => void;
   onComplete?: () => void;
 }
 
@@ -64,12 +65,15 @@ const NewAttachmentPage = ({
   classId,
   isEditing = false,
   attachment,
+  onCancel,
   onComplete,
 }: NewAttachmentPageProps) => {
   const router = useRouter();
+
   const updateAttachment = api.attachments.updateAttachment.useMutation();
   const createAttachment = api.attachments.createAttachment.useMutation();
-  const updateFileAssociatingId = api.fileupload.updateAssociatingId.useMutation();
+  const updateFileAssociatingId =
+    api.fileupload.updateAssociatingId.useMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -81,7 +85,9 @@ const NewAttachmentPage = ({
       class: classId ?? attachment?.classId ?? "",
       courseId: courseId ?? "",
       details: attachment?.details ?? "",
-      dueDate: attachment?.dueDate ? new Date(attachment.dueDate).toISOString().split("T")[0] : "",
+      dueDate: attachment?.dueDate
+        ? new Date(attachment.dueDate).toISOString().split("T")[0]
+        : "",
       maxSubmissions: attachment?.maxSubmissions?.toString() ?? "1",
     },
   });
@@ -90,7 +96,9 @@ const NewAttachmentPage = ({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const dueDate =
-      values?.dueDate !== "" && values?.dueDate ? new Date(values?.dueDate) : undefined;
+      values?.dueDate !== "" && values?.dueDate
+        ? new Date(values?.dueDate)
+        : undefined;
 
     values.title = values.title.trim();
 
@@ -105,7 +113,9 @@ const NewAttachmentPage = ({
           submissionMode: values.submissionMode as submissionMode,
           details: values.details,
           dueDate: dueDate,
-          maxSubmissions: values?.maxSubmissions ? parseInt(values.maxSubmissions) : 1,
+          maxSubmissions: values?.maxSubmissions
+            ? parseInt(values.maxSubmissions)
+            : 1,
           courseId: courseId,
         });
         toast.success("Assignment updated");
@@ -118,7 +128,9 @@ const NewAttachmentPage = ({
           submissionMode: values.submissionMode as submissionMode,
           details: values.details,
           dueDate: dueDate,
-          maxSubmissions: values?.maxSubmissions ? parseInt(values.maxSubmissions) : 1,
+          maxSubmissions: values?.maxSubmissions
+            ? parseInt(values.maxSubmissions)
+            : 1,
           courseId: courseId,
         });
         toast.success("Assignment created");
@@ -126,11 +138,13 @@ const NewAttachmentPage = ({
 
       if (onComplete) {
         onComplete();
-      } else {
-        router.push(`/courses/${courseId}/classes/${classId}`);
       }
     } catch (error) {
-      toast.error(isEditing ? "Failed to update assignment" : "Failed to create assignment");
+      toast.error(
+        isEditing
+          ? "Failed to update assignment"
+          : "Failed to create assignment",
+      );
     }
   };
   return (
@@ -170,20 +184,35 @@ const NewAttachmentPage = ({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue className="text-base" placeholder="Select a type" />
+                      <SelectValue
+                        className="text-base"
+                        placeholder="Select a type"
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-secondary-700 bg-background text-base text-white">
-                    <SelectItem className="text-base hover:bg-secondary-800" value="ASSIGNMENT">
+                    <SelectItem
+                      className="hover:bg-secondary-800 text-base"
+                      value="ASSIGNMENT"
+                    >
                       Assignment
                     </SelectItem>
-                    <SelectItem className="text-base hover:bg-secondary-800" value="ZOOM">
+                    <SelectItem
+                      className="hover:bg-secondary-800 text-base"
+                      value="ZOOM"
+                    >
                       Zoom
                     </SelectItem>
-                    <SelectItem className="text-base hover:bg-secondary-800" value="GITHUB">
+                    <SelectItem
+                      className="hover:bg-secondary-800 text-base"
+                      value="GITHUB"
+                    >
                       Github
                     </SelectItem>
-                    <SelectItem className="text-base hover:bg-secondary-800" value="OTHERS">
+                    <SelectItem
+                      className="hover:bg-secondary-800 text-base"
+                      value="OTHERS"
+                    >
                       Other
                     </SelectItem>
                   </SelectContent>
@@ -225,18 +254,27 @@ const NewAttachmentPage = ({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue className="text-base" placeholder="Select a type" />
+                      <SelectValue
+                        className="text-base"
+                        placeholder="Select a type"
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-secondary-700 bg-background text-base text-white">
-                    <SelectItem className="text-base hover:bg-secondary-800" value="HTML_CSS_JS">
+                    <SelectItem
+                      className="hover:bg-secondary-800 text-base"
+                      value="HTML_CSS_JS"
+                    >
                       HTML CSS JS
                     </SelectItem>
                     {/* todo: add react */}
                     {/* <SelectItem className="text-base hover:bg-secondary-800" value="REACT">
                       REACT
                     </SelectItem> */}
-                    <SelectItem className="text-base hover:bg-secondary-800" value="EXTERNAL_LINK">
+                    <SelectItem
+                      className="hover:bg-secondary-800 text-base"
+                      value="EXTERNAL_LINK"
+                    >
                       EXTERNAL LINK
                     </SelectItem>
                   </SelectContent>
@@ -251,10 +289,16 @@ const NewAttachmentPage = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-base">
-                  Due Date <span className="text-sm opacity-80">(optional)</span>
+                  Due Date{" "}
+                  <span className="text-sm opacity-80">(optional)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input className="text-base" disabled={isSubmitting} type="date" {...field} />
+                  <Input
+                    className="text-base"
+                    disabled={isSubmitting}
+                    type="date"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage className="font-bold text-red-700" />
               </FormItem>
@@ -273,7 +317,10 @@ const NewAttachmentPage = ({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue className="text-base" placeholder="Select a class" />
+                      <SelectValue
+                        className="text-base"
+                        placeholder="Select a class"
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-secondary-700 bg-background text-base text-white">
@@ -281,7 +328,7 @@ const NewAttachmentPage = ({
                       <SelectItem
                         key={c.id}
                         value={c.id}
-                        className="text-base hover:bg-secondary-800"
+                        className="hover:bg-secondary-800 text-base"
                       >
                         {c.title}
                       </SelectItem>
@@ -325,7 +372,14 @@ const NewAttachmentPage = ({
                   fileUploadOptions={{
                     fileType: FileType.ATTACHMENT,
                     associatingId: attachment?.id ?? "",
-                    allowedExtensions: ["jpeg", "jpg", "png", "gif", "svg", "webp"],
+                    allowedExtensions: [
+                      "jpeg",
+                      "jpg",
+                      "png",
+                      "gif",
+                      "svg",
+                      "webp",
+                    ],
                     onUpload: async (file) => {
                       await updateFileAssociatingId.mutateAsync({
                         fileId: file.id,
@@ -342,14 +396,18 @@ const NewAttachmentPage = ({
         <div className="flex items-center gap-x-3">
           <Button
             className="bg-red-700 hover:bg-red-800"
-            onClick={() => {
-              router.push(`/courses/${courseId}/classes/${classId}`);
-            }}
-            variant="destructive"
+            type="button"
+            disabled={isSubmitting}
+            onClick={onCancel ?? (() => router.back())}
+            // variant="destructive"
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="bg-gray-600 hover:bg-gray-700">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-gray-600 hover:bg-gray-700"
+          >
             {isEditing ? "Update" : "Create"}
           </Button>
         </div>

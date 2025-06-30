@@ -1,6 +1,6 @@
 "use client";
 
-import type { Account, Session } from "@prisma/client";
+import type { Account, Session } from "@tutly/api/schema";
 import { HardDrive, Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -21,7 +21,11 @@ type SessionsModalProps = {
   currentSessionId?: string;
 };
 
-export default function Sessions({ sessions, accounts, currentSessionId }: SessionsModalProps) {
+export default function Sessions({
+  sessions,
+  accounts,
+  currentSessionId,
+}: SessionsModalProps) {
   const router = useRouter();
   const { mutate: deleteSession } = api.users.deleteSession.useMutation({
     onSuccess: () => {
@@ -49,20 +53,28 @@ export default function Sessions({ sessions, accounts, currentSessionId }: Sessi
     if (!userAgent) return <HardDrive className="h-5 w-5" />;
 
     const ua = userAgent.toLowerCase();
-    if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) {
+    if (
+      ua.includes("mobile") ||
+      ua.includes("android") ||
+      ua.includes("iphone")
+    ) {
       return <Smartphone className="h-5 w-5" />;
     } else if (ua.includes("tablet") || ua.includes("ipad")) {
       return <Tablet className="h-5 w-5" />;
-    } else if (ua.includes("windows") || ua.includes("macintosh") || ua.includes("linux")) {
+    } else if (
+      ua.includes("windows") ||
+      ua.includes("macintosh") ||
+      ua.includes("linux")
+    ) {
       return <Laptop className="h-5 w-5" />;
     }
     return <Monitor className="h-5 w-5" />;
   };
 
   return (
-    <div className="w-full max-w-[600px] mx-auto p-6">
-      <div className="bg-background rounded-xl shadow-lg p-6 border">
-        <h2 className="text-2xl font-semibold mb-6">Account Settings</h2>
+    <div className="mx-auto w-full max-w-[600px] p-6">
+      <div className="bg-background rounded-xl border p-6 shadow-lg">
+        <h2 className="mb-6 text-2xl font-semibold">Account Settings</h2>
 
         <Tabs defaultValue="sessions" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -70,7 +82,7 @@ export default function Sessions({ sessions, accounts, currentSessionId }: Sessi
             <TabsTrigger value="connections">Connected Accounts</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="sessions" className="space-y-4 mt-6">
+          <TabsContent value="sessions" className="mt-6 space-y-4">
             {sessions.map((session) => {
               const isCurrentSession = session.id === currentSessionId;
               const deviceInfo = extractDeviceLabel(session.userAgent || "");
@@ -78,16 +90,18 @@ export default function Sessions({ sessions, accounts, currentSessionId }: Sessi
               return (
                 <div
                   key={session.id}
-                  className="flex items-center justify-between p-4 rounded-lg border hover:border-primary/50 transition-colors bg-card shadow-sm"
+                  className="hover:border-primary/50 bg-card flex items-center justify-between rounded-lg border p-4 shadow-sm transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="p-2.5 bg-muted rounded-lg border">
+                    <div className="bg-muted rounded-lg border p-2.5">
                       {getDeviceIcon(session.userAgent)}
                     </div>
                     <div>
                       <p className="font-medium">{deviceInfo}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {isCurrentSession ? "Current session" : "Active session"}
+                      <p className="text-muted-foreground text-sm">
+                        {isCurrentSession
+                          ? "Current session"
+                          : "Active session"}
                       </p>
                     </div>
                   </div>
@@ -105,23 +119,27 @@ export default function Sessions({ sessions, accounts, currentSessionId }: Sessi
             })}
           </TabsContent>
 
-          <TabsContent value="connections" className="space-y-4 mt-6">
+          <TabsContent value="connections" className="mt-6 space-y-4">
             {Object.entries(providers).map(([key, _]) => {
               if (key === "credentials") return null;
-              const isConnected = accounts.some((account) => account.provider === key);
+              const isConnected = accounts.some(
+                (account) => account.provider === key,
+              );
 
               return (
                 <div
                   key={key}
-                  className="flex items-center justify-between p-4 rounded-lg border hover:border-primary/50 transition-colors bg-card shadow-sm"
+                  className="hover:border-primary/50 bg-card flex items-center justify-between rounded-lg border p-4 shadow-sm transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="p-2.5 bg-muted rounded-lg border">
-                      <span className="text-lg font-semibold">{key === "google" ? "G" : "GH"}</span>
+                    <div className="bg-muted rounded-lg border p-2.5">
+                      <span className="text-lg font-semibold">
+                        {key === "google" ? "G" : "GH"}
+                      </span>
                     </div>
                     <div>
                       <p className="font-medium capitalize">{key}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {isConnected ? "Connected" : "Not connected"}
                       </p>
                     </div>

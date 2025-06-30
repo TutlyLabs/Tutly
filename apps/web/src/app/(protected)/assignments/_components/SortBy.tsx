@@ -21,7 +21,7 @@ const SortBy = () => {
 
   return (
     <div className="flex items-center border-b p-1 sm:p-2">
-      <p className="text-nowrap text-sm font-semibold max-sm:hidden">Sort by</p>
+      <p className="text-sm font-semibold text-nowrap max-sm:hidden">Sort by</p>
       <div className="sm:ml-2">
         <Select
           defaultValue={searchParams.get("sortBy") || "username"}

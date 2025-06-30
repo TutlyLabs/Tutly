@@ -9,7 +9,7 @@ import SuperJSON from "superjson";
 
 import { type AppRouter } from "@tutly/api";
 import { createQueryClient } from "./query-client";
-import { NODE_ENV } from "@/lib/constants";
+import { BACKEND_URL, NODE_ENV } from "@/lib/constants";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {
@@ -52,17 +52,15 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         }),
         httpBatchStreamLink({
           transformer: SuperJSON,
-          url: getBaseUrl() + "/trpc",
+          url: `${BACKEND_URL}/trpc`,
+          headers: {
+            "x-trpc-source": "nextjs-react",
+            "trpc-accept": "application/jsonl",
+          },
           fetch(url, options) {
             return fetch(url, {
               ...options,
               credentials: "include",
-              headers: {
-                ...options?.headers,
-                "x-trpc-source": "nextjs-react",
-                "trpc-accept": "application/jsonl",
-                "Content-Type": "application/json",
-              },
             });
           },
         }),
@@ -77,11 +75,4 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
       </api.Provider>
     </QueryClientProvider>
   );
-}
-
-function getBaseUrl() {
-  if (process.env.NODE_ENV === "development") {
-    return "http://localhost:3001";
-  }
-  return "https://api.tutly.in";
 }

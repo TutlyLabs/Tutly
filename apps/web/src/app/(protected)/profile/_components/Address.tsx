@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@prisma/client";
+import type { Profile } from "@tutly/api/schema";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -59,7 +59,7 @@ export default function Address({ address, onUpdate }: AddressProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Address</h2>
         <Button
           variant={isEditing ? "outline" : "default"}
@@ -71,7 +71,7 @@ export default function Address({ address, onUpdate }: AddressProps) {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <FormField
               control={form.control}
               name="building"
@@ -97,7 +97,11 @@ export default function Address({ address, onUpdate }: AddressProps) {
                 <FormItem>
                   <FormLabel>Street/Area</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter street/area" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter street/area"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -111,7 +115,11 @@ export default function Address({ address, onUpdate }: AddressProps) {
                 <FormItem>
                   <FormLabel>City</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter city" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter city"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -125,7 +133,11 @@ export default function Address({ address, onUpdate }: AddressProps) {
                 <FormItem>
                   <FormLabel>State</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter state" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter state"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -139,7 +151,11 @@ export default function Address({ address, onUpdate }: AddressProps) {
                 <FormItem>
                   <FormLabel>Country</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter country" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter country"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -153,7 +169,11 @@ export default function Address({ address, onUpdate }: AddressProps) {
                 <FormItem>
                   <FormLabel>Pincode</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter pincode" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter pincode"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -51,7 +51,9 @@ export function DynamicBreadcrumbs({
   } else {
     visibleSegments = pathSegments
       .map((segment, index) => (segment ? { segment, index } : null))
-      .filter((item): item is { segment: string; index: number } => item !== null);
+      .filter(
+        (item): item is { segment: string; index: number } => item !== null,
+      );
   }
 
   return (
@@ -60,11 +62,15 @@ export function DynamicBreadcrumbs({
         {visibleSegments.map(({ segment, index }, arrayIndex) => {
           const href = `/${pathSegments.slice(0, index + 1).join("/")}`;
           const isLast = index === pathSegments.length - 1;
-          const showingEllipsis = showEllipsis && arrayIndex === 0 && visibleSegments.length > 1;
+          const showingEllipsis =
+            showEllipsis && arrayIndex === 0 && visibleSegments.length > 1;
 
           const rawDisplayText =
-            crumbReplacement?.[segment] ?? segment.charAt(0).toUpperCase() + segment.slice(1);
-          const displayText = isMobile ? truncateText(rawDisplayText) : rawDisplayText;
+            crumbReplacement?.[segment] ??
+            segment.charAt(0).toUpperCase() + segment.slice(1);
+          const displayText = isMobile
+            ? truncateText(rawDisplayText)
+            : rawDisplayText;
 
           return (
             <Fragment key={segment + index}>

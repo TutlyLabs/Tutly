@@ -51,3 +51,5 @@ yarn-error.log*
 *.swp
 .DS_Store
 Thumbs.db
+/generated/prisma
+backend

@@ -1,4 +1,9 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { Column } from "./DisplayTable";
 import { toast } from "sonner";
@@ -25,7 +30,7 @@ export const DeleteConfirmation = ({
       </DialogHeader>
       <div className="space-y-4">
         <p>Are you sure you want to delete this record?</p>
-        <div className="p-4 border rounded-md bg-muted space-y-2">
+        <div className="bg-muted space-y-2 rounded-md border p-4">
           <div className="font-medium">Record ID: {selectedRow?.id}</div>
           {columns
             .filter((col) => !col.hidden)

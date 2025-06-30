@@ -22,10 +22,20 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const COLORS = ["var(--color-evaluated)", "var(--color-unreviewed)", "var(--color-unsubmitted)"];
+const COLORS = [
+  "var(--color-evaluated)",
+  "var(--color-unreviewed)",
+  "var(--color-unsubmitted)",
+];
 const LABELS = ["Evaluated", "Unreviewed", "Unsubmitted"];
 
-export function Piechart({ courseId, mentorUsername }: { courseId: string; mentorUsername?: string }) {
+export function Piechart({
+  courseId,
+  mentorUsername,
+}: {
+  courseId: string;
+  mentorUsername?: string;
+}) {
   const { data, isLoading } = api.statistics.getPiechartData.useQuery({
     courseId,
     mentorUsername,
@@ -49,9 +59,9 @@ export function Piechart({ courseId, mentorUsername }: { courseId: string; mento
         <CardHeader>
           <CardTitle>Assignments</CardTitle>
         </CardHeader>
-        <CardContent className="h-[250px] w-full flex items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <InboxIcon className="mx-auto h-8 w-8 mb-2" />
+        <CardContent className="flex h-[250px] w-full items-center justify-center">
+          <div className="text-muted-foreground text-center">
+            <InboxIcon className="mx-auto mb-2 h-8 w-8" />
             <p>No assignment data available</p>
           </div>
         </CardContent>

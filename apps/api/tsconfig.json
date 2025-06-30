@@ -1,18 +1,26 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "outDir": "build",
+    "baseUrl": "src",
+    "paths": {
+      ".": ["."]
+    },
+    "allowJs": true,
     "strict": true,
-    "verbatimModuleSyntax": true,
-    "skipLibCheck": true,
-    "types": ["node"],
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx",
-    "outDir": "./dist",
+    "strictNullChecks": true,
+    "pretty": true,
+    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "allowJs": true
+    "isolatedModules": true,
+    "incremental": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2022",
+    "moduleDetection": "force"
   },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+  "include": [".", ".eslintrc.cjs", ".commitlintrc.ts"],
+  "exclude": ["build", "node_modules"]
 }

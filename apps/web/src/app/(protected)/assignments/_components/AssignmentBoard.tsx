@@ -1,189 +1,283 @@
 "use client";
 
 import { useState } from "react";
-import { MdOutlineSportsScore } from "react-icons/md";
-
-import { Card } from "@/components/ui/card";
-import { Tabs } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  Trophy,
+  Eye,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+} from "lucide-react";
+import NoDataFound from "@/components/NoDataFound";
 
-export default function StudentWiseAssignments({ courses, assignments, userId }: any) {
+export default function MobileResponsiveStudentAssignments({
+  courses,
+  assignments,
+  userId,
+}: any) {
   const [currentCourse, setCurrentCourse] = useState<string>(courses[0]?.id);
   const router = useRouter();
   const [filterOption, setFilterOption] = useState<string>("all");
-  const pathname = usePathname()
+  const pathname = usePathname();
+
+  const filterOptions = [
+    { value: "all", label: "All", icon: Eye },
+    { value: "reviewed", label: "Reviewed", icon: CheckCircle },
+    { value: "unreviewed", label: "Unreviewed", icon: Clock },
+    { value: "not-submitted", label: "Not Submitted", icon: XCircle },
+  ];
+
+  const getStatusConfig = (assignment: any) => {
+    if (assignment.submissions.length === 0) {
+      return {
+        status: "Not submitted",
+        color: "bg-red-500",
+        textColor: "text-white",
+        icon: XCircle,
+      };
+    }
+
+    const hasUnreviewed = assignment.submissions.some(
+      (sub: any) => sub.points.length === 0,
+    );
+    const hasReviewed = assignment.submissions.some(
+      (sub: any) => sub.points.length > 0,
+    );
+
+    if (hasUnreviewed && !hasReviewed) {
+      return {
+        status: "Under review",
+        color: "bg-yellow-500",
+        textColor: "text-white",
+        icon: Clock,
+      };
+    }
+
+    if (hasReviewed) {
+      const totalScore = assignment.submissions.reduce(
+        (total: number, sub: any) => {
+          return (
+            total +
+            sub.points.reduce(
+              (subTotal: number, point: any) => subTotal + point.score,
+              0,
+            )
+          );
+        },
+        0,
+      );
+      return {
+        status: `Score: ${totalScore}`,
+        color: "bg-green-500",
+        textColor: "text-white",
+        icon: Trophy,
+      };
+    }
+
+    return {
+      status: "Submitted",
+      color: "bg-green-500",
+      textColor: "text-white",
+      icon: CheckCircle,
+    };
+  };
+
+  const filteredAssignments =
+    assignments
+      .find((course: any) => course.id === currentCourse)
+      ?.classes.flatMap((cls: any) =>
+        cls.attachments.filter((assignment: any) => {
+          if (filterOption === "all") return true;
+          if (filterOption === "not-submitted")
+            return assignment.submissions.length === 0;
+          if (filterOption === "unreviewed") {
+            return (
+              assignment.submissions.length > 0 &&
+              assignment.submissions.some((x: any) => x.points.length === 0)
+            );
+          }
+          if (filterOption === "reviewed") {
+            return (
+              assignment.submissions.length > 0 &&
+              assignment.submissions.some((x: any) => x.points.length > 0)
+            );
+          }
+          return true;
+        }),
+      ) || [];
 
   return (
-    <div className="flex flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <div className="flex flex-wrap gap-2">
-          {courses?.map((course: any) => (
-            <Tabs
-              onClick={() => setCurrentCourse(course.id)}
-              className={`rounded-md px-4 py-2 text-sm font-medium cursor-pointer transition-colors 
-                ${
-                  currentCourse === course.id
-                    ? "bg-blue-500 text-white border border-blue-600"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }
-              `}
-              key={course.id}
-            >
-              <h1 className="truncate">{course.title}</h1>
-            </Tabs>
-          ))}
-        </div>
-        <div className="flex space-x-2 text-sm font-medium">
-          <Tabs
-            className={`cursor-pointer px-4 py-2 transition-all rounded-md 
-              ${filterOption === "all" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
-            `}
-            onClick={() => setFilterOption("all")}
-          >
-            All
-          </Tabs>
-          <Tabs
-            className={`cursor-pointer px-4 py-2 transition-all rounded-md 
-              ${filterOption === "reviewed" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
-            `}
-            onClick={() => setFilterOption("reviewed")}
-          >
-            Reviewed
-          </Tabs>
-          <Tabs
-            className={`cursor-pointer px-4 py-2 transition-all rounded-md 
-              ${filterOption === "unreviewed" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
-            `}
-            onClick={() => setFilterOption("unreviewed")}
-          >
-            Unreviewed
-          </Tabs>
-          <Tabs
-            className={`cursor-pointer px-4 py-2 transition-all rounded-md 
-              ${filterOption === "not-submitted" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
-            `}
-            onClick={() => setFilterOption("not-submitted")}
-          >
-            Not Submitted
-          </Tabs>
-        </div>
+    <div className="flex flex-col gap-4 p-2">
+      {/* Course Selection - Horizontal Scroll on Mobile */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">Courses</h2>
+        <ScrollArea className="w-full">
+          <div className="flex gap-2 pb-2">
+            {courses?.map((course: any) => (
+              <Button
+                key={course.id}
+                variant={currentCourse === course.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentCourse(course.id)}
+                className="flex-shrink-0 whitespace-nowrap"
+              >
+                {course.title}
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
-      {assignments.map((course: any) => {
-        if (course.id !== currentCourse) return null;
-        return course.classes.map((cls: any) =>
-          cls.attachments
-            .filter((x: any) => {
-              if (filterOption === "all") {
-                return true;
-              } else if (filterOption === "not-submitted") {
-                return x.submissions.length === 0;
-              } else if (filterOption === "unreviewed") {
-                return (
-                  x.submissions.length > 0 && x.submissions.some((x: any) => x.points.length === 0)
-                );
-              } else if (filterOption === "reviewed") {
-                return (
-                  x.submissions.length > 0 && x.submissions.some((x: any) => x.points.length > 0)
-                );
-              }
-              return true;
-            })
-            .map((assignment: any) => (
-              <Card key={assignment.id} className="rounded-lg border p-1 md:p-4 mt-1">
-                <div className="flex flex-wrap items-center justify-around p-2 md:justify-between md:p-0 md:px-4">
-                  <div className="flex w-full flex-wrap items-center justify-between md:flex-row">
-                    <div className="text-sm">
-                      <h2 className="m-2 flex-1 font-medium">{assignment.title}</h2>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-white md:gap-6">
-                      {assignment.submissions.length === 0 ? (
-                        <div className="flex gap-6 items-center">
-                          <div className="rounded-full bg-red-600 px-4 py-2">Not submitted</div>
-                        </div>
-                      ) : (
+
+      {/* Assignments List */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between max-sm:flex-col">
+          <h3 className="text-2xl font-medium max-sm:mb-2 max-sm:text-lg">
+            Assignments ({filteredAssignments.length})
+          </h3>
+          <div className="grid grid-cols-2 gap-2 sm:flex">
+            {filterOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <Button
+                  key={option.value}
+                  variant={
+                    filterOption === option.value ? "default" : "outline"
+                  }
+                  size="sm"
+                  onClick={() => setFilterOption(option.value)}
+                  className="flex items-center justify-center gap-2 sm:justify-start"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">{option.label}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
+        {filteredAssignments.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <NoDataFound
+                message="No Assignments Found"
+                additionalMessage={
+                  filterOption === "all"
+                    ? "No assignments available for this course."
+                    : `No ${filterOption.replace("-", " ")} assignments found.`
+                }
+              ></NoDataFound>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {filteredAssignments.map((assignment: any) => {
+              return (
+                <Card
+                  key={assignment.id}
+                  className="transition-shadow hover:shadow-md"
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between space-y-3 max-sm:flex-col">
+                      <div>
+                        <h4 className="text-xl font-medium max-sm:text-lg">
+                          {assignment.title}
+                        </h4>
+                      </div>
+
+                      {/* Status and Actions */}
+                      <div className="flex gap-5 sm:flex-row sm:items-center sm:justify-between">
+                        {/* Status Badges */}
                         <div className="flex flex-wrap gap-2">
-                          {assignment.submissions.map((eachSubmission: any, index: number) => {
-                            if (eachSubmission.points.length === 0) {
-                              if (
-                                (pathname.startsWith("/mentor/") ||
-                                  pathname.startsWith("instructor/")) &&
-                                eachSubmission.submissionLink
-                              ) {
-                                return (
-                                  <div
-                                    onClick={() => router.push(eachSubmission.submissionLink)}
-                                    className="flex items-center gap-6"
-                                    key={index}
-                                  >
-                                    <div className="rounded-full bg-yellow-600 px-4 py-2">
+                          {assignment.submissions.length === 0 ? (
+                            <Badge
+                              variant="destructive"
+                              className="flex items-center gap-1 rounded-full text-sm max-sm:text-xs"
+                            >
+                              <XCircle className="h-3 w-3" />
+                              Not submitted
+                            </Badge>
+                          ) : (
+                            assignment.submissions.map(
+                              (submission: any, index: number) => {
+                                const isClickable =
+                                  (pathname.startsWith("/mentor/") ||
+                                    pathname.startsWith("/instructor/")) &&
+                                  submission.submissionLink;
+
+                                if (submission.points.length === 0) {
+                                  return (
+                                    <Badge
+                                      key={index}
+                                      variant="secondary"
+                                      className={`flex items-center gap-1 rounded-full bg-yellow-500 text-sm text-white hover:bg-yellow-600 max-sm:text-xs ${
+                                        isClickable ? "cursor-pointer" : ""
+                                      }`}
+                                      onClick={() =>
+                                        isClickable &&
+                                        router.push(submission.submissionLink)
+                                      }
+                                    >
+                                      <Clock className="h-3 w-3" />
                                       Under review
-                                    </div>
-                                  </div>
-                                );
-                              } else {
-                                return (
-                                  <div className="flex items-center gap-6" key={index}>
-                                    <div className="flex cursor-pointer items-center rounded-full bg-green-600 px-4 py-2">
-                                      <h1>Submitted</h1>
-                                    </div>
-                                  </div>
-                                );
-                              }
-                            } else {
-                              let total = 0;
-                              eachSubmission.points.forEach((point: any) => {
-                                total += point.score;
-                              });
-                              if (
-                                (pathname.startsWith("/mentor/") ||
-                                  pathname.startsWith("instructor/")) &&
-                                eachSubmission.submissionLink
-                              ) {
-                                return (
-                                  <div
-                                    className="flex items-center gap-6"
-                                    onClick={() => router.push(eachSubmission.submissionLink)}
-                                    key={index}
-                                  >
-                                    <div className="flex cursor-pointer items-center rounded-full bg-green-600 px-4 py-2">
-                                      <h1>Score: {total}</h1>
-                                      <MdOutlineSportsScore className="inline sm:h-5 sm:w-5" />
-                                    </div>
-                                  </div>
-                                );
-                              } else {
-                                return (
-                                  <div className="flex items-center gap-6" key={index}>
-                                    <div className="flex cursor-pointer items-center rounded-full bg-green-600 px-4 py-2">
-                                      <h1>Submitted</h1>
-                                    </div>
-                                  </div>
-                                );
-                              }
-                            }
-                          })}
+                                    </Badge>
+                                  );
+                                } else {
+                                  const total = submission.points.reduce(
+                                    (sum: number, point: any) =>
+                                      sum + point.score,
+                                    0,
+                                  );
+                                  return (
+                                    <Badge
+                                      key={index}
+                                      variant="secondary"
+                                      className={`flex items-center gap-1 rounded-full bg-green-500 text-sm text-white hover:bg-green-600 max-sm:text-xs ${
+                                        isClickable ? "cursor-pointer" : ""
+                                      }`}
+                                      onClick={() =>
+                                        isClickable &&
+                                        router.push(submission.submissionLink)
+                                      }
+                                    >
+                                      <Trophy className="h-3 w-3" />
+                                      {isClickable
+                                        ? `Score: ${total}`
+                                        : "Submitted"}
+                                    </Badge>
+                                  );
+                                }
+                              },
+                            )
+                          )}
                         </div>
-                      )}
-                      <button
-                        title="Details"
-                        onClick={() => {
-                          if (userId) {
-                            router.push(`/assignments/${assignment.id}?username=${userId}`);
-                          } else {
-                            router.push(`/assignments/${assignment.id}`);
-                          }
-                        }}
-                        className="rounded bg-blue-500 px-4 py-2"
-                      >
-                        View Details
-                      </button>
+
+                        {/* View Details Button */}
+                        <Button
+                          onClick={() => {
+                            const url = userId
+                              ? `/assignments/${assignment.id}?username=${userId}`
+                              : `/assignments/${assignment.id}`;
+                            router.push(url);
+                          }}
+                          className="text-md w-24 p-4 max-sm:p-3 max-sm:text-sm"
+                        >
+                          Details
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </Card>
-            ))
-        );
-      })}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

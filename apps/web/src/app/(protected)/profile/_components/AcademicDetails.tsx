@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@prisma/client";
+import type { Profile } from "@tutly/api/schema";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -45,7 +45,10 @@ interface AcademicDetailsProps {
   onUpdate: (profile: Partial<Profile>) => Promise<void>;
 }
 
-export default function AcademicDetails({ academicDetails, onUpdate }: AcademicDetailsProps) {
+export default function AcademicDetails({
+  academicDetails,
+  onUpdate,
+}: AcademicDetailsProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -74,7 +77,7 @@ export default function AcademicDetails({ academicDetails, onUpdate }: AcademicD
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Academic Details</h2>
         <Button
           variant={isEditing ? "outline" : "default"}
@@ -86,7 +89,7 @@ export default function AcademicDetails({ academicDetails, onUpdate }: AcademicD
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <FormField
               control={form.control}
               name="rollNumber"
@@ -94,7 +97,11 @@ export default function AcademicDetails({ academicDetails, onUpdate }: AcademicD
                 <FormItem>
                   <FormLabel>Roll Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter roll number" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter roll number"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -108,7 +115,11 @@ export default function AcademicDetails({ academicDetails, onUpdate }: AcademicD
                 <FormItem>
                   <FormLabel>CGPA</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter CGPA" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter CGPA"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,7 +133,11 @@ export default function AcademicDetails({ academicDetails, onUpdate }: AcademicD
                 <FormItem>
                   <FormLabel>Percentage</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter percentage" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter percentage"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -165,7 +180,11 @@ export default function AcademicDetails({ academicDetails, onUpdate }: AcademicD
                 <FormItem>
                   <FormLabel>Section</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter section" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter section"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -179,7 +198,11 @@ export default function AcademicDetails({ academicDetails, onUpdate }: AcademicD
                 <FormItem>
                   <FormLabel>Branch</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter branch" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter branch"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -193,7 +216,11 @@ export default function AcademicDetails({ academicDetails, onUpdate }: AcademicD
                 <FormItem>
                   <FormLabel>Academic Year</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter academic year" {...field} disabled={!isEditing} />
+                    <Input
+                      placeholder="Enter academic year"
+                      {...field}
+                      disabled={!isEditing}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

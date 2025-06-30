@@ -1,105 +1,55 @@
-import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
-import { serve } from "@hono/node-server";
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { Hono } from "hono";
-import { cors } from "hono/cors";
+import * as trpcExpress from '@trpc/server/adapters/express';
+import { toNodeHandler } from 'better-auth/node';
+import cors from 'cors';
+import express from 'express';
 
-import { AUTH_COOKIE_NAME, validateSessionToken } from "@tutly/auth";
+import { FRONTEND_URL } from './lib/constants';
+import { createTRPCContext, getSessionFromRequest } from './trpc';
+import { appRouter } from './trpc/root';
+import { auth } from './utils/auth';
 
-import type { AppRouter } from "./trpc/root";
-import { createTRPCContext } from "./trpc";
-import { appRouter } from "./trpc/root";
-
-const app = new Hono();
+const app = express();
 
 app.use(
-  "/*",
   cors({
-    origin: ["http://localhost:3000", "https://tutly.vercel.app"],
+    origin: [FRONTEND_URL],
     credentials: true,
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowHeaders: ["*"],
   }),
 );
 
-app.get("/", async (c) => {
-  const cookieStore = c.req.raw.headers.get("cookie");
-  const sessionId = cookieStore
-    ?.split(";")
-    .find((c) => c.trim().startsWith(`${AUTH_COOKIE_NAME}=`))
-    ?.split("=")[1];
+app.all('/api/auth/{*any}', toNodeHandler(auth));
 
-  let session = null;
-  if (sessionId) {
-    try {
-      const result = await validateSessionToken(sessionId);
-      session = result.session;
-    } catch (error) {
-      console.error("Session validation error:", error);
-    }
-  }
-
-  return c.text(
-    JSON.stringify({
-      status: "ok",
-      user: session?.user,
-    }),
-  );
-});
-
-app.all("/trpc/*", async (c) => {
-  const cookieStore = c.req.raw.headers.get("cookie");
-  const sessionId = cookieStore
-    ?.split(";")
-    .find((c) => c.trim().startsWith(`${AUTH_COOKIE_NAME}=`))
-    ?.split("=")[1];
-
-  let session = null;
-  if (sessionId) {
-    try {
-      const result = await validateSessionToken(sessionId);
-      session = result.session;
-    } catch (error) {
-      console.error("Session validation error:", error);
-    }
-  }
-
-  return fetchRequestHandler({
-    endpoint: "/trpc",
-    req: c.req.raw,
+app.use(
+  '/trpc',
+  trpcExpress.createExpressMiddleware({
     router: appRouter,
-    createContext: () =>
-      createTRPCContext({
-        headers: c.req.raw.headers,
-        session,
-      }),
+    createContext: createTRPCContext,
+  }),
+);
+
+// @ts-expect-error Upgrade express to v5
+app.use('/', async (req, res) => {
+  let session = null;
+  try {
+    session = await getSessionFromRequest(req);
+  } catch (error) {
+    console.error('Session validation error:', error);
+  }
+  return res.send({
+    status: 'ok',
+    user: session?.user
+      ? {
+          id: session.user.id,
+          name: session.user.name,
+          email: session.user.email,
+          role: session.user.role,
+        }
+      : null,
   });
 });
 
-type RouterInputs = inferRouterInputs<AppRouter>;
-type RouterOutputs = inferRouterOutputs<AppRouter>;
+const PORT = process.env.PORT ?? 3001;
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
-
-serve(
-  {
-    fetch: app.fetch,
-    port: PORT,
-  },
-  (info) => {
-    console.log(`API Server is running on http://localhost:${info.port}`);
-  },
-).on("error", (err: Error & { code?: string }) => {
-  if (err.code === "EADDRINUSE") {
-    console.error(
-      `Port ${PORT} is already in use. Please try a different port or kill the process using this port.`,
-    );
-    process.exit(1);
-  } else {
-    console.error("Server error:", err);
-    process.exit(1);
-  }
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
-
-export { createTRPCContext, appRouter };
-export type { AppRouter, RouterInputs, RouterOutputs };

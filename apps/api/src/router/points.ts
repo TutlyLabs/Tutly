@@ -1,7 +1,7 @@
-import type { pointCategory } from "@prisma/client";
-import { z } from "zod";
+import type { pointCategory } from '@prisma/client';
+import { z } from 'zod';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 export const pointsRouter = createTRPCRouter({
   addPoints: protectedProcedure
@@ -19,8 +19,8 @@ export const pointsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const currentUser = ctx.session.user;
-        if (currentUser.role === "STUDENT") {
-          return { error: "Unauthorized" };
+        if (currentUser.role === 'STUDENT') {
+          return { error: 'Unauthorized' };
         }
 
         const allCategories = await Promise.all(
@@ -34,7 +34,7 @@ export const pointsRouter = createTRPCRouter({
 
             await ctx.db.events.create({
               data: {
-                eventCategory: "ASSIGNMENT_EVALUATION",
+                eventCategory: 'ASSIGNMENT_EVALUATION',
                 causedById: currentUser.id,
                 eventCategoryDataId: input.submissionId,
               },
@@ -63,7 +63,7 @@ export const pointsRouter = createTRPCRouter({
 
         return { success: true, data: allCategories };
       } catch {
-        return { error: "Error in adding points" };
+        return { error: 'Error in adding points' };
       }
     }),
 
@@ -75,8 +75,8 @@ export const pointsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
-      if (currentUser.role === "STUDENT") {
-        return { error: "Unauthorized" };
+      if (currentUser.role === 'STUDENT') {
+        return { error: 'Unauthorized' };
       }
 
       await ctx.db.submission.delete({

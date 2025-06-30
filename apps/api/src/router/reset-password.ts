@@ -1,10 +1,10 @@
-import bcrypt from "bcryptjs";
-import { Resend } from "resend";
-import { z } from "zod";
+import bcrypt from 'bcryptjs';
+import { Resend } from 'resend';
+import { z } from 'zod';
 
-import { RESEND_API_KEY } from "../lib/constants";
+import { RESEND_API_KEY } from '../lib/constants';
 // import OTPEmailTemplate from "../components/email/OTPEmailTemplate";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, publicProcedure } from '../trpc';
 
 const resend = new Resend(RESEND_API_KEY);
 
@@ -26,7 +26,7 @@ export const resetPasswordRouter = createTRPCRouter({
           return {
             success: false,
             error: {
-              message: "No account found with this email address",
+              message: 'No account found with this email address',
             },
           };
         }
@@ -40,7 +40,7 @@ export const resetPasswordRouter = createTRPCRouter({
             },
           },
           orderBy: {
-            createdAt: "desc",
+            createdAt: 'desc',
           },
         });
 
@@ -74,16 +74,16 @@ export const resetPasswordRouter = createTRPCRouter({
           data: {
             email: lowerCaseEmail,
             otp,
-            type: "PASSWORD_RESET",
+            type: 'PASSWORD_RESET',
             expiresAt,
             createdAt: new Date(),
           },
         });
 
         const { data, error } = await resend.emails.send({
-          from: "Tutly <no-reply@otp.tutly.in>",
+          from: 'Tutly <no-reply@otp.tutly.in>',
           to: [input.email],
-          subject: "Password Reset OTP",
+          subject: 'Password Reset OTP',
           // react: OTPEmailTemplate({
           //   otp,
           //   name: user.name,
@@ -95,7 +95,7 @@ export const resetPasswordRouter = createTRPCRouter({
           return {
             success: false,
             error: {
-              message: "An error occurred while sending OTP",
+              message: 'An error occurred while sending OTP',
             },
           };
         }
@@ -105,11 +105,11 @@ export const resetPasswordRouter = createTRPCRouter({
           data,
         };
       } catch (error) {
-        console.error("Error sending OTP:", error);
+        console.error('Error sending OTP:', error);
         return {
           success: false,
           error: {
-            message: "Failed to send OTP",
+            message: 'Failed to send OTP',
           },
         };
       }
@@ -140,7 +140,7 @@ export const resetPasswordRouter = createTRPCRouter({
         if (!otpRecord) {
           return {
             success: false,
-            error: "Invalid or expired OTP",
+            error: 'Invalid or expired OTP',
           };
         }
 
@@ -148,10 +148,10 @@ export const resetPasswordRouter = createTRPCRouter({
           success: true,
         };
       } catch (error) {
-        console.error("Error verifying OTP:", error);
+        console.error('Error verifying OTP:', error);
         return {
           success: false,
-          error: "Failed to verify OTP",
+          error: 'Failed to verify OTP',
         };
       }
     }),
@@ -183,7 +183,7 @@ export const resetPasswordRouter = createTRPCRouter({
           return {
             success: false,
             error: {
-              message: "Invalid or expired OTP",
+              message: 'Invalid or expired OTP',
             },
           };
         }
@@ -191,8 +191,22 @@ export const resetPasswordRouter = createTRPCRouter({
         const hashedPassword = await bcrypt.hash(input.password, 10);
         console.log(hashedPassword);
 
-        await ctx.db.user.update({
+        const user = await ctx.db.user.findUnique({
           where: { email: lowerCaseEmail },
+          select: { id: true },
+        });
+
+        if (!user) {
+          return {
+            success: false,
+            error: {
+              message: 'User not found',
+            },
+          };
+        }
+
+        await ctx.db.account.updateMany({
+          where: { userId: user.id, providerId: 'credential' },
           data: { password: hashedPassword },
         });
 
@@ -203,14 +217,14 @@ export const resetPasswordRouter = createTRPCRouter({
 
         return {
           success: true,
-          message: "Password reset successfully",
+          message: 'Password reset successfully',
         };
       } catch (error) {
-        console.error("Error resetting password:", error);
+        console.error('Error resetting password:', error);
         return {
           success: false,
           error: {
-            message: "Failed to reset password",
+            message: 'Failed to reset password',
           },
         };
       }

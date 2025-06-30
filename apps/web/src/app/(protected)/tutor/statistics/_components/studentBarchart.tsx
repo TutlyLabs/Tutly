@@ -1,12 +1,7 @@
 import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ChartConfig } from "@/components/ui/chart";
 import {
   ChartContainer,
@@ -18,7 +13,11 @@ import { InboxIcon } from "lucide-react";
 const chartData = [
   { browser: "evaluated", submissions: 275, fill: "var(--color-evaluated)" },
   { browser: "unreviewed", submissions: 200, fill: "var(--color-unreviewed)" },
-  { browser: "unsubmitted", submissions: 187, fill: "var(--color-unsubmitted)" },
+  {
+    browser: "unsubmitted",
+    submissions: 187,
+    fill: "var(--color-unsubmitted)",
+  },
 ];
 
 const chartConfig = {
@@ -54,9 +53,9 @@ export function StudentBarchart({ data }: any) {
         <CardHeader>
           <CardTitle>Assignments</CardTitle>
         </CardHeader>
-        <CardContent className="h-[250px] w-full flex items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <InboxIcon className="mx-auto h-8 w-8 mb-2" />
+        <CardContent className="flex h-[250px] w-full items-center justify-center">
+          <div className="text-muted-foreground text-center">
+            <InboxIcon className="mx-auto mb-2 h-8 w-8" />
             <p>No assignment data available</p>
           </div>
         </CardContent>
@@ -86,10 +85,15 @@ export function StudentBarchart({ data }: any) {
               tickLine={false}
               tickMargin={5}
               axisLine={false}
-              tickFormatter={(value) => chartConfig[value as keyof typeof chartConfig]?.label}
+              tickFormatter={(value) =>
+                chartConfig[value as keyof typeof chartConfig]?.label
+              }
             />
             <XAxis dataKey="submissions" type="number" hide />
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent hideLabel />}
+            />
             <Bar dataKey="submissions" layout="vertical" radius={5} />
           </BarChart>
         </ChartContainer>

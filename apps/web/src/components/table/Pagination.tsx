@@ -27,8 +27,10 @@ export function Pagination({
 }: PaginationProps) {
   return (
     <div className="flex items-center justify-between px-2">
-      <div className="flex items-center gap-2">
-        <p className="text-sm text-muted-foreground">Rows per page</p>
+      <div className="flex items-center gap-1">
+        <p className="text-muted-foreground text-sm max-sm:text-xs">
+          Rows per page
+        </p>
         <Select
           value={pageSize.toString()}
           onValueChange={(value) => onPageSizeChange(Number(value))}
@@ -47,7 +49,7 @@ export function Pagination({
       </div>
 
       <div className="flex items-center gap-2">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm max-sm:text-xs">
           Page {currentPage} of {totalPages}
         </p>
         <div className="flex items-center gap-1">

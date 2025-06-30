@@ -52,7 +52,7 @@ interface Mentor {
   name: string;
   image: string | null;
   mobile: string | null;
-  courseId:string|null;
+  courseId: string | null;
 }
 
 interface CurrentUser {
@@ -85,13 +85,16 @@ const LeaderBoard = ({
   const searchParams = useSearchParams();
   const [activeMentor, setActiveMentor] = useState<string | null>(null);
 
-  const handleCourseChange = useCallback((courseId: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("course", courseId);
-    params.delete("mentor");
-    router.push(`?${params.toString()}`);
-    setActiveMentor(null);
-  }, [router, searchParams]);
+  const handleCourseChange = useCallback(
+    (courseId: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("course", courseId);
+      params.delete("mentor");
+      router.push(`?${params.toString()}`);
+      setActiveMentor(null);
+    },
+    [router, searchParams],
+  );
 
   useEffect(() => {
     if (!selectedCourse && courses[0]) {
@@ -116,7 +119,7 @@ const LeaderBoard = ({
         ? activeMentor
           ? submission.enrolledUser.mentor?.username === activeMentor
           : true
-        : true
+        : true,
     );
 
     const leaderboardMap = new Map<
@@ -155,50 +158,63 @@ const LeaderBoard = ({
   }, [selectedCourse, submissions, activeMentor, currentUser.role]);
 
   return (
-    <div className="mx-2 mb-10 mt-6 flex flex-col gap-4 md:mx-14">
+    <div className="mx-2 mt-6 mb-10 flex flex-col gap-4 md:mx-14">
       <div className="flex flex-col text-center">
         <FaCrown className="m-auto h-20 w-20 text-blue-500 dark:text-yellow-400" />
-        <h1 className="text-2xl font-semibold text-blue-500 dark:text-yellow-400">Leaderboard</h1>
+        <h1 className="text-2xl font-semibold text-blue-500 dark:text-yellow-400">
+          Leaderboard
+        </h1>
       </div>
 
-      <div className="mt-4 flex flex-wrap justify-between items-center gap-4">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap gap-3">
-          {courses?.sort((a, b) => a.title.localeCompare(b.title))
-          .map((course) => (
-            <button
-              hidden={!course.isPublished}
-              onClick={() => handleCourseChange(course.id)}
-              className={`w-20 rounded p-1 px-2 sm:w-auto ${selectedCourse === course.id && "rounded border"
+          {courses
+            ?.sort((a, b) => a.title.localeCompare(b.title))
+            .map((course) => (
+              <button
+                hidden={!course.isPublished}
+                onClick={() => handleCourseChange(course.id)}
+                className={`w-20 rounded p-1 px-2 sm:w-auto ${
+                  selectedCourse === course.id && "rounded border"
                 }`}
-              key={course.id}
-            >
-              <h1 className="max-w-xs truncate text-sm font-medium">{course.title}</h1>
-            </button>
-          ))}
+                key={course.id}
+              >
+                <h1 className="max-w-xs truncate text-sm font-medium">
+                  {course.title}
+                </h1>
+              </button>
+            ))}
         </div>
 
         {currentUser.role === "INSTRUCTOR" && (
           <Select
             value={activeMentor || ""}
-            onValueChange={(value) => setActiveMentor(value === "all" ? null : value)}
+            onValueChange={(value) =>
+              setActiveMentor(value === "all" ? null : value)
+            }
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Mentor" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Mentors</SelectItem>
-              {mentors?.filter((mentor)=>mentor.courseId==selectedCourse).map((mentor) => (
-                <SelectItem key={mentor.id} value={mentor.username}>
-                  {mentor.username}
-                </SelectItem>
-              ))}
+              {mentors
+                ?.filter((mentor) => mentor.courseId == selectedCourse)
+                .map((mentor) => (
+                  <SelectItem key={mentor.id} value={mentor.username}>
+                    {mentor.username}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         )}
       </div>
 
       {leaderboardData.length === 0 ? (
-        <NoDataFound message="No data found!" additionalMessage="Nothing here… like a to-do list after exams!"/>
+        <NoDataFound
+          message="No data found!"
+          additionalMessage="Nothing here… like a to-do list after exams!"
+        />
       ) : (
         <table>
           <thead className="bg-slate-600 text-white">
@@ -219,10 +235,11 @@ const LeaderBoard = ({
               if (data.totalPoints === 0) return null;
               return (
                 <tr
-                  className={`border-b-2 bg-gradient-to-r p-2 px-4 hover:text-white ${currentUser.username === data.username
-                    ? "from-yellow-500/65 via-yellow-600/80 to-yellow-700"
-                    : "hover:from-blue-600 hover:to-sky-500"
-                    }`}
+                  className={`border-b-2 bg-gradient-to-r p-2 px-4 hover:text-white ${
+                    currentUser.username === data.username
+                      ? "from-yellow-500/65 via-yellow-600/80 to-yellow-700"
+                      : "hover:from-blue-600 hover:to-sky-500"
+                  }`}
                   key={data.userId}
                 >
                   <td className="pl-12">{index + 1}</td>
@@ -240,7 +257,9 @@ const LeaderBoard = ({
                     </div>
                   </td>
                   <td>
-                    <h1 className="text-xs font-medium md:text-sm">{data.totalPoints} points</h1>
+                    <h1 className="text-xs font-medium md:text-sm">
+                      {data.totalPoints} points
+                    </h1>
                   </td>
                 </tr>
               );

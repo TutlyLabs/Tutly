@@ -7,7 +7,12 @@ import * as XLSX from "xlsx";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -50,8 +55,12 @@ interface AttendanceClientProps {
   role: string;
 }
 
-export default function AttendanceClient({ courses, role }: AttendanceClientProps) {
-  const { data: attendanceData } = api.attendances.getAttendanceOfAllStudents.useQuery();
+export default function AttendanceClient({
+  courses,
+  role,
+}: AttendanceClientProps) {
+  const { data: attendanceData } =
+    api.attendances.getAttendanceOfAllStudents.useQuery();
   const attendance: any = attendanceData?.data ?? [];
   const [fileData, setFileData] = useState<any>([]);
   const [selectedFile, setSelectedFile] = useState<any>();
@@ -63,12 +72,12 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
 
   const getMentorStudents = api.courses.getMentorStudents.useQuery(
     { courseId: currentCourse?.id },
-    { enabled: !!currentCourse && role === "MENTOR" }
+    { enabled: !!currentCourse && role === "MENTOR" },
   );
 
   const getAllEnrolledUsers = api.users.getAllEnrolledUsers.useQuery(
     { courseId: currentCourse?.id },
-    { enabled: !!currentCourse && role === "INSTRUCTOR" }
+    { enabled: !!currentCourse && role === "INSTRUCTOR" },
   );
 
   useEffect(() => {
@@ -82,7 +91,7 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
           ...student,
           username: student.username || "",
           name: student.name || "",
-        }))
+        })),
       );
     }
 
@@ -107,7 +116,9 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
           cellDates: true,
         });
         const worksheetName = workbook.SheetNames[0];
-        const worksheet = worksheetName ? workbook.Sheets[worksheetName] : undefined;
+        const worksheet = worksheetName
+          ? workbook.Sheets[worksheetName]
+          : undefined;
         if (!worksheet) {
           throw new Error("Worksheet not found");
         }
@@ -118,7 +129,9 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
 
         const modifiedData = data.map((row: any) => ({
           Name: row["Name (Original Name)"],
-          username: String(row["Name (Original Name)"]).substring(0, 10).toUpperCase(),
+          username: String(row["Name (Original Name)"])
+            .substring(0, 10)
+            .toUpperCase(),
           JoinTime: row["Join Time"],
           LeaveTime: row["Leave Time"],
           Duration: row["Duration (Minutes)"],
@@ -162,17 +175,20 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
     }
   };
 
-  const [pastpresentStudents, setPastPresentStudents] = useState<PastPresentStudent[]>([]);
+  const [pastpresentStudents, setPastPresentStudents] = useState<
+    PastPresentStudent[]
+  >([]);
   const [present, setPresent] = useState(0);
 
   const viewAttendance = api.attendances.viewAttendanceByClassId.useQuery(
     { classId: currentClass?.id },
-    { enabled: !!currentClass }
+    { enabled: !!currentClass },
   );
 
   useEffect(() => {
     if (viewAttendance.data?.data) {
-      const { attendance, present: presentCount = 0 } = viewAttendance.data.data;
+      const { attendance, present: presentCount = 0 } =
+        viewAttendance.data.data;
       setPastPresentStudents(attendance);
       setPresent(presentCount);
 
@@ -186,7 +202,8 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
           LeaveTime: join?.LeaveTime || "",
           Duration: join?.Duration || 0,
           UserEmail: student?.UserEmail || "",
-          RecordingDisclaimerResponse: student?.RecordingDisclaimerResponse || "",
+          RecordingDisclaimerResponse:
+            student?.RecordingDisclaimerResponse || "",
           InWaitingRoom: student?.InWaitingRoom || "",
         }));
 
@@ -264,60 +281,71 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
       }
       return acc;
     },
-    {}
+    {},
   );
 
-  const sortedAggregatedStudents = Object.values(aggregatedStudents).sort((a: any, b: any) => {
-    const usernameA = String(a.username || "").toUpperCase();
-    const usernameB = String(b.username || "").toUpperCase();
-    return usernameA.localeCompare(usernameB);
-  });
+  const sortedAggregatedStudents = Object.values(aggregatedStudents).sort(
+    (a: any, b: any) => {
+      const usernameA = String(a.username || "").toUpperCase();
+      const usernameB = String(b.username || "").toUpperCase();
+      return usernameA.localeCompare(usernameB);
+    },
+  );
 
-  const modifiedAggregatedStudents = sortedAggregatedStudents.map((student: any) => {
-    if (role === "MENTOR") {
+  const modifiedAggregatedStudents = sortedAggregatedStudents.map(
+    (student: any) => {
+      if (role === "MENTOR") {
+        const matchedUser = Array.isArray(users)
+          ? users.find((user: any) => user.username === student.username)
+          : null;
+        return {
+          ...student,
+          Present: student.attended,
+          username: student.username || "",
+          ActualName: matchedUser?.name || student.Name || "",
+        };
+      }
+
       const matchedUser = Array.isArray(users)
         ? users.find((user: any) => user.username === student.username)
         : null;
-      return {
-        ...student,
-        Present: student.attended,
-        username: student.username || "",
-        ActualName: matchedUser?.name || student.Name || "",
-      };
-    }
-
-    const matchedUser = Array.isArray(users)
-      ? users.find((user: any) => user.username === student.username)
-      : null;
-    if (matchedUser) {
-      return {
-        ...student,
-        Present: true,
-        username: matchedUser.username || student.username,
-        ActualName: matchedUser.name || student.Name,
-      };
-    } else {
-      return {
-        ...student,
-        Present: false,
-        username: student.username || "",
-        ActualName: student.Name || "",
-      };
-    }
-  });
+      if (matchedUser) {
+        return {
+          ...student,
+          Present: true,
+          username: matchedUser.username || student.username,
+          ActualName: matchedUser.name || student.Name,
+        };
+      } else {
+        return {
+          ...student,
+          Present: false,
+          username: student.username || "",
+          ActualName: student.Name || "",
+        };
+      }
+    },
+  );
 
   const combinedStudents = modifiedAggregatedStudents.map((student: any) => ({
     ...student,
     Name: student.ActualName,
     username: student.username,
   }));
-  const presentStudents = combinedStudents.filter((student: any) => student.Present === true);
-  const absentStudents = combinedStudents.filter((student: any) => !student.Present);
+  const presentStudents = combinedStudents.filter(
+    (student: any) => student.Present === true,
+  );
+  const absentStudents = combinedStudents.filter(
+    (student: any) => !student.Present,
+  );
 
   const allStudents = [...presentStudents];
   if (role === "MENTOR") {
     const absentAssignedStudents = users
-      .filter((user: any) => !presentStudents.find((p: any) => p.username === user.username))
+      .filter(
+        (user: any) =>
+          !presentStudents.find((p: any) => p.username === user.username),
+      )
       .map((user: any) => ({
         ...user,
         Present: false,
@@ -342,13 +370,13 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
   const [maxInstructionDuration, setMaxInstructionDuration] = useState(0);
 
   return (
-    <div className="p-2 sm:p-4 text-center">
+    <div className="p-2 text-center sm:p-4">
       <div>
-        <h1 className="mx-auto mb-2 mt-4 w-60 bg-gradient-to-r text-3xl sm:text-4xl uppercase font-black text-primary">
+        <h1 className="text-primary mx-auto mt-4 mb-2 w-60 bg-gradient-to-r text-3xl font-black uppercase sm:text-4xl">
           Attendance
         </h1>
       </div>
-      <h1 className="text-sm sm:text-md text-center tracking-widest font-semibold text-secondary-foreground">
+      <h1 className="sm:text-md text-secondary-foreground text-center text-sm font-semibold tracking-widest">
         {" "}
         ~ Mark and Monitor Students Attendance
       </h1>
@@ -357,7 +385,7 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
           variant="outline"
           size="sm"
           onClick={() => setShowOverallAttendance(!showOverallAttendance)}
-          className="gap-1 sm:gap-2 text-xs sm:text-sm"
+          className="gap-1 text-xs sm:gap-2 sm:text-sm"
         >
           {showOverallAttendance ? (
             <>
@@ -429,41 +457,66 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
         <OverallAttendanceTable studentsAttendance={attendance} />
       )}
 
-      <Dialog open={!!selectedStudent} onOpenChange={() => setSelectedStudent(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-3xl overflow-hidden">
+      <Dialog
+        open={!!selectedStudent}
+        onOpenChange={() => setSelectedStudent(null)}
+      >
+        <DialogContent className="max-w-[95vw] overflow-hidden sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="text-base sm:text-lg font-medium">
-              Attendance Details for {selectedStudent?.Name || selectedStudent?.user?.name || "Unknown"}
+            <DialogTitle className="text-base font-medium sm:text-lg">
+              Attendance Details for{" "}
+              {selectedStudent?.Name ||
+                selectedStudent?.user?.name ||
+                "Unknown"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="w-full text-sm overflow-x-auto">
+          <div className="w-full overflow-x-auto text-sm">
             <table className="w-full min-w-[400px]">
               <thead>
                 <tr>
-                  <th className="border bg-muted/30 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Actual Name</th>
-                  <th className="border bg-muted/30 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Join Time</th>
-                  <th className="border bg-muted/30 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Leave Time</th>
-                  <th className="border bg-muted/30 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Duration</th>
+                  <th className="bg-muted/30 border px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm">
+                    Actual Name
+                  </th>
+                  <th className="bg-muted/30 border px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm">
+                    Join Time
+                  </th>
+                  <th className="bg-muted/30 border px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm">
+                    Leave Time
+                  </th>
+                  <th className="bg-muted/30 border px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm">
+                    Duration
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {(selectedStudent?.Joins || selectedStudent?.data)?.map(
                   (join: any, index: number) => (
                     <tr key={index}>
-                      <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{join.ActualName}</td>
-                      <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{join.JoinTime}</td>
-                      <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{join.LeaveTime}</td>
-                      <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{join.Duration}</td>
+                      <td className="border px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm">
+                        {join.ActualName}
+                      </td>
+                      <td className="border px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm">
+                        {join.JoinTime}
+                      </td>
+                      <td className="border px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm">
+                        {join.LeaveTime}
+                      </td>
+                      <td className="border px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm">
+                        {join.Duration}
+                      </td>
                     </tr>
-                  )
+                  ),
                 )}
                 <tr className="bg-muted/30">
-                  <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium">Total Duration</td>
-                  <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm"></td>
-                  <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm"></td>
-                  <td className="border px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium">
-                    {selectedStudent?.Duration || selectedStudent?.attendedDuration}
+                  <td className="border px-2 py-1 text-xs font-medium sm:px-3 sm:py-1.5 sm:text-sm">
+                    Total Duration
+                  </td>
+                  <td className="border px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm"></td>
+                  <td className="border px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm"></td>
+                  <td className="border px-2 py-1 text-xs font-medium sm:px-3 sm:py-1.5 sm:text-sm">
+                    {selectedStudent?.Duration ||
+                      selectedStudent?.attendedDuration}
                   </td>
                 </tr>
               </tbody>
@@ -473,7 +526,7 @@ export default function AttendanceClient({ courses, role }: AttendanceClientProp
       </Dialog>
     </div>
   );
-};
+}
 
 const AttendanceTable = ({
   presentStudents,
@@ -494,7 +547,10 @@ const AttendanceTable = ({
   const allStudents = [
     ...presentStudents,
     ...users
-      .filter((user: any) => !presentStudents.find((p: any) => p.username === user.username))
+      .filter(
+        (user: any) =>
+          !presentStudents.find((p: any) => p.username === user.username),
+      )
       .map((user: any) => ({
         ...user,
         ActualName: user.name,
@@ -506,7 +562,7 @@ const AttendanceTable = ({
 
   const filteredStudents = allStudents.filter((student: any) => {
     const matchesSearch = Object.values(student).some((value) =>
-      String(value).toLowerCase().includes(searchQuery.toLowerCase())
+      String(value).toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
     if (!matchesSearch) return false;
@@ -530,59 +586,74 @@ const AttendanceTable = ({
     }
   });
   return (
-    <div className="mx-auto mt-4 sm:mt-8 w-full px-1 sm:w-[95%] space-y-2 sm:space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-        <Tabs 
-          defaultValue="all" 
-          value={activeTab} 
+    <div className="mx-auto mt-4 w-full space-y-2 px-1 sm:mt-8 sm:w-[95%] sm:space-y-4">
+      <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-0">
+        <Tabs
+          defaultValue="all"
+          value={activeTab}
           onValueChange={setActiveTab}
-          className="w-full sm:w-auto overflow-x-auto pb-1"
+          className="w-full overflow-x-auto pb-1 sm:w-auto"
         >
           <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="all" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <TabsTrigger
+              value="all"
+              className="gap-1 text-xs sm:gap-2 sm:text-sm"
+            >
               All
-              <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs">
+              <span className="bg-muted rounded-full px-1.5 py-0.5 text-xs">
                 {allStudents.length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="present" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-              <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-500" />
+            <TabsTrigger
+              value="present"
+              className="gap-1 text-xs sm:gap-2 sm:text-sm"
+            >
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 sm:h-2 sm:w-2" />
               Present
-              <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs">
+              <span className="bg-muted rounded-full px-1.5 py-0.5 text-xs">
                 {
                   presentStudents.filter((p: any) =>
-                    flag ? p.attended : p.Duration >= maxInstructionDuration
+                    flag ? p.attended : p.Duration >= maxInstructionDuration,
                   ).length
                 }
               </span>
             </TabsTrigger>
-            <TabsTrigger value="absent" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-              <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-red-500" />
+            <TabsTrigger
+              value="absent"
+              className="gap-1 text-xs sm:gap-2 sm:text-sm"
+            >
+              <div className="h-1.5 w-1.5 rounded-full bg-red-500 sm:h-2 sm:w-2" />
               Absent
-              <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs">
+              <span className="bg-muted rounded-full px-1.5 py-0.5 text-xs">
                 {flag
                   ? users.filter(
-                    (u: any) =>
-                      !presentStudents.find((p: any) => p.username === u.username && p.attended)
-                  ).length
+                      (u: any) =>
+                        !presentStudents.find(
+                          (p: any) => p.username === u.username && p.attended,
+                        ),
+                    ).length
                   : users.filter(
-                    (u: any) =>
-                      !presentStudents.find(
-                        (p: any) =>
-                          p.username === u.username && p.Duration >= maxInstructionDuration
-                      )
-                  ).length}
+                      (u: any) =>
+                        !presentStudents.find(
+                          (p: any) =>
+                            p.username === u.username &&
+                            p.Duration >= maxInstructionDuration,
+                        ),
+                    ).length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="short" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-              <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-yellow-500" />
+            <TabsTrigger
+              value="short"
+              className="gap-1 text-xs sm:gap-2 sm:text-sm"
+            >
+              <div className="h-1.5 w-1.5 rounded-full bg-yellow-500 sm:h-2 sm:w-2" />
               {"<"}60min
-              <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs">
+              <span className="bg-muted rounded-full px-1.5 py-0.5 text-xs">
                 {
                   presentStudents.filter(
                     (s: any) =>
                       (s.Duration || s.attendedDuration) > 0 &&
-                      (s.Duration || s.attendedDuration) < 60
+                      (s.Duration || s.attendedDuration) < 60,
                   ).length
                 }
               </span>
@@ -591,7 +662,7 @@ const AttendanceTable = ({
         </Tabs>
 
         <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
           <Input
             placeholder="Search students..."
             value={searchQuery}
@@ -612,7 +683,9 @@ const AttendanceTable = ({
               <TableHead className="hidden sm:table-cell">Date</TableHead>
               <TableHead className="hidden sm:table-cell">Times</TableHead>
               <TableHead className="w-14 sm:w-16">View</TableHead>
-              {absentStudents.length > 0 && <TableHead className="w-14 sm:w-16">Edit</TableHead>}
+              {absentStudents.length > 0 && (
+                <TableHead className="w-14 sm:w-16">Edit</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -621,11 +694,13 @@ const AttendanceTable = ({
                 key={index}
                 className={`hover:bg-muted/50 ${student.isAbsent ? "bg-muted/30" : ""}`}
               >
-                <TableCell className="text-xs sm:text-sm py-2 sm:py-4">{index + 1}</TableCell>
-                <TableCell className="font-medium text-xs sm:text-sm py-2 sm:py-4">
+                <TableCell className="py-2 text-xs sm:py-4 sm:text-sm">
+                  {index + 1}
+                </TableCell>
+                <TableCell className="py-2 text-xs font-medium sm:py-4 sm:text-sm">
                   {student.ActualName || student.user?.name}
                 </TableCell>
-                <TableCell className="hidden sm:table-cell text-xs sm:text-sm py-2 sm:py-4">
+                <TableCell className="hidden py-2 text-xs sm:table-cell sm:py-4 sm:text-sm">
                   {openEditName === index + 1 ? (
                     <Input
                       type="text"
@@ -637,16 +712,25 @@ const AttendanceTable = ({
                     student.username
                   )}
                 </TableCell>
-                <TableCell className="text-xs sm:text-sm py-2 sm:py-4">
+                <TableCell className="py-2 text-xs sm:py-4 sm:text-sm">
                   {student.Duration > 0 || student.attendedDuration > 0 ? (
                     <Badge
                       variant="outline"
-                      className={`${(flag ? !student.attended : student.Duration < Number(maxInstructionDuration))
-                        ? "bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-500/10"
-                        : (!flag ? student.Duration < 60 : student.attendedDuration < 60)
-                          ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 hover:bg-yellow-500/10"
-                          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-500 hover:bg-emerald-500/10"
-                        }`}
+                      className={`${
+                        (
+                          flag
+                            ? !student.attended
+                            : student.Duration < Number(maxInstructionDuration)
+                        )
+                          ? "bg-red-500/10 text-red-500 hover:bg-red-500/10 dark:text-red-400"
+                          : (
+                                !flag
+                                  ? student.Duration < 60
+                                  : student.attendedDuration < 60
+                              )
+                            ? "bg-yellow-500/10 text-yellow-700 hover:bg-yellow-500/10 dark:text-yellow-500"
+                            : "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-500"
+                      }`}
                     >
                       {flag ? student.attendedDuration : student.Duration}
                     </Badge>
@@ -654,7 +738,7 @@ const AttendanceTable = ({
                     "-"
                   )}
                 </TableCell>
-                <TableCell className="hidden sm:table-cell text-xs sm:text-sm py-2 sm:py-4">
+                <TableCell className="hidden py-2 text-xs sm:table-cell sm:py-4 sm:text-sm">
                   {flag
                     ? student.data?.[0]?.JoinTime
                       ? student.data[0].JoinTime.split("T")[0]
@@ -663,23 +747,30 @@ const AttendanceTable = ({
                       ? student.Joins[0].JoinTime.split(" ")[0]
                       : "-"}
                 </TableCell>
-                <TableCell className="hidden sm:table-cell text-xs sm:text-sm py-2 sm:py-4">
-                  {flag ? student.data?.length || "-" : student.Joins?.length || "-"}
+                <TableCell className="hidden py-2 text-xs sm:table-cell sm:py-4 sm:text-sm">
+                  {flag
+                    ? student.data?.length || "-"
+                    : student.Joins?.length || "-"}
                 </TableCell>
-                <TableCell className="text-xs sm:text-sm py-2 sm:py-4">
-                  <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => handleStudentClick(student)}>
+                <TableCell className="py-2 text-xs sm:py-4 sm:text-sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => handleStudentClick(student)}
+                  >
                     View
                   </Button>
                 </TableCell>
                 {absentStudents.length > 0 && (
-                  <TableCell className="text-xs sm:text-sm py-2 sm:py-4">
+                  <TableCell className="py-2 text-xs sm:py-4 sm:text-sm">
                     {student.isUnknown && (
                       <>
                         {openEditName !== index + 1 ? (
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 text-xs px-2"
+                            className="h-7 px-2 text-xs"
                             onClick={() => setOpenEditName(index + 1)}
                           >
                             Edit
@@ -688,7 +779,7 @@ const AttendanceTable = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 text-xs px-2"
+                            className="h-7 px-2 text-xs"
                             onClick={() => {
                               setOpenEditName(0);
                               handleEditUsername(student.username, username);
@@ -708,7 +799,7 @@ const AttendanceTable = ({
       </div>
 
       {filteredStudents.length === 0 && (
-        <div className="py-8 text-center text-muted-foreground">
+        <div className="text-muted-foreground py-8 text-center">
           No students match your search criteria
         </div>
       )}

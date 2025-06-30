@@ -1,7 +1,8 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getEnrolledCourseIds } from "./courses";
+import { createTRPCRouter, protectedProcedure } from '../trpc';
+
+import { getEnrolledCourseIds } from './courses';
 
 export const doubtsRouter = createTRPCRouter({
   getUserDoubtsByCourseId: protectedProcedure
@@ -95,7 +96,7 @@ export const doubtsRouter = createTRPCRouter({
       },
     });
 
-    if (mentorCourses.length === 0) return { error: "No courses found" };
+    if (mentorCourses.length === 0) return { error: 'No courses found' };
 
     const courses = await ctx.db.course.findMany({
       where: {
@@ -130,10 +131,10 @@ export const doubtsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
 
-      if (currentUser.role === "INSTRUCTOR") {
+      if (currentUser.role === 'INSTRUCTOR') {
         const userCourseIds = await getEnrolledCourseIds(currentUser.username);
         if (!userCourseIds.includes(input.courseId)) {
-          throw new Error("You do not have access to this course");
+          throw new Error('You do not have access to this course');
         }
       }
 
@@ -157,7 +158,7 @@ export const doubtsRouter = createTRPCRouter({
 
       await ctx.db.events.create({
         data: {
-          eventCategory: "DOUBT_CREATION",
+          eventCategory: 'DOUBT_CREATION',
           causedById: currentUser.id,
           eventCategoryDataId: doubt.id,
         },
@@ -189,7 +190,7 @@ export const doubtsRouter = createTRPCRouter({
 
       await ctx.db.events.create({
         data: {
-          eventCategory: "DOUBT_RESPONSE",
+          eventCategory: 'DOUBT_RESPONSE',
           causedById: currentUser.id,
           eventCategoryDataId: response.id,
         },

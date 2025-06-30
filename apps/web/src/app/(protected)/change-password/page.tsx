@@ -1,28 +1,25 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "@tutly/auth";
-import { db } from "@tutly/db";
+"use client";
+
+import { api } from "@/trpc/react";
 import ChangePassword from "@/app/(protected)/profile/_components/ChangePassword";
 
-export default async function ChangePasswordPage() {
-  const session = await getServerSession();
-  if (!session?.user) {
-    redirect("/sign-in");
+export default function ChangePasswordPage() {
+  const { data: passwordData, isLoading } =
+    api.users.checkUserPassword.useQuery();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
-  const userWithPassword = await db.user.findUnique({
-    where: {
-      id: session.user.id,
-    },
-    select: {
-      password: true,
-    },
-  });
+  if (!passwordData?.success || !passwordData.data) {
+    return <div>Failed to load user data.</div>;
+  }
 
-  const isPasswordExists = userWithPassword?.password !== null;
+  const { isPasswordExists, email } = passwordData.data;
 
   return (
     <div>
-      <ChangePassword isPasswordExists={isPasswordExists} email={session.user.email ?? ""} />
+      <ChangePassword isPasswordExists={isPasswordExists} email={email ?? ""} />
     </div>
   );
-} 
+}

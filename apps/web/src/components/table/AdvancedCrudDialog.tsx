@@ -31,7 +31,9 @@ export function AdvancedCrudDialog({
   initialData,
   mode,
 }: AdvancedCrudDialogProps) {
-  const [formData, setFormData] = useState<Record<string, any>>(initialData || {});
+  const [formData, setFormData] = useState<Record<string, any>>(
+    initialData || {},
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -120,7 +122,9 @@ export function AdvancedCrudDialog({
       name: column.key,
       value: formData[column.key] || "",
       onChange: (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+        e: React.ChangeEvent<
+          HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        >,
       ) => {
         setFormData({ ...formData, [column.key]: e.target.value });
         const error = validateField(column, e.target.value);
@@ -174,7 +178,9 @@ export function AdvancedCrudDialog({
                 <div key={column.key} className="space-y-2">
                   <Label htmlFor={column.key}>
                     {column.label || column.name}
-                    {column.validation?.required && <span className="text-red-500 ml-1">*</span>}
+                    {column.validation?.required && (
+                      <span className="ml-1 text-red-500">*</span>
+                    )}
                   </Label>
                   {renderField(column)}
                   {errors[column.key] && (
@@ -183,14 +189,24 @@ export function AdvancedCrudDialog({
                 </div>
               ))}
           {mode === "delete" && (
-            <p>Are you sure you want to delete this record? This action cannot be undone.</p>
+            <p>
+              Are you sure you want to delete this record? This action cannot be
+              undone.
+            </p>
           )}
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" variant={mode === "delete" ? "destructive" : "default"}>
-              {mode === "create" ? "Create" : mode === "edit" ? "Save" : "Confirm Delete"}
+            <Button
+              type="submit"
+              variant={mode === "delete" ? "destructive" : "default"}
+            >
+              {mode === "create"
+                ? "Create"
+                : mode === "edit"
+                  ? "Save"
+                  : "Confirm Delete"}
             </Button>
           </div>
         </form>

@@ -18,7 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { redirect } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 const signInSchema = z.object({
   email: z.string().min(1, "Username or email is required"),
@@ -57,24 +57,15 @@ export function SignIn() {
   const handleSubmit = async (values: SignInInput) => {
     try {
       setIsLoading(true);
-
-      const formData = new FormData();
-      formData.append("email", values.email);
-      formData.append("password", values.password);
-
-      const res = await fetch("/api/auth/signin/credentials", {
-        method: "POST",
-        body: formData,
+      const result = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
       });
-
-      if (res.redirected) {
-        // NextResponse.redirect is handled this way on client
-        window.location.href = res.url;
+      if (result?.data?.user) {
+        window.location.href = "/dashboard";
         return;
       }
-
-      const data = await res.json();
-      toast.error(data?.error || "Failed to sign in", {
+      toast.error(result?.error?.message || "Failed to sign in", {
         position: "top-center",
         duration: 3000,
       });
@@ -112,23 +103,33 @@ export function SignIn() {
   // };
 
   return (
-    <div className="flex justify-center items-center p-2 min-h-screen">
-      <Card className="bg-white/20 dark:bg-gray-900/20 backdrop-blur-sm border-white/30 dark:border-gray-700/50 w-full max-w-[400px]">
+    <div className="flex min-h-screen items-center justify-center p-2">
+      <Card className="w-full max-w-[400px] border-white/30 bg-white/20 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-900/20">
         <CardHeader>
-          <CardTitle className="font-bold text-2xl text-center">Sign In</CardTitle>
+          <CardTitle className="text-center text-2xl font-bold">
+            Sign In
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form className="flex flex-col gap-2" onSubmit={form.handleSubmit(handleSubmit)}>
-
+            <form
+              className="flex flex-col gap-2"
+              onSubmit={form.handleSubmit(handleSubmit)}
+            >
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground/80">Email or Username</FormLabel>
+                    <FormLabel className="text-foreground/80">
+                      Email or Username
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} disabled={isLoading} autoComplete="username" />
+                      <Input
+                        {...field}
+                        disabled={isLoading}
+                        autoComplete="username"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -139,7 +140,9 @@ export function SignIn() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground/80">Password</FormLabel>
+                    <FormLabel className="text-foreground/80">
+                      Password
+                    </FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
@@ -152,13 +155,13 @@ export function SignIn() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="top-0 right-0 absolute hover:bg-transparent px-3 py-2 h-full"
+                          className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
-                            <EyeOff className="w-4 h-4 text-muted-foreground" />
+                            <EyeOff className="text-muted-foreground h-4 w-4" />
                           ) : (
-                            <Eye className="w-4 h-4 text-muted-foreground" />
+                            <Eye className="text-muted-foreground h-4 w-4" />
                           )}
                         </Button>
                       </div>
@@ -167,8 +170,11 @@ export function SignIn() {
                   </FormItem>
                 )}
               />
-              <div className="flex justify-start items-center mt-1">
-                <a href="/reset-password" className="text-primary text-sm hover:underline">
+              <div className="mt-1 flex items-center justify-start">
+                <a
+                  href="/reset-password"
+                  className="text-primary text-sm hover:underline"
+                >
                   Forgot Password?
                 </a>
               </div>
@@ -177,7 +183,7 @@ export function SignIn() {
                 className="bg-primary/90 hover:bg-primary mt-4 w-full transition-colors"
                 disabled={isLoading}
               >
-                {isLoading && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
@@ -195,6 +201,6 @@ export function SignIn() {
           </Form>
         </CardContent>
       </Card>
-    </div >
+    </div>
   );
 }

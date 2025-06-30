@@ -22,7 +22,11 @@ function AddCourse() {
         </div>
       </Card>
 
-      <CourseFormModal open={openModal} onOpenChange={setOpenModal} mode="add" />
+      <CourseFormModal
+        open={openModal}
+        onOpenChange={setOpenModal}
+        mode="add"
+      />
     </>
   );
 }

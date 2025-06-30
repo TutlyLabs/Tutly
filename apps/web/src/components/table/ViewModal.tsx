@@ -1,5 +1,10 @@
-import React from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -28,23 +33,27 @@ const ViewModal = ({
         {columns
           .filter((col) => !col.hidden)
           .map((col) => (
-            <div key={col.key} className="space-y-2 relative group">
+            <div key={col.key} className="group relative space-y-2">
               <div>
                 <Label>{col.label || col.name}</Label>
                 <div className="relative">
-                  <div className="p-2 border rounded-md bg-muted">
+                  <div className="bg-muted rounded-md border p-2">
                     {selectedRow?.[col.key]}
                   </div>
                   <Button
-                    className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    className="absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                     variant="ghost"
                     size="sm"
                     onClick={async () => {
-                      await navigator.clipboard.writeText(selectedRow?.[col.key]);
-                      toast.success(`${col.label || col.name} copied successfully`);
+                      await navigator.clipboard.writeText(
+                        selectedRow?.[col.key],
+                      );
+                      toast.success(
+                        `${col.label || col.name} copied successfully`,
+                      );
                     }}
                   >
-                    <CopyIcon className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                    <CopyIcon className="text-muted-foreground hover:text-foreground h-4 w-4 transition-colors" />
                   </Button>
                 </div>
               </div>
@@ -58,4 +67,4 @@ const ViewModal = ({
   </Dialog>
 );
 
-export default ViewModal
+export default ViewModal;

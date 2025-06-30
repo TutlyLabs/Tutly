@@ -1,29 +1,29 @@
-const CODEFORCES_API = "https://codeforces.com/api/";
+const CODEFORCES_API = 'https://codeforces.com/api/';
 
-interface CodeforcesResponse {
+type CodeforcesResponse = {
   status: string;
   result: unknown;
   comment?: string;
-}
+};
 
-interface Submission {
+type Submission = {
   verdict: string;
   contestId: number;
   problem: {
     name: string;
   };
-}
+};
 
-interface UserInfo {
+type UserInfo = {
   rating: number;
-}
+};
 
 const makeRequest = async (endpoint: string) => {
   const response = await fetch(`${CODEFORCES_API}${endpoint}`);
   const data = (await response.json()) as CodeforcesResponse;
 
   if (response.status !== 200) {
-    throw new Error("Something went wrong");
+    throw new Error('Something went wrong');
   }
 
   return data.result;
@@ -40,10 +40,8 @@ export async function isHandleValid(handle: string): Promise<boolean> {
 
 export async function getScore(handle: string) {
   const [profile, submissions] = await Promise.all([
-    makeRequest(`user.info?handles=${handle}`) as Promise<UserInfo[]>,
-    makeRequest(`user.status?handle=${handle}&from=1&count=500`) as Promise<
-      Submission[]
-    >,
+    makeRequest(`user.info?handles=${handle}`) as Promise<Array<UserInfo>>,
+    makeRequest(`user.status?handle=${handle}&from=1&count=500`) as Promise<Array<Submission>>,
   ]);
 
   const visitedProblems = new Set<string>();
@@ -51,7 +49,7 @@ export async function getScore(handle: string) {
   let score = 0;
 
   for (const submission of submissions) {
-    if (submission.verdict !== "OK") continue;
+    if (submission.verdict !== 'OK') continue;
     const problemKey = `${submission.contestId}-${submission.problem.name}`;
 
     if (!visitedProblems.has(problemKey)) {

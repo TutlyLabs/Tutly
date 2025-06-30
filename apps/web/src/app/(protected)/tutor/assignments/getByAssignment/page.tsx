@@ -1,165 +1,49 @@
-import { redirect } from "next/navigation";
-import { getServerSessionOrRedirect } from "@tutly/auth";
-import { db } from "@tutly/db";
-import type { Course } from "@prisma/client";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { api } from "@/trpc/react";
 import NoDataFound from "@/components/NoDataFound";
 import SingleAssignmentBoard from "../_components/assignmentBoard";
 
-type SimpleCourse = {
-  id: string;
-  title: string;
-};
+export default function GetByAssignmentPage() {
+  const router = useRouter();
 
-type CourseWithAssignments = Course & {
-  classes: {
-    id: string;
-    createdAt: Date;
-    attachments: {
-      id: string;
-      title: string;
-      class: {
-        title: string;
-      } | null;
-      submissions: {
-        id: string;
-        points: {
-          id: string;
-        }[];
-        enrolledUser: {
-          mentorUsername: string | null;
-        };
-      }[];
-    }[];
-  }[];
-};
+  const {
+    data: assignmentData,
+    isLoading,
+    error,
+  } = api.assignments.getByAssignmentPageData.useQuery();
 
-export default async function GetByAssignmentPage() {
-  const session = await getServerSessionOrRedirect();
-  const currentUser = session.user;
+  useEffect(() => {
+    if (assignmentData?.success === false) {
+      if (assignmentData.redirectTo) {
+        router.push(assignmentData.redirectTo);
+      } else {
+        router.push("/assignments");
+      }
+    }
+  }, [assignmentData, router]);
 
-  if (currentUser.role === "STUDENT") {
-    return redirect("/assignments");
+  if (isLoading) {
+    return <div>Loading assignments...</div>;
   }
 
-  const courses = await db.course.findMany({
-    where: {
-      enrolledUsers: {
-        some: {
-          username: currentUser.username,
-        },
-      },
-    },
-    select: {
-      id: true,
-      title: true,
-    },
-  }) as SimpleCourse[];
+  if (error) {
+    return <div>Error loading assignments</div>;
+  }
 
-  const coursesWithAssignments = await db.course.findMany({
-    where: {
-      id: {
-        in: courses.map((course) => course.id),
-      },
-      ...(currentUser.role === "MENTOR" && {
-        classes: {
-          some: {
-            attachments: {
-              some: {
-                submissions: {
-                  some: {
-                    enrolledUser: {
-                      mentorUsername: currentUser.username,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }),
-    },
-    select: {
-      id: true,
-      title: true,
-      image: true,
-      startDate: true,
-      endDate: true,
-      isPublished: true,
-      createdAt: true,
-      updatedAt: true,
-      createdById: true,
-      classes: {
-        select: {
-          id: true,
-          createdAt: true,
-          attachments: {
-            where: {
-              attachmentType: "ASSIGNMENT",
-              ...(currentUser.role === "MENTOR" && {
-                submissions: {
-                  some: {
-                    enrolledUser: {
-                      mentorUsername: currentUser.username,
-                    },
-                  },
-                },
-              }),
-            },
-            select: {
-              id: true,
-              title: true,
-              class: {
-                select: {
-                  title: true,
-                },
-              },
-              submissions: {
-                where: {
-                  ...(currentUser.role === "MENTOR" && {
-                    enrolledUser: {
-                      mentorUsername: currentUser.username,
-                    },
-                  }),
-                },
-                select: {
-                  id: true,
-                  points: {
-                    select: {
-                      id: true,
-                    },
-                  },
-                  enrolledUser: {
-                    select: {
-                      mentorUsername: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      },
-    },
-  }) as CourseWithAssignments[];
+  if (!assignmentData?.success || !assignmentData.data) {
+    return <div>No assignment data found!</div>;
+  }
 
-  const sortedAssignments = coursesWithAssignments.map((course) => ({
-    ...course,
-    classes: course.classes
-      .map((cls) => ({
-        ...cls,
-        attachments: cls.attachments.sort((a, b) => a.title.localeCompare(b.title)),
-      }))
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
-  }));
+  const { courses, sortedAssignments } = assignmentData.data;
 
   return (
     <div className="flex flex-col gap-4 py-2 md:mx-14 md:px-8">
       <div>
         <h1 className="m-2 rounded-lg bg-gradient-to-r from-blue-600 to-sky-500 py-2 text-center text-xl font-semibold">
-          Students
+          ASSIGNMENTS
         </h1>
         {courses && courses.length > 0 ? (
           <SingleAssignmentBoard
@@ -167,9 +51,12 @@ export default async function GetByAssignmentPage() {
             assignments={sortedAssignments}
           />
         ) : (
-          <NoDataFound message="No students found!" additionalMessage="It’s a ghost town in here — not a student in sight!"/>
+          <NoDataFound
+            message="No Course found!"
+            additionalMessage="All quiet... even the books took a break!"
+          />
         )}
       </div>
     </div>
   );
-} 
+}

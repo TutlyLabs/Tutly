@@ -1,14 +1,14 @@
-const LEETCODE_API = "https://leetcode.com/graphql";
+const LEETCODE_API = 'https://leetcode.com/graphql';
 
-interface LeetCodeResponse {
+type LeetCodeResponse = {
   data: {
     matchedUser: {
       username: string;
       submitStats: {
-        acSubmissionNum: {
+        acSubmissionNum: Array<{
           difficulty: string;
           count: number;
-        }[];
+        }>;
       };
     } | null;
     userContestRanking: {
@@ -16,19 +16,16 @@ interface LeetCodeResponse {
       rating: number;
     } | null;
   };
-}
+};
 
-const makeRequest = async (
-  query: string,
-  variables: Record<string, unknown>,
-) => {
+const makeRequest = async (query: string, variables: Record<string, unknown>) => {
   const response = await fetch(LEETCODE_API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
   });
 
-  if (!response.ok) throw new Error("Failed to fetch data");
+  if (!response.ok) throw new Error('Failed to fetch data');
   return response.json() as Promise<LeetCodeResponse>;
 };
 
@@ -68,19 +65,17 @@ export async function getScore(handle: string) {
   try {
     const { data } = await makeRequest(query, { username: handle });
 
-    if (!data.matchedUser) throw new Error("User not found");
+    if (!data.matchedUser) throw new Error('User not found');
 
     const problemsCount =
       data.matchedUser.submitStats.acSubmissionNum.find(
-        (submission: { difficulty: string; count: number }) =>
-          submission.difficulty === "All",
+        (submission: { difficulty: string; count: number }) => submission.difficulty === 'All',
       )?.count ?? 0;
 
     const currentRating = data.userContestRanking?.rating ?? 0;
     let score = problemsCount * 50;
 
-    const attendedContestsCount =
-      data.userContestRanking?.attendedContestsCount ?? 0;
+    const attendedContestsCount = data.userContestRanking?.attendedContestsCount ?? 0;
     if (attendedContestsCount >= 3) {
       score += Math.floor(Math.pow(currentRating - 1300, 2) / 30);
     }
@@ -91,6 +86,6 @@ export async function getScore(handle: string) {
       currentRating,
     };
   } catch {
-    throw new Error("Failed to fetch score");
+    throw new Error('Failed to fetch score');
   }
 }

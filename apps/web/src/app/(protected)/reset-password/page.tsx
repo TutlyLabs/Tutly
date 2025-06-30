@@ -11,4 +11,4 @@ export default async function ResetPasswordPage({
       <ManagePassword initialEmail={email} />
     </div>
   );
-} 
+}

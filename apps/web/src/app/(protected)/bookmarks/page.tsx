@@ -1,23 +1,23 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "@tutly/auth";
-import { db } from "@tutly/db";
+"use client";
+
+import { api } from "@/trpc/react";
 import Bookmarks from "./_components/Bookmarks";
 
-export default async function BookmarksPage() {
-  const session = await getServerSession();
-  if (!session?.user) {
-    redirect("/sign-in");
+export default function BookmarksPage() {
+  const { data: bookmarksData, isLoading } =
+    api.bookmarks.getUserBookmarks.useQuery();
+
+  if (isLoading) {
+    return <div>Loading bookmarks...</div>;
   }
 
-  const bookmarks = await db.bookMarks.findMany({
-    where: {
-      userId: session.user.id,
-    },
-  });
+  if (!bookmarksData?.success || !bookmarksData.data) {
+    return <div>Failed to load bookmarks.</div>;
+  }
 
   return (
     <div className="container mx-auto py-6">
-      <Bookmarks bookmarks={bookmarks} />
+      <Bookmarks bookmarks={bookmarksData.data} />
     </div>
   );
-} 
+}

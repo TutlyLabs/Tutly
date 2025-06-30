@@ -1,0 +1,17 @@
+node_modules
+coverage
+build
+compiled
+
+.DS_Store
+*.log
+.vscode
+.idea
+
+npm-debug.log*
+
+*.env
+
+prisma/generated
+trpc-api-export/dist/schema/libquery_engine-darwin-arm64.dylib.node
+trpc-api-export/dist/schema/schema.prisma

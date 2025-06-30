@@ -17,14 +17,18 @@ interface YearViewProps {
   onEventClick: (event: Event) => void;
 }
 
-export function YearView({ selectedDate, events, onEventClick }: YearViewProps) {
+export function YearView({
+  selectedDate,
+  events,
+  onEventClick,
+}: YearViewProps) {
   const yearStart = startOfYear(selectedDate);
   const today = new Date();
 
   const months = Array.from({ length: 12 }, (_, i) => addMonths(yearStart, i));
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10 p-4 mb-10">
+    <div className="mb-10 grid grid-cols-1 gap-4 p-4 md:grid-cols-2 md:gap-10 lg:grid-cols-3">
       {months.map((month) => (
         <MonthCalendar
           key={format(month, "MM-yyyy")}

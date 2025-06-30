@@ -50,7 +50,8 @@ const columns: Column[] = [
     validation: {
       required: true,
       regex: /^[a-zA-Z0-9_]{3,20}$/,
-      message: "Username must be 3-20 characters, alphanumeric and underscore only",
+      message:
+        "Username must be 3-20 characters, alphanumeric and underscore only",
     },
   },
   {
@@ -236,23 +237,39 @@ const UserPage = ({
         clientSideProcessing={false}
         totalItems={totalItems}
         defaultPageSize={10}
-        onCreate={shouldAllowActions ? (data) => createUserMutation.mutateAsync(data) : null}
-        onEdit={shouldAllowActions ? (data) => updateUserMutation.mutateAsync(data) : null}
-        onDelete={shouldAllowActions ? (data) => deleteUserMutation.mutateAsync(data) : null}
-        onBulkImport={shouldAllowActions ? (data) => bulkUpsertMutation.mutateAsync(data) : null}
+        onCreate={
+          shouldAllowActions
+            ? (data) => createUserMutation.mutateAsync(data)
+            : null
+        }
+        onEdit={
+          shouldAllowActions
+            ? (data) => updateUserMutation.mutateAsync(data)
+            : null
+        }
+        onDelete={
+          shouldAllowActions
+            ? (data) => deleteUserMutation.mutateAsync(data)
+            : null
+        }
+        onBulkImport={
+          shouldAllowActions
+            ? (data) => bulkUpsertMutation.mutateAsync(data)
+            : null
+        }
         title="Users Management"
         actions={
           shouldAllowActions
             ? [
-              {
-                label: "Reset Password",
-                icon: <MdLockReset className="text-red-500 mr-2 h-5 w-5" />,
-                onClick: (user: any) => {
-                  setSelectedUser(user);
-                  setOpen(true);
+                {
+                  label: "Reset Password",
+                  icon: <MdLockReset className="mr-2 h-5 w-5 text-red-500" />,
+                  onClick: (user: any) => {
+                    setSelectedUser(user);
+                    setOpen(true);
+                  },
                 },
-              },
-            ]
+              ]
             : []
         }
       />
@@ -260,7 +277,9 @@ const UserPage = ({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Reset Password</DialogTitle>
-            <DialogDescription>Reset password for user: {selectedUser?.username}</DialogDescription>
+            <DialogDescription>
+              Reset password for user: {selectedUser?.username}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -281,16 +300,20 @@ const UserPage = ({
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute inset-y-0 right-0 flex h-full w-9 items-center justify-center text-muted-foreground/80 hover:text-foreground"
+                  className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 right-0 flex h-full w-9 items-center justify-center"
                 >
-                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
 
               {showPasswordStrength && (
                 <>
                   <div
-                    className="mb-4 mt-3 h-1 w-full overflow-hidden rounded-full bg-border"
+                    className="bg-border mt-3 mb-4 h-1 w-full overflow-hidden rounded-full"
                     role="progressbar"
                     aria-valuenow={newPasswordScore}
                     aria-valuemin={0}
@@ -302,7 +325,7 @@ const UserPage = ({
                     />
                   </div>
 
-                  <p className="mb-2 text-sm font-medium text-foreground">
+                  <p className="text-foreground mb-2 text-sm font-medium">
                     {getStrengthText(newPasswordScore)}. Must contain:
                   </p>
 
@@ -312,7 +335,7 @@ const UserPage = ({
                         {req.met ? (
                           <Check className="h-4 w-4 text-emerald-500" />
                         ) : (
-                          <X className="h-4 w-4 text-muted-foreground/80" />
+                          <X className="text-muted-foreground/80 h-4 w-4" />
                         )}
                         <span
                           className={`text-xs ${req.met ? "text-emerald-600" : "text-muted-foreground"}`}
@@ -339,7 +362,7 @@ const UserPage = ({
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 flex h-full w-9 items-center justify-center text-muted-foreground/80 hover:text-foreground"
+                  className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 right-0 flex h-full w-9 items-center justify-center"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -351,7 +374,7 @@ const UserPage = ({
             </div>
 
             {newPassword !== confirmPassword && confirmPassword && (
-              <p className="text-sm text-destructive">Passwords do not match</p>
+              <p className="text-destructive text-sm">Passwords do not match</p>
             )}
           </div>
 

@@ -27,7 +27,9 @@
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@tutly/api": ["../api/src/external"],
+      "@tutly/api/schema": ["../api/src/external/schema"]
     }
   },
   "include": [

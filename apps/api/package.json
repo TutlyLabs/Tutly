@@ -1,42 +1,60 @@
 {
   "name": "@tutly/api",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
   "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
-    }
-  },
-  "license": "AGPL-3.0",
   "scripts": {
-    "build": "tsc",
-    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "prisma:generate": "npx prisma generate || true",
+    "prepare": "husky",
+    "build": "rm -rf build && tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "start": "tsx src/index.ts",
+    "lint": "eslint --report-unused-disable-directives --max-warnings 0 .",
+    "lint:fix": "eslint --fix .",
+    "lint-staged-husky": "lint-staged",
+    "tsc": "tsc -p tsconfig.json",
+    "format:check": "prettier --config .prettierrc --check --ignore-unknown .",
+    "format:fix": "prettier --config .prettierrc --write --ignore-unknown -l .",
+    "postinstall": "npm run prisma:generate",
+    "seed": "tsx prisma/seed/index.ts"
   },
   "dependencies": {
-    "@hono/node-server": "^1.14.4",
-    "@trpc/server": "catalog:",
-    "@tutly/auth": "workspace:*",
-    "@tutly/db": "workspace:*",
-    "@tutly/validators": "workspace:*",
-    "hono": "^4.7.11",
+    "@aws-sdk/client-s3": "^3.645.0",
+    "@aws-sdk/s3-request-presigner": "^3.832.0",
+    "@prisma/client": "^6.5.0",
+    "@trpc/server": "11.4.1",
+    "bcryptjs": "^3.0.2",
+    "better-auth": "^1.2.10",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "2.8.5",
+    "express": "5.1.0",
+    "resend": "^3.5.0",
     "superjson": "2.2.2",
-    "zod": "catalog:"
+    "web-push": "^3.6.7",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@tutly/eslint-config": "workspace:*",
-    "@tutly/prettier-config": "workspace:*",
-    "@tutly/tsconfig": "workspace:*",
-    "@types/node": "^22.13.11",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
+    "@commitlint/cli": "19.8.1",
+    "@commitlint/config-conventional": "19.8.1",
+    "@eslint/js": "^9.23.0",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/cors": "2.8.19",
+    "@types/eslint": "9.6.1",
+    "@types/express": "5.0.3",
+    "@types/web-push": "^3.6.4",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "10.1.5",
+    "eslint-import-resolver-typescript": "4.4.3",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "5.4.1",
+    "husky": "9.1.7",
+    "lint-staged": "16.1.0",
+    "prettier": "^3.5.3",
+    "prisma": "^6.5.0",
     "tsx": "^4.7.1",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.27.0"
   },
-  "prettier": "@tutly/prettier-config"
+  "engines": {
+    "node": ">=22.15.0"
+  }
 }

@@ -77,12 +77,18 @@ interface CalendarProps {
   isAuthorized?: boolean;
 }
 
-export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarProps) => {
+export const Calendar = ({
+  events,
+  holidays,
+  isAuthorized = false,
+}: CalendarProps) => {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [view, setView] = useState<ViewType>("month");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [selectedView, setSelectedView] = useState<"calendar" | "holidays">("calendar");
+  const [selectedView, setSelectedView] = useState<"calendar" | "holidays">(
+    "calendar",
+  );
   const [editingHoliday, setEditingHoliday] = useState<any>(null);
 
   const { mutate: deleteHoliday } = api.holidays.deleteHoliday.useMutation({
@@ -109,15 +115,29 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
 
   const navigate = (direction: "prev" | "next") => {
     if (view === "day") {
-      setSelectedDate(direction === "prev" ? subDays(selectedDate, 1) : addDays(selectedDate, 1));
+      setSelectedDate(
+        direction === "prev"
+          ? subDays(selectedDate, 1)
+          : addDays(selectedDate, 1),
+      );
     } else if (view === "week") {
-      setSelectedDate(direction === "prev" ? subWeeks(selectedDate, 1) : addWeeks(selectedDate, 1));
+      setSelectedDate(
+        direction === "prev"
+          ? subWeeks(selectedDate, 1)
+          : addWeeks(selectedDate, 1),
+      );
     } else if (view === "month") {
       setSelectedDate(
-        direction === "prev" ? subMonths(selectedDate, 1) : addMonths(selectedDate, 1)
+        direction === "prev"
+          ? subMonths(selectedDate, 1)
+          : addMonths(selectedDate, 1),
       );
     } else if (view === "year") {
-      setSelectedDate(direction === "prev" ? subYears(selectedDate, 1) : addYears(selectedDate, 1));
+      setSelectedDate(
+        direction === "prev"
+          ? subYears(selectedDate, 1)
+          : addYears(selectedDate, 1),
+      );
     }
   };
 
@@ -160,12 +180,14 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
 
   return (
     <div className="flex flex-col">
-      <header className="flex md:flex-row flex-col gap-5  items-center justify-between p-2 border-b">
+      <header className="flex flex-col items-center justify-between gap-5 border-b p-2 md:flex-row">
         <div className="flex items-center space-x-4">
           {isAuthorized && (
             <Tabs
               value={selectedView}
-              onValueChange={(value) => setSelectedView(value as "calendar" | "holidays")}
+              onValueChange={(value) =>
+                setSelectedView(value as "calendar" | "holidays")
+              }
             >
               <TabsList>
                 <TabsTrigger value="calendar">Calendar</TabsTrigger>
@@ -175,7 +197,10 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
           )}
 
           {selectedView === "calendar" && (
-            <Tabs value={view} onValueChange={(value) => setView(value as ViewType)}>
+            <Tabs
+              value={view}
+              onValueChange={(value) => setView(value as ViewType)}
+            >
               <TabsList>
                 <TabsTrigger value="day">Day</TabsTrigger>
                 <TabsTrigger value="week">Week</TabsTrigger>
@@ -187,15 +212,25 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
         </div>
         {selectedView === "calendar" ? (
           <div className="flex items-center space-x-4">
-            <span className="text-lg font-semibold">{format(selectedDate, "dd MMMM yyyy")}</span>
+            <span className="text-lg font-semibold">
+              {format(selectedDate, "dd MMMM yyyy")}
+            </span>
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="icon" onClick={() => navigate("prev")}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate("prev")}
+              >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button variant="outline" onClick={navigateToday}>
                 Today
               </Button>
-              <Button variant="outline" size="icon" onClick={() => navigate("next")}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate("next")}
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -209,7 +244,7 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
 
       {selectedView === "calendar" ? (
         <>
-          <main className="flex-1 h-[90vh]">
+          <main className="h-[90vh] flex-1">
             {view === "day" && (
               <DayView
                 selectedDate={selectedDate}
@@ -241,13 +276,16 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
           </main>
 
           {selectedEvent && (
-            <EventDetails event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+            <EventDetails
+              event={selectedEvent}
+              onClose={() => setSelectedEvent(null)}
+            />
           )}
         </>
       ) : (
-        <div className="overflow-x-auto bg-background rounded-lg shadow-md p-6 mt-4">
+        <div className="bg-background mt-4 overflow-x-auto rounded-lg p-6 shadow-md">
           <div className="flex justify-between">
-            <h2 className="text-xl font-bold mb-6">List of Holidays</h2>
+            <h2 className="mb-6 text-xl font-bold">List of Holidays</h2>
           </div>
           {holidays && holidays.length > 0 ? (
             <ScrollArea className="max-h-[80vh] rounded-md border">
@@ -258,19 +296,29 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
                     <TableHead className="font-semibold">Description</TableHead>
                     <TableHead className="font-semibold">From</TableHead>
                     <TableHead className="font-semibold">To</TableHead>
-                    {isAuthorized && <TableHead className="font-semibold">Actions</TableHead>}
+                    {isAuthorized && (
+                      <TableHead className="font-semibold">Actions</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {holidays.map((holiday: any) => (
                     <TableRow key={holiday.id}>
                       <TableCell>{holiday.reason}</TableCell>
-                      <TableCell>{holiday.description || "No description available"}</TableCell>
                       <TableCell>
-                        {format(new Date(holiday.startDate), "MMMM d, yyyy, EEEE")}
+                        {holiday.description || "No description available"}
                       </TableCell>
                       <TableCell>
-                        {format(new Date(holiday.endDate), "MMMM d, yyyy, EEEE")}
+                        {format(
+                          new Date(holiday.startDate),
+                          "MMMM d, yyyy, EEEE",
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {format(
+                          new Date(holiday.endDate),
+                          "MMMM d, yyyy, EEEE",
+                        )}
                       </TableCell>
                       {isAuthorized && (
                         <TableCell>
@@ -289,8 +337,8 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
                                 <DialogHeader>
                                   <DialogTitle>Edit Holiday</DialogTitle>
                                   <DialogDescription>
-                                    Make changes to the holiday details here. Click save when
-                                    you&apos;re done.
+                                    Make changes to the holiday details here.
+                                    Click save when you&apos;re done.
                                   </DialogDescription>
                                 </DialogHeader>
                                 <form
@@ -316,11 +364,15 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
                                       />
                                     </div>
                                     <div className="p-3">
-                                      <label htmlFor="description">Description</label>
+                                      <label htmlFor="description">
+                                        Description
+                                      </label>
                                       <Textarea
                                         id="description"
                                         className="mt-2"
-                                        value={editingHoliday?.description || ""}
+                                        value={
+                                          editingHoliday?.description || ""
+                                        }
                                         onChange={(e) =>
                                           setEditingHoliday({
                                             ...editingHoliday,
@@ -330,11 +382,15 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
                                       />
                                     </div>
                                     <div className="p-3">
-                                      <label htmlFor="startDate">Start Date</label>
+                                      <label htmlFor="startDate">
+                                        Start Date
+                                      </label>
                                       <CalendarPicker
                                         id="startDate"
                                         mode="single"
-                                        selected={new Date(editingHoliday?.startDate)}
+                                        selected={
+                                          new Date(editingHoliday?.startDate)
+                                        }
                                         onSelect={(date) =>
                                           setEditingHoliday({
                                             ...editingHoliday,
@@ -349,7 +405,9 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
                                       <CalendarPicker
                                         id="endDate"
                                         mode="single"
-                                        selected={new Date(editingHoliday?.endDate)}
+                                        selected={
+                                          new Date(editingHoliday?.endDate)
+                                        }
                                         onSelect={(date) =>
                                           setEditingHoliday({
                                             ...editingHoliday,
@@ -377,15 +435,19 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogTitle>
+                                    Are you absolutely sure?
+                                  </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the
-                                    holiday.
+                                    This action cannot be undone. This will
+                                    permanently delete the holiday.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(holiday.id)}>
+                                  <AlertDialogAction
+                                    onClick={() => handleDelete(holiday.id)}
+                                  >
                                     Delete
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -400,9 +462,9 @@ export const Calendar = ({ events, holidays, isAuthorized = false }: CalendarPro
               </Table>
             </ScrollArea>
           ) : (
-            <div className="flex flex-col items-center justify-center p-8 rounded-lg">
-              <MdHolidayVillage className="md:w-24 md:h-24 h-16 w-16 mb-4 text-muted-foreground" />
-              <h1 className="font-semibold text-base">No holidays scheduled</h1>
+            <div className="flex flex-col items-center justify-center rounded-lg p-8">
+              <MdHolidayVillage className="text-muted-foreground mb-4 h-16 w-16 md:h-24 md:w-24" />
+              <h1 className="text-base font-semibold">No holidays scheduled</h1>
             </div>
           )}
         </div>

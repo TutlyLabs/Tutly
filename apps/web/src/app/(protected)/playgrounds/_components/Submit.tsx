@@ -91,7 +91,14 @@ const Submit = ({
             height={window.innerHeight || 1000}
             numberOfPieces={400}
             friction={0.99}
-            colors={["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"]}
+            colors={[
+              "#ff0000",
+              "#00ff00",
+              "#0000ff",
+              "#ffff00",
+              "#ff00ff",
+              "#00ffff",
+            ]}
           />
         )}
       </div>
@@ -100,13 +107,18 @@ const Submit = ({
           <AlertDialogTitle>Confirm Submission</AlertDialogTitle>
           <p className="mb-2">
             Are you sure you want to submit the
-            <a href={`${assignmentDetails.link}`} target="_blank" className="text-blue-500">
+            <a
+              href={`${assignmentDetails.link}`}
+              target="_blank"
+              className="text-blue-500"
+            >
               &nbsp;{assignmentDetails.title}
             </a>{" "}
             ?
           </p>
           <p className="mb-6 flex items-center gap-1 text-sm text-gray-500">
-            <IoWarningOutline className="text-md" /> Once submitted, you cannot edit your code.
+            <IoWarningOutline className="text-md" /> Once submitted, you cannot
+            edit your code.
           </p>
         </AlertDialogHeader>
         <AlertDialogFooter>

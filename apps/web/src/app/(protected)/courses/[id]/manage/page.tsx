@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
-import { db } from "@tutly/db";
-import UsersTable from "./_components/UsersTable";
-import { getServerSessionOrRedirect } from "@tutly/auth";
+import { getServerSessionOrRedirect } from "@/lib/auth";
+import CourseManageClient from "./_components/CourseManageClient";
 
-export default async function ManageCoursePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ManageCoursePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const session = await getServerSessionOrRedirect();
 
   if (!session?.user || session.user.role !== "INSTRUCTOR") {
@@ -12,22 +15,5 @@ export default async function ManageCoursePage({ params }: { params: Promise<{ i
 
   const { id } = await params;
 
-  const allUsers = await db.user.findMany({
-    where: {
-      organizationId: session.user.organizationId,
-    },
-    include: {
-      enrolledUsers: {
-        where: {
-          courseId: id,
-        },
-      },
-    },
-  });
-
-  return (
-    <div className="w-full px-4">
-      <UsersTable users={allUsers} courseId={id} />
-    </div>
-  );
+  return <CourseManageClient courseId={id} currentUser={session.user} />;
 }
