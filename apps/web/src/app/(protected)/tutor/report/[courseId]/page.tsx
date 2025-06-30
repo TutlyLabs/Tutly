@@ -1,23 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { api } from "@/trpc/react";
 import Report from "./_components/Report";
 
-export default function CourseReportPage({
-  params,
-}: {
-  params: Promise<{ courseId: string }>;
-}) {
+export default function CourseReportPage() {
   const router = useRouter();
-  const [courseId, setCourseId] = useState<string | null>(null);
-
-  useEffect(() => {
-    params.then(({ courseId: id }) => {
-      setCourseId(id);
-    });
-  }, [params]);
+  const params = useParams<{ courseId: string }>();
+  const courseId = params.courseId;
 
   const {
     data: reportData,

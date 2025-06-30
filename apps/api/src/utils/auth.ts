@@ -70,3 +70,5 @@ export const auth = betterAuth({
   ],
   trustedOrigins: [FRONTEND_URL],
 });
+
+export type Auth = typeof auth;

@@ -1,23 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { api } from "@/trpc/react";
 import StudentWiseAssignments from "../_components/StudentWiseAssignments";
 
-export default function StudentAssignmentsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function StudentAssignmentsPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    params.then(({ id }) => {
-      setUserId(id);
-    });
-  }, [params]);
+  const params = useParams<{ id: string }>();
+  const userId = params.id;
 
   const {
     data: assignmentsData,

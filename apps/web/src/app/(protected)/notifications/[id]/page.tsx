@@ -1,28 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { api } from "@/trpc/react";
 import { NOTIFICATION_HREF_MAP } from "@/components/Notifications";
 import type { causedObjects } from "@/components/Notifications";
 
-export default function NotificationRedirectPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function NotificationRedirectPage() {
   const router = useRouter();
-  const [id, setId] = useState<string | null>(null);
-
-  useEffect(() => {
-    params.then(({ id: notificationId }) => {
-      if (!notificationId) {
-        router.push("/notifications");
-        return;
-      }
-      setId(notificationId);
-    });
-  }, [params, router]);
+  const params = useParams<{ id: string }>();
+  const id = params.id;
 
   const {
     data: notificationData,
@@ -62,7 +49,7 @@ export default function NotificationRedirectPage({
 
     const getLinkFn =
       NOTIFICATION_HREF_MAP[
-        data.eventType as keyof typeof NOTIFICATION_HREF_MAP
+      data.eventType as keyof typeof NOTIFICATION_HREF_MAP
       ];
     if (!getLinkFn) {
       router.push("/notifications");

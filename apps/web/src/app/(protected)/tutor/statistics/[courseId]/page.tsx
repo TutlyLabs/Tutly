@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { api } from "@/trpc/react";
 import { Barchart } from "../_components/barchart";
 import { Linechart } from "../_components/linechart";
@@ -15,14 +15,10 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import MenteeCount from "../_components/MenteeCount";
 
-export default function StatisticsDetailPage({
-  params,
-}: {
-  params: Promise<{ courseId: string }>;
-}) {
+export default function StatisticsDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [courseId, setCourseId] = useState<string | null>(null);
+  const params = useParams<{ courseId: string }>();
   const [mentorUsername, setMentorUsername] = useState<string | undefined>(
     undefined,
   );
@@ -30,11 +26,7 @@ export default function StatisticsDetailPage({
     undefined,
   );
 
-  useEffect(() => {
-    params.then(({ courseId: id }) => {
-      setCourseId(id);
-    });
-  }, [params]);
+  const courseId = params.courseId ?? null;
 
   useEffect(() => {
     if (searchParams) {

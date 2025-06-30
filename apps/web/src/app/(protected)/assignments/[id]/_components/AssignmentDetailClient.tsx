@@ -36,7 +36,7 @@ export default function AssignmentDetailClient({
   }
 
   if (!assignmentData?.success || !assignmentData.data) {
-    return <div>Assignment not found or you don't have access to it.</div>;
+    return <div>Assignment not found or you don&apos;t have access to it.</div>;
   }
 
   const {

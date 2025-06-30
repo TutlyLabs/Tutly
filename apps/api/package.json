@@ -38,7 +38,7 @@
     "seed": "tsx prisma/seed/index.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.645.0",
+    "@aws-sdk/client-s3": "^3.832.0",
     "@aws-sdk/s3-request-presigner": "^3.832.0",
     "@prisma/client": "^6.5.0",
     "@trpc/server": "11.4.1",

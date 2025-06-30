@@ -1,6 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 import { customSessionClient } from "better-auth/client/plugins";
-import type { auth } from "../../backend/src/utils/auth";
+import type { Auth } from "@tutly/api";
 import {
   adminClient,
   apiKeyClient,
@@ -14,6 +14,6 @@ export const authClient = createAuthClient({
     usernameClient(),
     adminClient(),
     apiKeyClient(),
-    customSessionClient<typeof auth>(),
+    customSessionClient<Auth>(),
   ],
 });

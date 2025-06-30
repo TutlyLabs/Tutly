@@ -22,7 +22,6 @@ const ReactPlayground = ({ currentUser }: { currentUser: any }) => {
       ) : (
         <Suspense fallback={<div>Loading...</div>}>
           <Playground
-            currentUser={currentUser}
             initialFiles={filesObj}
             template="react"
           />
