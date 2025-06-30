@@ -46,7 +46,11 @@ export default function Crisp({ user, organization }: CrispProps) {
         window.$crisp.push(["set", "user:username", user.username]);
         window.$crisp.push(["set", "user:mobile", user.mobile]);
         if (organization) {
-          window.$crisp.push(["set", "user:organization", organization.orgCode]);
+          window.$crisp.push([
+            "set",
+            "user:organization",
+            organization.orgCode,
+          ]);
         }
       }
     };

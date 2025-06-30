@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FaCrown } from "react-icons/fa6";
 import Image from "next/image";
-import type { User, Course } from "@prisma/client";
+import type { User, Course } from "@tutly/api/schema";
 
 import NoDataFound from "@/components/NoDataFound";
 
@@ -54,15 +54,17 @@ export default function Leaderboard({
   submissions,
   courses,
 }: LeaderboardProps) {
-  const [currentCourse, setCurrentCourse] = useState<string>(courses[0]?.id || "");
+  const [currentCourse, setCurrentCourse] = useState<string>(
+    courses[0]?.id || "",
+  );
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData[]>([]);
 
   useEffect(() => {
     const filteredSubmissions = submissions.filter((submission) =>
       currentUser.role === "INSTRUCTOR"
         ? submission.enrolledUser.mentor.username === currentUser.username &&
-        submission.assignment.class.course.id === currentCourse
-        : submission.assignment.class.course.id === currentCourse
+          submission.assignment.class.course.id === currentCourse
+        : submission.assignment.class.course.id === currentCourse,
     );
 
     const leaderboardMap = new Map<string, LeaderboardData>();
@@ -92,11 +94,13 @@ export default function Leaderboard({
   }, [currentCourse, submissions, currentUser.role, currentUser.username]);
 
   return (
-    <div className="mx-2 mb-10 mt-6 flex flex-col gap-4 md:mx-14">
+    <div className="mx-2 mt-6 mb-10 flex flex-col gap-4 md:mx-14">
       {/* Leaderboard-header */}
       <div className="flex flex-col text-center">
         <FaCrown className="m-auto h-20 w-20 text-blue-500 dark:text-yellow-400" />
-        <h1 className="text-2xl font-semibold text-blue-500 dark:text-yellow-400">Leaderboard</h1>
+        <h1 className="text-2xl font-semibold text-blue-500 dark:text-yellow-400">
+          Leaderboard
+        </h1>
       </div>
       {/* Courses list */}
       <div className="mt-4 flex gap-3">
@@ -104,17 +108,23 @@ export default function Leaderboard({
           <button
             hidden={!course.isPublished}
             onClick={() => setCurrentCourse(course.id)}
-            className={`w-20 rounded p-1 px-2 sm:w-auto ${currentCourse === course.id && "rounded border"
-              }`}
+            className={`w-20 rounded p-1 px-2 sm:w-auto ${
+              currentCourse === course.id && "rounded border"
+            }`}
             key={course.id}
           >
-            <h1 className="max-w-xs truncate text-sm font-medium">{course.title}</h1>
+            <h1 className="max-w-xs truncate text-sm font-medium">
+              {course.title}
+            </h1>
           </button>
         ))}
       </div>
       {/* Leaderboard */}
       {leaderboardData.length === 0 ? (
-        <NoDataFound message="No data found!" additionalMessage="Nothing here… like a to-do list after exams!" />
+        <NoDataFound
+          message="No data found!"
+          additionalMessage="Nothing here… like a to-do list after exams!"
+        />
       ) : (
         <table>
           <thead className="bg-slate-600 text-white">
@@ -135,14 +145,15 @@ export default function Leaderboard({
               if (data.totalPoints === 0) return null;
               return (
                 <tr
-                  className={`border-b-2 bg-gradient-to-r p-2 px-4 hover:text-white ${currentUser.username === data.username
-                    ? "from-yellow-500/65 via-yellow-600/80 to-yellow-700"
-                    : "hover:from-blue-600 hover:to-sky-500"
-                    }`}
+                  className={`border-b-2 bg-gradient-to-r p-2 px-4 hover:text-white ${
+                    currentUser.username === data.username
+                      ? "from-yellow-500/65 via-yellow-600/80 to-yellow-700"
+                      : "hover:from-blue-600 hover:to-sky-500"
+                  }`}
                   key={data.userId}
                 >
                   <td className="pl-12">{index + 1}</td>
-                  <td className="flex items-center md:gap-4 space-x-3">
+                  <td className="flex items-center space-x-3 md:gap-4">
                     <Image
                       src={data.image || "/placeholder.jpg"}
                       alt={`User ${index + 1}`}
@@ -156,7 +167,9 @@ export default function Leaderboard({
                     </div>
                   </td>
                   <td>
-                    <h1 className="text-xs font-medium md:text-sm">{data.totalPoints} points</h1>
+                    <h1 className="text-xs font-medium md:text-sm">
+                      {data.totalPoints} points
+                    </h1>
                   </td>
                 </tr>
               );

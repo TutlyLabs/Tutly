@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { FaCrown } from "react-icons/fa";
 import { HiOutlineDotsHorizontal } from "react-icons/hi";
@@ -31,8 +31,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { SessionUser } from "@tutly/auth";
+import type { SessionUser } from "@/lib/auth";
 import { api } from "@/trpc/react";
+import { useClientSession } from "@/lib/auth/client";
+import { useRouter } from "next/navigation";
 
 interface Doubt {
   id: string;
@@ -63,16 +65,25 @@ interface Response {
 
 interface MessagesProps {
   doubts: Doubt[];
-  currentUser: SessionUser;
   currentCourseId: string;
 }
 
-export default function Messages({ doubts, currentUser, currentCourseId }: MessagesProps) {
+export default function Messages({ doubts, currentCourseId }: MessagesProps) {
   const [openAccordion, setOpenAccordion] = useState<number>(0);
   const [show, setShow] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
   const [reply, setReply] = useState<string>("");
   const [replyId, setReplyId] = useState<string>("");
+  const addDoubtRef = useRef<HTMLTextAreaElement>(null);
+
+  const { data } = useClientSession();
+  const currentUser = data?.user;
+  const router = useRouter();
+
+  if (!currentUser) {
+    router.push("/sign-in");
+    return;
+  }
 
   const utils = api.useUtils();
 
@@ -195,16 +206,17 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
     return `${formattedDate} , ${formattedTime}`;
   }
 
-  const addDoubtRef = useRef<HTMLTextAreaElement>(null);
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto md:min-w-[800px]">
-      <div className="flex flex-col items-center text-sm font-medium space-y-4">
-        <div className="flex w-full justify-center mb-4 sticky top-0 z-10 py-2">
+    <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6 md:min-w-[800px] lg:px-8">
+      <div className="flex flex-col items-center space-y-4 text-sm font-medium">
+        <div className="sticky top-0 z-10 mb-4 flex w-full justify-center py-2">
           <AlertDialog open={show} onOpenChange={setShow}>
             <AlertDialogTrigger className="w-full sm:w-auto">
-              <Button className=" rounded-md px-4 py-3 text-white bg-gray-500 hover:bg-gray-600">
-                {currentUser.role === "STUDENT" ? "Ask a Doubt" : "Raise a Query"}
+              <Button className="rounded-md bg-gray-500 px-4 py-3 text-white hover:bg-gray-600">
+                {currentUser.role === "STUDENT"
+                  ? "Ask a Doubt"
+                  : "Raise a Query"}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -219,14 +231,15 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                     onKeyDown={handleCtrlEnterDown}
                     rows={4}
                     value={message}
-                    className="w-full resize-none font-semibold p-3 text-gray-300 border border-gray-300 my-2 rounded-md
-  focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent"
+                    className="my-2 w-full resize-none rounded-md border border-gray-300 p-3 font-semibold text-gray-300 focus:border-transparent focus:ring-2 focus:ring-fuchsia-500 focus:outline-none"
                   />
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleSubmit}>Continue</AlertDialogAction>
+                <AlertDialogAction onClick={handleSubmit}>
+                  Continue
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -237,28 +250,28 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
         <Card
           id="accordion-color"
           data-accordion="collapse"
-          className="text-gray-700 mt-5 cursor-pointer w-full space-y-4"
+          className="mt-5 w-full cursor-pointer space-y-4 text-gray-700"
         >
           {doubts?.map((qa, index) => (
             <div
               key={index}
-              className={`relative p-4 bg-white transition-shadow duration-300 ease-in-out bg-white rounded-md ${openAccordion === index ? "shadow-xl" : "shadow-md"
+              className={`relative rounded-md bg-white p-4 transition-shadow duration-300 ease-in-out ${openAccordion === index ? "shadow-xl" : "shadow-md"
                 }w-full`}
             >
-              <div className="flex flex-col sm:flex-row justify-between gap-4 p-2">
-                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <div className="flex flex-col justify-between gap-4 p-2 sm:flex-row">
+                <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
                   {qa.user.role === "STUDENT" && (
                     <Image
                       src={qa.user?.image || "/placeholder.jpg"}
                       alt="profile"
                       width={40}
                       height={40}
-                      className="rounded-full shadow-lg shadow-fuchsia-500/50 ring ring-fuchsia-600 ring-offset-1"
+                      className="rounded-full shadow-lg ring shadow-fuchsia-500/50 ring-fuchsia-600 ring-offset-1"
                     />
                   )}
                   {qa.user.role === "MENTOR" && (
                     <div className="relative">
-                      <FaCrown className="absolute -left-3 -top-3 -rotate-45 text-yellow-400 shadow-yellow-500 drop-shadow-sm hover:text-yellow-500" />
+                      <FaCrown className="absolute -top-3 -left-3 -rotate-45 text-yellow-400 shadow-yellow-500 drop-shadow-sm hover:text-yellow-500" />
                       <Image
                         src={qa.user?.image || "/placeholder.jpg"}
                         alt="profile"
@@ -270,7 +283,7 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                   )}
                   {qa.user.role === "INSTRUCTOR" && (
                     <div className="relative">
-                      <FaCrown className="absolute -left-3 -top-3 -rotate-45 text-red-500 shadow-red-500 drop-shadow-sm hover:text-red-600" />
+                      <FaCrown className="absolute -top-3 -left-3 -rotate-45 text-red-500 shadow-red-500 drop-shadow-sm hover:text-red-600" />
                       <Image
                         src={qa.user?.image || "/placeholder.jpg"}
                         alt="profile"
@@ -281,19 +294,27 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                     </div>
                   )}
                   <div className="flex flex-col justify-start gap-1">
-                    <div className="flex flex-row justify-end items-center gap-3 flex-wrap">
-                      <p className="text-xs font-semibold truncate max-w-[150px] sm:max-w-xs">{qa?.user?.name} </p>
-                      <p className="text-xs test-gray-500 font-medium"> [ {qa.user?.username} ]</p>
+                    <div className="flex flex-row flex-wrap items-center justify-end gap-3">
+                      <p className="max-w-[150px] truncate text-xs font-semibold sm:max-w-xs">
+                        {qa?.user?.name}{" "}
+                      </p>
+                      <p className="test-gray-500 text-xs font-medium">
+                        {" "}
+                        [ {qa.user?.username} ]
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400 font-medium">
+                      <p className="text-xs font-medium text-gray-400">
                         Posted on {formatDateTime(qa?.createdAt)}
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="flex text-sm items-center justify-end p-2 gap-4">
-                  <div onClick={() => toggleAccordion(index)} className="text-sm font-medium">
+                <div className="flex items-center justify-end gap-4 p-2 text-sm">
+                  <div
+                    onClick={() => toggleAccordion(index)}
+                    className="text-sm font-medium"
+                  >
                     <div className="flex items-center gap-2 p-1">
                       <LuMessageCircleMore className="h-5 w-5" />
                       <h1>{qa.response.length} replies</h1>
@@ -310,7 +331,8 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                           <span>Reply</span>
                         </DropdownMenuItem>
                         {(currentUser.role === "INSTRUCTOR" ||
-                          (currentUser.role === "MENTOR" && qa.user.id === currentUser.id)) && (
+                          (currentUser.role === "MENTOR" &&
+                            qa.user.id === currentUser.id)) && (
                             <DropdownMenuItem>
                               <MdDelete className="mr-2 h-4 w-4" />
                               <AlertDialogTrigger>Delete</AlertDialogTrigger>
@@ -322,7 +344,8 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                       <AlertDialogHeader>
                         <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete this? This action cannot be undone.
+                          Are you sure you want to delete this? This action
+                          cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -339,11 +362,11 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                 </div>
               </div>
               <div className="px-5">
-                <h1 className="font-semibold text-lg">{qa.description}</h1>
+                <h1 className="text-lg font-semibold">{qa.description}</h1>
               </div>
 
               {openAccordion === index && qa.response.length === 0 && (
-                <div className="m-2 flex items-center justify-center space-x-2 rounded-lg bg-secondary-200 p-3 hover:bg-secondary-300">
+                <div className="bg-secondary-200 hover:bg-secondary-300 m-2 flex items-center justify-center space-x-2 rounded-lg p-3">
                   <p className="text-medium flex items-center justify-start font-bold">
                     No responses
                   </p>
@@ -352,7 +375,7 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
 
               <div className="m-2 flex items-center">
                 {replyId === qa?.id && (
-                  <div className="w-full m-2 flex items-center gap-3">
+                  <div className="m-2 flex w-full items-center gap-3">
                     <Input
                       placeholder="Enter your reply"
                       value={reply}
@@ -367,10 +390,18 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                       onChange={(e) => setReply(e.target.value)}
                       className="flex-grow"
                     />
-                    <Button onClick={() => setReplyId("")} variant="outline" size="icon">
+                    <Button
+                      onClick={() => setReplyId("")}
+                      variant="outline"
+                      size="icon"
+                    >
                       <RxCross2 className="h-4 w-4 text-white" />
                     </Button>
-                    <Button onClick={() => void handleReply(qa.id)} variant="outline" size="icon">
+                    <Button
+                      onClick={() => void handleReply(qa.id)}
+                      variant="outline"
+                      size="icon"
+                    >
                       <LuSendHorizontal className="h-4 w-4 text-white" />
                     </Button>
                   </div>
@@ -380,7 +411,10 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
               {openAccordion === index && qa?.response.length > 0 && (
                 <div className="rounded-lg p-3">
                   {qa?.response.map((r, responseIndex) => (
-                    <div key={responseIndex} className="mb-2 rounded-lg p-5 bg-gray-200">
+                    <div
+                      key={responseIndex}
+                      className="mb-2 rounded-lg bg-gray-200 p-5"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex space-x-5">
                           {r.user?.role === "STUDENT" && (
@@ -389,12 +423,12 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                               alt="profile"
                               width={40}
                               height={40}
-                              className="rounded-full shadow-lg shadow-fuchsia-500/50 ring ring-fuchsia-600 ring-offset-1"
+                              className="rounded-full shadow-lg ring shadow-fuchsia-500/50 ring-fuchsia-600 ring-offset-1"
                             />
                           )}
                           {r.user?.role === "MENTOR" && (
                             <div className="relative">
-                              <FaCrown className="absolute -left-3 -top-3 -rotate-45 text-yellow-400 shadow-yellow-500 drop-shadow-sm hover:text-yellow-500" />
+                              <FaCrown className="absolute -top-3 -left-3 -rotate-45 text-yellow-400 shadow-yellow-500 drop-shadow-sm hover:text-yellow-500" />
                               <Image
                                 src={r.user?.image || "/placeholder.jpg"}
                                 alt="profile"
@@ -406,7 +440,7 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                           )}
                           {r.user?.role === "INSTRUCTOR" && (
                             <div className="relative">
-                              <PiCrownSimpleFill className="absolute -left-3 -top-3 -rotate-45 text-red-400 shadow-red-500 drop-shadow-sm hover:text-red-500" />
+                              <PiCrownSimpleFill className="absolute -top-3 -left-3 -rotate-45 text-red-400 shadow-red-500 drop-shadow-sm hover:text-red-500" />
                               <Image
                                 src={r.user?.image || "/placeholder.jpg"}
                                 alt="profile"
@@ -418,8 +452,13 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                           )}
                           <div className="flex flex-col justify-start gap-1">
                             <div className="flex flex-row justify-start gap-3">
-                              <p className="text-xs font-semibold">{r?.user?.name} </p>
-                              <p className="text-xs font-medium"> [ {r?.user?.username} ]</p>
+                              <p className="text-xs font-semibold">
+                                {r?.user?.name}{" "}
+                              </p>
+                              <p className="text-xs font-medium">
+                                {" "}
+                                [ {r?.user?.username} ]
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs font-medium">
@@ -428,32 +467,44 @@ export default function Messages({ doubts, currentUser, currentCourseId }: Messa
                             </div>
                           </div>
                         </div>
-                        <div hidden={r.user.role === "INSTRUCTOR" && currentUser.role !== "INSTRUCTOR"}>
-                          {(currentUser.role === "MENTOR" || currentUser.role === "INSTRUCTOR") && (
-                            <AlertDialog>
-                              <AlertDialogTrigger>
-                                <MdDelete className="h-5 w-5 cursor-pointer text-red-600" />
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the
-                                    reply.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteReply(r.id)}>
-                                    Continue
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
+                        <div
+                          hidden={
+                            r.user.role === "INSTRUCTOR" &&
+                            currentUser.role !== "INSTRUCTOR"
+                          }
+                        >
+                          {(currentUser.role === "MENTOR" ||
+                            currentUser.role === "INSTRUCTOR") && (
+                              <AlertDialog>
+                                <AlertDialogTrigger>
+                                  <MdDelete className="h-5 w-5 cursor-pointer text-red-600" />
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Are you absolutely sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will
+                                      permanently delete the reply.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteReply(r.id)}
+                                    >
+                                      Continue
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                         </div>
                       </div>
-                      <div className="-mb-2 mt-4 text-sm font-semibold">{r.description}</div>
+                      <div className="mt-4 -mb-2 text-sm font-semibold">
+                        {r.description}
+                      </div>
                     </div>
                   ))}
                 </div>

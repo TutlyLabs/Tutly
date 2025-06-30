@@ -2,7 +2,7 @@
 
 import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { SessionUser } from "@tutly/auth";
+import type { SessionUser } from "@/lib/auth";
 
 import { ModeToggle } from "../ModeToggle";
 import { DynamicBreadcrumbs } from "./DynamicBreadcrumbs";
@@ -20,14 +20,19 @@ export function AppHeader({ user, crumbReplacement = {} }: AppHeaderProps) {
   const pathname = usePathname();
 
   return (
-    <header className="top-0 z-50 sticky flex items-center gap-1 sm:gap-2 bg-background px-2 sm:px-4 border-b h-16 shrink-0 transition-all duration-300 ease-in-out">
-      <div className="flex justify-between items-center w-full">
+    <header className="bg-background sticky top-0 z-50 flex h-16 shrink-0 items-center gap-1 border-b px-2 transition-all duration-300 ease-in-out sm:gap-2 sm:px-4">
+      <div className="flex w-full items-center justify-between">
         <div className="flex items-center gap-1 sm:gap-2">
-          {isMobile && <Separator orientation="vertical" className="ml-3 sm:ml-5 h-4" />}
-          <DynamicBreadcrumbs pathname={pathname} crumbReplacement={crumbReplacement} />
+          {isMobile && (
+            <Separator orientation="vertical" className="ml-3 h-4 sm:ml-5" />
+          )}
+          <DynamicBreadcrumbs
+            pathname={pathname}
+            crumbReplacement={crumbReplacement}
+          />
         </div>
         <div className="flex items-center gap-1.5 sm:gap-3">
-          <span className="max-sm:hidden font-medium text-md">{user.role}</span>
+          <span className="text-md font-medium max-sm:hidden">{user.role}</span>
           <ModeToggle />
           <Notifications user={user} />
           <UserMenu user={user} />

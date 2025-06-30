@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import type { Profile, User } from "@prisma/client";
+import type { Profile, User } from "@tutly/api/schema";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -17,12 +17,8 @@ import PersonalDetails from "./PersonalDetails";
 import ProfessionalProfiles from "./ProfessionalProfiles";
 import SocialLinks from "./SocialLinks";
 
-type UserWithProfile = User & {
-  profile: Profile | null;
-};
-
-export default function ProfilePage({ userProfile }: { userProfile: UserWithProfile }) {
-  const [profile, setProfile] = useState(userProfile.profile);
+export default function ProfilePage({ userProfile }: { userProfile?: any }) {
+  const [profile, setProfile] = useState(userProfile?.profile);
 
   const { mutate: updateProfile } = api.users.updateUserProfile.useMutation({
     onSuccess: (data) => {
@@ -46,18 +42,33 @@ export default function ProfilePage({ userProfile }: { userProfile: UserWithProf
 
   return (
     <div className="p-3 md:p-6">
-
       <Tabs defaultValue="basic" className="space-y-4">
         <div className="overflow-x-auto">
           <TabsList className="mb-2 w-max min-w-full md:grid md:grid-cols-4 lg:grid-cols-8">
-            <TabsTrigger value="basic" className="text-sm md:text-base">Basic Details</TabsTrigger>
-            <TabsTrigger value="personal" className="text-sm md:text-base">Personal</TabsTrigger>
-            <TabsTrigger value="professional" className="text-sm md:text-base">Professional</TabsTrigger>
-            <TabsTrigger value="address" className="text-sm md:text-base">Address</TabsTrigger>
-            <TabsTrigger value="academic" className="text-sm md:text-base">Academic</TabsTrigger>
-            <TabsTrigger value="social" className="text-sm md:text-base">Social</TabsTrigger>
-            <TabsTrigger value="experience" className="text-sm md:text-base">Experience</TabsTrigger>
-            <TabsTrigger value="documents" className="text-sm md:text-base">Documents</TabsTrigger>
+            <TabsTrigger value="basic" className="text-sm md:text-base">
+              Basic Details
+            </TabsTrigger>
+            <TabsTrigger value="personal" className="text-sm md:text-base">
+              Personal
+            </TabsTrigger>
+            <TabsTrigger value="professional" className="text-sm md:text-base">
+              Professional
+            </TabsTrigger>
+            <TabsTrigger value="address" className="text-sm md:text-base">
+              Address
+            </TabsTrigger>
+            <TabsTrigger value="academic" className="text-sm md:text-base">
+              Academic
+            </TabsTrigger>
+            <TabsTrigger value="social" className="text-sm md:text-base">
+              Social
+            </TabsTrigger>
+            <TabsTrigger value="experience" className="text-sm md:text-base">
+              Experience
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="text-sm md:text-base">
+              Documents
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -90,7 +101,9 @@ export default function ProfilePage({ userProfile }: { userProfile: UserWithProf
         <TabsContent value="professional">
           <Card className="p-3 md:p-6">
             <ProfessionalProfiles
-              professionalProfiles={profile?.professionalProfiles as Record<string, string>}
+              professionalProfiles={
+                profile?.professionalProfiles as Record<string, string>
+              }
               onUpdate={handleUpdateProfile}
             />
           </Card>
@@ -108,7 +121,9 @@ export default function ProfilePage({ userProfile }: { userProfile: UserWithProf
         <TabsContent value="academic">
           <Card className="p-3 md:p-6">
             <AcademicDetails
-              academicDetails={profile?.academicDetails as Record<string, string>}
+              academicDetails={
+                profile?.academicDetails as Record<string, string>
+              }
               onUpdate={handleUpdateProfile}
             />
           </Card>

@@ -1,23 +1,18 @@
-import { getServerSession } from "@tutly/auth";
-import { db } from "@tutly/db";
-import { redirect } from "next/navigation";
+"use client";
+
+import { api } from "@/trpc/react";
 import Drive from "./_components/Drive";
 
-export default async function DrivePage() {
-  const session = await getServerSession();
-  if (!session?.user) {
-    redirect("/sign-in");
+export default function DrivePage() {
+  const { data: filesData, isLoading } = api.drive.getUserFiles.useQuery();
+
+  if (isLoading) {
+    return <div>Loading files...</div>;
   }
 
-  const uploadedFiles = await db.file.findMany({
-    where: {
-      uploadedById: session.user.id,
-      isArchived: false,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  if (!filesData?.success || !filesData.data) {
+    return <div>Failed to load files.</div>;
+  }
 
-  return <Drive uploadedFiles={uploadedFiles} />;
-} 
+  return <Drive uploadedFiles={filesData.data} />;
+}

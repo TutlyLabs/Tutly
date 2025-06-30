@@ -1,4 +1,4 @@
-import { getServerSession } from "@tutly/auth";
+import { getServerSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 import ClassSidebar from "../_components/classSidebar";
@@ -15,20 +15,16 @@ export default async function ClassPage({
   const { id, classId } = await params;
 
   return (
-    <div className="flex items-start w-full">
+    <div className="flex w-full items-start">
       <ClassSidebar
         courseId={id}
         title="Assignments"
         currentUser={session.user}
         isCourseAdmin={session.user.role === "INSTRUCTOR"}
       />
-      <div className="w-full m-3">
-        <Class
-          courseId={id}
-          classId={classId}
-          currentUser={session.user}
-        />
+      <div className="m-3 w-full">
+        <Class courseId={id} classId={classId} currentUser={session.user} />
       </div>
     </div>
   );
-} 
+}

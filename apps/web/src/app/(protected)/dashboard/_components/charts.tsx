@@ -12,15 +12,23 @@ import {
 } from "@/components/ui/chart";
 
 export default function Component({
-notSubmitted,
+  notSubmitted,
   submitted,
 }: {
   notSubmitted: number;
   submitted: number;
 }) {
   const chartData = [
-    { status: "Successfully Submitted", assignments: submitted, fill: "hsl(var(--chart-1))" },
-    { status: "Not submitted", assignments: notSubmitted, fill: "hsl(var(--chart-3))" },
+    {
+      status: "Successfully Submitted",
+      assignments: submitted,
+      fill: "hsl(var(--chart-1))",
+    },
+    {
+      status: "Not submitted",
+      assignments: notSubmitted,
+      fill: "hsl(var(--chart-3))",
+    },
   ];
 
   const chartConfig = {
@@ -47,7 +55,10 @@ notSubmitted,
         <CardTitle>Assignment Status Overview</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
-        <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+        <ChartContainer
+          config={chartConfig}
+          className="mx-auto aspect-square max-h-[250px]"
+        >
           <PieChart>
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
             <Pie

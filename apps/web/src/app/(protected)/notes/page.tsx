@@ -11,4 +11,4 @@ export default function NotesPage() {
       <NotesComponent notes={notes.data?.data ?? []} />
     </div>
   );
-} 
+}

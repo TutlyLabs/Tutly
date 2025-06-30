@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Course } from "@prisma/client";
+import type { Course } from "@tutly/api/schema";
+import NoDataFound from "@/components/NoDataFound";
 
 type SimpleCourse = {
   id: string;
@@ -39,7 +40,9 @@ const SingleAssignmentBoard = ({
   courses: SimpleCourse[];
   assignments: CourseWithAssignments[];
 }) => {
-  const [currentCourse, setCurrentCourse] = useState<string>(courses[0]?.id || "");
+  const [currentCourse, setCurrentCourse] = useState<string>(
+    courses[0]?.id || "",
+  );
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
 
@@ -73,26 +76,61 @@ const SingleAssignmentBoard = ({
             <button
               key={course.id}
               onClick={() => setCurrentCourse(course.id)}
-              className={`rounded p-2 sm:w-auto ${currentCourse === course.id ? "rounded border" : ""
-                }`}
+              className={`rounded p-2 sm:w-auto ${
+                currentCourse === course.id ? "rounded border" : ""
+              }`}
             >
-              <h1 className="max-w-xs truncate text-sm font-medium">{course.title}</h1>
+              <h1 className="max-w-xs truncate text-sm font-medium">
+                {course.title}
+              </h1>
             </button>
           ))}
         </div>
       </div>
+
+      {filteredAssignments.length == 0 && (
+        <NoDataFound
+          message="No Assignments Found"
+          additionalMessage="There are no assignments available for the selected course."
+        />
+      )}
       {filteredAssignments.map((course) => {
         if (course.id !== currentCourse) return null;
+        if (!course.classes || course.classes.length === 0) {
+          return (
+            <NoDataFound
+              key={course.id}
+              message="No Classes Found"
+              additionalMessage="Nothing to see here - the schedule's on vacation!"
+            />
+          );
+        }
+        if (!course.classes.some((cls) => cls.attachments.length > 0)) {
+          return (
+            <NoDataFound
+              key={course.id}
+              message="No Assignments Found"
+              additionalMessage="Zero attachments, zero stress... for now!"
+            />
+          );
+        }
+
         return course.classes.map((cls) =>
           cls.attachments.map((assignment) => {
-            const assignmentsEvaluated = assignment.submissions.filter((x) => x.points.length > 0);
+            const assignmentsEvaluated = assignment.submissions.filter(
+              (x) => x.points.length > 0,
+            );
             return (
               <div key={assignment.id} className="rounded-lg border p-1 md:p-3">
                 <div className="flex flex-wrap items-center justify-around p-2 md:justify-between md:p-0 md:px-4">
                   <div className="flex w-full flex-wrap items-center justify-between md:flex-row">
                     <div className="text-sm">
-                      <h2 className="mx-2 my-1 flex-1 font-medium">{assignment.title}</h2>
-                      <p className="mx-2 mb-1 text-xs text-gray-500">{assignment.class?.title}</p>
+                      <h2 className="mx-2 my-1 flex-1 font-medium">
+                        {assignment.title}
+                      </h2>
+                      <p className="mx-2 mb-1 text-xs text-gray-500">
+                        {assignment.class?.title}
+                      </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-white md:gap-6">
                       <div>
@@ -102,17 +140,21 @@ const SingleAssignmentBoard = ({
                       </div>
                       <div>
                         <div className="rounded-full bg-yellow-600 p-2.5">
-                          {assignment.submissions.length - assignmentsEvaluated.length} under review
+                          {assignment.submissions.length -
+                            assignmentsEvaluated.length}{" "}
+                          under review
                         </div>
                       </div>
                       <div className="itens-center flex gap-6">
-                        <div className="rounded-full bg-secondary-600 p-2.5">
+                        <div className="bg-secondary-600 rounded-full p-2.5">
                           {assignment.submissions.length} submissions
                         </div>
                       </div>
                       <button
                         title="Details"
-                        onClick={() => router.push(`/assignments/${assignment.id}`)}
+                        onClick={() =>
+                          router.push(`/assignments/${assignment.id}`)
+                        }
                         className="rounded bg-blue-500 p-2.5"
                       >
                         View Details
@@ -122,7 +164,7 @@ const SingleAssignmentBoard = ({
                 </div>
               </div>
             );
-          })
+          }),
         );
       })}
     </div>

@@ -1,7 +1,7 @@
-import type { attachmentType, submissionMode } from "@prisma/client";
-import { z } from "zod";
+import type { attachmentType, submissionMode } from '@prisma/client';
+import { z } from 'zod';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 export const attachmentsRouter = createTRPCRouter({
   createAttachment: protectedProcedure
@@ -11,23 +11,18 @@ export const attachmentsRouter = createTRPCRouter({
         details: z.string().optional(),
         link: z.string().optional(),
         dueDate: z.date().optional(),
-        attachmentType: z.enum([
-          "ASSIGNMENT",
-          "GITHUB",
-          "ZOOM",
-          "OTHERS",
-        ] as const),
+        attachmentType: z.enum(['ASSIGNMENT', 'GITHUB', 'ZOOM', 'OTHERS'] as const),
         courseId: z.string(),
         classId: z.string(),
         maxSubmissions: z.number().optional(),
-        submissionMode: z.enum(["HTML_CSS_JS", "REACT", "EXTERNAL_LINK"]),
+        submissionMode: z.enum(['HTML_CSS_JS', 'REACT', 'EXTERNAL_LINK']),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
         const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized" };
+        if (currentUser.role !== 'INSTRUCTOR') {
+          return { error: 'Unauthorized' };
         }
 
         const attachment = await ctx.db.attachment.create({
@@ -46,8 +41,8 @@ export const attachmentsRouter = createTRPCRouter({
 
         return { success: true, data: attachment };
       } catch (error) {
-        console.error("Error creating attachment:", error);
-        return { error: "Failed to create attachment" };
+        console.error('Error creating attachment:', error);
+        return { error: 'Failed to create attachment' };
       }
     }),
 
@@ -79,8 +74,8 @@ export const attachmentsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
 
-      if (currentUser.role !== "INSTRUCTOR") {
-        return { error: "You must be an instructor to delete an attachment" };
+      if (currentUser.role !== 'INSTRUCTOR') {
+        return { error: 'You must be an instructor to delete an attachment' };
       }
 
       const attachment = await ctx.db.attachment.delete({
@@ -103,23 +98,18 @@ export const attachmentsRouter = createTRPCRouter({
         details: z.string().optional(),
         link: z.string().optional(),
         dueDate: z.date().optional(),
-        attachmentType: z.enum([
-          "ASSIGNMENT",
-          "GITHUB",
-          "ZOOM",
-          "OTHERS",
-        ] as const),
+        attachmentType: z.enum(['ASSIGNMENT', 'GITHUB', 'ZOOM', 'OTHERS'] as const),
         courseId: z.string(),
         classId: z.string(),
         maxSubmissions: z.number().optional(),
-        submissionMode: z.enum(["HTML_CSS_JS", "REACT", "EXTERNAL_LINK"]),
+        submissionMode: z.enum(['HTML_CSS_JS', 'REACT', 'EXTERNAL_LINK']),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
         const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized" };
+        if (currentUser.role !== 'INSTRUCTOR') {
+          return { error: 'Unauthorized' };
         }
 
         const attachment = await ctx.db.attachment.update({
@@ -141,8 +131,8 @@ export const attachmentsRouter = createTRPCRouter({
 
         return { success: true, data: attachment };
       } catch (error) {
-        console.error("Error updating attachment:", error);
-        return { error: "Failed to update attachment" };
+        console.error('Error updating attachment:', error);
+        return { error: 'Failed to update attachment' };
       }
     }),
 
@@ -157,20 +147,20 @@ export const attachmentsRouter = createTRPCRouter({
         const assignments = await ctx.db.attachment.findMany({
           where: {
             courseId: input.courseId,
-            attachmentType: "ASSIGNMENT",
+            attachmentType: 'ASSIGNMENT',
           },
           include: {
             submissions: true,
           },
           orderBy: {
-            createdAt: "desc",
+            createdAt: 'desc',
           },
         });
 
         return { success: true, data: assignments };
       } catch (error) {
-        console.error("Error getting course assignments:", error);
-        return { error: "Failed to get course assignments" };
+        console.error('Error getting course assignments:', error);
+        return { error: 'Failed to get course assignments' };
       }
     }),
 });

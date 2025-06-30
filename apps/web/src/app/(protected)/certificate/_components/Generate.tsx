@@ -33,18 +33,21 @@ export default function Generate({ user }: GenerateProps) {
   return (
     <div>
       {isLoading && (
-        <div className="fixed inset-0 bg-black text-white font-bold text-lg bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black text-lg font-bold text-white">
           Download in progreess...
         </div>
       )}
       <button
         onClick={() => void downloadCertificate()}
-        className="mb-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded shadow hover:bg-blue-700"
+        className="mb-4 rounded bg-blue-600 px-4 py-2 font-semibold text-white shadow hover:bg-blue-700"
         disabled={isLoading}
       >
         {isLoading ? "Downloading..." : "Download Certificate"}
       </button>
-      <div id="certificate" className="relative w-[800px] h-[566px] mx-auto border border-gray-400">
+      <div
+        id="certificate"
+        className="relative mx-auto h-[566px] w-[800px] border border-gray-400"
+      >
         <Image
           src="/gold_template.png"
           alt="Certificate"
@@ -54,14 +57,16 @@ export default function Generate({ user }: GenerateProps) {
         />
         {/* <img src="/silver_template.png" alt="Certificate" className="w-full h-full object-cover" /> */}
         {/* <img src="/bronze_template.png" alt="Certificate" className="w-full h-full object-cover" /> */}
-        <div className="absolute top-[45%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-3xl font-bold uppercase text-black w-[70%]">
+        <div className="absolute top-[45%] left-1/2 w-[70%] -translate-x-1/2 -translate-y-1/2 transform text-center text-3xl font-bold text-black uppercase">
           {user?.name}
         </div>
-        <div className="absolute top-[60%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-lg font-medium text-[#333] w-[75%] leading-relaxed">
-          This certificate is awarded to <span className="font-bold">{user?.name}</span>, bearing
-          roll number <span className="font-bold">{user?.username}</span>, for successfully
-          completing the Web Development Course (MERN Stack). We recognize their dedication and hard
-          work in acquiring the skills necessary for modern web development.
+        <div className="absolute top-[60%] left-1/2 w-[75%] -translate-x-1/2 -translate-y-1/2 transform text-center text-lg leading-relaxed font-medium text-[#333]">
+          This certificate is awarded to{" "}
+          <span className="font-bold">{user?.name}</span>, bearing roll number{" "}
+          <span className="font-bold">{user?.username}</span>, for successfully
+          completing the Web Development Course (MERN Stack). We recognize their
+          dedication and hard work in acquiring the skills necessary for modern
+          web development.
         </div>
         <div className="absolute top-[70%] left-16 flex flex-col items-center">
           <Image
@@ -69,12 +74,12 @@ export default function Generate({ user }: GenerateProps) {
             alt="Signature"
             width={160}
             height={80}
-            className="w-40 h-auto"
+            className="h-auto w-40"
           />
           <p className="text-sm font-bold text-gray-600">Rajesh Thappeta</p>
           <p className="text-xs text-gray-600">Course Instructor</p>
         </div>
-        <div className="absolute top-[88%] left-1/2 transform -translate-x-1/2 text-center text-sm font-semibold text-[#555]">
+        <div className="absolute top-[88%] left-1/2 -translate-x-1/2 transform text-center text-sm font-semibold text-[#555]">
           Presented by <span className="text-blue-900">Tutly</span>
         </div>
       </div>

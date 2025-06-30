@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@prisma/client";
-import { FileType } from "@prisma/client";
+import type { Profile } from "@tutly/api/schema";
+import { FileType } from "@tutly/api/schema";
 import { Loader2, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -90,7 +90,7 @@ export default function Documents({ documents, onUpdate }: DocumentsProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center py-4">
+      <div className="flex items-center justify-between py-4">
         <h2 className="text-2xl font-semibold">Documents</h2>
         <Button
           variant={isEditing ? "outline" : "default"}
@@ -111,7 +111,7 @@ export default function Documents({ documents, onUpdate }: DocumentsProps) {
                 <FormItem className="space-y-4">
                   <FormLabel className="text-lg">Resume</FormLabel>
                   <FormControl>
-                    <div className="flex items-center gap-6 min-h-[100px] p-6 border rounded-lg">
+                    <div className="flex min-h-[100px] items-center gap-6 rounded-lg border p-6">
                       <div className="relative flex-1">
                         <Input
                           type="file"
@@ -119,10 +119,10 @@ export default function Documents({ documents, onUpdate }: DocumentsProps) {
                           ref={fileInputRef}
                           onChange={handleUpload}
                           disabled={!isEditing || isUploading}
-                          className="h-18 p-2 file:mr-6 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                          className="file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 h-18 p-2 file:mr-6 file:rounded-lg file:border-0 file:px-6 file:py-3 file:text-sm file:font-medium"
                         />
                         {isUploading && (
-                          <div className="absolute inset-0 bg-black/10 flex items-center justify-center rounded-lg">
+                          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/10">
                             <Loader2 className="h-6 w-6 animate-spin" />
                           </div>
                         )}
@@ -130,7 +130,7 @@ export default function Documents({ documents, onUpdate }: DocumentsProps) {
                       {field.value && (
                         <a
                           href={field.value}
-                          className="text-blue-500 hover:underline text-lg"
+                          className="text-lg text-blue-500 hover:underline"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -146,8 +146,8 @@ export default function Documents({ documents, onUpdate }: DocumentsProps) {
           </div>
 
           {isEditing && (
-            <Button type="submit" className="w-full md:w-auto h-12 text-lg">
-              <Upload className="h-5 w-5 mr-3" />
+            <Button type="submit" className="h-12 w-full text-lg md:w-auto">
+              <Upload className="mr-3 h-5 w-5" />
               Upload Documents
             </Button>
           )}

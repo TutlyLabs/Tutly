@@ -60,7 +60,12 @@ export default function PageLoader() {
           position: absolute;
           width: 100%;
           height: 100%;
-          background: linear-gradient(90deg, transparent 0%, hsl(221.2 83.2% 53.3%) 50%, transparent 100%);
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            hsl(221.2 83.2% 53.3%) 50%,
+            transparent 100%
+          );
           transform: translateX(-100%);
           animation: none;
         }
@@ -71,7 +76,12 @@ export default function PageLoader() {
           left: 0;
           width: 50%;
           height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent
+          );
           transform: translateX(-100%);
           animation: none;
         }
@@ -107,4 +117,4 @@ export default function PageLoader() {
       `}</style>
     </>
   );
-} 
+}

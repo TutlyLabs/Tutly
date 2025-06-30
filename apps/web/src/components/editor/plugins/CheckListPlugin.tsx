@@ -1,5 +1,10 @@
 import type { ListItemNode } from "@lexical/list";
-import { $isListItemNode, $isListNode, INSERT_CHECK_LIST_COMMAND, insertList } from "@lexical/list";
+import {
+  $isListItemNode,
+  $isListNode,
+  INSERT_CHECK_LIST_COMMAND,
+  insertList,
+} from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $findMatchingParent,
@@ -35,21 +40,21 @@ export function CheckListPlugin(): null {
           insertList(editor, "check");
           return true;
         },
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerCommand<KeyboardEvent>(
         KEY_ARROW_DOWN_COMMAND,
         (event) => {
           return handleArrownUpOrDown(event, editor, false);
         },
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerCommand<KeyboardEvent>(
         KEY_ARROW_UP_COMMAND,
         (event) => {
           return handleArrownUpOrDown(event, editor, true);
         },
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerCommand<KeyboardEvent>(
         KEY_ESCAPE_COMMAND,
@@ -68,7 +73,7 @@ export function CheckListPlugin(): null {
 
           return false;
         },
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerCommand<KeyboardEvent>(
         KEY_SPACE_COMMAND,
@@ -89,7 +94,7 @@ export function CheckListPlugin(): null {
 
           return false;
         },
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerCommand<KeyboardEvent>(
         KEY_ARROW_LEFT_COMMAND,
@@ -105,14 +110,15 @@ export function CheckListPlugin(): null {
                 const anchorNode = anchor.getNode();
                 const elementNode = $findMatchingParent(
                   anchorNode,
-                  (node) => $isElementNode(node) && !node.isInline()
+                  (node) => $isElementNode(node) && !node.isInline(),
                 );
                 if ($isListItemNode(elementNode)) {
                   const parent = elementNode.getParent();
                   if (
                     $isListNode(parent) &&
                     parent.getListType() === "check" &&
-                    (isElement || elementNode.getFirstDescendant() === anchorNode)
+                    (isElement ||
+                      elementNode.getFirstDescendant() === anchorNode)
                   ) {
                     const domNode = editor.getElementByKey(elementNode.__key);
 
@@ -129,7 +135,7 @@ export function CheckListPlugin(): null {
             return false;
           });
         },
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerRootListener((rootElement, prevElement) => {
         if (rootElement !== null) {
@@ -141,7 +147,7 @@ export function CheckListPlugin(): null {
           prevElement.removeEventListener("click", handleClick);
           prevElement.removeEventListener("pointerdown", handlePointerDown);
         }
-      })
+      }),
     );
   });
 
@@ -168,7 +174,10 @@ function handleCheckItemEvent(event: PointerEvent, callback: () => void) {
 
   const parentNode = target.parentNode;
 
-  if (!parentNode || (parentNode as HTMLElement).dataset.lexicalListType !== "check") {
+  if (
+    !parentNode ||
+    (parentNode as HTMLElement).dataset.lexicalListType !== "check"
+  ) {
     return;
   }
 
@@ -216,7 +225,8 @@ function getActiveCheckListItem(): HTMLElement | null {
   return activeElement != null &&
     activeElement.tagName === "LI" &&
     activeElement.parentNode != null &&
-    (activeElement.parentNode as HTMLElement).dataset.lexicalListType === "check"
+    (activeElement.parentNode as HTMLElement).dataset.lexicalListType ===
+      "check"
     ? activeElement
     : null;
 }
@@ -231,13 +241,17 @@ function findCheckListItemSibling(node: ListItemNode, backward: boolean) {
     parent = parent.getParentOrThrow().getParent() as ListItemNode;
 
     if (parent != null) {
-      sibling = backward ? parent.getPreviousSibling() : parent.getNextSibling();
+      sibling = backward
+        ? parent.getPreviousSibling()
+        : parent.getNextSibling();
     }
   }
 
   // Going down in a tree to get first non-nested list item
   while ($isListItemNode(sibling)) {
-    const firstChild = backward ? sibling.getLastChild() : sibling.getFirstChild();
+    const firstChild = backward
+      ? sibling.getLastChild()
+      : sibling.getFirstChild();
 
     if (!$isListNode(firstChild)) {
       return sibling;
@@ -249,7 +263,11 @@ function findCheckListItemSibling(node: ListItemNode, backward: boolean) {
   return null;
 }
 
-function handleArrownUpOrDown(event: KeyboardEvent, editor: LexicalEditor, backward: boolean) {
+function handleArrownUpOrDown(
+  event: KeyboardEvent,
+  editor: LexicalEditor,
+  backward: boolean,
+) {
   const activeItem = getActiveCheckListItem();
 
   if (activeItem != null) {

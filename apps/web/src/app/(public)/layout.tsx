@@ -2,7 +2,7 @@ import "@/styles/globals.css";
 import { RefreshCw } from "lucide-react";
 import { getVersion } from "@/lib/version";
 import ThemeToggle from "@/components/ThemeToggle";
-import posthog from 'posthog-js';
+import posthog from "posthog-js";
 
 type Props = {
   children: React.ReactNode;
@@ -20,17 +20,17 @@ export default function AuthLayout({ children }: Props) {
 
   return (
     <>
-      <div className="bottom-2 left-2 fixed flex items-center gap-1.5 px-2 text-muted-foreground text-xs">
+      <div className="text-muted-foreground fixed bottom-2 left-2 flex items-center gap-1.5 px-2 text-xs">
         <span>{version}</span>
         <button
           id="checkUpdate"
-          className="inline-flex items-center gap-1 hover:bg-muted px-1.5 py-0.5 rounded-md"
+          className="hover:bg-muted inline-flex items-center gap-1 rounded-md px-1.5 py-0.5"
           title="Check for updates"
         >
-          <RefreshCw className="w-3 h-3 transition-transform" />
+          <RefreshCw className="h-3 w-3 transition-transform" />
         </button>
       </div>
-      <div className="top-4 right-4 fixed">
+      <div className="fixed top-4 right-4">
         <ThemeToggle />
       </div>
       {children}

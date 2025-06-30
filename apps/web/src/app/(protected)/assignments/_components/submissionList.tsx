@@ -19,7 +19,9 @@ export const SubmissionList = ({
 
   useEffect(() => {
     if (searchParams?.submissionId) {
-      const element = document.getElementById(`submission-${searchParams.submissionId}`);
+      const element = document.getElementById(
+        `submission-${searchParams.submissionId}`,
+      );
       if (element) {
         element.scrollIntoView({ block: "center" });
       }
@@ -48,7 +50,11 @@ export const SubmissionList = ({
           Submissions {assignment && `(max:${assignment?.maxSubmissions})`}
         </p>
         <p className="text-xs text-slate-600">
-          {submissions.filter((submission: any) => submission?.points.length == 0).length}{" "}
+          {
+            submissions.filter(
+              (submission: any) => submission?.points.length == 0,
+            ).length
+          }{" "}
           un-evaluated / {submissions.length} total
         </p>
       </div>
@@ -90,8 +96,10 @@ export const SubmissionList = ({
                       ? `submission-${singleSubmission.id}`
                       : undefined
                   }
-                  className={`cursor-pointer border-b p-2 hover:bg-gray-100 hover:text-blue-500 ${singleSubmission.id == searchParams?.submissionId && "bg-gray-100 text-blue-500"
-                    } ${singleSubmission.points.length > 0 && "text-green-500"}`}
+                  className={`cursor-pointer border-b p-2 hover:bg-gray-100 hover:text-blue-500 ${
+                    singleSubmission.id == searchParams?.submissionId &&
+                    "bg-gray-100 text-blue-500"
+                  } ${singleSubmission.points.length > 0 && "text-green-500"}`}
                 >
                   <p className="text-sm">
                     {singleSubmission.enrolledUser.username}
@@ -102,7 +110,9 @@ export const SubmissionList = ({
                     {singleSubmission.enrolledUser.user.name}
                   </p>
                   {!assignment && (
-                    <p className="text-xs text-slate-600">{singleSubmission?.assignment?.title}</p>
+                    <p className="text-xs text-slate-600">
+                      {singleSubmission?.assignment?.title}
+                    </p>
                   )}
                 </div>
               </a>

@@ -5,7 +5,11 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Sidebar,
@@ -21,7 +25,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getDefaultSidebarItems } from "@/config/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { SessionUser } from "@tutly/auth";
+import type { SessionUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 export interface SidebarItem {
@@ -39,11 +43,18 @@ interface AppSidebarProps {
   className?: string;
 }
 
-export function AppSidebar({ user, forceClose = false, className }: AppSidebarProps) {
+export function AppSidebar({
+  user,
+  forceClose = false,
+  className,
+}: AppSidebarProps) {
   const organizationName = "Tutly";
   const pathname = usePathname();
 
-  const sidebarItems = getDefaultSidebarItems({ role: user.role, isAdmin: user.isAdmin });
+  const sidebarItems = getDefaultSidebarItems({
+    role: user.role,
+    isAdmin: user.isAdmin,
+  });
   const [isOpen, setIsOpen] = useState(() => !forceClose);
 
   useEffect(() => {
@@ -64,37 +75,39 @@ export function AppSidebar({ user, forceClose = false, className }: AppSidebarPr
   const isMobile = useIsMobile();
 
   return (
-    <div className={cn(
-      "flex-shrink-0 overflow-hidden transition-all duration-100 ease-in-out",
-      {
-        "sm:w-[220px]": isOpen && !forceClose,
-        "sm:w-[45px]": !isOpen || forceClose,
-      },
-    )}>
-      <SidebarProvider onOpenChange={handleOpenChange} open={isOpen && !forceClose}>
+    <div
+      className={cn(
+        "flex-shrink-0 overflow-hidden transition-all duration-100 ease-in-out",
+        {
+          "sm:w-[220px]": isOpen && !forceClose,
+          "sm:w-[45px]": !isOpen || forceClose,
+        },
+      )}
+    >
+      <SidebarProvider
+        onOpenChange={handleOpenChange}
+        open={isOpen && !forceClose}
+      >
         {isMobile && !forceClose && (
-          <div className="top-4 left-2 fixed flex items-center gap-2">
+          <div className="fixed top-4 left-2 flex items-center gap-2">
             <SidebarTrigger className="hover:bg-accent" />
           </div>
         )}
         <Sidebar
           collapsible={forceClose ? "icon" : "icon"}
-          className={cn(
-            "bg-background h-screen",
-            className
-          )}
+          className={cn("bg-background h-screen", className)}
         >
           <SidebarHeader>
             <SidebarMenu>
               <SidebarMenuItem>
                 <div
                   className={cn(
-                    "flex w-full items-center gap-2 justify-between",
-                    isOpen ? "flex-row" : "flex-col"
+                    "flex w-full items-center justify-between gap-2",
+                    isOpen ? "flex-row" : "flex-col",
                   )}
                 >
                   <SidebarMenuButton size="lg" className="mx-auto">
-                    <div className="flex justify-center items-center bg-sidebar-primary rounded-lg size-8 aspect-square text-sidebar-primary-foreground">
+                    <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                       <Image
                         src="/logo-with-bg.png"
                         alt="Logo"
@@ -104,9 +117,11 @@ export function AppSidebar({ user, forceClose = false, className }: AppSidebarPr
                       />
                     </div>
                     {!forceClose && isOpen && (
-                      <div className="flex-1 grid text-sm text-left leading-tight">
-                        <span className="font-semibold truncate">{organizationName}</span>
-                        <span className="text-xs truncate">{user.role}</span>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">
+                          {organizationName}
+                        </span>
+                        <span className="truncate text-xs">{user.role}</span>
                       </div>
                     )}
                   </SidebarMenuButton>
@@ -121,12 +136,17 @@ export function AppSidebar({ user, forceClose = false, className }: AppSidebarPr
                 {sidebarItems.map((item) => {
                   const ItemIcon = item.icon;
                   const isSubItemActive =
-                    item.items?.some((subItem) => pathname === subItem.url) ?? false;
+                    item.items?.some((subItem) => pathname === subItem.url) ??
+                    false;
                   return (
                     <Collapsible
                       key={item.title}
                       asChild
-                      defaultOpen={item.isActive ?? pathname.startsWith(item.url) ?? isSubItemActive}
+                      defaultOpen={
+                        item.isActive ??
+                        pathname.startsWith(item.url) ??
+                        isSubItemActive
+                      }
                       className={`group/collapsible ${item.className ?? ""}`}
                     >
                       <SidebarMenuItem>
@@ -136,32 +156,36 @@ export function AppSidebar({ user, forceClose = false, className }: AppSidebarPr
                               <CollapsibleTrigger asChild>
                                 <SidebarMenuButton
                                   className={cn(
-                                    pathname === item.url ? "bg-primary text-primary-foreground" : "",
-                                    "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base"
+                                    pathname === item.url
+                                      ? "bg-primary text-primary-foreground"
+                                      : "",
+                                    "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base",
                                   )}
                                 >
                                   <ItemIcon className="size-6" />
                                   <span>{item.title}</span>
-                                  <ChevronRight className="ml-auto group-data-[state=open]/collapsible:rotate-90 transition-transform duration-200" />
+                                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                                 </SidebarMenuButton>
                               </CollapsibleTrigger>
                             ) : (
                               <SidebarMenuButton
                                 tooltip={{
                                   children: (
-                                    <div className="flex flex-col bg-popover shadow-md border rounded-md w-[160px] overflow-hidden text-popover-foreground">
+                                    <div className="bg-popover text-popover-foreground flex w-[160px] flex-col overflow-hidden rounded-md border shadow-md">
                                       {item.items.map((subItem) => (
                                         <a
                                           key={subItem.title}
                                           href={subItem.url}
                                           className={cn(
-                                            "relative flex select-none items-center px-2.5 py-1.5 text-sm outline-none",
-                                            "transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                                            "relative flex items-center px-2.5 py-1.5 text-sm outline-none select-none",
+                                            "hover:bg-accent hover:text-accent-foreground transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
                                             pathname === subItem.url &&
-                                            "bg-accent text-accent-foreground"
+                                              "bg-accent text-accent-foreground",
                                           )}
                                         >
-                                          <span className="truncate">{subItem.title}</span>
+                                          <span className="truncate">
+                                            {subItem.title}
+                                          </span>
                                         </a>
                                       ))}
                                     </div>
@@ -172,9 +196,13 @@ export function AppSidebar({ user, forceClose = false, className }: AppSidebarPr
                                   align: "center",
                                 }}
                                 className={cn(
-                                  pathname === item.url ? "bg-primary text-primary-foreground" : "",
-                                  isSubItemActive && !isOpen && "bg-accent text-accent-foreground",
-                                  "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base"
+                                  pathname === item.url
+                                    ? "bg-primary text-primary-foreground"
+                                    : "",
+                                  isSubItemActive &&
+                                    !isOpen &&
+                                    "bg-accent text-accent-foreground",
+                                  "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base",
                                 )}
                               >
                                 <ItemIcon className="size-6" />
@@ -192,7 +220,7 @@ export function AppSidebar({ user, forceClose = false, className }: AppSidebarPr
                                             ? "bg-primary text-primary-foreground"
                                             : "",
                                           "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base",
-                                          subItem.className ?? ""
+                                          subItem.className ?? "",
                                         )}
                                       >
                                         <a href={subItem.url}>
@@ -210,8 +238,10 @@ export function AppSidebar({ user, forceClose = false, className }: AppSidebarPr
                             <SidebarMenuButton
                               tooltip={isOpen ? "" : item.title}
                               className={cn(
-                                pathname === item.url ? "bg-primary text-primary-foreground" : "",
-                                "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base"
+                                pathname === item.url
+                                  ? "bg-primary text-primary-foreground"
+                                  : "",
+                                "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base",
                               )}
                             >
                               <ItemIcon className="size-6" />

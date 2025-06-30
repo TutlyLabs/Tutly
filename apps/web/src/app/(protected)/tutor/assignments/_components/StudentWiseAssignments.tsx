@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { MdOutlineSportsScore } from "react-icons/md";
 import { useRouter } from "next/navigation";
-import type { Course } from "@prisma/client";
+import type { Course } from "@tutly/api/schema";
 
 type SimpleCourse = {
   id: string;
@@ -37,13 +37,15 @@ type CourseWithAssignments = Course & {
 export default function StudentWiseAssignments({
   courses,
   assignments,
-  userId
+  userId,
 }: {
   courses: SimpleCourse[];
   assignments: CourseWithAssignments[];
   userId: string;
 }) {
-  const [currentCourse, setCurrentCourse] = useState<string>(courses[0]?.id || "");
+  const [currentCourse, setCurrentCourse] = useState<string>(
+    courses[0]?.id || "",
+  );
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const [unreviewed, setUnreviewed] = useState<string>("all");
@@ -64,11 +66,14 @@ export default function StudentWiseAssignments({
             return (
               <button
                 onClick={() => setCurrentCourse(course.id)}
-                className={`rounded p-2 sm:w-auto ${currentCourse === course.id && "rounded border"
-                  }`}
+                className={`rounded p-2 sm:w-auto ${
+                  currentCourse === course.id && "rounded border"
+                }`}
                 key={course.id}
               >
-                <h1 className="max-w-xs truncate text-sm font-medium">{course.title}</h1>
+                <h1 className="max-w-xs truncate text-sm font-medium">
+                  {course.title}
+                </h1>
               </button>
             );
           })}
@@ -143,61 +148,82 @@ export default function StudentWiseAssignments({
                 return x.submissions.length === 0;
               } else if (unreviewed == "unreviewed") {
                 return (
-                  x.submissions.length > 0 && x.submissions.some((x: any) => x.points.length === 0)
+                  x.submissions.length > 0 &&
+                  x.submissions.some((x: any) => x.points.length === 0)
                 );
               } else if (unreviewed == "reviewed") {
                 return (
-                  x.submissions.length > 0 && x.submissions.some((x: any) => x.points.length > 0)
+                  x.submissions.length > 0 &&
+                  x.submissions.some((x: any) => x.points.length > 0)
                 );
               }
               return true;
             })
             .map((assignment: any) => {
               return (
-                <div key={assignment.id} className="rounded-lg border p-1 md:p-3">
+                <div
+                  key={assignment.id}
+                  className="rounded-lg border p-1 md:p-3"
+                >
                   <div className="flex flex-wrap items-center justify-around p-2 md:justify-between md:p-0 md:px-4">
                     <div className="flex w-full flex-wrap items-center justify-between md:flex-row">
                       <div className="text-sm">
-                        <h2 className="m-2 flex-1 font-medium">{assignment.title}</h2>
+                        <h2 className="m-2 flex-1 font-medium">
+                          {assignment.title}
+                        </h2>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-white md:gap-6">
                         {assignment.submissions.length === 0 ? (
                           <div className="itens-center flex gap-6">
-                            <div className="rounded-full bg-secondary-600 p-2.5">not submitted</div>
+                            <div className="bg-secondary-600 rounded-full p-2.5">
+                              not submitted
+                            </div>
                           </div>
                         ) : (
                           <div className="flex gap-2">
-                            {assignment.submissions.map((eachSubmission: any, index: number) => {
-                              if (eachSubmission.points.length === 0) {
-                                return (
-                                  <div className="flex items-center gap-6" key={index}>
-                                    <div className="rounded-full bg-yellow-600 p-2.5 hover:bg-yellow-500">
-                                      Under review
+                            {assignment.submissions.map(
+                              (eachSubmission: any, index: number) => {
+                                if (eachSubmission.points.length === 0) {
+                                  return (
+                                    <div
+                                      className="flex items-center gap-6"
+                                      key={index}
+                                    >
+                                      <div className="rounded-full bg-yellow-600 p-2.5 hover:bg-yellow-500">
+                                        Under review
+                                      </div>
                                     </div>
-                                  </div>
-                                );
-                              } else {
-                                let total = 0;
-                                return (
-                                  <div className="flex items-center gap-6" key={index}>
-                                    <div className="flex items-center rounded-full bg-green-600 p-2.5">
-                                      {eachSubmission.points.forEach((point: any) => {
-                                        total += point.score;
-                                      })}
-                                      <h1>Score : {total}</h1>
-                                      <MdOutlineSportsScore className="inline sm:h-5 sm:w-5" />
+                                  );
+                                } else {
+                                  let total = 0;
+                                  return (
+                                    <div
+                                      className="flex items-center gap-6"
+                                      key={index}
+                                    >
+                                      <div className="flex items-center rounded-full bg-green-600 p-2.5">
+                                        {eachSubmission.points.forEach(
+                                          (point: any) => {
+                                            total += point.score;
+                                          },
+                                        )}
+                                        <h1>Score : {total}</h1>
+                                        <MdOutlineSportsScore className="inline sm:h-5 sm:w-5" />
+                                      </div>
                                     </div>
-                                  </div>
-                                );
-                              }
-                            })}
+                                  );
+                                }
+                              },
+                            )}
                           </div>
                         )}
                         <button
                           title="Details"
                           onClick={() => {
                             if (userId) {
-                              router.push(`/assignments/${assignment.id}?username=${userId}`);
+                              router.push(
+                                `/assignments/${assignment.id}?username=${userId}`,
+                              );
                             } else {
                               router.push(`/assignments/${assignment.id}`);
                             }

@@ -24,11 +24,13 @@ export default function CourseCard({ course, currentUser }: any) {
   };
 
   return (
-    <Card className="m-auto mt-3 w-[280px] overflow-hidden md:mx-2 ">
+    <Card className="m-auto mt-3 w-[280px] overflow-hidden md:mx-2">
       <div
-        className="relative h-[150px] cursor-pointer bg-white text-secondary-700"
+        className="text-secondary-700 relative h-[150px] cursor-pointer bg-white"
         onClick={
-          expired() ? () => router.push("/courses") : () => router.push(`/courses/${course.id}`)
+          expired()
+            ? () => router.push("/courses")
+            : () => router.push(`/courses/${course.id}`)
         }
       >
         <div className="relative h-full w-full">
@@ -40,11 +42,11 @@ export default function CourseCard({ course, currentUser }: any) {
             height={150}
           />
           {!course.isPublished && currentUser?.role === "INSTRUCTOR" && (
-            <div className="absolute right-0 top-0 m-3 rounded-md border bg-red-500 px-2 py-1 text-xs text-white">
+            <div className="absolute top-0 right-0 m-3 rounded-md border bg-red-500 px-2 py-1 text-xs text-white">
               Draft
             </div>
           )}
-          <div className="absolute bottom-0 right-0 m-3 flex items-center rounded-md border bg-blue-500 px-2 py-1 text-xs text-white">
+          <div className="absolute right-0 bottom-0 m-3 flex items-center rounded-md border bg-blue-500 px-2 py-1 text-xs text-white">
             <IoMdBookmarks className="mr-1" />
             <span>{course._count.classes} Classes</span>
           </div>
@@ -53,7 +55,9 @@ export default function CourseCard({ course, currentUser }: any) {
 
       <div className="flex items-center justify-between border-t p-3">
         <div className="cursor-pointer">
-          <h2 className="font-medium">{expired() ? `${course.title} [Expired]` : course.title}</h2>
+          <h2 className="font-medium">
+            {expired() ? `${course.title} [Expired]` : course.title}
+          </h2>
         </div>
 
         {currentUser.role === "INSTRUCTOR" && !currentUser.isAdmin && (
@@ -66,7 +70,11 @@ export default function CourseCard({ course, currentUser }: any) {
               <FaUsersGear className="h-5 w-5" />
             </Button>
 
-            <Button variant="ghost" size="icon" onClick={() => setOpenModal(true)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setOpenModal(true)}
+            >
               <MdOutlineEdit className="h-5 w-5" />
             </Button>
 

@@ -8,7 +8,17 @@ interface FileData {
   content: string;
 }
 
-const imagExtensions = ["jpg", "jpeg", "png", "gif", "svg", "webp", "bmp", "ico", "tiff"];
+const imagExtensions = [
+  "jpg",
+  "jpeg",
+  "png",
+  "gif",
+  "svg",
+  "webp",
+  "bmp",
+  "ico",
+  "tiff",
+];
 
 const FolderUpload = ({
   setFilesObj,
@@ -108,7 +118,11 @@ const FolderUpload = ({
     setFilesObj(filesObjWithoutFolderName);
   };
 
-  const traverseFileTree = async (item: any, path: string, fileArray: FileData[]) => {
+  const traverseFileTree = async (
+    item: any,
+    path: string,
+    fileArray: FileData[],
+  ) => {
     if (item.isFile) {
       const file = await new Promise<File>((resolve) => item.file(resolve));
       // Skip node_modules folder, .git folder, .DS_Store. //todo: add more
@@ -130,7 +144,9 @@ const FolderUpload = ({
       fileArray.push({ path: path + file.name, content });
     } else if (item.isDirectory) {
       const dirReader = item.createReader();
-      const entries = await new Promise<any[]>((resolve) => dirReader.readEntries(resolve));
+      const entries = await new Promise<any[]>((resolve) =>
+        dirReader.readEntries(resolve),
+      );
       for (const entry of entries) {
         await traverseFileTree(entry, path + item.name + "/", fileArray);
       }
@@ -154,8 +170,11 @@ const FolderUpload = ({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={() => inputRef.current?.click()}
-          className={`group flex w-full cursor-pointer flex-col items-center justify-center gap-6 rounded-lg border-2 border-dotted p-10 transition-all duration-300 ease-in-out md:w-2/5 ${isDragging ? "border-indigo-500 bg-indigo-100" : "border-gray-600 bg-white"
-            }`}
+          className={`group flex w-full cursor-pointer flex-col items-center justify-center gap-6 rounded-lg border-2 border-dotted p-10 transition-all duration-300 ease-in-out md:w-2/5 ${
+            isDragging
+              ? "border-indigo-500 bg-indigo-100"
+              : "border-gray-600 bg-white"
+          }`}
         >
           <IoCloudUploadOutline className="h-20 w-20 text-blue-500 transition-transform duration-300 ease-in-out group-hover:scale-110 group-hover:text-blue-700" />
 
@@ -163,7 +182,9 @@ const FolderUpload = ({
             htmlFor="fileInput"
             className="cursor-pointer text-lg font-semibold text-gray-500 transition-colors duration-300 ease-in-out group-hover:text-blue-600"
           >
-            {isDragging ? "Drop React folder here" : "Drag and drop react folder here"}
+            {isDragging
+              ? "Drop React folder here"
+              : "Drag and drop react folder here"}
             <input
               id="fileInput"
               type="file"
@@ -180,7 +201,7 @@ const FolderUpload = ({
       {isLoading && (
         <div className="bg-opacity/50 fixed inset-0 z-50 flex items-center justify-center bg-black">
           <div className="rounded-lg bg-white p-6 shadow-xl">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-indigo-500"></div>
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-indigo-500"></div>
             <p className="mt-4 font-semibold text-blue-600">Loading files...</p>
           </div>
         </div>

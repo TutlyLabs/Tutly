@@ -67,9 +67,11 @@ export default function AssignmentPage({
   mentors,
   pagination,
 }: Props) {
-  const haveAdminAccess = currentUser && (currentUser.role === "INSTRUCTOR" || isCourseAdmin);
+  const haveAdminAccess =
+    currentUser && (currentUser.role === "INSTRUCTOR" || isCourseAdmin);
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [nonSubmissions, setNonSubmissions] = useState<boolean>(false);
   const [modal, setModal] = useState(false);
@@ -81,6 +83,7 @@ export default function AssignmentPage({
     other: 0,
   });
   const [feedback, setFeedback] = useState("");
+  const [isEditClassDialogOpen, setIsEditClassDialogOpen] = useState(false);
 
   const addPointsMutation = api.points.addPoints.useMutation({
     onSuccess: () => {
@@ -102,15 +105,17 @@ export default function AssignmentPage({
     },
   });
 
-  const deleteSubmissionMutation = api.submissions.deleteSubmission.useMutation({
-    onSuccess: () => {
-      toast.success("Submission deleted successfully");
-      router.refresh();
+  const deleteSubmissionMutation = api.submissions.deleteSubmission.useMutation(
+    {
+      onSuccess: () => {
+        toast.success("Submission deleted successfully");
+        router.refresh();
+      },
+      onError: () => {
+        toast.error("Failed to delete submission");
+      },
     },
-    onError: () => {
-      toast.error("Failed to delete submission");
-    },
-  });
+  );
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -143,7 +148,10 @@ export default function AssignmentPage({
   };
 
   const handleSend = (message: string) => {
-    window.open(`https://web.whatsapp.com/send?phone=${phoneNumber}&text=${message}&app_absent=0`, '_blank');
+    window.open(
+      `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${message}&app_absent=0`,
+      "_blank",
+    );
     setModal(false);
   };
 
@@ -160,7 +168,10 @@ export default function AssignmentPage({
     const submission = assignments.find((x: any) => x.id === submissionId);
 
     const getScore = (category: string) => {
-      return submission?.points.find((point: any) => point.category === category)?.score || 0;
+      return (
+        submission?.points.find((point: any) => point.category === category)
+          ?.score || 0
+      );
     };
 
     setEditedScores({
@@ -215,14 +226,17 @@ export default function AssignmentPage({
       </h1>
 
       <div className="my-4 flex items-center justify-between text-xs font-medium md:text-sm">
-        <p className="rounded bg-secondary-500 p-1 px-2 text-white">
+        <p className="bg-secondary-500 rounded p-1 px-2 text-white">
           # {assignment?.class?.course?.title}
         </p>
         <div className="flex items-center justify-center gap-4">
           {assignment?.dueDate != null && (
             <div
-              className={`rounded p-1 px-2 text-white ${new Date(assignment?.dueDate) > new Date() ? "bg-primary-600" : "bg-secondary-500"
-                }`}
+              className={`rounded p-1 px-2 text-white ${
+                new Date(assignment?.dueDate) > new Date()
+                  ? "bg-primary-600"
+                  : "bg-secondary-500"
+              }`}
             >
               Last Date : {assignment?.dueDate.toISOString().split("T")[0]}
             </div>
@@ -236,24 +250,34 @@ export default function AssignmentPage({
             Max responses : {assignment?.maxSubmissions}
           </h1>
           {haveAdminAccess && (
-            <Dialog>
+            <Dialog
+              open={isEditClassDialogOpen}
+              onOpenChange={setIsEditClassDialogOpen}
+            >
               <DialogTrigger asChild>
                 <Button className="rounded-md bg-emerald-700 p-1 px-3 hover:bg-emerald-800">
                   Edit
                 </Button>
               </DialogTrigger>
-              <DialogContent className="min-w-[70vw] max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-h-[90vh] min-w-[70vw] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Edit</DialogTitle>
-                  <DialogDescription>Modify the assignment details.</DialogDescription>
+                  <DialogDescription>
+                    Modify the assignment details.
+                  </DialogDescription>
                 </DialogHeader>
                 {assignment && (
                   <NewAttachmentPage
-                    classes={assignment.class.course.classes}
+                    classes={assignment.course.classes}
                     courseId={assignment.courseId}
                     classId={assignment.classId}
                     isEditing={true}
                     attachment={assignment}
+                    onCancel={() => setIsEditClassDialogOpen(false)}
+                    onComplete={() => {
+                      setIsEditClassDialogOpen(false);
+                      window.location.reload();
+                    }}
                   />
                 )}
               </DialogContent>
@@ -273,14 +297,17 @@ export default function AssignmentPage({
           <a
             target="_blank"
             href={`${assignment?.link}`}
-            className="break-words text-sm font-semibold text-blue-400"
+            className="text-sm font-semibold break-words text-blue-400"
           >
             {assignment?.link}
           </a>
         </div>
 
         {currentUser?.role === "STUDENT" ? (
-          <StudentAssignmentSubmission courseId={assignment.courseId} assignment={assignment} />
+          <StudentAssignmentSubmission
+            courseId={assignment.courseId}
+            assignment={assignment}
+          />
         ) : (
           <AdminAssignmentTable
             assignmentId={assignment.id}
@@ -332,15 +359,16 @@ const StudentAssignmentSubmission = ({
 }) => {
   const [externalLink, setExternalLink] = useState("");
   const router = useRouter();
-  const submitExternalLinkMutation = api.submissions.submitExternalLink.useMutation({
-    onSuccess: () => {
-      toast.success("Assignment submitted successfully");
-      router.refresh();
-    },
-    onError: (error) => {
-      toast.error(`Error: ${error.message}`);
-    },
-  });
+  const submitExternalLinkMutation =
+    api.submissions.submitExternalLink.useMutation({
+      onSuccess: () => {
+        toast.success("Assignment submitted successfully");
+        router.refresh();
+      },
+      onError: (error) => {
+        toast.error(`Error: ${error.message}`);
+      },
+    });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -363,7 +391,8 @@ const StudentAssignmentSubmission = ({
     }
   };
 
-  const isMaxSubmissionsReached = assignment?.maxSubmissions <= assignment.submissions.length;
+  const isMaxSubmissionsReached =
+    assignment?.maxSubmissions <= assignment.submissions.length;
   const isPlaygroundSubmission = assignment.submissionMode === "HTML_CSS_JS";
 
   return (
@@ -375,7 +404,10 @@ const StudentAssignmentSubmission = ({
           </div>
         ) : isPlaygroundSubmission ? (
           <Button asChild>
-            <a href={`/playgrounds/html-css-js?assignmentId=${assignment.id}`} target="_blank">
+            <a
+              href={`/playgrounds/html-css-js?assignmentId=${assignment.id}`}
+              target="_blank"
+            >
               {assignment?.submissions.length === 0
                 ? "Submit through Playground"
                 : "Submit another response"}
@@ -417,7 +449,7 @@ const StudentAssignmentSubmission = ({
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Submissions</h2>
+        <h2 className="text-foreground text-lg font-semibold">Submissions</h2>
 
         <Table>
           <TableHeader className="bg-muted">
@@ -433,12 +465,21 @@ const StudentAssignmentSubmission = ({
             {assignment?.submissions.map((submission: any, index: number) => {
               const points = {
                 responsiveness:
-                  submission.points.find((p: any) => p.category === "RESPOSIVENESS")?.score || 0,
-                styling: submission.points.find((p: any) => p.category === "STYLING")?.score || 0,
-                other: submission.points.find((p: any) => p.category === "OTHER")?.score || 0,
+                  submission.points.find(
+                    (p: any) => p.category === "RESPOSIVENESS",
+                  )?.score || 0,
+                styling:
+                  submission.points.find((p: any) => p.category === "STYLING")
+                    ?.score || 0,
+                other:
+                  submission.points.find((p: any) => p.category === "OTHER")
+                    ?.score || 0,
               };
 
-              const totalScore = Object.values(points).reduce((sum, score) => sum + score, 0);
+              const totalScore = Object.values(points).reduce(
+                (sum, score) => sum + score,
+                0,
+              );
               const submissionUrl = isPlaygroundSubmission
                 ? `/playgrounds/html-css-js?submissionId=${submission.id}`
                 : submission.submissionLink;
@@ -454,7 +495,8 @@ const StudentAssignmentSubmission = ({
                     </Button>
                   </TableCell>
                   <TableCell className="text-foreground">
-                    {submission.submissionDate.toISOString().split("T")[0] || "NA"}
+                    {submission.submissionDate.toISOString().split("T")[0] ||
+                      "NA"}
                   </TableCell>
                   <TableCell className="text-foreground">
                     {submission.overallFeedback || "NA"}
@@ -546,31 +588,33 @@ const AdminAssignmentTable = ({
 
   return (
     <div>
-      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between  mb-2">
-        <div className="flex items-center gap-6">
+      <div className="mt-8 mb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-6 max-sm:flex-col">
           <div className="rounded-md bg-blue-600 px-3 py-2 text-sm text-white">
             Submissions : 👇
           </div>
-          <Select value={selectedMentor} onValueChange={onMentorChange}>
-            <SelectTrigger className="w-[180px] text-white">
-              <SelectValue placeholder="Filter by mentor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Mentors</SelectItem>
-              {mentors.map((mentor) => (
-                <SelectItem key={mentor} value={mentor}>
-                  {mentor}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            onClick={() => setNonSubmissions(!nonSubmissions)}
-            variant="link"
-            className="italic text-muted-foreground hover:text-foreground"
-          >
-            {!nonSubmissions ? "Not received from?" : "Received from?"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select value={selectedMentor} onValueChange={onMentorChange}>
+              <SelectTrigger className="w-[180px] text-white max-sm:w-[150px]">
+                <SelectValue placeholder="Filter by mentor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Mentors</SelectItem>
+                {mentors.map((mentor) => (
+                  <SelectItem key={mentor} value={mentor}>
+                    {mentor}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={() => setNonSubmissions(!nonSubmissions)}
+              variant="link"
+              className="text-muted-foreground hover:text-foreground italic"
+            >
+              {!nonSubmissions ? "Not received from?" : "Received from?"}
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -581,17 +625,20 @@ const AdminAssignmentTable = ({
               value={searchQuery}
               onChange={(e) => onSearch(e.target.value)}
             />
-            <FaSearch className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <FaSearch className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2" />
           </div>
           <Button
             onClick={() => {
               if (username) {
-                router.push(`/assignments/${assignmentId}/evaluate?username=${username}`);
+                router.push(
+                  `/assignments/${assignmentId}/evaluate?username=${username}`,
+                );
               } else {
                 router.push(`/assignments/${assignmentId}/evaluate`);
               }
             }}
-            className="bg-primary-600 text-white hover:bg-primary-700"
+            variant={"link"}
+            className="border border-white text-white hover:bg-white hover:text-black"
           >
             Evaluate
           </Button>
@@ -613,8 +660,12 @@ const AdminAssignmentTable = ({
               {notSubmittedMentees?.map((user: any, index: any) => (
                 <TableRow key={index}>
                   <TableCell className="text-foreground">{index + 1}</TableCell>
-                  <TableCell className="text-foreground">{user.username}</TableCell>
-                  <TableCell className="text-foreground">{user.mentorUsername}</TableCell>
+                  <TableCell className="text-foreground">
+                    {user.username}
+                  </TableCell>
+                  <TableCell className="text-foreground">
+                    {user.mentorUsername}
+                  </TableCell>
                   <TableCell className="text-center">
                     <Button
                       variant="ghost"
@@ -635,7 +686,9 @@ const AdminAssignmentTable = ({
                 <TableHead className="text-foreground">Sl.no</TableHead>
                 <TableHead className="text-foreground">Username</TableHead>
                 <TableHead className="text-foreground">Date</TableHead>
-                <TableHead className="text-foreground">Responsive(10)</TableHead>
+                <TableHead className="text-foreground">
+                  Responsive(10)
+                </TableHead>
                 <TableHead className="text-foreground">Styling(10)</TableHead>
                 <TableHead className="text-foreground">Others(10)</TableHead>
                 <TableHead className="text-foreground">Total</TableHead>
@@ -651,26 +704,37 @@ const AdminAssignmentTable = ({
             <TableBody>
               {assignments?.map((submission: any, index: any) => {
                 const rValue = submission.points.find(
-                  (point: any) => point.category === "RESPOSIVENESS"
+                  (point: any) => point.category === "RESPOSIVENESS",
                 );
-                const sValue = submission.points.find((point: any) => point.category === "STYLING");
-                const oValue = submission.points.find((point: any) => point.category === "OTHER");
+                const sValue = submission.points.find(
+                  (point: any) => point.category === "STYLING",
+                );
+                const oValue = submission.points.find(
+                  (point: any) => point.category === "OTHER",
+                );
 
-                const totalScore = [rValue, sValue, oValue].reduce((acc, currentValue) => {
-                  return acc + (currentValue ? currentValue.score : 0);
-                }, 0);
+                const totalScore = [rValue, sValue, oValue].reduce(
+                  (acc, currentValue) => {
+                    return acc + (currentValue ? currentValue.score : 0);
+                  },
+                  0,
+                );
 
                 return (
                   <TableRow key={index}>
-                    <TableCell className="text-foreground">{index + 1}</TableCell>
+                    <TableCell className="text-foreground">
+                      {index + 1}
+                    </TableCell>
                     <TableCell className="text-foreground">
                       <div>{submission.enrolledUser.username}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-muted-foreground text-xs">
                         {submission.enrolledUser.mentorUsername}
                       </div>
                     </TableCell>
                     <TableCell className="text-foreground">
-                      {day(submission.submissionDate).format("DD MMM YYYY, hh:mm:ss A")}
+                      {day(submission.submissionDate).format(
+                        "DD MMM YYYY, hh:mm:ss A",
+                      )}
                     </TableCell>
                     <TableCell className="text-foreground">
                       {editingIndex === index ? (
@@ -679,7 +743,11 @@ const AdminAssignmentTable = ({
                           value={editedScores.responsiveness}
                           onChange={(e) => {
                             const newScore = parseInt(e.target.value);
-                            if (!isNaN(newScore) && newScore >= 0 && newScore <= 10) {
+                            if (
+                              !isNaN(newScore) &&
+                              newScore >= 0 &&
+                              newScore <= 10
+                            ) {
                               setEditedScores({
                                 ...editedScores,
                                 responsiveness: newScore,
@@ -701,7 +769,11 @@ const AdminAssignmentTable = ({
                           value={editedScores.styling}
                           onChange={(e) => {
                             const newScore = parseInt(e.target.value);
-                            if (!isNaN(newScore) && newScore >= 0 && newScore <= 10) {
+                            if (
+                              !isNaN(newScore) &&
+                              newScore >= 0 &&
+                              newScore <= 10
+                            ) {
                               setEditedScores({
                                 ...editedScores,
                                 styling: newScore,
@@ -723,7 +795,11 @@ const AdminAssignmentTable = ({
                           value={editedScores.other}
                           onChange={(e) => {
                             const newScore = parseInt(e.target.value);
-                            if (!isNaN(newScore) && newScore >= 0 && newScore <= 10) {
+                            if (
+                              !isNaN(newScore) &&
+                              newScore >= 0 &&
+                              newScore <= 10
+                            ) {
                               setEditedScores({
                                 ...editedScores,
                                 other: newScore,
@@ -739,7 +815,9 @@ const AdminAssignmentTable = ({
                       )}
                     </TableCell>
                     <TableCell className="text-foreground">
-                      {rValue?.score || sValue?.score || oValue?.score ? totalScore : "NA"}
+                      {rValue?.score || sValue?.score || oValue?.score
+                        ? totalScore
+                        : "NA"}
                     </TableCell>
                     <TableCell className="text-foreground">
                       {editingIndex === index ? (
@@ -749,7 +827,7 @@ const AdminAssignmentTable = ({
                           onChange={(e) => {
                             setFeedback(e.target.value);
                           }}
-                          className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                         />
                       ) : (
                         submission.overallFeedback || "NA"
@@ -838,9 +916,9 @@ const AdminAssignmentTable = ({
                 {messages.map((msg, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between gap-4 border-b border-border py-2"
+                    className="border-border flex items-center justify-between gap-4 border-b py-2"
                   >
-                    <p className="text-sm text-foreground">{msg}</p>
+                    <p className="text-foreground text-sm">{msg}</p>
                     <Button variant="link" onClick={() => onSend(msg)}>
                       Send
                     </Button>

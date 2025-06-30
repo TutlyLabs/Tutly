@@ -1,5 +1,7 @@
-import { getServerSessionOrRedirect } from "@tutly/auth";
-import { db } from "@tutly/db";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { api } from "@/trpc/react";
 import Playground from "../_components/Playground";
 
 type SandpackFile = {
@@ -13,45 +15,31 @@ type SandpackFiles = {
   [key: string]: SandpackFile;
 };
 
-export default async function HtmlCssJsPlaygroundPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ assignmentId?: string; submissionId?: string }>;
-}) {
-  const session = await getServerSessionOrRedirect();
-  const currentUser = session?.user;
-  const { assignmentId, submissionId } = await searchParams;
+export default function HtmlCssJsPlaygroundPage() {
+  const searchParams = useSearchParams();
+  const assignmentId = searchParams.get("assignmentId") || undefined;
+  const submissionId = searchParams.get("submissionId") || undefined;
 
+  const { data: submissionData, isLoading } =
+    api.submissions.getSubmissionForPlayground.useQuery(
+      { submissionId: submissionId! },
+      { enabled: !!submissionId },
+    );
 
-  let initialFiles: SandpackFiles | undefined;
-
-  if (submissionId) {
-    const submission = await db.submission.findUnique({
-      where: { id: submissionId },
-      include: {
-        enrolledUser: true,
-        points: true,
-      },
-    });
-
-    if (submission?.data) {
-      initialFiles = submission.data as SandpackFiles;
-    }
-
-    const studentAccess =
-      currentUser?.role === "STUDENT" && submission?.enrolledUser.username === currentUser.username;
-    const mentorAccess =
-      currentUser?.role === "MENTOR" && submission?.enrolledUser.mentorUsername === currentUser.username;
-    const instructorAccess = currentUser?.role === "INSTRUCTOR";
-
-    if (!studentAccess && !mentorAccess && !instructorAccess) {
-      return <div>Access Denied</div>;
-    }
+  if (isLoading) {
+    return <div>Loading playground...</div>;
   }
+
+  if (submissionId && (!submissionData?.success || !submissionData.data)) {
+    return <div>Access Denied or submission not found</div>;
+  }
+
+  const initialFiles = submissionData?.data?.initialFiles as
+    | SandpackFiles
+    | undefined;
 
   return (
     <Playground
-      currentUser={currentUser}
       assignmentId={assignmentId || ""}
       initialFiles={initialFiles}
       template="static"

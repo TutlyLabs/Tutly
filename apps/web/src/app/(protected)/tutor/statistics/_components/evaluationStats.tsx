@@ -4,7 +4,13 @@ import { api } from "@/trpc/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InboxIcon } from "lucide-react";
 
-export function EvaluationStats({ courseId, mentorUsername }: { courseId: string; mentorUsername?: string }) {
+export function EvaluationStats({
+  courseId,
+  mentorUsername,
+}: {
+  courseId: string;
+  mentorUsername?: string;
+}) {
   const { data, isLoading } = api.statistics.getPiechartData.useQuery({
     courseId,
     mentorUsername,
@@ -23,9 +29,9 @@ export function EvaluationStats({ courseId, mentorUsername }: { courseId: string
         <CardHeader>
           <CardTitle>Evaluation Stats</CardTitle>
         </CardHeader>
-        <CardContent className="h-[190px] w-full flex items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <InboxIcon className="mx-auto h-8 w-8 mb-2" />
+        <CardContent className="flex h-[190px] w-full items-center justify-center">
+          <div className="text-muted-foreground text-center">
+            <InboxIcon className="mx-auto mb-2 h-8 w-8" />
             <p>No evaluation data available</p>
           </div>
         </CardContent>
@@ -42,16 +48,18 @@ export function EvaluationStats({ courseId, mentorUsername }: { courseId: string
       </CardHeader>
       <CardContent className="h-[190px] w-full">
         <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
+          <div className="bg-muted flex flex-col items-center justify-center rounded-lg p-4">
             <span className="text-2xl font-bold">{total}</span>
-            <span className="text-sm text-muted-foreground">Total Submissions</span>
+            <span className="text-muted-foreground text-sm">
+              Total Submissions
+            </span>
           </div>
-          <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
+          <div className="bg-muted flex flex-col items-center justify-center rounded-lg p-4">
             <span className="text-2xl font-bold">{averageScore}%</span>
-            <span className="text-sm text-muted-foreground">Average Score</span>
+            <span className="text-muted-foreground text-sm">Average Score</span>
           </div>
         </div>
       </CardContent>
     </Card>
   );
-} 
+}

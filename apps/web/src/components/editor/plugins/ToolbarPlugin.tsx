@@ -1,4 +1,4 @@
-import { type FileType } from "@prisma/client";
+import { type FileType } from "@tutly/api/schema";
 import {
   $isListNode,
   INSERT_CHECK_LIST_COMMAND,
@@ -8,8 +8,16 @@ import {
   REMOVE_LIST_COMMAND,
 } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $createHeadingNode, $createQuoteNode, $isHeadingNode } from "@lexical/rich-text";
-import { $isAtNodeEnd, $isParentElementRTL, $wrapNodes } from "@lexical/selection";
+import {
+  $createHeadingNode,
+  $createQuoteNode,
+  $isHeadingNode,
+} from "@lexical/rich-text";
+import {
+  $isAtNodeEnd,
+  $isParentElementRTL,
+  $wrapNodes,
+} from "@lexical/selection";
 import { $getNearestNodeOfType, mergeRegister } from "@lexical/utils";
 import type { Point } from "lexical";
 import {
@@ -67,7 +75,7 @@ const blockTypeToBlockName = {
 };
 
 function Divider() {
-  return <div className="h-5 w-[1px] bg-border mx-1" />;
+  return <div className="bg-border mx-1 h-5 w-[1px]" />;
 }
 
 interface SelectProps {
@@ -121,14 +129,19 @@ interface ToolbarPluginProps {
   allowUpload?: boolean;
 }
 
-export default function ToolbarPlugin({ fileUploadOptions, allowUpload }: ToolbarPluginProps) {
+export default function ToolbarPlugin({
+  fileUploadOptions,
+  allowUpload,
+}: ToolbarPluginProps) {
   const [editor] = useLexicalComposerContext();
   const toolbarRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [blockType, setBlockType] = useState("paragraph");
-  const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null);
+  const [selectedElementKey, setSelectedElementKey] = useState<string | null>(
+    null,
+  );
   const [isRTL, setIsRTL] = useState(false);
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
@@ -136,10 +149,11 @@ export default function ToolbarPlugin({ fileUploadOptions, allowUpload }: Toolba
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const { fileType, onUpload, associatingId, allowedExtensions } = fileUploadOptions ?? {};
+  const { fileType, onUpload, associatingId, allowedExtensions } =
+    fileUploadOptions ?? {};
 
   const { uploadFile } = useFileUpload({
-    fileType: fileType ?? "IMAGE" as FileType,
+    fileType: fileType ?? ("IMAGE" as FileType),
     allowedExtensions: allowedExtensions,
     onUpload: async (file) => {
       if (!file?.publicUrl) return;
@@ -186,7 +200,9 @@ export default function ToolbarPlugin({ fileUploadOptions, allowUpload }: Toolba
     if ($isRangeSelection(selection)) {
       const anchorNode = selection.anchor.getNode();
       const element =
-        anchorNode.getKey() === "root" ? anchorNode : anchorNode.getTopLevelElementOrThrow();
+        anchorNode.getKey() === "root"
+          ? anchorNode
+          : anchorNode.getTopLevelElementOrThrow();
       const elementKey = element.getKey();
       const elementDOM = editor.getElementByKey(elementKey);
       if (elementDOM !== null) {
@@ -196,7 +212,9 @@ export default function ToolbarPlugin({ fileUploadOptions, allowUpload }: Toolba
           const type = parentList ? parentList.getTag() : element.getTag();
           setBlockType(type);
         } else {
-          const type = $isHeadingNode(element) ? element.getTag() : element.getType();
+          const type = $isHeadingNode(element)
+            ? element.getTag()
+            : element.getType();
           setBlockType(type);
         }
       }
@@ -230,7 +248,7 @@ export default function ToolbarPlugin({ fileUploadOptions, allowUpload }: Toolba
           }
           return false;
         },
-        LowPriority
+        LowPriority,
       ),
       editor.registerCommand(
         CAN_UNDO_COMMAND,
@@ -238,7 +256,7 @@ export default function ToolbarPlugin({ fileUploadOptions, allowUpload }: Toolba
           setCanUndo(payload);
           return false;
         },
-        LowPriority
+        LowPriority,
       ),
       editor.registerCommand(
         CAN_REDO_COMMAND,
@@ -246,8 +264,8 @@ export default function ToolbarPlugin({ fileUploadOptions, allowUpload }: Toolba
           setCanRedo(payload);
           return false;
         },
-        LowPriority
-      )
+        LowPriority,
+      ),
     );
 
     return () => {
@@ -321,7 +339,10 @@ export default function ToolbarPlugin({ fileUploadOptions, allowUpload }: Toolba
   };
 
   return (
-    <div className="flex items-center p-1 gap-1 border rounded-lg bg-background" ref={toolbarRef}>
+    <div
+      className="bg-background flex items-center gap-1 rounded-lg border p-1"
+      ref={toolbarRef}
+    >
       <Button
         disabled={!canUndo}
         onClick={(e) => {

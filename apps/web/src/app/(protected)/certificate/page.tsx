@@ -1,110 +1,25 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "@tutly/auth";
-import { db } from "@tutly/db";
+"use client";
+
+import { api } from "@/trpc/react";
 import StudentCertificate from "./_components/StudentCertificate";
 
-interface Course {
-  courseId: string;
-  courseTitle: string;
-  assignmentsSubmitted: number;
-  totalPoints: number;
-  totalAssignments: number;
-}
+export default function CertificatePage() {
+  const { data: certificateData, isLoading } =
+    api.certificates.getStudentCertificateData.useQuery();
 
-interface DashboardData {
-  courses: Course[];
-  currentUser: {
-    name: string;
-    username: string;
-  };
-}
-
-export default async function CertificatePage() {
-  const session = await getServerSession();
-  if (!session?.user) {
-    redirect("/sign-in");
+  if (isLoading) {
+    return <div>Loading certificate data...</div>;
   }
 
-  if (session.user.role !== "STUDENT") {
-    redirect("/dashboard");
+  if (!certificateData?.success || !certificateData.data) {
+    return <div>Failed to load certificate data or access denied.</div>;
   }
 
-  const enrolledCourses = await db.enrolledUsers.findMany({
-    where: {
-      username: session.user.username,
-      user: {
-        organizationId: session.user.organizationId,
-      },
-    },
-    select: {
-      course: {
-        select: {
-          id: true,
-          title: true,
-          attachments: {
-            where: {
-              attachmentType: "ASSIGNMENT",
-            },
-            select: {
-              id: true,
-              title: true,
-              submissions: {
-                where: {
-                  enrolledUser: {
-                    username: session.user.username,
-                  },
-                },
-                select: {
-                  id: true,
-                  points: {
-                    select: {
-                      score: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  const dashboardData: DashboardData = {
-    courses: enrolledCourses.map((enrolledCourse) => {
-      if (!enrolledCourse.course?.id || !enrolledCourse.course?.title) {
-        throw new Error("Course ID or title is missing");
-      }
-
-      const courseAssignments = enrolledCourse.course.attachments || [];
-      const submissions = courseAssignments.flatMap((a) => a.submissions);
-
-      const totalPoints = submissions.reduce(
-        (acc, curr) => acc + curr.points.reduce((acc, curr) => acc + curr.score, 0),
-        0
-      );
-
-      return {
-        courseId: enrolledCourse.course.id,
-        courseTitle: enrolledCourse.course.title,
-        assignments: courseAssignments,
-        assignmentsSubmitted: submissions.length,
-        totalPoints,
-        totalAssignments: courseAssignments.length,
-      };
-    }),
-    currentUser: {
-      name: session.user.name,
-      username: session.user.username,
-    },
-  };
+  const { courses, currentUser } = certificateData.data;
 
   return (
     <div>
-      <StudentCertificate user={dashboardData.currentUser} data={dashboardData} />
+      <StudentCertificate user={currentUser} data={{ courses, currentUser }} />
     </div>
   );
-} 
+}

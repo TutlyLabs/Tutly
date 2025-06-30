@@ -60,7 +60,9 @@ export default function GridView({
                   <DropdownMenuItem
                     key={action.label}
                     onClick={() => void handleAction(action, row)}
-                    className={action.variant === "destructive" ? "text-destructive" : ""}
+                    className={
+                      action.variant === "destructive" ? "text-destructive" : ""
+                    }
                   >
                     <div className="flex items-center">
                       {action.icon}
@@ -100,7 +102,7 @@ export default function GridView({
                     }}
                   >
                     <div className="flex items-center">
-                      <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+                      <Trash2 className="text-destructive mr-2 h-4 w-4" />
                       Delete
                     </div>
                   </DropdownMenuItem>
@@ -115,22 +117,27 @@ export default function GridView({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {data.map((row, index) => (
         <div
           key={index}
-          className="bg-background rounded-lg border shadow-sm hover:shadow-md transition-shadow p-4 relative"
+          className="bg-background relative rounded-lg border p-4 shadow-sm transition-shadow hover:shadow-md"
         >
           <div className="space-y-2 pt-4">
             {columns
               .filter((column) => !column.hidden)
               .map((column) => (
-                <div key={column.key} className="flex justify-between items-center">
-                  <div className="text-sm font-medium text-muted-foreground">
+                <div
+                  key={column.key}
+                  className="flex items-center justify-between"
+                >
+                  <div className="text-muted-foreground text-sm font-medium">
                     {column.label || column.name}:
                   </div>
                   <div className="text-sm">
-                    {column.render ? column.render(row[column.key], row) : row[column.key]}
+                    {column.render
+                      ? column.render(row[column.key], row)
+                      : row[column.key]}
                   </div>
                 </div>
               ))}
@@ -139,4 +146,4 @@ export default function GridView({
       ))}
     </div>
   );
-} 
+}

@@ -1,4 +1,4 @@
-import { getServerSessionOrRedirect } from "@tutly/auth";
+import { getServerSessionOrRedirect } from "@/lib/auth";
 import ReactPlayground from "./ReactPlayground";
 
 export default async function ReactPlaygroundPage() {
@@ -6,4 +6,4 @@ export default async function ReactPlaygroundPage() {
   const currentUser = session?.user;
 
   return <ReactPlayground currentUser={currentUser} />;
-} 
+}

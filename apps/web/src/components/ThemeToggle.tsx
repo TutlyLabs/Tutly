@@ -10,7 +10,9 @@ const ThemeToggle = () => {
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark";
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
 
     setTheme(savedTheme || (prefersDark ? "dark" : "light"));
   }, []);
@@ -23,9 +25,14 @@ const ThemeToggle = () => {
   };
 
   return (
-    <Button variant="ghost" size="icon" className="rounded-md w-9 h-9" onClick={toggleTheme}>
-      <Sun className="w-4 h-4 rotate-0 dark:-rotate-90 scale-100 dark:scale-0 transition-all" />
-      <Moon className="absolute w-4 h-4 rotate-90 dark:rotate-0 scale-0 dark:scale-100 transition-all" />
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-9 w-9 rounded-md"
+      onClick={toggleTheme}
+    >
+      <Sun className="h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+      <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
       <span className="sr-only">Toggle theme</span>
     </Button>
   );

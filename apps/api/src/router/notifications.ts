@@ -1,27 +1,14 @@
-import { NotificationEvent, NotificationMedium } from "@prisma/client";
-import webPush from "web-push";
-import { z } from "zod";
+import { NotificationEvent, NotificationMedium } from '@prisma/client';
+import webPush from 'web-push';
+import { z } from 'zod';
 
-import { db } from "@tutly/db";
+import { NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } from '../lib/constants';
+import { db } from '../lib/db';
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
-import {
-  NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY,
-  VAPID_SUBJECT,
-} from "../lib/constants";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+webPush.setVapidDetails(VAPID_SUBJECT, NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
-webPush.setVapidDetails(
-  VAPID_SUBJECT,
-  NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY,
-);
-
-async function sendPushNotification(
-  userId: string,
-  message: string,
-  notificationId: string,
-) {
+async function sendPushNotification(userId: string, message: string, notificationId: string) {
   const subscription = await db.pushSubscription.findFirst({
     where: { userId },
   });
@@ -40,11 +27,11 @@ async function sendPushNotification(
       JSON.stringify({
         message,
         id: notificationId,
-        type: "NOTIFICATION",
+        type: 'NOTIFICATION',
       }),
     );
   } catch (error) {
-    console.error("Failed to send push notification:", error);
+    console.error('Failed to send push notification:', error);
     if ((error as { statusCode?: number }).statusCode === 410) {
       await db.pushSubscription.delete({
         where: { endpoint: subscription.endpoint },
@@ -59,7 +46,7 @@ export const notificationsRouter = createTRPCRouter({
 
     const notifications = await ctx.db.notification.findMany({
       where: { intendedForId: userId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
     return notifications;
   }),
@@ -191,7 +178,7 @@ export const notificationsRouter = createTRPCRouter({
       const currentUser = ctx.session.user;
       const organizationId = currentUser.organization?.id;
       if (!organizationId) {
-        throw new Error("User not authenticated or missing organization");
+        throw new Error('User not authenticated or missing organization');
       }
 
       const enrolledUsers = await ctx.db.enrolledUsers.findMany({
@@ -199,7 +186,7 @@ export const notificationsRouter = createTRPCRouter({
           courseId: input.courseId,
           user: {
             role: {
-              in: ["STUDENT", "MENTOR"],
+              in: ['STUDENT', 'MENTOR'],
             },
             organization: {
               id: organizationId,
@@ -226,19 +213,103 @@ export const notificationsRouter = createTRPCRouter({
 
       await Promise.all(
         enrolledUsers.map(async (enrolled) => {
-          const notification = notifications.find(
-            (n) => n.intendedForId === enrolled.user.id,
-          );
+          const notification = notifications.find((n) => n.intendedForId === enrolled.user.id);
           if (notification) {
-            await sendPushNotification(
-              enrolled.user.id,
-              input.message,
-              notification.id,
-            );
+            await sendPushNotification(enrolled.user.id, input.message, notification.id);
           }
         }),
       );
 
       return notifications;
+    }),
+
+  handleNotificationRedirect: protectedProcedure
+    .input(z.object({ notificationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const notification = await ctx.db.notification.findUnique({
+          where: {
+            id: input.notificationId,
+          },
+        });
+
+        if (!notification) {
+          return { success: false, error: 'Notification not found' };
+        }
+
+        // Mark notification as read
+        await ctx.db.notification.update({
+          where: { id: input.notificationId },
+          data: { readAt: new Date() },
+        });
+
+        return {
+          success: true,
+          data: {
+            notification,
+          },
+        };
+      } catch (error) {
+        console.error('Error handling notification redirect:', error);
+        return {
+          success: false,
+          error: 'Failed to handle notification redirect',
+          details: error instanceof Error ? error.message : String(error),
+        };
+      }
+    }),
+
+  getNotificationRedirectData: protectedProcedure
+    .input(z.object({ notificationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const { notificationId } = input;
+
+        if (!notificationId) {
+          return { success: false, error: 'Notification ID is required' };
+        }
+
+        const notification = await ctx.db.notification.findUnique({
+          where: {
+            id: notificationId,
+          },
+        });
+
+        if (!notification) {
+          return { success: false, error: 'Notification not found' };
+        }
+
+        // Check if notification has a custom link
+        if (notification.customLink) {
+          return {
+            success: true,
+            data: {
+              redirectUrl: notification.customLink,
+              notification,
+            },
+          };
+        }
+
+        // Parse caused objects for link generation
+        const causedObj = notification.causedObjects
+          ? (JSON.parse(JSON.stringify(notification.causedObjects)) as Record<string, string>)
+          : {};
+
+        return {
+          success: true,
+          data: {
+            notification,
+            causedObj,
+            eventType: notification.eventType,
+          },
+        };
+      } catch (error) {
+        console.error('Error fetching notification redirect data:', error);
+        return {
+          success: false,
+          error: 'Failed to fetch notification redirect data',
+          details: error instanceof Error ? error.message : String(error),
+        };
+      }
     }),
 });

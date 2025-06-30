@@ -1,7 +1,7 @@
-import { BookMarkCategory } from "@prisma/client";
-import { z } from "zod";
+import { BookMarkCategory } from '@prisma/client';
+import { z } from 'zod';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 export const bookmarksRouter = createTRPCRouter({
   toggleBookmark: protectedProcedure
@@ -61,8 +61,32 @@ export const bookmarksRouter = createTRPCRouter({
 
         return { success: true, data: bookmark };
       } catch (error) {
-        console.error("Error getting bookmark:", error);
-        return { error: "Failed to get bookmark" };
+        console.error('Error getting bookmark:', error);
+        return { error: 'Failed to get bookmark' };
       }
     }),
+
+  getUserBookmarks: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const currentUser = ctx.session.user;
+
+      const bookmarks = await ctx.db.bookMarks.findMany({
+        where: {
+          userId: currentUser.id,
+        },
+      });
+
+      return {
+        success: true,
+        data: bookmarks,
+      };
+    } catch (error) {
+      console.error('Error fetching user bookmarks:', error);
+      return {
+        success: false,
+        error: 'Failed to fetch user bookmarks',
+        details: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }),
 });

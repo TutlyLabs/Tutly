@@ -1,17 +1,17 @@
-import type { Attendance, submission, User } from "@prisma/client";
-import { z } from "zod";
+import type { Attendance, submission, User } from '@prisma/client';
+import { z } from 'zod';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
-interface AttendanceWithClass extends Attendance {
+type AttendanceWithClass = {
   class: {
     createdAt: Date;
   };
-}
+} & Attendance;
 
-interface SubmissionWithPoints extends submission {
-  points: { score: number }[];
-}
+type SubmissionWithPoints = {
+  points: Array<{ score: number }>;
+} & submission;
 
 export const statisticsRouter = createTRPCRouter({
   getPiechartData: protectedProcedure
@@ -24,9 +24,9 @@ export const statisticsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       try {
-        let assignments: SubmissionWithPoints[] | undefined;
+        let assignments: Array<SubmissionWithPoints> | undefined;
         let noOfTotalMentees: number | undefined;
-        if (currentUser.role === "MENTOR" || input.mentorUsername) {
+        if (currentUser.role === 'MENTOR' || input.mentorUsername) {
           assignments = await ctx.db.submission.findMany({
             where: {
               enrolledUser: {
@@ -44,7 +44,7 @@ export const statisticsRouter = createTRPCRouter({
               courseId: input.courseId,
             },
           });
-        } else if (currentUser.role === "INSTRUCTOR") {
+        } else if (currentUser.role === 'INSTRUCTOR') {
           assignments = await ctx.db.submission.findMany({
             where: {
               assignment: {
@@ -59,7 +59,7 @@ export const statisticsRouter = createTRPCRouter({
             where: {
               courseId: input.courseId,
               user: {
-                role: "STUDENT",
+                role: 'STUDENT',
               },
             },
           });
@@ -75,18 +75,16 @@ export const statisticsRouter = createTRPCRouter({
         });
         const noOfTotalAssignments = await ctx.db.attachment.count({
           where: {
-            attachmentType: "ASSIGNMENT",
+            attachmentType: 'ASSIGNMENT',
             courseId: input.courseId,
           },
         });
         const notSubmitted =
-          noOfTotalAssignments * (noOfTotalMentees ?? 0) -
-          assignmentsWithPoints -
-          assignmentsWithoutPoints;
+          noOfTotalAssignments * (noOfTotalMentees ?? 0) - assignmentsWithPoints - assignmentsWithoutPoints;
 
         return [assignmentsWithPoints, assignmentsWithoutPoints, notSubmitted];
       } catch (e) {
-        return { error: "Failed to fetch pichart data", details: String(e) };
+        return { error: 'Failed to fetch pichart data', details: String(e) };
       }
     }),
 
@@ -101,15 +99,14 @@ export const statisticsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       try {
-        let attendance: AttendanceWithClass[] = [];
-        if (currentUser.role === "MENTOR" || input.mentorUsername) {
+        let attendance: Array<AttendanceWithClass> = [];
+        if (currentUser.role === 'MENTOR' || input.mentorUsername) {
           attendance = await ctx.db.attendance.findMany({
             where: {
               user: {
                 enrolledUsers: {
                   some: {
-                    mentorUsername:
-                      input.mentorUsername ?? currentUser.username,
+                    mentorUsername: input.mentorUsername ?? currentUser.username,
                   },
                 },
               },
@@ -128,7 +125,7 @@ export const statisticsRouter = createTRPCRouter({
               },
             },
           });
-        } else if (currentUser.role === "INSTRUCTOR") {
+        } else if (currentUser.role === 'INSTRUCTOR') {
           attendance = await ctx.db.attendance.findMany({
             where: {
               attended: true,
@@ -154,16 +151,14 @@ export const statisticsRouter = createTRPCRouter({
             createdAt: true,
           },
           orderBy: {
-            createdAt: "asc",
+            createdAt: 'asc',
           },
         });
-        const classes: string[] = [];
-        const attendanceInEachClass: number[] = [];
+        const classes: Array<string> = [];
+        const attendanceInEachClass: Array<number> = [];
         getAllClasses.forEach((classData) => {
-          classes.push(classData.createdAt.toISOString().split("T")[0] ?? "");
-          const tem = attendance.filter(
-            (attendanceData) => attendanceData.classId === classData.id,
-          );
+          classes.push(classData.createdAt.toISOString().split('T')[0] ?? '');
+          const tem = attendance.filter((attendanceData) => attendanceData.classId === classData.id);
           attendanceInEachClass.push(tem.length);
         });
         const linechartData = [];
@@ -176,7 +171,7 @@ export const statisticsRouter = createTRPCRouter({
         }
         return linechartData;
       } catch (e) {
-        return { error: "Failed to fetch linechart data", details: String(e) };
+        return { error: 'Failed to fetch linechart data', details: String(e) };
       }
     }),
 
@@ -191,42 +186,41 @@ export const statisticsRouter = createTRPCRouter({
       const currentUser = ctx.session.user;
       try {
         let submissionCount;
-        if (currentUser.role === "MENTOR" || input.mentorUsername) {
+        if (currentUser.role === 'MENTOR' || input.mentorUsername) {
           submissionCount = await ctx.db.attachment.findMany({
             where: {
-              attachmentType: "ASSIGNMENT",
+              attachmentType: 'ASSIGNMENT',
               courseId: input.courseId,
             },
             include: {
               submissions: {
                 where: {
                   enrolledUser: {
-                    mentorUsername:
-                      input.mentorUsername ?? currentUser.username,
+                    mentorUsername: input.mentorUsername ?? currentUser.username,
                   },
                 },
               },
             },
             orderBy: {
-              createdAt: "asc",
+              createdAt: 'asc',
             },
           });
-        } else if (currentUser.role === "INSTRUCTOR") {
+        } else if (currentUser.role === 'INSTRUCTOR') {
           submissionCount = await ctx.db.attachment.findMany({
             where: {
-              attachmentType: "ASSIGNMENT",
+              attachmentType: 'ASSIGNMENT',
               courseId: input.courseId,
             },
             include: {
               submissions: true,
             },
             orderBy: {
-              createdAt: "asc",
+              createdAt: 'asc',
             },
           });
         }
-        const assignments: string[] = [];
-        const countForEachAssignment: number[] = [];
+        const assignments: Array<string> = [];
+        const countForEachAssignment: Array<number> = [];
         submissionCount?.forEach((submission) => {
           assignments.push(submission.title);
           countForEachAssignment.push(submission.submissions.length);
@@ -240,7 +234,7 @@ export const statisticsRouter = createTRPCRouter({
         }
         return barchartData;
       } catch (e) {
-        return { error: "Failed to fetch barchart data", details: String(e) };
+        return { error: 'Failed to fetch barchart data', details: String(e) };
       }
     }),
 
@@ -254,8 +248,8 @@ export const statisticsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       try {
-        let students: User[] | undefined;
-        if (currentUser.role === "MENTOR" || input.mentorUsername) {
+        let students: Array<User> | undefined;
+        if (currentUser.role === 'MENTOR' || input.mentorUsername) {
           students = await ctx.db.user.findMany({
             where: {
               enrolledUsers: {
@@ -266,7 +260,7 @@ export const statisticsRouter = createTRPCRouter({
                   mentorUsername: input.mentorUsername ?? currentUser.username,
                 },
               },
-              role: "STUDENT",
+              role: 'STUDENT',
               organization: {
                 id: currentUser.organization?.id,
               },
@@ -276,7 +270,7 @@ export const statisticsRouter = createTRPCRouter({
               enrolledUsers: true,
             },
           });
-        } else if (currentUser.role === "INSTRUCTOR") {
+        } else if (currentUser.role === 'INSTRUCTOR') {
           students = await ctx.db.user.findMany({
             where: {
               enrolledUsers: {
@@ -286,7 +280,7 @@ export const statisticsRouter = createTRPCRouter({
                   },
                 },
               },
-              role: "STUDENT",
+              role: 'STUDENT',
               organization: {
                 id: currentUser.organization?.id,
               },
@@ -300,7 +294,7 @@ export const statisticsRouter = createTRPCRouter({
 
         return students ?? [];
       } catch (e) {
-        return { error: "Failed to fetch barchart data", details: String(e) };
+        return { error: 'Failed to fetch barchart data', details: String(e) };
       }
     }),
 
@@ -322,7 +316,7 @@ export const statisticsRouter = createTRPCRouter({
                 },
               },
             },
-            role: "MENTOR",
+            role: 'MENTOR',
             organization: {
               id: currentUser.organization?.id,
             },
@@ -335,7 +329,7 @@ export const statisticsRouter = createTRPCRouter({
 
         return mentors;
       } catch (e) {
-        return { error: "Failed to fetch barchart data", details: String(e) };
+        return { error: 'Failed to fetch barchart data', details: String(e) };
       }
     }),
 
@@ -364,9 +358,7 @@ export const statisticsRouter = createTRPCRouter({
         });
         let totalPoints = 0;
         const tem = assignments;
-        assignments = assignments.filter(
-          (assignment) => assignment.points.length > 0,
-        );
+        assignments = assignments.filter((assignment) => assignment.points.length > 0);
         const underReview = tem.length - assignments.length;
         assignments.forEach((assignment) => {
           assignment.points.forEach((point) => {
@@ -375,7 +367,7 @@ export const statisticsRouter = createTRPCRouter({
         });
         const noOfTotalAssignments = await ctx.db.attachment.findMany({
           where: {
-            attachmentType: "ASSIGNMENT",
+            attachmentType: 'ASSIGNMENT',
             courseId: input.courseId,
           },
         });
@@ -390,7 +382,7 @@ export const statisticsRouter = createTRPCRouter({
           totalPoints: totalPoints,
         };
       } catch (e) {
-        return { error: "Failed to fetch barchart data", details: String(e) };
+        return { error: 'Failed to fetch barchart data', details: String(e) };
       }
     }),
 
@@ -423,11 +415,9 @@ export const statisticsRouter = createTRPCRouter({
             },
           },
         });
-        const attendanceDates: string[] = [];
+        const attendanceDates: Array<string> = [];
         attendance.forEach((attendanceData) => {
-          attendanceDates.push(
-            attendanceData.class.createdAt.toISOString().split("T")[0] ?? "",
-          );
+          attendanceDates.push(attendanceData.class.createdAt.toISOString().split('T')[0] ?? '');
         });
 
         const getAllClasses = await ctx.db.class.findMany({
@@ -442,16 +432,90 @@ export const statisticsRouter = createTRPCRouter({
             createdAt: true,
           },
           orderBy: {
-            createdAt: "asc",
+            createdAt: 'asc',
           },
         });
-        const classes: string[] = [];
+        const classes: Array<string> = [];
         getAllClasses.forEach((classData) => {
-          classes.push(classData.createdAt.toISOString().split("T")[0] ?? "");
+          classes.push(classData.createdAt.toISOString().split('T')[0] ?? '');
         });
         return { classes, attendanceDates };
       } catch (e) {
-        return { error: "Failed to fetch barchart data", details: String(e) };
+        return { error: 'Failed to fetch barchart data', details: String(e) };
+      }
+    }),
+
+  getStatisticsPageData: protectedProcedure
+    .input(
+      z.object({
+        courseId: z.string(),
+        mentorUsername: z.string().optional(),
+        studentUsername: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const currentUser = ctx.session.user;
+        const { courseId, mentorUsername, studentUsername } = input;
+
+        // Check if current user has appropriate role
+        if (currentUser.role !== 'INSTRUCTOR' && currentUser.role !== 'MENTOR') {
+          return {
+            success: false,
+            error: 'Unauthorized access',
+            redirectTo: '/',
+          };
+        }
+
+        // Check if user is enrolled in the course
+        const enrolledCourses = await ctx.db.enrolledUsers.findMany({
+          where: {
+            username: currentUser.username,
+          },
+        });
+
+        if (!enrolledCourses.some((course) => course.courseId === courseId)) {
+          return {
+            success: false,
+            error: 'Course not found or not enrolled',
+            redirectTo: '/',
+          };
+        }
+
+        // Handle mentor-specific redirects
+        if (currentUser.role === 'MENTOR' && !mentorUsername) {
+          return {
+            success: false,
+            error: 'Mentor username required',
+            redirectTo: `/tutor/statistics/${courseId}?mentor=${currentUser.username}`,
+          };
+        }
+
+        if (currentUser.role === 'MENTOR' && mentorUsername !== currentUser.username) {
+          return {
+            success: false,
+            error: 'Unauthorized mentor access',
+            redirectTo: '/',
+          };
+        }
+
+        return {
+          success: true,
+          data: {
+            courseId,
+            mentorUsername,
+            studentUsername,
+            userRole: currentUser.role,
+            username: currentUser.username,
+          },
+        };
+      } catch (error) {
+        console.error('Error fetching statistics page data:', error);
+        return {
+          success: false,
+          error: 'Failed to fetch statistics page data',
+          details: error instanceof Error ? error.message : String(error),
+        };
       }
     }),
 });

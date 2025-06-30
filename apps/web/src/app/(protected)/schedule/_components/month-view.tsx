@@ -23,7 +23,11 @@ interface MonthViewProps {
   onEventClick: (event: Event) => void;
 }
 
-export function MonthView({ selectedDate, events, onEventClick }: MonthViewProps) {
+export function MonthView({
+  selectedDate,
+  events,
+  onEventClick,
+}: MonthViewProps) {
   const monthStart = startOfMonth(selectedDate);
   const monthEnd = endOfMonth(selectedDate);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -54,7 +58,10 @@ export function MonthView({ selectedDate, events, onEventClick }: MonthViewProps
     <div className="h-full p-4">
       <div className="grid grid-cols-7 gap-px">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((dayName) => (
-          <div key={dayName} className="h-8 text-sm font-medium text-center text-muted-foreground">
+          <div
+            key={dayName}
+            className="text-muted-foreground h-8 text-center text-sm font-medium"
+          >
             {dayName}
           </div>
         ))}
@@ -70,38 +77,38 @@ export function MonthView({ selectedDate, events, onEventClick }: MonthViewProps
             return (
               <div
                 key={dayIndex}
-                className={`flex flex-col items-start p-2 h-[90px] md:h-[120px] border border-border ${
+                className={`border-border flex h-[90px] flex-col items-start border p-2 md:h-[120px] ${
                   isCurrentMonth ? "bg-background" : "bg-muted/50"
                 }`}
               >
                 <div
-                  className={`text-sm mb-1 ${
+                  className={`mb-1 text-sm ${
                     isToday
-                      ? "flex justify-center items-center font-bold bg-green-600 w-10 h-10 rounded-full"
+                      ? "flex h-10 w-10 items-center justify-center rounded-full bg-green-600 font-bold"
                       : ""
                   }`}
                 >
                   {getDate(day)}
                 </div>
 
-                <div className="flex flex-col w-full">
+                <div className="flex w-full flex-col">
                   {dayEvents.map((event, index) => (
                     <div
                       key={index}
-                      className="text-xs rounded text-center px-2 py-1 cursor-pointer overflow-hidden"
+                      className="cursor-pointer overflow-hidden rounded px-2 py-1 text-center text-xs"
                       onClick={() => onEventClick(event)}
                       title={event.name}
                     >
                       {event.type === "Holiday" ? (
-                        <div className="ml-auto text-xs font-semibold text-red-500 bg-red-100 px-2 py-1 rounded-full">
+                        <div className="ml-auto rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-500">
                           {event.type}
                         </div>
                       ) : event.type === "Assignment" ? (
-                        <div className="ml-auto text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
+                        <div className="ml-auto rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
                           {event.name}
                         </div>
                       ) : (
-                        <div className="ml-auto text-xs font-semibold bg-violet-100 text-violet-600 px-2 py-1 rounded-full">
+                        <div className="ml-auto rounded-full bg-violet-100 px-2 py-1 text-xs font-semibold text-violet-600">
                           {event.name}
                         </div>
                       )}

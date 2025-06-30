@@ -18,7 +18,7 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
-import { type FileType } from "@prisma/client";
+import { type FileType } from "@tutly/api/schema";
 import { $createTextNode, type LexicalNode, type TextNode } from "lexical";
 
 import { cn } from "@/lib/utils";
@@ -31,7 +31,11 @@ import ListMaxIndentLevelPlugin from "./plugins/ListMaxIndentLevelPlugin";
 import ToolbarPlugin from "./plugins/ToolbarPlugin";
 
 const Placeholder = () => {
-  return <div className="absolute top-3 left-3 text-muted-foreground">Enter some text...</div>;
+  return (
+    <div className="text-muted-foreground absolute top-3 left-3">
+      Enter some text...
+    </div>
+  );
 };
 
 export interface FileUploadOptions {
@@ -49,7 +53,8 @@ interface RichTextEditorProps {
   fileUploadOptions?: FileUploadOptions;
 }
 
-const IMAGE_MARKDOWN_REGEXP = /!\[([^\]]*)\]\(([^)\s]+)(?:\s*\{(\d+)x(\d+)\})?\)/;
+const IMAGE_MARKDOWN_REGEXP =
+  /!\[([^\]]*)\]\(([^)\s]+)(?:\s*\{(\d+)x(\d+)\})?\)/;
 
 const customTransformers: Transformer[] = [
   {
@@ -94,7 +99,9 @@ const customTransformers: Transformer[] = [
           textNode.insertAfter(imageNode);
         }
 
-        const textAfterImage = textContent.slice(imageMarkdownIndex + fullMatch.length);
+        const textAfterImage = textContent.slice(
+          imageMarkdownIndex + fullMatch.length,
+        );
         if (textAfterImage) {
           const newTextNode = $createTextNode(textAfterImage);
           imageNode.insertAfter(newTextNode);
@@ -171,7 +178,10 @@ export default function RichTextEditor({
     },
     editorState: () => {
       try {
-        const state = $convertFromMarkdownString(initialValue ?? "", customTransformers);
+        const state = $convertFromMarkdownString(
+          initialValue ?? "",
+          customTransformers,
+        );
         return state;
       } catch (error) {
         console.error("Error converting markdown:", error);
@@ -182,8 +192,11 @@ export default function RichTextEditor({
   return (
     <EditorErrorBoundary>
       <LexicalComposer initialConfig={editorConfig}>
-        <div className="flex flex-col w-full">
-          <ToolbarPlugin fileUploadOptions={fileUploadOptions} allowUpload={allowUpload} />
+        <div className="flex w-full flex-col">
+          <ToolbarPlugin
+            fileUploadOptions={fileUploadOptions}
+            allowUpload={allowUpload}
+          />
           <div className="relative">
             <RichTextPlugin
               contentEditable={
@@ -193,7 +206,7 @@ export default function RichTextEditor({
                     "overflow-y-auto rounded-b-md border border-t-0",
                     "bg-background text-foreground",
                     "focus:outline-none",
-                    height
+                    height,
                   )}
                 />
               }

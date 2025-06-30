@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@prisma/client";
+import type { Profile } from "@tutly/api/schema";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -63,7 +63,7 @@ export default function PersonalDetails({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Personal Details</h2>
         <Button
           variant={isEditing ? "outline" : "default"}
@@ -86,7 +86,11 @@ export default function PersonalDetails({
                     <Input
                       type="date"
                       disabled={!isEditing}
-                      value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
+                      value={
+                        field.value
+                          ? new Date(field.value).toISOString().split("T")[0]
+                          : ""
+                      }
                       onChange={(e) => field.onChange(new Date(e.target.value))}
                     />
                   </FormControl>

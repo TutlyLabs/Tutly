@@ -1,6 +1,13 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  LabelList,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { api } from "@/trpc/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ChartConfig } from "@/components/ui/chart";
@@ -14,7 +21,13 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function Linechart({ courseId, mentorUsername }: { courseId: string; mentorUsername?: string }) {
+export function Linechart({
+  courseId,
+  mentorUsername,
+}: {
+  courseId: string;
+  mentorUsername?: string;
+}) {
   const { data, isLoading } = api.statistics.getLinechartData.useQuery({
     courseId,
     mentorUsername,
@@ -31,9 +44,9 @@ export function Linechart({ courseId, mentorUsername }: { courseId: string; ment
         <CardHeader>
           <CardTitle>Attendance</CardTitle>
         </CardHeader>
-        <CardContent className="h-[250px] w-full flex items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <InboxIcon className="mx-auto h-8 w-8 mb-2" />
+        <CardContent className="flex h-[250px] w-full items-center justify-center">
+          <div className="text-muted-foreground text-center">
+            <InboxIcon className="mx-auto mb-2 h-8 w-8" />
             <p>No attendance data available</p>
           </div>
         </CardContent>
@@ -58,7 +71,12 @@ export function Linechart({ courseId, mentorUsername }: { courseId: string; ment
             }}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="class" tickLine={false} axisLine={false} tickMargin={8} />
+            <XAxis
+              dataKey="class"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
             <YAxis tickLine={false} axisLine={false} tickMargin={8} />
             <Bar
               dataKey="attendees"

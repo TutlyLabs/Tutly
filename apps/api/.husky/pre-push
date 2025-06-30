@@ -1,0 +1,11 @@
+#!/bin/sh
+npm run trpc-api-export 2>err.log || {
+  if grep -q "ENOENT: no such file or directory, open" err.log; then
+    echo "Ignoring known ENOENT error from prisma generate."
+    exit 0
+  else
+    cat err.log
+    exit 1
+  fi
+}
+rm -f err.log

@@ -1,8 +1,12 @@
-import { getServerSessionOrRedirect } from "@tutly/auth";
+import { getServerSessionOrRedirect } from "@/lib/auth";
 import { notFound } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Role } from "@tutly/api/schema";
 
-export default async function ProtectedLayout({ children }: { children: React.ReactNode; }) {
+export default async function ProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const session = await getServerSessionOrRedirect();
 
   const allowedRoles: Role[] = ["INSTRUCTOR", "MENTOR"];
@@ -11,9 +15,5 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     return notFound();
   }
 
-  return (
-    <div>
-      {children}
-    </div>
-  );
-} 
+  return <div>{children}</div>;
+}

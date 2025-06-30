@@ -16,7 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 
@@ -52,7 +56,9 @@ export default function AddHolidayDialog() {
       });
     } catch (error) {
       console.error("Error adding holiday:", error);
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong",
+      );
     }
   };
 
@@ -66,7 +72,7 @@ export default function AddHolidayDialog() {
           <DialogTitle>Add Holiday</DialogTitle>
           <form
             onSubmit={handleSubmit}
-            className="space-y-4 w-full mx-auto pt-4 rounded-lg shadow-md"
+            className="mx-auto w-full space-y-4 rounded-lg pt-4 shadow-md"
           >
             <div className="space-y-1">
               <Label htmlFor="reason">Reason</Label>
@@ -80,8 +86,15 @@ export default function AddHolidayDialog() {
               <Label>Start Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    {startDate ? day(startDate).format("DD-MM-YYYY") : <span>Pick a date</span>}
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    {startDate ? (
+                      day(startDate).format("DD-MM-YYYY")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -99,13 +112,25 @@ export default function AddHolidayDialog() {
               <Label>End Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    {endDate ? day(endDate).format("DD-MM-YYYY") : <span>Pick a date</span>}
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    {endDate ? (
+                      day(endDate).format("DD-MM-YYYY")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                  />
                 </PopoverContent>
               </Popover>
             </div>

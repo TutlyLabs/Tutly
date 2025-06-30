@@ -5,7 +5,12 @@ import { toast } from "sonner";
 import { FaPlus } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -55,7 +60,9 @@ const EditClassDialog = ({
   const [folderName, setFolderName] = useState("");
   const [folders, setFolders] = useState<Folder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>("");
-  const [createdAt, setCreatedAt] = useState(new Date().toISOString().split("T")[0]);
+  const [createdAt, setCreatedAt] = useState(
+    new Date().toISOString().split("T")[0],
+  );
 
   const updateClass = api.classes.updateClass.useMutation();
   const getFolders = api.courses.foldersByCourseId.useQuery({ id: courseId });
@@ -65,7 +72,9 @@ const EditClassDialog = ({
       setClassTitle(classDetails.title ?? "");
       setVideoLink(classDetails.video?.videoLink ?? "");
       setVideoType(classDetails.video?.videoType ?? "DRIVE");
-      setCreatedAt(new Date(classDetails.createdAt).toISOString().split("T")[0]);
+      setCreatedAt(
+        new Date(classDetails.createdAt).toISOString().split("T")[0],
+      );
       setSelectedFolder(classDetails.Folder?.id ?? "");
     }
   }, [classDetails]);
@@ -142,7 +151,11 @@ const EditClassDialog = ({
             onChange={(e) => setVideoLink(e.target.value)}
           />
 
-          <Input type="date" value={createdAt} onChange={(e) => setCreatedAt(e.target.value)} />
+          <Input
+            type="date"
+            value={createdAt}
+            onChange={(e) => setCreatedAt(e.target.value)}
+          />
 
           <Select value={selectedFolder} onValueChange={setSelectedFolder}>
             <SelectTrigger>

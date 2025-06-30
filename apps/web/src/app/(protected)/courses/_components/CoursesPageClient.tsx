@@ -1,8 +1,8 @@
 "use client";
 
-import type { Course } from "@prisma/client";
+import type { Course } from "@tutly/api/schema";
 import { useRouter } from "next/navigation";
-import type { SessionUser } from "@tutly/auth";
+import type { SessionUser } from "@/lib/auth";
 
 import AddCourse from "./AddCourse";
 import CourseCard from "./CourseCard";
@@ -20,8 +20,11 @@ export default function CoursesPageClient({ user }: { user: SessionUser }) {
 
   if (!coursesData?.data) return null;
 
-  const publishedCourses = coursesData.data.filter((course: Course) => course.isPublished);
-  const coursesFinal = user.role === "INSTRUCTOR" ? coursesData.data : publishedCourses;
+  const publishedCourses = coursesData.data.filter(
+    (course: Course) => course.isPublished,
+  );
+  const coursesFinal =
+    user.role === "INSTRUCTOR" ? coursesData.data : publishedCourses;
 
   return (
     <div className="w-full">
@@ -47,4 +50,4 @@ export default function CoursesPageClient({ user }: { user: SessionUser }) {
       </div>
     </div>
   );
-} 
+}

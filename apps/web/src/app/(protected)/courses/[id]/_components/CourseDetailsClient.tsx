@@ -2,14 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { FaExternalLinkAlt } from "react-icons/fa";
-import type { SessionUser } from "@tutly/auth";
+import type { SessionUser } from "@/lib/auth";
 
 import ClassSidebar from "../classes/_components/classSidebar";
 import { api } from "@/trpc/react";
 
-export default function CourseDetailsClient({ user, courseId }: { user: SessionUser; courseId: string }) {
+export default function CourseDetailsClient({
+  user,
+  courseId,
+}: {
+  user: SessionUser;
+  courseId: string;
+}) {
   const router = useRouter();
-  const { data: assignments } = api.attachments.getCourseAssignments.useQuery({ courseId });
+  const { data: assignments } = api.attachments.getCourseAssignments.useQuery({
+    courseId,
+  });
 
   if (!user) {
     router.push("/sign-in");
@@ -17,7 +25,7 @@ export default function CourseDetailsClient({ user, courseId }: { user: SessionU
   }
 
   return (
-    <div className="flex items-start w-full">
+    <div className="flex w-full items-start">
       <ClassSidebar
         courseId={courseId}
         title="Assignments"
@@ -25,11 +33,15 @@ export default function CourseDetailsClient({ user, courseId }: { user: SessionU
         isCourseAdmin={user.role === "INSTRUCTOR"}
       />
       <div className="m-3 w-full">
-        <h1 className="border-b-2 p-2 text-center text-lg font-medium md:text-xl">Assignments</h1>
+        <h1 className="border-b-2 p-2 text-center text-lg font-medium md:text-xl">
+          Assignments
+        </h1>
 
         <div className="mt-3 grid grid-cols-1 gap-4 p-2 sm:grid-cols-2 md:grid-cols-3">
           {assignments?.data?.length === 0 && (
-            <div className="mt-5 text-xl dark:text-secondary-300">No assignments yet...</div>
+            <div className="dark:text-secondary-300 mt-5 text-xl">
+              No assignments yet...
+            </div>
           )}
 
           {assignments?.data?.map((attachment) => (
@@ -49,7 +61,8 @@ export default function CourseDetailsClient({ user, courseId }: { user: SessionU
                   {attachment.title}
                 </a>
                 <div className="gadiv-2 flex items-center text-sm font-medium">
-                  {attachment.dueDate && new Date(attachment.dueDate).toLocaleDateString()}
+                  {attachment.dueDate &&
+                    new Date(attachment.dueDate).toLocaleDateString()}
                   {"  "}
                   {user.role === "STUDENT" && (
                     <div className="text-white">
@@ -66,7 +79,7 @@ export default function CourseDetailsClient({ user, courseId }: { user: SessionU
                   )}
                 </div>
               </div>
-              <p className="mb-2 mt-2 text-sm font-semibold text-gray-500/85 dark:text-gray-400">
+              <p className="mt-2 mb-2 text-sm font-semibold text-gray-500/85 dark:text-gray-400">
                 {/* Markdown preview would go here */}
               </p>
               {attachment.link && (
@@ -88,4 +101,4 @@ export default function CourseDetailsClient({ user, courseId }: { user: SessionU
       </div>
     </div>
   );
-} 
+}

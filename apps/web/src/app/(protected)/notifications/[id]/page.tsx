@@ -1,47 +1,72 @@
-import { redirect } from "next/navigation";
-import { db } from "@tutly/db";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { api } from "@/trpc/react";
 import { NOTIFICATION_HREF_MAP } from "@/components/Notifications";
 import type { causedObjects } from "@/components/Notifications";
 
-export default async function NotificationRedirectPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+export default function NotificationRedirectPage() {
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const id = params.id;
+
+  const {
+    data: notificationData,
+    isLoading,
+    error,
+  } = api.notifications.getNotificationRedirectData.useQuery(
+    { notificationId: id! },
+    { enabled: !!id },
+  );
+
+  useEffect(() => {
+    if (!notificationData?.success) {
+      if (error || notificationData?.error) {
+        router.push("/notifications");
+      }
+      return;
+    }
+
+    const { data } = notificationData;
+
+    if (!data) {
+      router.push("/notifications");
+      return;
+    }
+
+    // Handle custom link redirect
+    if (data.redirectUrl) {
+      router.push(data.redirectUrl);
+      return;
+    }
+
+    // Handle event-based redirect
+    if (!data.eventType || !(data.eventType in NOTIFICATION_HREF_MAP)) {
+      router.push("/notifications");
+      return;
+    }
+
+    const getLinkFn =
+      NOTIFICATION_HREF_MAP[
+      data.eventType as keyof typeof NOTIFICATION_HREF_MAP
+      ];
+    if (!getLinkFn) {
+      router.push("/notifications");
+      return;
+    }
+
+    const redirectUrl = getLinkFn(data.causedObj as causedObjects);
+    router.push(redirectUrl);
+  }, [notificationData, error, router]);
+
+  if (isLoading) {
+    return <div>Loading notification...</div>;
+  }
 
   if (!id) {
-    redirect("/notifications");
+    return <div>Loading...</div>;
   }
 
-  const notification = await db.notification.findUnique({
-    where: {
-      id: id,
-    },
-  });
-
-  if (!notification) {
-    redirect("/notifications");
-  }
-
-  if (notification.customLink) {
-    redirect(notification.customLink);
-  }
-
-  const getLinkFn = NOTIFICATION_HREF_MAP[notification.eventType];
-  if (!getLinkFn) {
-    redirect("/notifications");
-  }
-
-  const causedObj = notification.causedObjects
-    ? (JSON.parse(JSON.stringify(notification.causedObjects)) as causedObjects)
-    : {};
-  const redirectUrl = getLinkFn(causedObj);
-
-  await db.notification.update({
-    where: { id },
-    data: { readAt: new Date() },
-  });
-
-  redirect(redirectUrl);
-} 
+  return null;
+}

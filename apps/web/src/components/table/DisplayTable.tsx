@@ -8,7 +8,13 @@ import {
   Table as TableIcon,
   X,
 } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+} from "react";
 import { toast } from "sonner";
 import { useQueryState } from "nuqs";
 import { useDebounce } from "use-debounce";
@@ -18,7 +24,11 @@ import { Button } from "@/components/ui/button";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -46,7 +56,13 @@ export interface IAction {
 export type FilterCondition = {
   column: string;
   value: string;
-  operator: "contains" | "equals" | "startsWith" | "endsWith" | "greaterThan" | "lessThan";
+  operator:
+    | "contains"
+    | "equals"
+    | "startsWith"
+    | "endsWith"
+    | "greaterThan"
+    | "lessThan";
 };
 
 export type Column = {
@@ -54,24 +70,24 @@ export type Column = {
   name: string;
   label?: string;
   type?:
-  | "text"
-  | "number"
-  | "date"
-  | "datetime-local"
-  | "time"
-  | "email"
-  | "tel"
-  | "url"
-  | "password"
-  | "select"
-  | "textarea"
-  | "checkbox"
-  | "radio"
-  | "color"
-  | "file"
-  | "range"
-  | "month"
-  | "week";
+    | "text"
+    | "number"
+    | "date"
+    | "datetime-local"
+    | "time"
+    | "email"
+    | "tel"
+    | "url"
+    | "password"
+    | "select"
+    | "textarea"
+    | "checkbox"
+    | "radio"
+    | "color"
+    | "file"
+    | "range"
+    | "month"
+    | "week";
   options?: { label: string; value: any }[];
   sortable?: boolean;
   filterable?: boolean;
@@ -95,7 +111,6 @@ export type Column = {
   placeholder?: string;
   hideInTable?: boolean;
 };
-
 
 type DisplayTableProps = {
   data: Record<string, any>[];
@@ -140,34 +155,43 @@ export default function DisplayTable({
   const [search, setSearch] = useQueryState("search");
   const [view, setView] = useQueryState("view", { defaultValue: defaultView });
   const [page, setPage] = useQueryState("page", { defaultValue: "1" });
-  const [limit, setLimit] = useQueryState("limit", { defaultValue: defaultPageSize.toString() });
+  const [limit, setLimit] = useQueryState("limit", {
+    defaultValue: defaultPageSize.toString(),
+  });
   const [sort, setSort] = useQueryState("sort");
   const [direction, setDirection] = useQueryState("direction");
   const [filters, setFilters] = useQueryState("filter", {
-    parse: (value) => value ? value.split(",") : [],
-    serialize: (value) => value.join(",")
+    parse: (value) => (value ? value.split(",") : []),
+    serialize: (value) => value.join(","),
   });
 
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
 
   const viewMode = view as "table" | "grid";
 
-  const activeFilters: FilterCondition[] = (filters || []).map((f: string) => {
-    const [column, operator, value] = f.split(":");
-    if (!column || !operator || !value) return undefined;
-    return {
-      column,
-      operator: operator as FilterCondition["operator"],
-      value,
-    };
-  }).filter((f: FilterCondition | undefined): f is FilterCondition => f !== undefined);
+  const activeFilters: FilterCondition[] = (filters || [])
+    .map((f: string) => {
+      const [column, operator, value] = f.split(":");
+      if (!column || !operator || !value) return undefined;
+      return {
+        column,
+        operator: operator as FilterCondition["operator"],
+        value,
+      };
+    })
+    .filter(
+      (f: FilterCondition | undefined): f is FilterCondition => f !== undefined,
+    );
 
-  const sortConfig = useMemo(() =>
-    sort ? {
-      key: sort,
-      direction: (direction as "asc" | "desc") || "asc",
-    } : null,
-    [sort, direction]
+  const sortConfig = useMemo(
+    () =>
+      sort
+        ? {
+            key: sort,
+            direction: (direction as "asc" | "desc") || "asc",
+          }
+        : null,
+    [sort, direction],
   );
 
   const sortedData = useMemo(() => {
@@ -209,7 +233,11 @@ export default function DisplayTable({
     void setDirection(newDirection);
   };
 
-  const addFilter = (column: string, value: string, operator: FilterCondition["operator"]) => {
+  const addFilter = (
+    column: string,
+    value: string,
+    operator: FilterCondition["operator"],
+  ) => {
     const newFilter = `${column}:${operator}:${value}`;
     void setFilters([...(filters || []), newFilter]);
   };
@@ -252,14 +280,19 @@ export default function DisplayTable({
   const FilterMenu = () => {
     const [selectedColumn, setSelectedColumn] = useState("");
     const [filterValue, setFilterValue] = useState("");
-    const [operator, setOperator] = useState<FilterCondition["operator"]>("contains");
+    const [operator, setOperator] =
+      useState<FilterCondition["operator"]>("contains");
 
     const filterableColumns = columns.filter((col) => col.filterable);
 
     return (
       <Popover open={filterMenuOpen} onOpenChange={setFilterMenuOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
             <Filter className="h-4 w-4" />
             <span className="hidden lg:inline">Filter</span>
           </Button>
@@ -286,7 +319,9 @@ export default function DisplayTable({
               <Label>Operator</Label>
               <Select
                 value={operator}
-                onValueChange={(value: FilterCondition["operator"]) => setOperator(value)}
+                onValueChange={(value: FilterCondition["operator"]) =>
+                  setOperator(value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select operator" />
@@ -331,9 +366,11 @@ export default function DisplayTable({
 
   const exportToCSV = () => {
     const visibleColumns = columns.filter((col) => !col.hidden);
-    const headers = visibleColumns.map((col) => col.label || col.name).join(",");
+    const headers = visibleColumns
+      .map((col) => col.label || col.name)
+      .join(",");
     const rows = sortedData.map((row) =>
-      visibleColumns.map((col) => JSON.stringify(row[col.key] ?? "")).join(",")
+      visibleColumns.map((col) => JSON.stringify(row[col.key] ?? "")).join(","),
     );
     const csv = [headers, ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -385,12 +422,9 @@ export default function DisplayTable({
     void setSearch(debouncedSearchTerm || null);
   }, [debouncedSearchTerm, setSearch]);
 
-  const handleSearch = useCallback(
-    (value: string) => {
-      setLocalSearchTerm(value);
-    },
-    []
-  );
+  const handleSearch = useCallback((value: string) => {
+    setLocalSearchTerm(value);
+  }, []);
 
   const filteredData = useMemo(() => {
     if (!clientSideProcessing) return sortedData;
@@ -433,7 +467,13 @@ export default function DisplayTable({
         }
       });
     });
-  }, [sortedData, localSearchTerm, activeFilters, columns, clientSideProcessing]);
+  }, [
+    sortedData,
+    localSearchTerm,
+    activeFilters,
+    columns,
+    clientSideProcessing,
+  ]);
 
   const currentPage = parseInt(page || "1");
   const pageSize = parseInt(limit || defaultPageSize.toString());
@@ -466,26 +506,24 @@ export default function DisplayTable({
     }
   };
 
-    
-
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">{title}</h2>
-        <div className="flex flex-wrap items-center gap-2 w-full md:justify-between">
-          <div>
-            {searchable && (
-              <div className="relative">
-                <div className="block w-[200px]">
-                  <Input
-                    placeholder="Search..."
-                    value={localSearchTerm}
-                    onChange={(e) => handleSearch(e.target.value)}
-                  />
-                </div>
+      <div className="flex w-full flex-wrap items-center gap-2 md:justify-between">
+        <div>
+          {searchable && (
+            <div className="relative">
+              <div className="block w-[200px]">
+                <Input
+                  placeholder="Search..."
+                  value={localSearchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                />
               </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
           {filterable && <FilterMenu />}
           <Button
             variant="outline"
@@ -536,7 +574,7 @@ export default function DisplayTable({
               <span className="hidden lg:inline">Export</span>
             </Button>
           )}
-          </div>
+        </div>
       </div>
 
       {activeFilters.length > 0 && (
@@ -544,7 +582,11 @@ export default function DisplayTable({
           {activeFilters.map((filter, index) => {
             const column = columns.find((col) => col.key === filter.column);
             return (
-              <Badge key={index} variant="secondary" className="flex items-center gap-1">
+              <Badge
+                key={index}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
                 <span>{column?.label || column?.name}</span>
                 <span className="text-xs opacity-70">{filter.operator}</span>
                 <span>{filter.value}</span>

@@ -1,7 +1,7 @@
 "use client";
 
-import type { Attachment, Class, Notes, Video } from "@prisma/client";
-import { FileType } from "@prisma/client";
+import type { Attachment, Class, Notes, Video } from "@tutly/api/schema";
+import { FileType } from "@tutly/api/schema";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ import { useDebounce } from "use-debounce";
 
 import VideoPlayer from "./videoEmbeds/VideoPlayer";
 import RichTextEditor from "@/components/editor/RichTextEditor";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,14 +66,16 @@ interface ClassProps {
   };
 }
 
-export default function Class({
-  courseId,
-  classId,
-  currentUser,
-}: ClassProps) {
-  const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+export default function Class({ courseId, classId, currentUser }: ClassProps) {
+  const [selectedAttachment, setSelectedAttachment] =
+    useState<Attachment | null>(null);
+  const [isAddAssignmentDialogOpen, setIsAddAssignmentDialogOpen] =
+    useState(false);
+  const [isEditAssignmentDialogOpen, setIsEditAssignmentDialogOpen] =
+    useState(false);
+  const [isDeleteAssignmentDialogOpen, setIsDeleteAssignmentDialogOpen] =
+    useState(false);
+  const [isEditClassDialogOpen, setIsEditClassDialogOpen] = useState(false);
   const [notes, setNotes] = useState("");
   const [debouncedNotes] = useDebounce(notes, 1000);
   const [notesStatus, setNotesStatus] = useState("");
@@ -82,8 +85,12 @@ export default function Class({
   const [isClearNotesDialogOpen, setIsClearNotesDialogOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const { data: classes } = api.classes.getClassesByCourseId.useQuery({ courseId });
-  const { data: classDetails } = api.classes.getClassDetails.useQuery({ id: classId });
+  const { data: classes } = api.classes.getClassesByCourseId.useQuery({
+    courseId,
+  });
+  const { data: classDetails } = api.classes.getClassDetails.useQuery({
+    id: classId,
+  });
   const { data: notesData } = api.notes.getNote.useQuery({
     userId: currentUser.id,
     objectId: classId,
@@ -100,11 +107,9 @@ export default function Class({
     }
   }, [notesData]);
 
-
   const updateNote = api.notes.updateNote.useMutation();
   const toggleBookmark = api.bookmarks.toggleBookmark.useMutation();
   const deleteAttachment = api.attachments.deleteAttachment.useMutation();
-
 
   useEffect(() => {
     if (isInitialLoad) {
@@ -141,7 +146,9 @@ export default function Class({
   }, [debouncedNotes, classId, tags, isInitialLoad, updateNote, courseId]);
 
   if (!classDetails?.data) {
-    return <div className="flex items-center justify-center p-8">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center p-8">Loading...</div>
+    );
   }
 
   const { video, title, createdAt, attachments } = classDetails.data;
@@ -149,7 +156,7 @@ export default function Class({
   const isBookmarked = !!bookmarkData?.data;
 
   const isCourseAdmin = currentUser?.adminForCourses?.some(
-    (course: { id: string }) => course.id === courseId
+    (course: { id: string }) => course.id === courseId,
   );
   const haveAdminAccess = currentUser.role == "INSTRUCTOR" || isCourseAdmin;
 
@@ -174,13 +181,18 @@ export default function Class({
   const renderVideo = () => {
     if (!videoId) {
       return (
-        <span className="text-sm text-muted-foreground flex items-center justify-center h-full">
+        <span className="text-muted-foreground flex h-full items-center justify-center text-sm">
           No video to display
         </span>
       );
     }
 
-    return <VideoPlayer videoId={videoId} videoType={videoType as "YOUTUBE" | "DRIVE"} />;
+    return (
+      <VideoPlayer
+        videoId={videoId}
+        videoType={videoType as "YOUTUBE" | "DRIVE"}
+      />
+    );
   };
 
   const renderAttachmentLink = (attachment: Attachment) => {
@@ -285,7 +297,7 @@ export default function Class({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setIsEditDialogOpen(true)}
+                        onClick={() => setIsEditClassDialogOpen(true)}
                         className="hover:bg-secondary/80"
                       >
                         <RiEdit2Fill className="h-5 w-5" />
@@ -307,9 +319,11 @@ export default function Class({
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm font-medium">{dayjs(createdAt).format("MMM D, YYYY")}</p>
+                <p className="text-sm font-medium">
+                  {dayjs(createdAt).format("MMM D, YYYY")}
+                </p>
               </div>
-              <div className="flex-1 text-secondary-100 w-full aspect-video bg-gray-500/10 rounded-xl object-cover">
+              <div className="text-secondary-100 aspect-video w-full flex-1 rounded-xl bg-gray-500/10 object-cover">
                 {renderVideo()}
               </div>
             </div>
@@ -319,21 +333,36 @@ export default function Class({
         <div className="w-full pb-4 md:m-0 md:w-96">
           <div className="h-full w-full rounded-xl p-2">
             {haveAdminAccess && (
-              <div className="flex w-full justify-end mb-4">
-                <Dialog>
+              <div className="mb-4 flex w-full justify-end">
+                <Dialog
+                  open={isAddAssignmentDialogOpen}
+                  onOpenChange={setIsAddAssignmentDialogOpen}
+                >
                   <DialogTrigger asChild>
-                    <Button className="text-white flex items-center gap-2">
+                    <Button className="flex items-center gap-2 text-white">
                       Add an assignment
                       <FaPlus />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="min-w-[70vw] max-h-[90vh] overflow-hidden">
+                  <DialogContent className="max-h-[90vh] min-w-[70vw] overflow-hidden">
                     <DialogHeader>
                       <DialogTitle>Add Assignment</DialogTitle>
-                      <DialogDescription>Create a new assignment for this class.</DialogDescription>
+                      <DialogDescription>
+                        Create a new assignment for this class.
+                      </DialogDescription>
                     </DialogHeader>
                     <ScrollArea className="max-h-[70vh] overflow-y-auto">
-                      <NewAttachmentPage classes={classes} courseId={courseId} classId={classId} />
+                      <NewAttachmentPage
+                        classes={classes?.data}
+                        courseId={courseId}
+                        classId={classId}
+                        onCancel={() => {
+                          setIsAddAssignmentDialogOpen(false);
+                        }}
+                        onComplete={() => {
+                          window.location.reload();
+                        }}
+                      />
                     </ScrollArea>
                   </DialogContent>
                 </Dialog>
@@ -341,7 +370,7 @@ export default function Class({
             )}
 
             <table className="w-full border-collapse">
-              <thead className="mb-4 border-b-2 border-secondary-400 font-semibold">
+              <thead className="border-secondary-400 mb-4 border-b-2 font-semibold">
                 <tr>
                   <th className="px-4 py-2">Title</th>
                   <th className="px-4 py-2">Link</th>
@@ -367,9 +396,12 @@ export default function Class({
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-2">{renderAttachmentLink(attachment)}</td>
                       <td className="px-4 py-2">
-                        {attachment.attachmentType === "ASSIGNMENT" && attachment.dueDate
+                        {renderAttachmentLink(attachment)}
+                      </td>
+                      <td className="px-4 py-2">
+                        {attachment.attachmentType === "ASSIGNMENT" &&
+                        attachment.dueDate
                           ? dayjs(attachment.dueDate).format("MMM D, YYYY")
                           : "-"}
                       </td>
@@ -383,7 +415,7 @@ export default function Class({
                               <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedAttachment(attachment);
-                                  setIsEditDialogOpen(true);
+                                  setIsEditAssignmentDialogOpen(true);
                                 }}
                               >
                                 <div className="flex items-center gap-2">
@@ -395,7 +427,7 @@ export default function Class({
                                 className="text-red-600"
                                 onClick={() => {
                                   setSelectedAttachment(attachment);
-                                  setIsDeleteDialogOpen(true);
+                                  setIsDeleteAssignmentDialogOpen(true);
                                 }}
                               >
                                 <div className="flex items-center gap-2">
@@ -417,19 +449,26 @@ export default function Class({
       </div>
 
       {/* Notes Section */}
-      <div className="w-full bg-transparent rounded-xl shadow-lg">
-        <div className="flex items-center gap-4 mb-4">
+      <div className="w-full rounded-xl bg-transparent shadow-lg">
+        <div className="mb-4 flex items-center gap-4">
           <div className="flex items-center gap-2">
             <FaStickyNote className="h-5 w-5 text-blue-600" />
             <h2 className="text-xl font-semibold">Class Notes</h2>
           </div>
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex flex-1 items-center gap-2">
             <FaTags className="h-5 w-5 text-blue-600" />
-            <div className="flex flex-wrap gap-2 items-center">
+            <div className="flex flex-wrap items-center gap-2">
               {tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="px-3 py-1 flex items-center gap-2">
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="flex items-center gap-2 px-3 py-1"
+                >
                   {tag}
-                  <button onClick={() => removeTag(tag)} className="text-xs hover:text-red-500">
+                  <button
+                    onClick={() => removeTag(tag)}
+                    className="text-xs hover:text-red-500"
+                  >
                     ×
                   </button>
                 </Badge>
@@ -441,7 +480,7 @@ export default function Class({
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addTag()}
-                  className="w-32 h-8"
+                  className="h-8 w-32"
                 />
                 <Button variant="outline" size="sm" onClick={addTag}>
                   Add
@@ -449,18 +488,20 @@ export default function Class({
               </div>
             </div>
           </div>
-          <div className="text-sm text-muted-foreground whitespace-nowrap">
+          <div className="text-muted-foreground text-sm whitespace-nowrap">
             {notesStatus && <span>{notesStatus}</span>}
-            {lastSaved && <span> • Last saved {dayjs(lastSaved).fromNow()}</span>}
+            {lastSaved && (
+              <span> • Last saved {dayjs(lastSaved).fromNow()}</span>
+            )}
           </div>
           {notes && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsClearNotesDialogOpen(true)}
-              className="text-red-500 hover:text-red-600 hover:bg-red-100/10"
+              className="text-red-500 hover:bg-red-100/10 hover:text-red-600"
             >
-              <FaTrash className="h-4 w-4 mr-1" />
+              <FaTrash className="mr-1 h-4 w-4" />
               Clear
             </Button>
           )}
@@ -478,26 +519,64 @@ export default function Class({
         />
       </div>
 
-      {/* Edit Dialog */}
+      {/* Edit class Dialog */}
       <EditClassDialog
-        isOpen={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
+        isOpen={isEditClassDialogOpen}
+        onOpenChange={setIsEditClassDialogOpen}
         courseId={courseId}
         classDetails={classDetails.data}
       />
 
+      {/* Edit Assignment Dialog */}
+      <Dialog
+        open={isEditAssignmentDialogOpen}
+        onOpenChange={setIsEditAssignmentDialogOpen}
+      >
+        <DialogContent className="max-h-[90vh] min-w-[70vw] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Edit Assignment</DialogTitle>
+            <DialogDescription>
+              Modify the details of the selected assignment.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh] overflow-y-auto">
+            <NewAttachmentPage
+              classes={classes?.data}
+              courseId={courseId}
+              classId={classId}
+              isEditing
+              attachment={selectedAttachment ?? undefined}
+              onCancel={() => {
+                setIsEditAssignmentDialogOpen(false);
+              }}
+              onComplete={() => {
+                setIsEditAssignmentDialogOpen(false);
+                window.location.reload();
+              }}
+            />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Alert Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteAssignmentDialogOpen}
+        onOpenChange={setIsDeleteAssignmentDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the assignment.
+              This action cannot be undone. This will permanently delete the
+              assignment.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -505,17 +584,24 @@ export default function Class({
       </AlertDialog>
 
       {/* Clear Notes Alert Dialog */}
-      <AlertDialog open={isClearNotesDialogOpen} onOpenChange={setIsClearNotesDialogOpen}>
+      <AlertDialog
+        open={isClearNotesDialogOpen}
+        onOpenChange={setIsClearNotesDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Clear Notes?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete your notes for this class. This action cannot be undone.
+              This will permanently delete your notes for this class. This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleClearNotes} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={handleClearNotes}
+              className="bg-red-600 hover:bg-red-700"
+            >
               Clear Notes
             </AlertDialogAction>
           </AlertDialogFooter>

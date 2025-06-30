@@ -1,7 +1,7 @@
-import { NoteCategory } from "@prisma/client";
-import { z } from "zod";
+import { NoteCategory } from '@prisma/client';
+import { z } from 'zod';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 export const notesRouter = createTRPCRouter({
   updateNote: protectedProcedure
@@ -17,13 +17,7 @@ export const notesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const currentUserId = ctx.session.user.id;
 
-      const {
-        category,
-        description,
-        tags,
-        objectId,
-        causedObjects = {},
-      } = input;
+      const { category, description, tags, objectId, causedObjects = {} } = input;
 
       if (!description) {
         await ctx.db.notes.delete({
@@ -81,8 +75,8 @@ export const notesRouter = createTRPCRouter({
 
         return { success: true, data: note };
       } catch (error) {
-        console.error("Error getting note:", error);
-        return { error: "Failed to get note" };
+        console.error('Error getting note:', error);
+        return { error: 'Failed to get note' };
       }
     }),
 

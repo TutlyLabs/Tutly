@@ -1,6 +1,6 @@
 "use client";
 
-import type { File } from "@prisma/client";
+import type { File } from "@tutly/api/schema";
 import { formatDistanceToNow } from "date-fns";
 import { Download, FileText, Plus, Trash2 } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
@@ -90,14 +90,18 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
   );
 
   const FileCard = ({ file }: { file: File }) => (
-    <Card key={file.id} className="p-4 hover:shadow-lg transition-shadow">
+    <Card key={file.id} className="p-4 transition-shadow hover:shadow-lg">
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3">
           <FileText className="h-8 w-8 text-blue-500" />
           <div>
-            <h3 className="font-medium text-lg truncate max-w-[200px]">{file.name}</h3>
+            <h3 className="max-w-[200px] truncate text-lg font-medium">
+              {file.name}
+            </h3>
             <p className="text-sm text-gray-500">
-              {formatDistanceToNow(new Date(file.createdAt), { addSuffix: true })}
+              {formatDistanceToNow(new Date(file.createdAt), {
+                addSuffix: true,
+              })}
             </p>
           </div>
         </div>
@@ -118,38 +122,44 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
   );
 
   const EmptyState = ({ fileType }: { fileType?: string }) => (
-    <div className="text-center py-12">
-      <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+    <div className="py-12 text-center">
+      <FileText className="mx-auto mb-4 h-12 w-12 text-gray-400" />
       <h3 className="text-xl font-medium text-gray-600">
         No {fileType ? `${fileType.toLowerCase()} ` : ""}files uploaded yet
       </h3>
       <p className="text-gray-500">
-        Your uploaded {fileType ? `${fileType.toLowerCase()} ` : ""}files will appear here
+        Your uploaded {fileType ? `${fileType.toLowerCase()} ` : ""}files will
+        appear here
       </p>
     </div>
   );
 
   return (
     <div className="container mx-auto p-6">
-    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-      <h1 className="text-3xl font-bold">My Drive</h1>
-      <div className="flex items-center gap-2">
-        <Button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Upload File
-        </Button>
-        <Input ref={fileInputRef} type="file" onChange={handleUpload} className="hidden" />
+      <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
+        <h1 className="text-3xl font-bold">My Drive</h1>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Upload File
+          </Button>
+          <Input
+            ref={fileInputRef}
+            type="file"
+            onChange={handleUpload}
+            className="hidden"
+          />
+        </div>
       </div>
-    </div>
 
       {isUploading && (
         <div className="mb-4">
-          <div className="h-2 bg-gray-200 rounded">
-            <div className="h-full bg-blue-500 rounded animate-pulse" />
+          <div className="h-2 rounded bg-gray-200">
+            <div className="h-full animate-pulse rounded bg-blue-500" />
           </div>
         </div>
       )}
@@ -158,10 +168,10 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
         <div className="overflow-x-auto pb-2">
           <TabsList className="mb-4 flex w-full min-w-max">
             {fileTypes.map((type) => (
-              <TabsTrigger 
-                key={type} 
+              <TabsTrigger
+                key={type}
                 value={type}
-                className="flex-1 whitespace-nowrap px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm"
+                className="flex-1 px-2 py-1 text-xs whitespace-nowrap sm:px-3 sm:py-1.5 sm:text-sm"
               >
                 {type.charAt(0) + type.slice(1).toLowerCase()}
               </TabsTrigger>
@@ -177,7 +187,7 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
 
           return (
             <TabsContent key={fileType} value={fileType}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredFiles.map((file) => (
                   <FileCard key={file.id} file={file} />
                 ))}

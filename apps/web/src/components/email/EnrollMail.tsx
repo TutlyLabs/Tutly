@@ -87,9 +87,13 @@ const EnrollMail = ({ name, email, password }: Readonly<EnrollMailProps>) => {
               marginBottom: "20px",
             }}
           >
-            You have been successfully enrolled in the <strong>HTML CSS JS</strong> batch at
-            <strong> VNR Vignana Jyothi Institute of Engineering & Technology</strong>. Below are
-            your temporary login credentials to access your course:
+            You have been successfully enrolled in the{" "}
+            <strong>HTML CSS JS</strong> batch at
+            <strong>
+              {" "}
+              VNR Vignana Jyothi Institute of Engineering & Technology
+            </strong>
+            . Below are your temporary login credentials to access your course:
           </p>
 
           <div
@@ -101,7 +105,13 @@ const EnrollMail = ({ name, email, password }: Readonly<EnrollMailProps>) => {
               boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
             }}
           >
-            <p style={{ margin: "0 0 12px 0", fontSize: "15px", color: "#4a5568" }}>
+            <p
+              style={{
+                margin: "0 0 12px 0",
+                fontSize: "15px",
+                color: "#4a5568",
+              }}
+            >
               <strong>Email:</strong> {email}
             </p>
             <p style={{ margin: "0", fontSize: "15px", color: "#4a5568" }}>
@@ -123,8 +133,9 @@ const EnrollMail = ({ name, email, password }: Readonly<EnrollMailProps>) => {
             }}
           >
             <p style={{ margin: "0" }}>
-              <strong>Important:</strong> For security reasons, you must change your password upon
-              first login. This temporary password is valid for one-time use only.
+              <strong>Important:</strong> For security reasons, you must change
+              your password upon first login. This temporary password is valid
+              for one-time use only.
             </p>
           </div>
 
@@ -160,7 +171,10 @@ const EnrollMail = ({ name, email, password }: Readonly<EnrollMailProps>) => {
         >
           <p>
             If you face any issues, contact us at{" "}
-            <a href="mailto:info@tutly.in" style={{ color: "#007bff", textDecoration: "none" }}>
+            <a
+              href="mailto:info@tutly.in"
+              style={{ color: "#007bff", textDecoration: "none" }}
+            >
               info@tutly.in
             </a>
           </p>
@@ -176,7 +190,9 @@ const EnrollMail = ({ name, email, password }: Readonly<EnrollMailProps>) => {
           }}
         >
           <p style={{ margin: "0" }}>&copy; 2025 Tutly. All rights reserved.</p>
-          <p style={{ margin: "5px 0 0 0" }}>Terms of Service | Privacy Policy</p>
+          <p style={{ margin: "5px 0 0 0" }}>
+            Terms of Service | Privacy Policy
+          </p>
         </div>
       </div>
     </div>

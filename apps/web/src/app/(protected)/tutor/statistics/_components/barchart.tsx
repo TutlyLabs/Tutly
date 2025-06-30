@@ -18,7 +18,13 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function Barchart({ courseId, mentorUsername }: { courseId: string; mentorUsername?: string }) {
+export function Barchart({
+  courseId,
+  mentorUsername,
+}: {
+  courseId: string;
+  mentorUsername?: string;
+}) {
   const { data, isLoading } = api.statistics.getBarchartData.useQuery({
     courseId,
     mentorUsername,
@@ -34,9 +40,9 @@ export function Barchart({ courseId, mentorUsername }: { courseId: string; mento
         <CardHeader>
           <CardTitle>Submissions</CardTitle>
         </CardHeader>
-        <CardContent className="h-[250px] w-full flex items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <InboxIcon className="mx-auto h-8 w-8 mb-2" />
+        <CardContent className="flex h-[250px] w-full items-center justify-center">
+          <div className="text-muted-foreground text-center">
+            <InboxIcon className="mx-auto mb-2 h-8 w-8" />
             <p>No submission data available</p>
           </div>
         </CardContent>
@@ -65,9 +71,21 @@ export function Barchart({ courseId, mentorUsername }: { courseId: string; mento
               tickMargin={10}
               axisLine={false}
             />
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-            <Bar dataKey="submissions" fill="var(--color-submissions)" radius={[8, 8, 0, 0]}>
-              <LabelList position="top" offset={12} className="fill-foreground" fontSize={12} />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent hideLabel />}
+            />
+            <Bar
+              dataKey="submissions"
+              fill="var(--color-submissions)"
+              radius={[8, 8, 0, 0]}
+            >
+              <LabelList
+                position="top"
+                offset={12}
+                className="fill-foreground"
+                fontSize={12}
+              />
             </Bar>
           </BarChart>
         </ChartContainer>

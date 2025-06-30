@@ -1,57 +1,41 @@
-import { initTRPC, TRPCError } from "@trpc/server";
-import superjson from "superjson";
-import { ZodError } from "zod";
+import { initTRPC, TRPCError } from '@trpc/server';
+import type * as trpcExpress from '@trpc/server/adapters/express';
+import superjson from 'superjson';
+import { ZodError } from 'zod';
 
-import type { SessionWithUser } from "@tutly/auth";
-import { validateSessionToken } from "@tutly/auth";
-import { db } from "@tutly/db/client";
+import { db } from '../lib/db';
+import { auth } from '../utils/auth';
 
 /**
  * Session validation for API requests
  */
-const getSessionFromHeaders = async (headers: Headers) => {
-  // Check for Authorization header first
-  const authToken = headers.get("Authorization") ?? null;
-  if (authToken) {
-    const result = await validateSessionToken(authToken);
-    return result.session;
-  }
-
-  // Then check for cookie
-  const cookieHeader = headers.get("cookie");
-  if (cookieHeader) {
-    const cookies = Object.fromEntries(
-      cookieHeader.split("; ").map((c) => {
-        const [key, value] = c.split("=");
-        return [key, value];
-      }),
-    );
-    const sessionId = cookies.tutly_session;
-    if (sessionId) {
-      const result = await validateSessionToken(sessionId);
-      return result.session;
+export const getSessionFromRequest = async (req: trpcExpress.CreateExpressContextOptions['req']) => {
+  // Convert Node.js headers to a Headers instance for Better Auth
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (Array.isArray(value)) {
+      headers.set(key, value.join(', '));
+    } else if (value !== undefined) {
+      headers.set(key, value);
     }
   }
-
-  return null;
+  const session = await auth.api.getSession({ headers });
+  return session?.user ? session : null;
 };
 
 /**
  * Context creation for tRPC
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (opts: {
-  headers: Headers;
-  session: SessionWithUser | null;
-}) => {
-  const session = await getSessionFromHeaders(opts.headers);
-  const source = opts.headers.get("x-trpc-source") ?? "unknown";
-  console.log(">>> tRPC Request from", source, "by", session?.user);
+export const createTRPCContext = async (opts: trpcExpress.CreateExpressContextOptions) => {
+  const session = await getSessionFromRequest(opts.req);
+  const source = opts.req.headers['x-trpc-source'] ?? 'unknown';
+  console.log('>>> tRPC Request from', source, 'by', session?.user.email);
 
   return {
     session,
     db,
-    token: opts.headers.get("Authorization") ?? null,
+    token: opts.req.headers.authorization ?? null,
   };
 };
 
@@ -111,15 +95,13 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  * Protected procedure - requires authenticated user
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure
-  .use(timingMiddleware)
-  .use(({ ctx, next }) => {
-    if (!ctx.session?.user.organization) {
-      throw new TRPCError({ code: "UNAUTHORIZED" });
-    }
-    return next({
-      ctx: {
-        session: { ...ctx.session, user: ctx.session.user },
-      },
-    });
+export const protectedProcedure = t.procedure.use(timingMiddleware).use(({ ctx, next }) => {
+  if (!ctx.session?.user) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+  return next({
+    ctx: {
+      session: { ...ctx.session, user: ctx.session.user },
+    },
   });
+});

@@ -44,7 +44,9 @@ marked.use({
     list(token) {
       const { items, ordered } = token;
       const type = ordered ? "ol" : "ul";
-      const style = ordered ? "list-decimal list-inside mb-4" : "list-disc list-inside mb-4";
+      const style = ordered
+        ? "list-decimal list-inside mb-4"
+        : "list-disc list-inside mb-4";
       return `<${type} class="${style}">${items.map((item) => `<li class="ml-1">${item.text}</li>`).join("")}</${type}>`;
     },
     listitem(token) {
@@ -87,7 +89,7 @@ const MarkdownPreview = ({ content, className }: MarkdownPreviewProps) => {
 
   return (
     <div
-      className={cn("w-full prose dark:prose-invert max-w-none", className)}
+      className={cn("prose dark:prose-invert w-full max-w-none", className)}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
