@@ -8,7 +8,8 @@
       ],
       "outputs": [
         ".cache/tsbuildinfo.json",
-        "dist/**"
+        "dist/**",
+        "build/**"
       ]
     },
     "dev": {
@@ -24,14 +25,7 @@
       ],
       "outputLogs": "new-only"
     },
-    "lint": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        ".cache/.eslintcache"
-      ]
-    },
+    "lint": {},
     "typecheck": {
       "dependsOn": [
         "^build"
