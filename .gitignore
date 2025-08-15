@@ -54,4 +54,4 @@ dist/
 .DS_Store
 
 # localstack
-data/
+/data
