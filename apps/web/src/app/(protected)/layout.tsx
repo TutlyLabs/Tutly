@@ -1,8 +1,8 @@
 import "@/styles/globals.css";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
 import { AppHeader } from "@/components/sidebar/AppHeader";
-import posthog from 'posthog-js';
-import { getServerSessionOrRedirect } from "@tutly/auth";
+import posthog from "posthog-js";
+import { getServerSessionOrRedirect } from "@/lib/auth";
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ interface ProtectedLayoutProps {
 
 export default async function ProtectedLayout({
   children,
-  forceClose = false
+  forceClose = false,
 }: ProtectedLayoutProps) {
   const session = await getServerSessionOrRedirect();
 
@@ -28,12 +28,10 @@ export default async function ProtectedLayout({
       <div>
         <AppSidebar user={session.user} forceClose={forceClose} />
       </div>
-      <div className="flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out">
+      <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 ease-in-out">
         <AppHeader user={session.user} />
-        <main className="flex-1 p-4 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto p-4">{children}</main>
       </div>
     </div>
   );
-} 
+}

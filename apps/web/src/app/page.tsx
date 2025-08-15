@@ -1,8 +1,8 @@
-import { getServerSession } from '@tutly/auth';
-import { redirect } from 'next/navigation';
-import NoDataFound from '@/components/NoDataFound';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { getServerSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import NoDataFound from "@/components/NoDataFound";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const Page = async () => {
   const session = await getServerSession();
@@ -14,12 +14,13 @@ const Page = async () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <NoDataFound message="You are not supposed to be on this page" additionalMessage='You’ve taken a wrong turn! Let’s get you back on track.'/>
+    <div className="flex min-h-screen flex-col items-center justify-center">
+      <NoDataFound
+        message="You are not supposed to be on this page"
+        additionalMessage="You’ve taken a wrong turn! Let’s get you back on track."
+      />
       <Link href="/dashboard">
-        <Button className="mt-4">
-          Return to Home
-        </Button>
+        <Button className="mt-4">Return to Home</Button>
       </Link>
     </div>
   );

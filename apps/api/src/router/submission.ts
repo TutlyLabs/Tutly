@@ -1,38 +1,32 @@
-import type {
-  Attachment,
-  EnrolledUsers,
-  Point,
-  submission,
-  User,
-} from "@prisma/client";
-import type { InputJsonValue } from "@prisma/client/runtime/library";
-import { z } from "zod";
+import type { Attachment, EnrolledUsers, Point, submission, User } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
+import { z } from 'zod';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
-export interface AssignmentDetails {
+export type AssignmentDetails = {
   id: string;
   maxSubmissions: number;
   class: {
     courseId: string;
   };
-}
+};
 
-export interface MentorDetails {
+export type MentorDetails = {
   mentor: {
     username: string;
   };
-}
+};
 
-export interface SubmissionWithDetails extends submission {
+export type SubmissionWithDetails = {
   enrolledUser: EnrolledUsers & {
     user: User;
   };
-  points: Point[];
+  points: Array<Point>;
   assignment: Attachment;
   submissionCount?: number;
   submissionIndex?: number;
-}
+} & submission;
 
 export const submissionRouter = createTRPCRouter({
   createSubmission: protectedProcedure
@@ -66,7 +60,7 @@ export const submissionRouter = createTRPCRouter({
       });
 
       if (submissions.length >= input.assignmentDetails.maxSubmissions) {
-        return { error: "Maximum submission limit reached" };
+        return { error: 'Maximum submission limit reached' };
       }
 
       const enrolledUser = await ctx.db.enrolledUsers.findUnique({
@@ -78,7 +72,7 @@ export const submissionRouter = createTRPCRouter({
           },
         },
       });
-      if (!enrolledUser) return { error: "Not enrolled" };
+      if (!enrolledUser) return { error: 'Not enrolled' };
 
       const submission = await ctx.db.submission.create({
         data: {
@@ -90,7 +84,7 @@ export const submissionRouter = createTRPCRouter({
 
       await ctx.db.events.create({
         data: {
-          eventCategory: "ASSIGNMENT_SUBMISSION",
+          eventCategory: 'ASSIGNMENT_SUBMISSION',
           causedById: user.id,
           eventCategoryDataId: submission.id,
         },
@@ -114,7 +108,7 @@ export const submissionRouter = createTRPCRouter({
       });
 
       if (!submission) {
-        return { error: "submission not found" };
+        return { error: 'submission not found' };
       }
 
       const updatedSubmission = await ctx.db.submission.update({
@@ -137,8 +131,8 @@ export const submissionRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const { user } = ctx.session;
-      if (user.role === "STUDENT") {
-        return { error: "Unauthorized" };
+      if (user.role === 'STUDENT') {
+        return { error: 'Unauthorized' };
       }
 
       const assignment = await ctx.db.attachment.findUnique({
@@ -162,27 +156,26 @@ export const submissionRouter = createTRPCRouter({
         },
         orderBy: {
           enrolledUser: {
-            username: "asc",
+            username: 'asc',
           },
         },
       });
 
-      let filteredSubmissions: SubmissionWithDetails[] = [];
+      let filteredSubmissions: Array<SubmissionWithDetails> = [];
 
-      if (user.role === "INSTRUCTOR") {
-        filteredSubmissions = submissions as SubmissionWithDetails[];
+      if (user.role === 'INSTRUCTOR') {
+        filteredSubmissions = submissions as Array<SubmissionWithDetails>;
       }
 
-      if (user.role === "MENTOR") {
+      if (user.role === 'MENTOR') {
         filteredSubmissions = submissions.filter(
-          (submission) =>
-            submission.enrolledUser.mentorUsername === user.username,
-        ) as SubmissionWithDetails[];
+          (submission) => submission.enrolledUser.mentorUsername === user.username,
+        ) as Array<SubmissionWithDetails>;
       }
 
       if (assignment?.maxSubmissions && assignment.maxSubmissions > 1) {
         const submissionCount = await ctx.db.submission.groupBy({
-          by: ["enrolledUserId"],
+          by: ['enrolledUserId'],
           where: {
             attachmentId: input.assignmentId,
           },
@@ -192,9 +185,7 @@ export const submissionRouter = createTRPCRouter({
         });
 
         filteredSubmissions.forEach((submission) => {
-          const submissionCountData = submissionCount.find(
-            (data) => data.enrolledUserId === submission.enrolledUserId,
-          );
+          const submissionCountData = submissionCount.find((data) => data.enrolledUserId === submission.enrolledUserId);
           if (submissionCountData) {
             submission.submissionCount = submissionCountData._count.id;
           }
@@ -206,8 +197,7 @@ export const submissionRouter = createTRPCRouter({
             const submissionIndex = submissions
               .filter((sub) => sub.enrolledUserId === submission.enrolledUserId)
               .findIndex((sub) => sub.id === submission.id);
-            submission.submissionIndex =
-              (submissionIndex >= 0 ? submissionIndex : 0) + 1;
+            submission.submissionIndex = (submissionIndex >= 0 ? submissionIndex : 0) + 1;
           }
         });
       }
@@ -217,8 +207,8 @@ export const submissionRouter = createTRPCRouter({
 
   getAllAssignmentSubmissions: protectedProcedure.query(async ({ ctx }) => {
     const { user } = ctx.session;
-    if (user.role === "STUDENT") {
-      return { error: "Unauthorized" };
+    if (user.role === 'STUDENT') {
+      return { error: 'Unauthorized' };
     }
 
     const submissions = await ctx.db.submission.findMany({
@@ -233,37 +223,34 @@ export const submissionRouter = createTRPCRouter({
       },
       orderBy: {
         enrolledUser: {
-          username: "asc",
+          username: 'asc',
         },
       },
     });
 
-    let filteredSubmissions: SubmissionWithDetails[] = [];
+    let filteredSubmissions: Array<SubmissionWithDetails> = [];
 
-    if (user.role === "INSTRUCTOR") {
-      filteredSubmissions = submissions as SubmissionWithDetails[];
+    if (user.role === 'INSTRUCTOR') {
+      filteredSubmissions = submissions as Array<SubmissionWithDetails>;
     }
 
-    if (user.role === "MENTOR") {
+    if (user.role === 'MENTOR') {
       filteredSubmissions = submissions.filter(
-        (submission) =>
-          submission.enrolledUser.mentorUsername === user.username,
-      ) as SubmissionWithDetails[];
+        (submission) => submission.enrolledUser.mentorUsername === user.username,
+      ) as Array<SubmissionWithDetails>;
     }
 
-    const submissionsByAssignment = filteredSubmissions.reduce(
+    const submissionsByAssignment = filteredSubmissions.reduce<Record<string, Array<SubmissionWithDetails>>>(
       (acc, submission) => {
         const attachmentId = submission.attachmentId;
         acc[attachmentId] = acc[attachmentId] ?? [];
         acc[attachmentId].push(submission);
         return acc;
       },
-      {} as Record<string, SubmissionWithDetails[]>,
+      {},
     );
 
-    for (const [attachmentId, assignmentSubmissions] of Object.entries(
-      submissionsByAssignment,
-    )) {
+    for (const [attachmentId, assignmentSubmissions] of Object.entries(submissionsByAssignment)) {
       const assignment = await ctx.db.attachment.findUnique({
         where: {
           id: attachmentId,
@@ -272,7 +259,7 @@ export const submissionRouter = createTRPCRouter({
 
       if (assignment?.maxSubmissions && assignment.maxSubmissions > 1) {
         const submissionCount = await ctx.db.submission.groupBy({
-          by: ["enrolledUserId"],
+          by: ['enrolledUserId'],
           where: {
             attachmentId: attachmentId,
           },
@@ -282,9 +269,7 @@ export const submissionRouter = createTRPCRouter({
         });
 
         assignmentSubmissions.forEach((submission) => {
-          const submissionCountData = submissionCount.find(
-            (data) => data.enrolledUserId === submission.enrolledUserId,
-          );
+          const submissionCountData = submissionCount.find((data) => data.enrolledUserId === submission.enrolledUserId);
           if (submissionCountData) {
             submission.submissionCount = submissionCountData._count.id;
           }
@@ -296,8 +281,7 @@ export const submissionRouter = createTRPCRouter({
             const submissionIndex = assignmentSubmissions
               .filter((sub) => sub.enrolledUserId === submission.enrolledUserId)
               .findIndex((sub) => sub.id === submission.id);
-            submission.submissionIndex =
-              (submissionIndex >= 0 ? submissionIndex : 0) + 1;
+            submission.submissionIndex = (submissionIndex >= 0 ? submissionIndex : 0) + 1;
           }
         });
       }
@@ -324,7 +308,7 @@ export const submissionRouter = createTRPCRouter({
       });
 
       if (!submission && input.submissionId) {
-        return { error: "Submission not found" };
+        return { error: 'Submission not found' };
       }
 
       return { success: true, data: submission };
@@ -338,9 +322,9 @@ export const submissionRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { user } = ctx.session;
-      const haveAccess = user.role === "INSTRUCTOR" || user.role === "MENTOR";
-      if (!haveAccess) {
-        return { error: "Unauthorized" };
+      const hasAccess = user.role === 'INSTRUCTOR' || user.role === 'MENTOR';
+      if (!hasAccess) {
+        return { error: 'Unauthorized' };
       }
 
       await ctx.db.submission.delete({
@@ -374,7 +358,7 @@ export const submissionRouter = createTRPCRouter({
       });
 
       if (submissions.length >= input.maxSubmissions) {
-        return { error: "Maximum submission limit reached" };
+        return { error: 'Maximum submission limit reached' };
       }
 
       const mentorDetails = await ctx.db.enrolledUsers.findFirst({
@@ -392,10 +376,10 @@ export const submissionRouter = createTRPCRouter({
       });
 
       if (!mentorDetails) {
-        return { error: "Mentor not found" };
+        return { error: 'Mentor not found' };
       }
 
-      const mentorUsername = mentorDetails.mentor?.username ?? "";
+      const mentorUsername = mentorDetails.mentor?.username ?? '';
 
       const enrolledUser = await ctx.db.enrolledUsers.findUnique({
         where: {
@@ -408,7 +392,7 @@ export const submissionRouter = createTRPCRouter({
       });
 
       if (!enrolledUser) {
-        return { error: "User not enrolled in the course" };
+        return { error: 'User not enrolled in the course' };
       }
 
       await ctx.db.submission.create({
@@ -420,5 +404,51 @@ export const submissionRouter = createTRPCRouter({
       });
 
       return { success: true };
+    }),
+
+  getSubmissionForPlayground: protectedProcedure
+    .input(z.object({ submissionId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const currentUser = ctx.session.user;
+
+        const submission = await ctx.db.submission.findUnique({
+          where: { id: input.submissionId },
+          include: {
+            enrolledUser: true,
+            points: true,
+          },
+        });
+
+        if (!submission) {
+          return { success: false, error: 'Submission not found' };
+        }
+
+        // Check access permissions
+        const isStudentAccess =
+          currentUser.role === 'STUDENT' && submission.enrolledUser.username === currentUser.username;
+        const isMentorAccess =
+          currentUser.role === 'MENTOR' && submission.enrolledUser.mentorUsername === currentUser.username;
+        const isInstructorAccess = currentUser.role === 'INSTRUCTOR';
+
+        if (!isStudentAccess && !isMentorAccess && !isInstructorAccess) {
+          return { success: false, error: 'Access denied' };
+        }
+
+        return {
+          success: true,
+          data: {
+            submission,
+            initialFiles: submission.data,
+          },
+        };
+      } catch (error) {
+        console.error('Error fetching submission for playground:', error);
+        return {
+          success: false,
+          error: 'Failed to fetch submission data',
+          details: error instanceof Error ? error.message : String(error),
+        };
+      }
     }),
 });

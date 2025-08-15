@@ -1,6 +1,13 @@
 "use client";
 
-import { addDays, endOfDay, format, isSameDay, startOfDay, startOfWeek } from "date-fns";
+import {
+  addDays,
+  endOfDay,
+  format,
+  isSameDay,
+  startOfDay,
+  startOfWeek,
+} from "date-fns";
 
 interface Event {
   name: string;
@@ -16,7 +23,11 @@ interface WeekViewProps {
   onEventClick: (event: Event) => void;
 }
 
-export function WeekView({ selectedDate, events, onEventClick }: WeekViewProps) {
+export function WeekView({
+  selectedDate,
+  events,
+  onEventClick,
+}: WeekViewProps) {
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -41,7 +52,10 @@ export function WeekView({ selectedDate, events, onEventClick }: WeekViewProps) 
 
   const getEventsForDay = (day: Date) => {
     return events
-      .filter((event) => event.startDate <= endOfDay(day) && event.endDate >= startOfDay(day))
+      .filter(
+        (event) =>
+          event.startDate <= endOfDay(day) && event.endDate >= startOfDay(day),
+      )
       .map((event) => splitEventForDay(event, day));
   };
 
@@ -72,9 +86,14 @@ export function WeekView({ selectedDate, events, onEventClick }: WeekViewProps) 
     });
   };
 
-  const getEventStyle = (event: Event, layout: { left: number; width: number }) => {
-    const startMinutes = event.startDate.getHours() * 60 + event.startDate.getMinutes();
-    const endMinutes = event.endDate.getHours() * 60 + event.endDate.getMinutes();
+  const getEventStyle = (
+    event: Event,
+    layout: { left: number; width: number },
+  ) => {
+    const startMinutes =
+      event.startDate.getHours() * 60 + event.startDate.getMinutes();
+    const endMinutes =
+      event.endDate.getHours() * 60 + event.endDate.getMinutes();
     const duration = endMinutes - startMinutes;
 
     return {
@@ -89,15 +108,17 @@ export function WeekView({ selectedDate, events, onEventClick }: WeekViewProps) 
 
   return (
     <div className="h-full overflow-auto">
-      <div className="sticky top-0 z-10 bg-background border-b">
-        <div className="grid grid-cols-[60px_1fr] divide-x divide-border">
+      <div className="bg-background sticky top-0 z-10 border-b">
+        <div className="divide-border grid grid-cols-[60px_1fr] divide-x">
           <div className="h-12"></div>
-          <div className="grid grid-cols-7 divide-x divide-border">
+          <div className="divide-border grid grid-cols-7 divide-x">
             {days.map((day) => (
               <div
                 key={day.toString()}
-                className={`text-center p-3 ${
-                  isSameDay(day, today) ? "bg-green-600 text-primary-foreground" : ""
+                className={`p-3 text-center ${
+                  isSameDay(day, today)
+                    ? "text-primary-foreground bg-green-600"
+                    : ""
                 }`}
               >
                 <div className="text-sm font-medium">{format(day, "EEE")}</div>
@@ -108,24 +129,27 @@ export function WeekView({ selectedDate, events, onEventClick }: WeekViewProps) 
         </div>
       </div>
 
-      <div className="grid grid-cols-[60px_1fr] divide-x divide-border">
-        <div className="divide-y divide-border">
+      <div className="divide-border grid grid-cols-[60px_1fr] divide-x">
+        <div className="divide-border divide-y">
           {hours.map((hour) => (
             <div
               key={hour}
-              className="flex items-center justify-end pr-2 h-[60px] text-sm text-muted-foreground"
+              className="text-muted-foreground flex h-[60px] items-center justify-end pr-2 text-sm"
             >
               {format(new Date().setHours(hour, 0, 0, 0), "h a")}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 divide-x divide-border">
+        <div className="divide-border grid grid-cols-7 divide-x">
           {days.map((day) => {
             const dayEvents = getEventsForDay(day);
             const layouts = getEventsLayout(dayEvents);
 
             return (
-              <div key={day.toString()} className="relative divide-y divide-border">
+              <div
+                key={day.toString()}
+                className="divide-border relative divide-y"
+              >
                 {hours.map((hour) => (
                   <div key={hour} className="h-[60px]"></div>
                 ))}
@@ -136,7 +160,7 @@ export function WeekView({ selectedDate, events, onEventClick }: WeekViewProps) 
                   return (
                     <div
                       key={`${event.name}-${event.startDate.getTime()}`}
-                      className="text-xs font-semibold rounded cursor-pointer text-primary-foreground break-words whitespace-normal p-2"
+                      className="text-primary-foreground cursor-pointer rounded p-2 text-xs font-semibold break-words whitespace-normal"
                       style={getEventStyle(event, layout)}
                       onClick={() => onEventClick(event)}
                     >

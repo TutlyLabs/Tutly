@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import day from "@/lib/dayjs";
 
-import type { Course } from "@prisma/client";
+import type { Course } from "@tutly/api/schema";
 import NoDataFound from "@/components/NoDataFound";
 
 declare module "jspdf" {
@@ -49,7 +49,9 @@ const Report = ({
 
   useEffect(() => {
     if (reportData) {
-      const sortedData = reportData.data?.sort((a, b) => a.username.localeCompare(b.username)) || [];
+      const sortedData =
+        reportData.data?.sort((a, b) => a.username.localeCompare(b.username)) ||
+        [];
       setData(sortedData);
     }
   }, [reportData]);
@@ -58,21 +60,25 @@ const Report = ({
   const [sortOrder, setSortOrder] = useState<string>("desc");
   const [selectedMentor, setSelectedMentor] = useState<string>("");
   const [selectedFormat, setSelectedFormat] = useState<string>("pdf");
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
-    Username: true,
-    Name: true,
-    Assignments: true,
-    Submissions: true,
-    Evaluated: true,
-    Score: true,
-    Attendance: true,
-    Mentor: !isMentor,
-  });
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
+    {
+      Username: true,
+      Name: true,
+      Assignments: true,
+      Submissions: true,
+      Evaluated: true,
+      Score: true,
+      Attendance: true,
+      Mentor: !isMentor,
+    },
+  );
 
   const isAllView = courseId === "all";
   const currentCourse = allCourses.find((course) => course?.id === courseId);
 
-  const uniqueMentors = Array.from(new Set(data.map((item) => item.mentorUsername)));
+  const uniqueMentors = Array.from(
+    new Set(data.map((item) => item.mentorUsername)),
+  );
 
   const columnMapping: Record<string, keyof DataItem> = {
     Username: "username",
@@ -127,10 +133,13 @@ const Report = ({
           return formatAttendance(value);
         }
         return value.toString();
-      })
+      }),
     );
 
-    const csvContent = [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((e) => e.join(",")),
+    ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -192,10 +201,15 @@ const Report = ({
       Attendance: 0.8,
     };
 
-    const totalRatio = visibleHeaders.reduce((sum, header) => sum + (columnRatios[header] || 1), 0);
+    const totalRatio = visibleHeaders.reduce(
+      (sum, header) => sum + (columnRatios[header] || 1),
+      0,
+    );
     const unitWidth = availableWidth / totalRatio;
 
-    const columnWidths = visibleHeaders.map((header) => (columnRatios[header] || 1) * unitWidth);
+    const columnWidths = visibleHeaders.map(
+      (header) => (columnRatios[header] || 1) * unitWidth,
+    );
 
     const columnStyles: { [key: string]: Partial<Styles> } = {};
     visibleHeaders.forEach((_, index) => {
@@ -255,7 +269,8 @@ const Report = ({
 
   const formatAttendance = (attendance: string | number | null): string => {
     if (attendance === null) return "N/A";
-    const attendanceNumber = typeof attendance === "string" ? parseFloat(attendance) : attendance;
+    const attendanceNumber =
+      typeof attendance === "string" ? parseFloat(attendance) : attendance;
     if (isNaN(attendanceNumber)) {
       return "N/A";
     }
@@ -263,15 +278,15 @@ const Report = ({
   };
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex w-full flex-col">
       {/* Course navigation bar - horizontally scrollable on small screens */}
-      <div className="w-full overflow-x-auto py-3 px-2 sm:px-6 bg-white dark:bg-gray-800">
-        <div className="flex items-center gap-2 min-w-max">
+      <div className="w-full overflow-x-auto bg-white px-2 py-3 sm:px-6 dark:bg-gray-800">
+        <div className="flex min-w-max items-center gap-2">
           <Link
             href="/tutor/report/all"
             className={`rounded px-2 py-1.5 text-sm whitespace-nowrap ${
-              isAllView 
-                ? "border border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400" 
+              isAllView
+                ? "border border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30"
                 : "hover:bg-gray-100 dark:hover:bg-gray-700"
             }`}
           >
@@ -284,16 +299,16 @@ const Report = ({
                   href={`/tutor/report/${course.id}`}
                   className={`rounded px-2 py-1.5 text-sm whitespace-nowrap ${
                     !isAllView && currentCourse?.id === course?.id
-                      ? "border border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400"
+                      ? "border border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30"
                       : "hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   key={course?.id}
                 >
-                  <h1 className="max-w-[140px] sm:max-w-xs truncate font-medium">
+                  <h1 className="max-w-[140px] truncate font-medium sm:max-w-xs">
                     {course.title}
                   </h1>
                 </Link>
-              )
+              ),
           )}
         </div>
       </div>
@@ -301,22 +316,25 @@ const Report = ({
       {data.length === 0 ? (
         <div>
           <div>
-            <p className="mb-5 mt-20 flex items-center justify-center text-xl font-semibold">
+            <p className="mt-20 mb-5 flex items-center justify-center text-xl font-semibold">
               No data available to generate report!
             </p>
-            <NoDataFound message="No data available to generate report!" additionalMessage="The report’s taking a nap — no data to wake it up!"/>
+            <NoDataFound
+              message="No data available to generate report!"
+              additionalMessage="The report’s taking a nap — no data to wake it up!"
+            />
           </div>
         </div>
       ) : (
         <div className="w-full p-2 sm:p-4 md:p-6">
-          <div className="relative overflow-x-auto shadow-md sm:rounded-lg border dark:border-gray-700">
+          <div className="relative overflow-x-auto border shadow-md sm:rounded-lg dark:border-gray-700">
             {/* Filter and control section */}
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-3 p-3 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+            <div className="flex flex-col gap-3 border-b bg-white p-3 sm:flex-row sm:justify-between dark:border-gray-700 dark:bg-gray-800">
               {/* Mentor filter */}
               {isMentor ? (
                 <div className="flex items-center text-sm dark:text-gray-200">
                   <span className="mr-2 font-medium">Mentor:</span>
-                  <div className="rounded-lg border dark:border-gray-600 p-1.5">
+                  <div className="rounded-lg border p-1.5 dark:border-gray-600">
                     {uniqueMentors.map((mentor) => (
                       <span key={mentor}>{mentor}</span>
                     ))}
@@ -329,7 +347,7 @@ const Report = ({
                     title="mentor name"
                     value={selectedMentor}
                     onChange={handleMentorChange}
-                    className="w-full sm:w-auto rounded-lg border p-1.5 text-sm bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    className="w-full rounded-lg border bg-white p-1.5 text-sm sm:w-auto dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
                   >
                     <option value="">All Mentors</option>
                     {uniqueMentors.map((mentor) => (
@@ -342,12 +360,15 @@ const Report = ({
               )}
 
               {/* Export controls */}
-              <div className="flex flex-col xs:flex-row gap-2 sm:items-center">
+              <div className="xs:flex-row flex flex-col gap-2 sm:items-center">
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="w-full xs:w-auto rounded-lg border bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-600">
+                  <DropdownMenuTrigger className="xs:w-auto w-full rounded-lg border bg-white px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
                     View Columns
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="dark:bg-gray-800 dark:border-gray-700">
+                  <DropdownMenuContent
+                    align="end"
+                    className="dark:border-gray-700 dark:bg-gray-800"
+                  >
                     {Object.keys(visibleColumns)
                       .filter((col) => col !== "Mentor" || !isMentor)
                       .map((column) => (
@@ -360,7 +381,7 @@ const Report = ({
                               [column]: checked,
                             }))
                           }
-                          className="dark:text-gray-200 dark:focus:bg-gray-700 dark:hover:bg-gray-700"
+                          className="dark:text-gray-200 dark:hover:bg-gray-700 dark:focus:bg-gray-700"
                         >
                           {column}
                         </DropdownMenuCheckboxItem>
@@ -368,20 +389,20 @@ const Report = ({
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <div className="flex w-full xs:w-auto">
+                <div className="xs:w-auto flex w-full">
                   <select
                     id="format-select"
                     title="select format"
                     value={selectedFormat}
                     onChange={handleFormatChange}
-                    className="rounded-l-lg border bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 py-1.5 px-2 text-sm flex-1 xs:flex-none"
+                    className="xs:flex-none flex-1 rounded-l-lg border bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
                   >
                     <option value="pdf">PDF</option>
                     <option value="csv">CSV</option>
                   </select>
                   <button
                     onClick={handleDownload}
-                    className="rounded-r-lg bg-blue-500 py-1.5 px-3 text-sm text-white hover:bg-blue-600 whitespace-nowrap"
+                    className="rounded-r-lg bg-blue-500 px-3 py-1.5 text-sm whitespace-nowrap text-white hover:bg-blue-600"
                   >
                     Download
                   </button>
@@ -390,9 +411,9 @@ const Report = ({
             </div>
 
             {/* Table section */}
-            <div className="overflow-x-auto w-full">
-              <table className="w-full border-collapse text-sm text-left dark:text-gray-200">
-                <thead className="bg-blue-500 text-xs uppercase text-white">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full border-collapse text-left text-sm dark:text-gray-200">
+                <thead className="bg-blue-500 text-xs text-white uppercase">
                   <tr>
                     <th className="cursor-pointer truncate border-b border-blue-600 px-3 py-2 sm:px-4 sm:py-3">
                       S.No
@@ -409,7 +430,7 @@ const Report = ({
                             {sortColumn === columnMapping[column] &&
                               (sortOrder === "asc" ? " ↑" : " ↓")}
                           </th>
-                        )
+                        ),
                     )}
                   </tr>
                 </thead>
@@ -418,12 +439,12 @@ const Report = ({
                     <tr
                       key={index}
                       className={`${
-                        index % 2 === 0 
-                          ? "bg-white dark:bg-gray-800" 
+                        index % 2 === 0
+                          ? "bg-white dark:bg-gray-800"
                           : "bg-gray-50 dark:bg-gray-700"
                       } hover:bg-gray-100 dark:hover:bg-gray-600`}
                     >
-                      <td className="border-b border-gray-300 dark:border-gray-700 px-3 py-2 sm:px-4 sm:py-3">
+                      <td className="border-b border-gray-300 px-3 py-2 sm:px-4 sm:py-3 dark:border-gray-700">
                         {index + 1}
                       </td>
                       {Object.entries(columnMapping).map(
@@ -431,11 +452,13 @@ const Report = ({
                           visibleColumns[column] && (
                             <td
                               key={column}
-                              className="border-b border-gray-300 dark:border-gray-700 px-3 py-2 sm:px-4 sm:py-3"
+                              className="border-b border-gray-300 px-3 py-2 sm:px-4 sm:py-3 dark:border-gray-700"
                             >
-                              {column === "Attendance" ? formatAttendance(row[key]) : row[key]}
+                              {column === "Attendance"
+                                ? formatAttendance(row[key])
+                                : row[key]}
                             </td>
-                          )
+                          ),
                       )}
                     </tr>
                   ))}

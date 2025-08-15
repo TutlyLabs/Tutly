@@ -2,7 +2,7 @@ import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -12,7 +12,8 @@ import PageLoader from "@/components/loader/PageLoader";
 
 export const metadata: Metadata = {
   title: "Tutly",
-  description: "Empowering students with state-of-the-art tools and resources for academic success.",
+  description:
+    "Empowering students with state-of-the-art tools and resources for academic success.",
 };
 
 const geist = Geist({
@@ -34,12 +35,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TRPCReactProvider>
-          <NuqsAdapter>
-            <PageLoader />
-            <Toaster />
-            <Crisp />
-            {children}
-          </NuqsAdapter>
+            <NuqsAdapter>
+              <PageLoader />
+              <Toaster />
+              <Crisp />
+              {children}
+            </NuqsAdapter>
           </TRPCReactProvider>
         </ThemeProvider>
       </body>

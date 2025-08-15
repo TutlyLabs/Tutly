@@ -14,7 +14,9 @@ export default function PlaygroundsPage() {
           </div>
           <div>
             <h1 className="text-lg font-bold">HTML/CSS/JS</h1>
-            <p className="text-sm text-slate-500">Playground for html, css, and js</p>
+            <p className="text-sm text-slate-500">
+              Playground for html, css, and js
+            </p>
           </div>
         </div>
       </Link>
@@ -31,4 +33,4 @@ export default function PlaygroundsPage() {
       </Link>
     </div>
   );
-} 
+}

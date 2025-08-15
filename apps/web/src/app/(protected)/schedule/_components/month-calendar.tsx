@@ -63,14 +63,14 @@ export function MonthCalendar({
 
   return (
     <div className={`${compact ? "text-xs" : "text-sm"}`}>
-      <h2 className={`${compact ? "text-sm" : "text-xl"} font-semibold mb-5`}>
+      <h2 className={`${compact ? "text-sm" : "text-xl"} mb-5 font-semibold`}>
         {format(month, "MMMM yyyy")}
       </h2>
       <div className="grid grid-cols-7 gap-px">
         {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((dayName) => (
           <div
             key={dayName}
-            className={`${compact ? "h-8" : "h-10"} font-medium text-center text-muted-foreground`}
+            className={`${compact ? "h-8" : "h-10"} text-muted-foreground text-center font-medium`}
           >
             {dayName}
           </div>
@@ -87,16 +87,16 @@ export function MonthCalendar({
                 className={`${compact ? "h-8" : "h-10"} ${
                   isCurrentMonth ? "bg-background" : "bg-muted/50"
                 } ${
-                  isToday ? "bg-green-600 text-white rounded-full" : ""
-                } flex flex-col items-center justify-center relative m-0.5`}
+                  isToday ? "rounded-full bg-green-600 text-white" : ""
+                } relative m-0.5 flex flex-col items-center justify-center`}
               >
                 <span>{getDate(day)}</span>
                 {dayEvents.length > 0 && (
-                  <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+                  <div className="absolute right-0 bottom-0 left-0 flex justify-center">
                     {dayEvents.map((event, index) => (
                       <div
                         key={index}
-                        className="w-4 h-1 bg-red-500 rounded-full cursor-pointer mt-1"
+                        className="mt-1 h-1 w-4 cursor-pointer rounded-full bg-red-500"
                         title={event.name}
                         onClick={() => onEventClick(event)}
                       ></div>
@@ -105,7 +105,7 @@ export function MonthCalendar({
                 )}
               </div>
             );
-          })
+          }),
         )}
       </div>
     </div>

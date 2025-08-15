@@ -1,41 +1,47 @@
-import { redirect } from "next/navigation";
-import { getServerSession, getServerSessionOrRedirect } from "@tutly/auth";
-import { db } from "@tutly/db";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { api } from "@/trpc/react";
 import Report from "./_components/Report";
 
-export default async function CourseReportPage({
-  params,
-}: {
-  params: Promise<{ courseId: string }>;
-}) {
-  const session = await getServerSession();
-  const user = session?.user;
-  const { courseId } = await params;
+export default function CourseReportPage() {
+  const router = useRouter();
+  const params = useParams<{ courseId: string }>();
+  const courseId = params.courseId;
 
-  if (!courseId || !user || (user.role !== "INSTRUCTOR" && user.role !== "MENTOR")) {
-    redirect("/404");
+  const {
+    data: reportData,
+    isLoading,
+    error,
+  } = api.report.getReportPageData.useQuery(
+    { courseId: courseId! },
+    { enabled: !!courseId },
+  );
+
+  useEffect(() => {
+    if (reportData?.success === false) {
+      if (reportData.redirectTo) {
+        router.push(reportData.redirectTo);
+      } else {
+        router.push("/404");
+      }
+    }
+  }, [reportData, router]);
+
+  if (isLoading) {
+    return <div>Loading report...</div>;
   }
 
-  const enrolledCourses = await db.enrolledUsers.findMany({
-    where: {
-      username: user.username,
-      courseId: {
-        not: null,
-      },
-    },
-    include: {
-      course: true,
-    },
-  });
+  if (error) {
+    return <div>Error loading report</div>;
+  }
 
-  const courses = enrolledCourses.map((enrolled) => enrolled.course);
-  const isMentor = user.role === "MENTOR";
+  if (!reportData?.success || !reportData.data) {
+    return <div>No report data found!</div>;
+  }
 
-  return (
-    <Report
-      isMentor={isMentor}
-      allCourses={courses}
-      courseId={courseId}
-    />
-  );
-} 
+  const { courseId: id, courses, isMentor } = reportData.data;
+
+  return <Report isMentor={isMentor} allCourses={courses} courseId={id} />;
+}

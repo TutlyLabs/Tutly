@@ -1,7 +1,20 @@
-import React from 'react'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import React from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ArrowUpDown, Edit2, Eye, MoreVertical, Trash2 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import type { Column, IAction } from "./DisplayTable";
 
@@ -55,7 +68,9 @@ const TableList = ({
                 >
                   <div className="flex items-center">
                     <span>{column.label || column.name}</span>
-                    {column.sortable && <ArrowUpDown className="ml-2 h-4 w-4" />}
+                    {column.sortable && (
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    )}
                   </div>
                 </TableHead>
               ))}
@@ -71,7 +86,9 @@ const TableList = ({
                 .filter((column) => !column.hidden && !column.hideInTable)
                 .map((column) => (
                   <TableCell key={`${index}-${column.key}`}>
-                    {column.render ? column.render(row[column.key], row) : row[column.key]}
+                    {column.render
+                      ? column.render(row[column.key], row)
+                      : row[column.key]}
                   </TableCell>
                 ))}
               {(actions.length > 0 || onEdit || onDelete || onView) && (
@@ -88,7 +105,11 @@ const TableList = ({
                           <DropdownMenuItem
                             key={action.label}
                             onClick={() => void handleAction(action, row)}
-                            className={action.variant === "destructive" ? "text-destructive" : ""}
+                            className={
+                              action.variant === "destructive"
+                                ? "text-destructive"
+                                : ""
+                            }
                           >
                             <div className="flex items-center">
                               {action.icon}
@@ -96,9 +117,10 @@ const TableList = ({
                             </div>
                           </DropdownMenuItem>
                         ))}
-                        {actions.length > 0 && (onView || onEdit || onDelete) && (
-                          <DropdownMenuSeparator className="my-2" />
-                        )}
+                        {actions.length > 0 &&
+                          (onView || onEdit || onDelete) && (
+                            <DropdownMenuSeparator className="my-2" />
+                          )}
                         {onView && (
                           <DropdownMenuItem onClick={() => handleView(row)}>
                             <div className="flex items-center">
@@ -118,7 +140,7 @@ const TableList = ({
                         {onDelete && (
                           <DropdownMenuItem onClick={() => onDeleteClick(row)}>
                             <div className="flex items-center">
-                              <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+                              <Trash2 className="text-destructive mr-2 h-4 w-4" />
                               Delete
                             </div>
                           </DropdownMenuItem>
@@ -133,7 +155,7 @@ const TableList = ({
         </TableBody>
       </Table>
     </div>
-  )
-}
+  );
+};
 
-export default TableList
+export default TableList;

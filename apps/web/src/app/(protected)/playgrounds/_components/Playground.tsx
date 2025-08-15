@@ -10,12 +10,18 @@ import {
 import { useEffect, useState } from "react";
 import { TfiFullscreen } from "react-icons/tfi";
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 import FileExplorer from "./FileExplorer";
 import MonacoEditor from "./MonacoEditor";
 import SandboxConsole from "./SandboxConsole";
 import SubmitAssignment from "./SubmitAssignment";
+import { useClientSession } from "@/lib/auth/client";
+import { useRouter } from "next/navigation";
 
 const defaultFiles: SandpackFiles = {
   "/index.html": `<!DOCTYPE html>
@@ -43,24 +49,32 @@ const AutoSave = ({ assignmentId }: { assignmentId: string }) => {
   useEffect(() => {
     if (!assignmentId) return;
 
-    localStorage.setItem(`playground-${assignmentId}`, JSON.stringify(sandpack.files));
+    localStorage.setItem(
+      `playground-${assignmentId}`,
+      JSON.stringify(sandpack.files),
+    );
   }, [assignmentId, sandpack.files]);
 
   return null;
 };
 
 const Playground = ({
-  currentUser,
   assignmentId,
   initialFiles,
   template = "static",
 }: {
-  currentUser?: any;
   assignmentId?: string;
   initialFiles?: SandpackFiles;
   template?: SandpackPredefinedTemplate;
 }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const session = useClientSession();
+  const currentUser = session?.data?.user;
+  const router = useRouter();
+  if (!currentUser) {
+    router.push("/sign-in");
+    return null;
+  }
 
   const startingFiles = (() => {
     if (!assignmentId) return initialFiles || defaultFiles;
@@ -83,7 +97,7 @@ const Playground = ({
         {isFullScreen && (
           <div className="fixed inset-0 z-50 bg-white">
             <button
-              className="absolute right-1 top-1 z-50 rounded bg-gray-800 p-2 text-white"
+              className="absolute top-1 right-1 z-50 rounded bg-gray-800 p-2 text-white"
               onClick={() => setIsFullScreen(false)}
             >
               Exit Fullscreen
@@ -109,13 +123,16 @@ const Playground = ({
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={43}>
-            <ResizablePanelGroup direction="vertical" className="h-[95vh] overflow-y-scroll">
+            <ResizablePanelGroup
+              direction="vertical"
+              className="h-[95vh] overflow-y-scroll"
+            >
               <ResizablePanel defaultSize={95}>
                 <div className="relative h-[95vh] overflow-y-scroll">
                   <div className="border-b bg-white text-black">
                     <h1 className="text-center text-xl font-bold">Preview</h1>
                     <TfiFullscreen
-                      className="absolute right-2 top-2 cursor-pointer"
+                      className="absolute top-2 right-2 cursor-pointer"
                       onClick={() => setIsFullScreen(true)}
                     />
                   </div>
@@ -135,7 +152,10 @@ const Playground = ({
         </ResizablePanelGroup>
         {assignmentId && (
           <div className="absolute -top-6 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2">
-            <SubmitAssignment currentUser={currentUser} assignmentId={assignmentId} />
+            <SubmitAssignment
+              currentUser={currentUser}
+              assignmentId={assignmentId}
+            />
           </div>
         )}
       </SandpackProvider>

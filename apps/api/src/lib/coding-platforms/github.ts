@@ -1,4 +1,4 @@
-const GITHUB_API = "https://api.github.com/users/";
+const GITHUB_API = 'https://api.github.com/users/';
 
 export async function isHandleValid(handle: string): Promise<boolean> {
   try {
@@ -12,7 +12,7 @@ export async function isHandleValid(handle: string): Promise<boolean> {
 export async function getScore(handle: string) {
   try {
     const response = await fetch(`${GITHUB_API}${handle}`);
-    if (!response.ok) throw new Error("User not found");
+    if (!response.ok) throw new Error('User not found');
 
     const data = (await response.json()) as {
       public_repos: number;
@@ -27,6 +27,6 @@ export async function getScore(handle: string) {
       currentRating: data.followers,
     };
   } catch {
-    throw new Error("Failed to fetch score");
+    throw new Error('Failed to fetch score');
   }
 }

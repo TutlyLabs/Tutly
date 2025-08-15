@@ -1,25 +1,25 @@
-const HACKERRANK_API = "https://www.hackerrank.com/rest/";
+const HACKERRANK_API = 'https://www.hackerrank.com/rest/';
 
-interface HackerrankResponse {
+type HackerrankResponse = {
   status: boolean;
-  models?: Track[];
+  models?: Array<Track>;
   error?: string;
-}
+};
 
-interface Track {
+type Track = {
   slug: string;
   practice: {
     score: number;
   };
-}
+};
 
-const makeRequest = async <T>(endpoint: string): Promise<T> => {
+const makeRequest = async <TResponse>(endpoint: string): Promise<TResponse> => {
   const response = await fetch(`${HACKERRANK_API}${endpoint}`, {
-    headers: { Accept: "application/json" },
+    headers: { Accept: 'application/json' },
   });
 
-  if (!response.ok) throw new Error("Failed to fetch data");
-  return response.json() as Promise<T>;
+  if (!response.ok) throw new Error('Failed to fetch data');
+  return response.json() as Promise<TResponse>;
 };
 
 export async function isHandleValid(handle: string): Promise<boolean> {
@@ -33,14 +33,12 @@ export async function isHandleValid(handle: string): Promise<boolean> {
 
 export async function getScore(handle: string) {
   try {
-    const data = await makeRequest<HackerrankResponse>(
-      `hackers/${handle}/scores_elo`,
-    );
+    const data = await makeRequest<HackerrankResponse>(`hackers/${handle}/scores_elo`);
     let score = 0;
     let currentRating = 0;
 
     for (const track of data.models ?? []) {
-      if (track.slug === "algorithms" || track.slug === "data-structures") {
+      if (track.slug === 'algorithms' || track.slug === 'data-structures') {
         score += Math.floor(track.practice.score);
         currentRating = Math.max(currentRating, track.practice.score);
       }
@@ -48,6 +46,6 @@ export async function getScore(handle: string) {
 
     return { score: score.toString(), problemCount: 0, currentRating };
   } catch {
-    throw new Error("Failed to fetch score");
+    throw new Error('Failed to fetch score');
   }
 }

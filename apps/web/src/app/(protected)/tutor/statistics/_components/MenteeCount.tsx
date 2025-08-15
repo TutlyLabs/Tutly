@@ -16,4 +16,4 @@ export default function MenteeCount({
 
   const menteesArray = Array.isArray(mentees) ? mentees : [];
   return <>{menteesArray.length}</>;
-} 
+}

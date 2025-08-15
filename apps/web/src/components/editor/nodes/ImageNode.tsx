@@ -14,9 +14,7 @@ import { DecoratorNode, createEditor } from "lexical";
 import * as React from "react";
 import { Suspense } from "react";
 
-const ImageComponent = React.lazy(
-  () => import("./ImageComponent")
-);
+const ImageComponent = React.lazy(() => import("./ImageComponent"));
 
 export interface ImagePayload {
   altText: string;
@@ -78,12 +76,13 @@ export class ImageNode extends DecoratorNode<React.ReactElement> {
       node.__showCaption,
       node.__caption,
       node.__captionsEnabled,
-      node.__key
+      node.__key,
     );
   }
 
   static override importJSON(serializedNode: SerializedImageNode): ImageNode {
-    const { altText, height, width, maxWidth, caption, src, showCaption } = serializedNode;
+    const { altText, height, width, maxWidth, caption, src, showCaption } =
+      serializedNode;
     const node = $createImageNode({
       altText,
       height: height ?? "inherit",
@@ -129,7 +128,7 @@ export class ImageNode extends DecoratorNode<React.ReactElement> {
     showCaption?: boolean,
     caption?: LexicalEditor,
     captionsEnabled?: boolean,
-    key?: NodeKey
+    key?: NodeKey,
   ) {
     super(key);
     this.__src = src;
@@ -172,7 +171,10 @@ export class ImageNode extends DecoratorNode<React.ReactElement> {
     return `![${altText}](${cleanSrc}${dimensions})\n`;
   }
 
-  setWidthAndHeight(width: "inherit" | number, height: "inherit" | number): void {
+  setWidthAndHeight(
+    width: "inherit" | number,
+    height: "inherit" | number,
+  ): void {
     const writable = this.getWritable();
     writable.__width = width;
     writable.__height = height;
@@ -259,7 +261,7 @@ export function $createImageNode({
     showCaption,
     caption,
     captionsEnabled,
-    key
+    key,
   );
 }
 

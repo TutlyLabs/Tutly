@@ -15,7 +15,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -39,7 +44,9 @@ export default function CourseFormModal({
   defaultValues,
 }: CourseFormModalProps) {
   const [courseTitle, setCourseTitle] = useState(defaultValues?.title ?? "");
-  const [isPublished, setIsPublished] = useState(defaultValues?.isPublished ?? false);
+  const [isPublished, setIsPublished] = useState(
+    defaultValues?.isPublished ?? false,
+  );
   const [img, setImg] = useState(defaultValues?.image ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -98,7 +105,9 @@ export default function CourseFormModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{mode === "add" ? "Add New Course" : "Edit Course"}</DialogTitle>
+            <DialogTitle>
+              {mode === "add" ? "Add New Course" : "Edit Course"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -115,7 +124,9 @@ export default function CourseFormModal({
               <Label>Publish Status</Label>
               <RadioGroup
                 value={String(isPublished)}
-                onValueChange={(value: string) => setIsPublished(value === "true")}
+                onValueChange={(value: string) =>
+                  setIsPublished(value === "true")
+                }
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="true" id="yes" />
@@ -144,11 +155,18 @@ export default function CourseFormModal({
                 disabled={isSubmitting || !courseTitle}
                 onClick={handleSubmit}
               >
-                {isSubmitting ? "Saving..." : mode === "add" ? "Create" : "Save"}
+                {isSubmitting
+                  ? "Saving..."
+                  : mode === "add"
+                    ? "Create"
+                    : "Save"}
               </Button>
 
               {mode === "edit" && (
-                <Button variant="destructive" onClick={() => setShowDeleteAlert(true)}>
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteAlert(true)}
+                >
                   Delete
                 </Button>
               )}
@@ -162,8 +180,8 @@ export default function CourseFormModal({
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the course and all its
-              associated data.
+              This action cannot be undone. This will permanently delete the
+              course and all its associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -41,7 +41,9 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
   const [folderName, setFolderName] = useState("");
   const [folders, setFolders] = useState<Folder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState("");
-  const [createdAt, setCreatedAt] = useState(new Date().toISOString().split("T")[0]);
+  const [createdAt, setCreatedAt] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [isOpen, setIsOpen] = useState(false);
 
   const createClass = api.classes.createClass.useMutation();
@@ -123,7 +125,11 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
             onChange={(e) => setVideoLink(e.target.value)}
           />
 
-          <Input type="date" value={createdAt} onChange={(e) => setCreatedAt(e.target.value)} />
+          <Input
+            type="date"
+            value={createdAt}
+            onChange={(e) => setCreatedAt(e.target.value)}
+          />
 
           <Select value={selectedFolder} onValueChange={setSelectedFolder}>
             <SelectTrigger>

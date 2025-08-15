@@ -1,16 +1,16 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 export const classesRouter = createTRPCRouter({
   createClass: protectedProcedure
     .input(
       z.object({
         classTitle: z.string().trim().min(1, {
-          message: "Title is required",
+          message: 'Title is required',
         }),
         videoLink: z.string().nullable(),
-        videoType: z.enum(["DRIVE", "YOUTUBE", "ZOOM"]),
+        videoType: z.enum(['DRIVE', 'YOUTUBE', 'ZOOM']),
         courseId: z.string().trim().min(1),
         createdAt: z.string().optional(),
         folderId: z.string().optional(),
@@ -53,9 +53,7 @@ export const classesRouter = createTRPCRouter({
               Folder: {
                 create: {
                   title: input.folderName,
-                  createdAt: input.createdAt
-                    ? new Date(input.createdAt)
-                    : new Date(),
+                  createdAt: input.createdAt ? new Date(input.createdAt) : new Date(),
                 },
               },
             },
@@ -66,8 +64,8 @@ export const classesRouter = createTRPCRouter({
           data: classData,
         });
       } catch (error) {
-        console.error("Error creating class:", error);
-        throw new Error("Error creating class");
+        console.error('Error creating class:', error);
+        throw new Error('Error creating class');
       }
     }),
 
@@ -78,7 +76,7 @@ export const classesRouter = createTRPCRouter({
         courseId: z.string(),
         classTitle: z.string(),
         videoLink: z.string().nullable(),
-        videoType: z.enum(["DRIVE", "YOUTUBE", "ZOOM"]),
+        videoType: z.enum(['DRIVE', 'YOUTUBE', 'ZOOM']),
         folderId: z.string().optional(),
         folderName: z.string().optional(),
         createdAt: z.string().optional(),
@@ -86,12 +84,10 @@ export const classesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
-      const isCourseAdmin = currentUser.adminForCourses.some(
-        (course: { id: string }) => course.id === input.courseId,
-      );
+      const isCourseAdmin = currentUser.adminForCourses.some((course: { id: string }) => course.id === input.courseId);
 
-      if (currentUser.role !== "INSTRUCTOR" && !isCourseAdmin) {
-        throw new Error("You are not authorized to update this class.");
+      if (currentUser.role !== 'INSTRUCTOR' && !isCourseAdmin) {
+        throw new Error('You are not authorized to update this class.');
       }
 
       try {
@@ -102,7 +98,7 @@ export const classesRouter = createTRPCRouter({
         });
 
         if (!existingClass) {
-          throw new Error("Class not found");
+          throw new Error('Class not found');
         }
 
         // Update video
@@ -147,8 +143,8 @@ export const classesRouter = createTRPCRouter({
 
         return { success: true, data: updatedClass };
       } catch (error) {
-        console.error("Error updating class:", error);
-        return { error: "Failed to update class" };
+        console.error('Error updating class:', error);
+        return { error: 'Failed to update class' };
       }
     }),
 
@@ -167,8 +163,8 @@ export const classesRouter = createTRPCRouter({
         });
         return { success: true };
       } catch (error) {
-        console.error("Error deleting class:", error);
-        throw new Error("Failed to delete class. Please try again later.");
+        console.error('Error deleting class:', error);
+        throw new Error('Failed to delete class. Please try again later.');
       }
     }),
 
@@ -177,10 +173,8 @@ export const classesRouter = createTRPCRouter({
       const res = await ctx.db.class.count();
       return res;
     } catch (error) {
-      console.error("Error getting total number of classes:", error);
-      throw new Error(
-        "Failed to get total number of classes. Please try again later.",
-      );
+      console.error('Error getting total number of classes:', error);
+      throw new Error('Failed to get total number of classes. Please try again later.');
     }
   }),
 
@@ -201,14 +195,14 @@ export const classesRouter = createTRPCRouter({
             Folder: true,
           },
           orderBy: {
-            createdAt: "asc",
+            createdAt: 'asc',
           },
         });
 
         return { success: true, data: classes };
       } catch (error) {
-        console.error("Error getting classes by course ID:", error);
-        return { error: "Failed to get classes" };
+        console.error('Error getting classes by course ID:', error);
+        return { error: 'Failed to get classes' };
       }
     }),
 
@@ -237,8 +231,8 @@ export const classesRouter = createTRPCRouter({
 
         return { success: true, data: classDetails };
       } catch (error) {
-        console.error("Error getting class details:", error);
-        return { error: "Failed to get class details" };
+        console.error('Error getting class details:', error);
+        return { error: 'Failed to get class details' };
       }
     }),
 });

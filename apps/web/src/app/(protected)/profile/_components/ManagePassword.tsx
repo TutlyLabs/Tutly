@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -71,23 +71,24 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
     },
   });
 
-  const { mutate: resetPassword } = api.reset_password.resetPassword.useMutation({
-    onSuccess: () => {
-      toast.success("Password reset successfully");
-      window.location.href = "/sign-in";
-    },
-    onError: (error) => {
-      if (error.data?.zodError) {
-        toast.error("Invalid password format");
-        return;
-      }
-      if (error.data?.code === "NOT_FOUND") {
-        toast.error("Invalid or expired OTP");
-        return;
-      }
-      toast.error("Failed to reset password");
-    },
-  });
+  const { mutate: resetPassword } =
+    api.reset_password.resetPassword.useMutation({
+      onSuccess: () => {
+        toast.success("Password reset successfully");
+        window.location.href = "/sign-in";
+      },
+      onError: (error) => {
+        if (error.data?.zodError) {
+          toast.error("Invalid password format");
+          return;
+        }
+        if (error.data?.code === "NOT_FOUND") {
+          toast.error("Invalid or expired OTP");
+          return;
+        }
+        toast.error("Failed to reset password");
+      },
+    });
 
   const checkStrength = (pass: string) => {
     const requirements = [
@@ -111,7 +112,7 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
 
   const newPasswordScore = useMemo(
     () => getStrengthScore(newPasswordStrength),
-    [newPasswordStrength]
+    [newPasswordStrength],
   );
 
   const getStrengthColor = (score: number) => {
@@ -186,7 +187,7 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
   const renderEmailStep = () => (
     <form onSubmit={handleEmailSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           Email
         </label>
         <Input
@@ -211,12 +212,17 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
   );
 
   const renderOTPStep = () => (
-    <form onSubmit={handleOTPSubmit} className="space-y-4 w-full">
+    <form onSubmit={handleOTPSubmit} className="w-full space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           Enter OTP
         </label>
-        <InputOTP maxLength={6} value={otp} onChange={(value) => setOtp(value)} className="gap-2">
+        <InputOTP
+          maxLength={6}
+          value={otp}
+          onChange={(value) => setOtp(value)}
+          className="gap-2"
+        >
           <InputOTPGroup className="flex justify-center gap-2">
             <InputOTPSlot index={0} />
             <InputOTPSlot index={1} />
@@ -230,13 +236,17 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
       </div>
 
       {timeRemaining && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Resend available in {Math.ceil(timeRemaining / 1000)} seconds
         </p>
       )}
 
       <div className="flex flex-col gap-2">
-        <Button type="submit" className="w-full" disabled={isLoading || otp.length !== 6}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isLoading || otp.length !== 6}
+        >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -290,17 +300,21 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
           <button
             type="button"
             onClick={() => setShowNewPassword(!showNewPassword)}
-            className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center text-muted-foreground/80 hover:text-foreground"
+            className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center"
             aria-label={showNewPassword ? "Hide password" : "Show password"}
           >
-            {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showNewPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         </div>
 
         {showPasswordStrength && (
           <>
             <div
-              className="mb-4 mt-3 h-1 w-full overflow-hidden rounded-full bg-border"
+              className="bg-border mt-3 mb-4 h-1 w-full overflow-hidden rounded-full"
               role="progressbar"
               aria-valuenow={newPasswordScore}
               aria-valuemin={0}
@@ -313,7 +327,10 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
               />
             </div>
 
-            <p id="password-strength" className="mb-2 text-sm font-medium text-foreground">
+            <p
+              id="password-strength"
+              className="text-foreground mb-2 text-sm font-medium"
+            >
               {getStrengthText(newPasswordScore)}. Must contain:
             </p>
 
@@ -321,16 +338,24 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
               {newPasswordStrength.map((req, index) => (
                 <li key={index} className="flex items-center gap-2">
                   {req.met ? (
-                    <Check className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+                    <Check
+                      className="h-4 w-4 text-emerald-500"
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <X className="h-4 w-4 text-muted-foreground/80" aria-hidden="true" />
+                    <X
+                      className="text-muted-foreground/80 h-4 w-4"
+                      aria-hidden="true"
+                    />
                   )}
                   <span
                     className={`text-xs ${req.met ? "text-emerald-600" : "text-muted-foreground"}`}
                   >
                     {req.text}
                     <span className="sr-only">
-                      {req.met ? " - Requirement met" : " - Requirement not met"}
+                      {req.met
+                        ? " - Requirement met"
+                        : " - Requirement not met"}
                     </span>
                   </span>
                 </li>
@@ -354,23 +379,30 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center text-muted-foreground/80 hover:text-foreground"
+            className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center"
             aria-label={showConfirmPassword ? "Hide password" : "Show password"}
           >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showConfirmPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>
 
       {newPassword !== confirmPassword && confirmPassword && (
-        <p className="text-sm text-destructive">Passwords do not match</p>
+        <p className="text-destructive text-sm">Passwords do not match</p>
       )}
 
       <Button
         type="submit"
         className="w-full"
         disabled={
-          isResetting || !newPassword || !confirmPassword || newPassword !== confirmPassword
+          isResetting ||
+          !newPassword ||
+          !confirmPassword ||
+          newPassword !== confirmPassword
         }
       >
         {isResetting ? (
@@ -387,7 +419,7 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-      <div className="mx-auto w-full max-w-sm rounded-lg bg-background p-8 shadow-sm">
+      <div className="bg-background mx-auto w-full max-w-sm rounded-lg p-8 shadow-sm">
         {step === "email" && renderEmailStep()}
         {step === "otp" && renderOTPStep()}
         {step === "password" && renderPasswordStep()}

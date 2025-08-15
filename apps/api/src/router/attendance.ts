@@ -1,26 +1,25 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 // todo: fix overall attendance for mentor exceeding 100%
-import type { Prisma, Role } from "@prisma/client";
-import { z } from "zod";
+import type { Prisma, Role } from '@prisma/client';
+import { z } from 'zod';
 
-import { db } from "@tutly/db";
+import { db } from '../lib/db';
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-
-interface StudentData {
+type StudentData = {
   Duration: number;
   username: string;
   Joins?: Prisma.InputJsonValue;
-}
+};
 
-export interface AttendanceRecord {
+export type AttendanceRecord = {
   username: string;
   name: string;
   mail: string | null;
   image: string | null;
-  role: Role;
+  role: string;
   count: number;
-}
+};
 
 export const attendanceRouter = createTRPCRouter({
   postAttendance: protectedProcedure
@@ -32,28 +31,24 @@ export const attendanceRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const parsedData = JSON.parse(
-        JSON.stringify(input.data),
-      ) as StudentData[];
+      const parsedData = JSON.parse(JSON.stringify(input.data)) as Array<StudentData>;
 
-      const attendanceData: Prisma.AttendanceCreateManyInput[] = parsedData.map(
-        (student) => {
-          const baseData = {
-            classId: input.classId,
-            username: student.username,
-            attendedDuration: student.Duration,
-            data: [student.Joins ?? {}] as Prisma.InputJsonValue[],
+      const attendanceData: Array<Prisma.AttendanceCreateManyInput> = parsedData.map((student) => {
+        const baseData = {
+          classId: input.classId,
+          username: student.username,
+          attendedDuration: student.Duration,
+          data: [student.Joins ?? {}] as Array<Prisma.InputJsonValue>,
+        };
+
+        if (student.Duration >= input.maxInstructionDuration) {
+          return {
+            ...baseData,
+            attended: true,
           };
-
-          if (student.Duration >= input.maxInstructionDuration) {
-            return {
-              ...baseData,
-              attended: true,
-            };
-          }
-          return baseData;
-        },
-      );
+        }
+        return baseData;
+      });
 
       const postAttendance = await ctx.db.attendance.createMany({
         data: attendanceData,
@@ -92,20 +87,16 @@ export const attendanceRouter = createTRPCRouter({
           createdAt: true,
         },
         orderBy: {
-          createdAt: "asc",
+          createdAt: 'asc',
         },
       });
 
-      const classes: string[] = [];
-      const attendanceInEachClass: number[] = [];
+      const classes: Array<string> = [];
+      const attendanceInEachClass: Array<number> = [];
       getAllClasses.forEach((classData) => {
-        const dateStr = classData.createdAt
-          .toISOString()
-          .split("T")[0] as string;
+        const dateStr = classData.createdAt.toISOString().split('T')[0] as string;
         classes.push(dateStr);
-        const tem = attendance.filter(
-          (attendanceData) => attendanceData.classId === classData.id,
-        );
+        const tem = attendance.filter((attendanceData) => attendanceData.classId === classData.id);
         attendanceInEachClass.push(tem.length);
       });
 
@@ -122,7 +113,7 @@ export const attendanceRouter = createTRPCRouter({
       const currentUser = ctx.session.user;
 
       let attendance;
-      if (currentUser.role === "MENTOR") {
+      if (currentUser.role === 'MENTOR') {
         attendance = await ctx.db.attendance.findMany({
           where: {
             user: {
@@ -160,20 +151,16 @@ export const attendanceRouter = createTRPCRouter({
           createdAt: true,
         },
         orderBy: {
-          createdAt: "asc",
+          createdAt: 'asc',
         },
       });
 
-      const classes: string[] = [];
-      const attendanceInEachClass: number[] = [];
+      const classes: Array<string> = [];
+      const attendanceInEachClass: Array<number> = [];
       getAllClasses.forEach((classData) => {
-        const dateStr = classData.createdAt
-          .toISOString()
-          .split("T")[0] as string;
+        const dateStr = classData.createdAt.toISOString().split('T')[0] as string;
         classes.push(dateStr);
-        const tem = attendance.filter(
-          (attendanceData) => attendanceData.classId === classData.id,
-        );
+        const tem = attendance.filter((attendanceData) => attendanceData.classId === classData.id);
         attendanceInEachClass.push(tem.length);
       });
 
@@ -224,11 +211,9 @@ export const attendanceRouter = createTRPCRouter({
         },
       });
 
-      const attendanceDates: string[] = [];
+      const attendanceDates: Array<string> = [];
       attendance.forEach((attendanceData) => {
-        const dateStr = attendanceData.class.createdAt
-          .toISOString()
-          .split("T")[0] as string;
+        const dateStr = attendanceData.class.createdAt.toISOString().split('T')[0] as string;
         attendanceDates.push(dateStr);
       });
 
@@ -241,15 +226,13 @@ export const attendanceRouter = createTRPCRouter({
           createdAt: true,
         },
         orderBy: {
-          createdAt: "asc",
+          createdAt: 'asc',
         },
       });
 
-      const classes: string[] = [];
+      const classes: Array<string> = [];
       getAllClasses.forEach((classData) => {
-        const dateStr = classData.createdAt
-          .toISOString()
-          .split("T")[0] as string;
+        const dateStr = classData.createdAt.toISOString().split('T')[0] as string;
         if (!attendanceDates.includes(dateStr)) {
           classes.push(dateStr);
         }
@@ -266,8 +249,8 @@ export const attendanceRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") {
-        return { error: "You must be an instructor to delete an attendance" };
+      if (currentUser.role !== 'INSTRUCTOR') {
+        return { error: 'You must be an instructor to delete an attendance' };
       }
 
       const attendance = await ctx.db.attendance.deleteMany({
@@ -281,15 +264,14 @@ export const attendanceRouter = createTRPCRouter({
 
   getTotalNumberOfClassesAttended: protectedProcedure.query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
-    if (currentUser.role === "STUDENT") {
+    if (currentUser.role === 'STUDENT') {
       return {
-        error:
-          "You must be logged in as an instructor or mentor to view attendance",
+        error: 'You must be logged in as an instructor or mentor to view attendance',
       };
     }
 
     let attendance;
-    if (currentUser.role === "MENTOR") {
+    if (currentUser.role === 'MENTOR') {
       attendance = await ctx.db.attendance.findMany({
         where: {
           user: {
@@ -310,7 +292,7 @@ export const attendanceRouter = createTRPCRouter({
       attendance = await ctx.db.attendance.findMany({
         where: {
           user: {
-            role: "STUDENT",
+            role: 'STUDENT',
           },
         },
         select: {
@@ -325,9 +307,7 @@ export const attendanceRouter = createTRPCRouter({
 
     attendance.forEach((attendanceData) => {
       if (attendanceData.attended && attendanceData.username) {
-        const existingRecord = groupByTotalAttendance[
-          attendanceData.username
-        ] ?? {
+        const existingRecord = groupByTotalAttendance[attendanceData.username] ?? {
           count: 0,
           username: attendanceData.username,
           name: attendanceData.user.name,
@@ -351,8 +331,8 @@ export const attendanceRouter = createTRPCRouter({
 
   getAttendanceForLeaderbaord: protectedProcedure.query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
-    if (currentUser.role === "STUDENT") {
-      return { error: "You must be logged in to attend a class" };
+    if (currentUser.role === 'STUDENT') {
+      return { error: 'You must be logged in to attend a class' };
     }
 
     const attendance = await ctx.db.attendance.findMany({
@@ -368,14 +348,11 @@ export const attendanceRouter = createTRPCRouter({
       },
     });
 
-    const groupedAttendance = attendance.reduce(
-      (acc: Record<string, number>, curr) => {
-        const username = curr.user.username;
-        acc[username] = (acc[username] ?? 0) + 1;
-        return acc;
-      },
-      {},
-    );
+    const groupedAttendance = attendance.reduce((acc: Record<string, number>, curr) => {
+      const username = curr.user.username;
+      acc[username] = (acc[username] ?? 0) + 1;
+      return acc;
+    }, {});
 
     return { success: true, data: groupedAttendance };
   }),
@@ -391,11 +368,11 @@ export const attendanceRouter = createTRPCRouter({
         },
       },
       orderBy: {
-        createdAt: "asc",
+        createdAt: 'asc',
       },
     });
 
-    const courseId = enrolledUsers[0]?.courseId ?? "";
+    const courseId = enrolledUsers[0]?.courseId ?? '';
 
     const totalAttendance = await serverActionOfgetTotalNumberOfClassesAttended(
       currentUser.username,
@@ -425,14 +402,14 @@ export const attendanceRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
 
-      if (currentUser.role === "STUDENT") {
+      if (currentUser.role === 'STUDENT') {
         return {
-          error: "You must be an instructor or mentor to view attendance",
+          error: 'You must be an instructor or mentor to view attendance',
         };
       }
 
       const attendance =
-        currentUser.role === "MENTOR"
+        currentUser.role === 'MENTOR'
           ? await ctx.db.attendance.findMany({
               where: {
                 classId: input.classId,
@@ -475,16 +452,89 @@ export const attendanceRouter = createTRPCRouter({
 
       return { success: true, data: { attendance, present } };
     }),
+
+  getAttendancePageData: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const currentUser = ctx.session.user;
+
+      // Fetch courses with complex includes
+      let courses = await ctx.db.course.findMany({
+        where: {
+          enrolledUsers: {
+            some: {
+              username: currentUser.username || '',
+            },
+          },
+        },
+        include: {
+          classes: true,
+          createdBy: {
+            select: {
+              id: true,
+              username: true,
+              name: true,
+              image: true,
+              email: true,
+              role: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+          _count: {
+            select: {
+              classes: true,
+            },
+          },
+          courseAdmins: {
+            select: {
+              id: true,
+              username: true,
+              name: true,
+              image: true,
+              email: true,
+              role: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+        },
+      });
+
+      // Sort classes by creation date
+      courses.forEach((course) => {
+        course.classes.sort((a, b) => {
+          return Number(a.createdAt) - Number(b.createdAt);
+        });
+      });
+
+      // Filter published courses for non-instructors
+      if (currentUser.role !== 'INSTRUCTOR') {
+        const publishedCourses = courses.filter((course) => course.isPublished);
+        courses = publishedCourses;
+      }
+
+      return {
+        success: true,
+        data: {
+          courses,
+          role: currentUser.role,
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching attendance page data:', error);
+      return {
+        success: false,
+        error: 'Failed to fetch attendance page data',
+        details: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }),
 });
 
 // Helper functions
-export async function serverActionOfgetTotalNumberOfClassesAttended(
-  username: string,
-  role: Role,
-  courseId: string,
-) {
+export async function serverActionOfgetTotalNumberOfClassesAttended(username: string, role: Role, courseId: string) {
   let attendance;
-  if (role === "MENTOR") {
+  if (role === 'MENTOR') {
     attendance = await db.attendance.findMany({
       where: {
         user: {
@@ -506,7 +556,7 @@ export async function serverActionOfgetTotalNumberOfClassesAttended(
     attendance = await db.attendance.findMany({
       where: {
         user: {
-          role: "STUDENT",
+          role: 'STUDENT',
         },
         class: {
           courseId,
@@ -524,9 +574,7 @@ export async function serverActionOfgetTotalNumberOfClassesAttended(
 
   attendance.forEach((attendanceData) => {
     if (attendanceData.attended && attendanceData.username) {
-      const existingRecord = groupByTotalAttendance[
-        attendanceData.username
-      ] ?? {
+      const existingRecord = groupByTotalAttendance[attendanceData.username] ?? {
         count: 0,
         username: attendanceData.username,
         name: attendanceData.user.name,

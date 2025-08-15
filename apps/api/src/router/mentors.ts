@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 export const mentorsRouter = createTRPCRouter({
   getMentors: protectedProcedure
@@ -13,12 +13,12 @@ export const mentorsRouter = createTRPCRouter({
       const currentUser = ctx.session.user;
 
       if (!currentUser.organization) {
-        return { error: "Unauthorized" };
+        return { error: 'Unauthorized' };
       }
 
       const mentors = await ctx.db.user.findMany({
         where: {
-          role: "MENTOR",
+          role: 'MENTOR',
           enrolledUsers: {
             some: {
               courseId: input.courseId,
@@ -47,7 +47,7 @@ export const mentorsRouter = createTRPCRouter({
       const currentUser = ctx.session.user;
 
       if (!currentUser.organization) {
-        return { error: "Unauthorized" };
+        return { error: 'Unauthorized' };
       }
 
       const mentor = await ctx.db.user.findUnique({

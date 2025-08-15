@@ -70,11 +70,16 @@ const ManageFolders = ({ courseId }: { courseId: string }) => {
         </DialogHeader>
         <div className="mt-4">
           {folders.length === 0 ? (
-            <p className="text-center text-muted-foreground">No folders found</p>
+            <p className="text-muted-foreground text-center">
+              No folders found
+            </p>
           ) : (
             <div className="space-y-4">
               {folders.map((folder) => (
-                <div key={folder.id} className="flex items-center justify-between gap-2">
+                <div
+                  key={folder.id}
+                  className="flex items-center justify-between gap-2"
+                >
                   {editingFolder === folder.id ? (
                     <div className="flex flex-1 items-center gap-2">
                       <Input
@@ -103,7 +108,7 @@ const ManageFolders = ({ courseId }: { courseId: string }) => {
                     <>
                       <div className="flex-1">
                         <p className="font-medium">{folder.title}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {folder._count?.Class ?? 0} classes
                         </p>
                       </div>

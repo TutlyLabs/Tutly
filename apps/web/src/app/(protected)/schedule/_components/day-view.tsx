@@ -38,7 +38,8 @@ export function DayView({ selectedDate, events, onEventClick }: DayViewProps) {
     return events
       .filter(
         (event) =>
-          event.startDate <= endOfDay(selectedDate) && event.endDate >= startOfDay(selectedDate)
+          event.startDate <= endOfDay(selectedDate) &&
+          event.endDate >= startOfDay(selectedDate),
       )
       .map((event) => splitEventForDay(event, selectedDate));
   };
@@ -47,15 +48,17 @@ export function DayView({ selectedDate, events, onEventClick }: DayViewProps) {
 
   return (
     <div className="h-full">
-      <div className="text-2xl font-bold p-4 mb-4">{format(selectedDate, "EEEE, d MMMM yyyy")}</div>
+      <div className="mb-4 p-4 text-2xl font-bold">
+        {format(selectedDate, "EEEE, d MMMM yyyy")}
+      </div>
       <div className="relative min-h-full">
         {hours.map((hour) => (
           <div key={hour} className="relative h-[60px]">
-            <div className="absolute w-full border-t flex m-2">
-              <div className="sticky left-0 -mt-2.5 w-[60px] text-sm text-muted-foreground">
+            <div className="absolute m-2 flex w-full border-t">
+              <div className="text-muted-foreground sticky left-0 -mt-2.5 w-[60px] text-sm">
                 {`${hour % 12 || 12}:00`} {hour < 12 ? "AM" : "PM"}
               </div>
-              <div className="flex-1 h-[60px] p-2 relative">
+              <div className="relative h-[60px] flex-1 p-2">
                 <div className="flex flex-row gap-2">
                   {dayEvents.map((event, index) => {
                     return (
@@ -63,7 +66,7 @@ export function DayView({ selectedDate, events, onEventClick }: DayViewProps) {
                       hour <= event.endDate.getHours() && (
                         <div
                           key={index}
-                          className="bg-primary text-white text-sm font-semibold p-2 rounded cursor-pointer ml-4"
+                          className="bg-primary ml-4 cursor-pointer rounded p-2 text-sm font-semibold text-white"
                           onClick={() => onEventClick(event)}
                         >
                           {event.name}

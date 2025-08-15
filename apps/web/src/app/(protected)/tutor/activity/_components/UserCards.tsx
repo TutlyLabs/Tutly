@@ -17,7 +17,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import day from "@/lib/dayjs";
 import { api } from "@/trpc/react";
 
@@ -33,7 +38,7 @@ const renderOnlineStatus = ({ lastSeen }: { lastSeen: Date | null }) => {
       <TooltipProvider>
         <Tooltip delayDuration={50}>
           <TooltipTrigger asChild>
-            <div className="absolute top-0 right-0 h-3 w-3 rounded-full bg-red-500 ring-2 ring-background" />
+            <div className="ring-background absolute top-0 right-0 h-3 w-3 rounded-full bg-red-500 ring-2" />
           </TooltipTrigger>
           <TooltipContent side="top" align="center" sideOffset={5}>
             <p>Never logged in</p>
@@ -53,11 +58,15 @@ const renderOnlineStatus = ({ lastSeen }: { lastSeen: Date | null }) => {
       <Tooltip delayDuration={50}>
         <TooltipTrigger asChild>
           <div
-            className={`absolute top-0 right-0 h-3 w-3 rounded-full ring-2 ring-background ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
+            className={`ring-background absolute top-0 right-0 h-3 w-3 rounded-full ring-2 ${isOnline ? "animate-pulse bg-green-500" : "bg-gray-500"}`}
           />
         </TooltipTrigger>
         <TooltipContent side="top" align="center" sideOffset={5}>
-          <p>{isOnline ? "User is currently online!" : `Last seen ${lastSeenTime.fromNow()}`}</p>
+          <p>
+            {isOnline
+              ? "User is currently online!"
+              : `Last seen ${lastSeenTime.fromNow()}`}
+          </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -80,8 +89,11 @@ const columns: Column[] = [
     render: (_, row) => (
       <div className="flex items-center gap-4">
         <div className="relative">
-          <Avatar className="h-10 w-10 ring-2 ring-primary/20">
-            <AvatarImage src={row.image ?? "/placeholder.jpg"} alt={row.name ?? ""} />
+          <Avatar className="ring-primary/20 h-10 w-10 ring-2">
+            <AvatarImage
+              src={row.image ?? "/placeholder.jpg"}
+              alt={row.name ?? ""}
+            />
             <AvatarFallback className="bg-primary/20 text-primary text-sm">
               {row.name
                 ?.split(" ")
@@ -93,7 +105,7 @@ const columns: Column[] = [
         </div>
         <div>
           <div className="font-medium">{row.name ?? row.username}</div>
-          <div className="text-sm text-muted-foreground">{row.username}</div>
+          <div className="text-muted-foreground text-sm">{row.username}</div>
         </div>
       </div>
     ),
@@ -133,12 +145,18 @@ const columns: Column[] = [
     render: (_, row) => {
       const now = day();
       const lastSeenTime = row.lastSeen ? day(row.lastSeen) : null;
-      const diffInMinutes = lastSeenTime ? now.diff(lastSeenTime, "minute") : null;
+      const diffInMinutes = lastSeenTime
+        ? now.diff(lastSeenTime, "minute")
+        : null;
       const isOnline = diffInMinutes !== null && diffInMinutes < 2;
 
       return (
-        <span className="text-sm text-muted-foreground">
-          {!lastSeenTime ? "Never logged in" : isOnline ? "Online" : lastSeenTime.fromNow()}
+        <span className="text-muted-foreground text-sm">
+          {!lastSeenTime
+            ? "Never logged in"
+            : isOnline
+              ? "Online"
+              : lastSeenTime.fromNow()}
         </span>
       );
     },
@@ -158,13 +176,16 @@ const gridViewRender = (data: Record<string, any>[]) => (
     {data.map((user) => (
       <div
         key={user.id}
-        className="group relative overflow-hidden rounded-lg border bg-card p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+        className="group bg-card relative overflow-hidden rounded-lg border p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
       >
         {user.__actions}
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Avatar className="h-12 w-12 ring-2 ring-primary/20">
-              <AvatarImage src={user.image ?? "/placeholder.jpg"} alt={user.name ?? ""} />
+            <Avatar className="ring-primary/20 h-12 w-12 ring-2">
+              <AvatarImage
+                src={user.image ?? "/placeholder.jpg"}
+                alt={user.name ?? ""}
+              />
               <AvatarFallback className="bg-primary/20 text-primary">
                 {user.name
                   ?.split(" ")
@@ -176,12 +197,14 @@ const gridViewRender = (data: Record<string, any>[]) => (
               {(() => {
                 const now = day();
                 const lastSeenTime = user.lastSeen ? day(user.lastSeen) : null;
-                const diffInMinutes = lastSeenTime ? now.diff(lastSeenTime, "minute") : null;
+                const diffInMinutes = lastSeenTime
+                  ? now.diff(lastSeenTime, "minute")
+                  : null;
                 const isOnline = diffInMinutes !== null && diffInMinutes < 2;
 
                 return (
                   <div
-                    className={`h-3 w-3 rounded-full ring-2 ring-background ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
+                    className={`ring-background h-3 w-3 rounded-full ring-2 ${isOnline ? "animate-pulse bg-green-500" : "bg-gray-500"}`}
                   />
                 );
               })()}
@@ -189,12 +212,14 @@ const gridViewRender = (data: Record<string, any>[]) => (
           </div>
           <div>
             <h3 className="font-semibold">{user.name ?? user.username}</h3>
-            <p className="text-sm text-muted-foreground">{user.role}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-sm">{user.role}</p>
+            <p className="text-muted-foreground text-xs">
               {(() => {
                 const now = day();
                 const lastSeenTime = user.lastSeen ? day(user.lastSeen) : null;
-                const diffInMinutes = lastSeenTime ? now.diff(lastSeenTime, "minute") : null;
+                const diffInMinutes = lastSeenTime
+                  ? now.diff(lastSeenTime, "minute")
+                  : null;
                 const isOnline = diffInMinutes !== null && diffInMinutes < 2;
 
                 return isOnline
@@ -225,7 +250,9 @@ const gridViewRender = (data: Record<string, any>[]) => (
 );
 
 const UserCards = ({ data, totalItems, activeCount }: UserCardsProps) => {
-  const [selectedUser, setSelectedUser] = useState<Record<string, any> | null>(null);
+  const [selectedUser, setSelectedUser] = useState<Record<string, any> | null>(
+    null,
+  );
   const [message, setMessage] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -316,7 +343,7 @@ const UserCards = ({ data, totalItems, activeCount }: UserCardsProps) => {
             <DialogTitle className="text-xl font-bold">
               Send Message to {selectedUser?.name ?? selectedUser?.username}
             </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
+            <DialogDescription className="text-muted-foreground text-sm">
               Send a notification message to this user
             </DialogDescription>
           </DialogHeader>
@@ -327,7 +354,11 @@ const UserCards = ({ data, totalItems, activeCount }: UserCardsProps) => {
             className="min-h-[160px] resize-none text-base leading-relaxed"
           />
           <DialogFooter>
-            <Button onClick={handleSendMessage} size="lg" className="w-full font-semibold">
+            <Button
+              onClick={handleSendMessage}
+              size="lg"
+              className="w-full font-semibold"
+            >
               Send Message
             </Button>
           </DialogFooter>

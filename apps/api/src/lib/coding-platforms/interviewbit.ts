@@ -1,28 +1,26 @@
-const INTERVIEWBIT_API = "https://www.interviewbit.com/v2/";
+const INTERVIEWBIT_API = 'https://www.interviewbit.com/v2/';
 
-interface ProblemsSolved {
-  course_problems_solved: {
+type ProblemsSolved = {
+  course_problems_solved: Array<{
     total_user_score: number;
-  }[];
+  }>;
   total_problems_solved: number;
-}
+};
 
-const makeRequest = async <T>(endpoint: string): Promise<T> => {
+const makeRequest = async <TResponse>(endpoint: string): Promise<TResponse> => {
   const response = await fetch(`${INTERVIEWBIT_API}${endpoint}`);
   const data = (await response.json()) as Record<string, unknown>;
 
   if (Object.keys(data).length === 0) {
-    throw new Error("User not found");
+    throw new Error('User not found');
   }
 
-  return data as T;
+  return data as TResponse;
 };
 
 export async function isHandleValid(handle: string): Promise<boolean> {
   try {
-    const data = await makeRequest<{ id: string }>(
-      `profile/username?id=${handle}`,
-    );
+    const data = await makeRequest<{ id: string }>(`profile/username?id=${handle}`);
     return Boolean(data.id);
   } catch {
     return false;
@@ -48,6 +46,6 @@ export async function getScore(handle: string) {
       currentRating: score,
     };
   } catch {
-    throw new Error("Failed to fetch score");
+    throw new Error('Failed to fetch score');
   }
 }

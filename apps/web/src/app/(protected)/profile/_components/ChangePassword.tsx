@@ -1,5 +1,4 @@
-"use client"
-
+"use client";
 
 import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -62,7 +61,7 @@ const ChangePassword = ({
 
   const newPasswordScore = useMemo(
     () => getStrengthScore(newPasswordStrength),
-    [newPasswordStrength]
+    [newPasswordStrength],
   );
 
   const getStrengthColor = (score: number) => {
@@ -95,7 +94,7 @@ const ChangePassword = ({
 
     setIsResetting(true);
     const loadingToast = toast.loading(
-      isPasswordExists ? "Changing password..." : "Setting password..."
+      isPasswordExists ? "Changing password..." : "Setting password...",
     );
 
     try {
@@ -107,7 +106,9 @@ const ChangePassword = ({
     } catch (error) {
       toast.dismiss(loadingToast);
       toast.error(
-        error instanceof Error ? error.message : "An error occurred while changing password"
+        error instanceof Error
+          ? error.message
+          : "An error occurred while changing password",
       );
       console.error("Password change error:", error);
     } finally {
@@ -123,7 +124,7 @@ const ChangePassword = ({
             <Label htmlFor="old-password">Current Password</Label>
             <a
               href={`/reset-password?email=${email}`}
-              className="text-sm text-primary hover:underline"
+              className="text-primary text-sm hover:underline"
             >
               Forgot Password?
             </a>
@@ -140,10 +141,14 @@ const ChangePassword = ({
             <button
               type="button"
               onClick={() => setShowOldPassword(!showOldPassword)}
-              className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center text-muted-foreground/80 hover:text-foreground"
+              className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center"
               aria-label={showOldPassword ? "Hide password" : "Show password"}
             >
-              {showOldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showOldPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
           </div>
         </div>
@@ -168,17 +173,21 @@ const ChangePassword = ({
           <button
             type="button"
             onClick={() => setShowNewPassword(!showNewPassword)}
-            className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center text-muted-foreground/80 hover:text-foreground"
+            className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center"
             aria-label={showNewPassword ? "Hide password" : "Show password"}
           >
-            {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showNewPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         </div>
 
         {showPasswordStrength && (
           <>
             <div
-              className="mb-4 mt-3 h-1 w-full overflow-hidden rounded-full bg-border"
+              className="bg-border mt-3 mb-4 h-1 w-full overflow-hidden rounded-full"
               role="progressbar"
               aria-valuenow={newPasswordScore}
               aria-valuemin={0}
@@ -191,7 +200,10 @@ const ChangePassword = ({
               />
             </div>
 
-            <p id="password-strength" className="mb-2 text-sm font-medium text-foreground">
+            <p
+              id="password-strength"
+              className="text-foreground mb-2 text-sm font-medium"
+            >
               {getStrengthText(newPasswordScore)}. Must contain:
             </p>
 
@@ -199,16 +211,24 @@ const ChangePassword = ({
               {newPasswordStrength.map((req, index) => (
                 <li key={index} className="flex items-center gap-2">
                   {req.met ? (
-                    <Check className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+                    <Check
+                      className="h-4 w-4 text-emerald-500"
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <X className="h-4 w-4 text-muted-foreground/80" aria-hidden="true" />
+                    <X
+                      className="text-muted-foreground/80 h-4 w-4"
+                      aria-hidden="true"
+                    />
                   )}
                   <span
                     className={`text-xs ${req.met ? "text-emerald-600" : "text-muted-foreground"}`}
                   >
                     {req.text}
                     <span className="sr-only">
-                      {req.met ? " - Requirement met" : " - Requirement not met"}
+                      {req.met
+                        ? " - Requirement met"
+                        : " - Requirement not met"}
                     </span>
                   </span>
                 </li>
@@ -232,16 +252,20 @@ const ChangePassword = ({
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center text-muted-foreground/80 hover:text-foreground"
+            className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center"
             aria-label={showConfirmPassword ? "Hide password" : "Show password"}
           >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showConfirmPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>
 
       {newPassword !== confirmPassword && confirmPassword && (
-        <p className="text-sm text-destructive">Passwords do not match</p>
+        <p className="text-destructive text-sm">Passwords do not match</p>
       )}
 
       <Button
@@ -271,12 +295,12 @@ const ChangePassword = ({
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-      <div className="mx-auto w-full max-w-sm space-y-6 rounded-lg bg-background p-8 shadow-sm">
+      <div className="bg-background mx-auto w-full max-w-sm space-y-6 rounded-lg p-8 shadow-sm">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
             {isPasswordExists ? "Change Password" : "Set Password"}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {isPasswordExists
               ? "Enter your current password and choose a new one"
               : "Choose a strong password for your account"}

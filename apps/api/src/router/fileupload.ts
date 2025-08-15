@@ -1,11 +1,6 @@
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { z } from "zod";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { z } from 'zod';
 
 import {
   AWS_ACCESS_KEY,
@@ -14,44 +9,44 @@ import {
   AWS_ENDPOINT,
   AWS_S3_URL,
   AWS_SECRET_KEY,
-} from "../lib/constants";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+} from '../lib/constants';
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 export const allowedMimeTypes = [
   // Images
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/bmp",
-  "image/webp",
-  "image/svg+xml",
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/bmp',
+  'image/webp',
+  'image/svg+xml',
   // Videos
-  "video/mp4",
-  "video/mpeg",
-  "video/x-msvideo",
-  "video/quicktime",
-  "video/x-ms-wmv",
-  "video/x-flv",
-  "video/webm",
+  'video/mp4',
+  'video/mpeg',
+  'video/x-msvideo',
+  'video/quicktime',
+  'video/x-ms-wmv',
+  'video/x-flv',
+  'video/webm',
   // Audio
-  "audio/mpeg",
-  "audio/wav",
-  "audio/aac",
-  "audio/ogg",
-  "audio/midi",
-  "audio/x-midi",
-  "audio/webm",
-  "audio/mp4",
+  'audio/mpeg',
+  'audio/wav',
+  'audio/aac',
+  'audio/ogg',
+  'audio/midi',
+  'audio/x-midi',
+  'audio/webm',
+  'audio/mp4',
   // Documents
-  "text/plain",
-  "text/csv",
-  "application/rtf",
-  "application/msword",
-  "application/vnd.oasis.opendocument.text",
-  "application/pdf",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/vnd.oasis.opendocument.spreadsheet",
+  'text/plain',
+  'text/csv',
+  'application/rtf',
+  'application/msword',
+  'application/vnd.oasis.opendocument.text',
+  'application/pdf',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.oasis.opendocument.spreadsheet',
 ];
 
 const s3Client = new S3Client({
@@ -68,8 +63,8 @@ const s3Client = new S3Client({
 });
 
 function getExtension(filename: string): string {
-  const parts = filename.split(".");
-  return parts.length > 1 ? `.${parts[parts.length - 1]?.toLowerCase()}` : "";
+  const parts = filename.split('.');
+  return parts.length > 1 ? `.${parts[parts.length - 1]?.toLowerCase()}` : '';
 }
 
 export const fileUploadRouter = createTRPCRouter({
@@ -77,7 +72,7 @@ export const fileUploadRouter = createTRPCRouter({
     .input(
       z.object({
         name: z.string(),
-        fileType: z.enum(["AVATAR", "ATTACHMENT", "NOTES", "OTHER"]),
+        fileType: z.enum(['AVATAR', 'ATTACHMENT', 'NOTES', 'OTHER']),
         associatingId: z.string().optional(),
         isPublic: z.boolean().default(false),
         mimeType: z.string().optional(),
@@ -127,7 +122,7 @@ export const fileUploadRouter = createTRPCRouter({
       const file = await ctx.db.file.findUnique({
         where: { id: input.fileId },
       });
-      if (!file) throw new Error("File not found");
+      if (!file) throw new Error('File not found');
 
       if (file.isPublic) {
         return file.publicUrl;
@@ -180,11 +175,9 @@ export const fileUploadRouter = createTRPCRouter({
         where: { id: input.fileId },
       });
 
-      if (!file) throw new Error("File not found");
+      if (!file) throw new Error('File not found');
 
-      const publicUrl = file.isPublic
-        ? `${AWS_S3_URL}/${file.fileType}/${file.internalName}`
-        : null;
+      const publicUrl = file.isPublic ? `${AWS_S3_URL}/${file.fileType}/${file.internalName}` : null;
 
       const updatedFile = await ctx.db.file.update({
         where: { id: input.fileId },
@@ -208,7 +201,7 @@ export const fileUploadRouter = createTRPCRouter({
       const file = await ctx.db.file.findUnique({
         where: { id: input.fileId },
       });
-      if (!file) throw new Error("File not found");
+      if (!file) throw new Error('File not found');
 
       // Delete from S3
       const command = new DeleteObjectCommand({

@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@prisma/client";
+import type { Profile } from "@tutly/api/schema";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -90,13 +90,13 @@ export default function Experience({ experiences, onUpdate }: ExperienceProps) {
     const experiences = form.getValues("experiences");
     form.setValue(
       "experiences",
-      experiences.filter((_, i) => i !== index)
+      experiences.filter((_, i) => i !== index),
     );
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Experience</h2>
         <Button
           variant={isEditing ? "outline" : "default"}
@@ -112,7 +112,7 @@ export default function Experience({ experiences, onUpdate }: ExperienceProps) {
             {form.watch("experiences").map((_, index) => (
               <Card key={index}>
                 <CardContent className="pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormField
                       control={form.control}
                       name={`experiences.${index}.company`}
@@ -138,7 +138,11 @@ export default function Experience({ experiences, onUpdate }: ExperienceProps) {
                         <FormItem>
                           <FormLabel>Role</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter role" {...field} disabled={!isEditing} />
+                            <Input
+                              placeholder="Enter role"
+                              {...field}
+                              disabled={!isEditing}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -170,7 +174,11 @@ export default function Experience({ experiences, onUpdate }: ExperienceProps) {
                         <FormItem>
                           <FormLabel>City</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter city" {...field} disabled={!isEditing} />
+                            <Input
+                              placeholder="Enter city"
+                              {...field}
+                              disabled={!isEditing}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -222,7 +230,7 @@ export default function Experience({ experiences, onUpdate }: ExperienceProps) {
                       className="mt-4"
                       onClick={() => removeExperience(index)}
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="mr-2 h-4 w-4" />
                       Remove Experience
                     </Button>
                   )}
@@ -232,9 +240,9 @@ export default function Experience({ experiences, onUpdate }: ExperienceProps) {
           </div>
 
           {isEditing && (
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <Button type="button" variant="outline" onClick={addExperience}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Experience
               </Button>
               <Button type="submit">Save Changes</Button>

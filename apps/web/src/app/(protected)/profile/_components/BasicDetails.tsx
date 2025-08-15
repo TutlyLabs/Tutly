@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@prisma/client";
-import { FileType } from "@prisma/client";
+import type { Profile } from "@tutly/api/schema";
+import { FileType } from "@tutly/api/schema";
 import { type ChangeEvent, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -32,7 +32,10 @@ import Image from "next/image";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  secondaryEmail: z.string().email("Please enter a valid email address").optional(),
+  secondaryEmail: z
+    .string()
+    .email("Please enter a valid email address")
+    .optional(),
   mobile: z
     .string()
     .min(12, "Must include country code")
@@ -112,7 +115,7 @@ export default function BasicDetails({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Basic Details</h2>
         <Button
           variant={isEditing ? "outline" : "default"}
@@ -122,14 +125,17 @@ export default function BasicDetails({
         </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8">
+      <div className="flex flex-col gap-8 md:flex-row">
         <div className="flex-shrink-0">
           <Avatar avatar={avatar} onUpdate={updateAvatar} />
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 flex-grow">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex-grow space-y-6"
+          >
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="email"
@@ -137,7 +143,11 @@ export default function BasicDetails({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="email@example.com" {...field} disabled />
+                      <Input
+                        placeholder="email@example.com"
+                        {...field}
+                        disabled
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,7 +161,11 @@ export default function BasicDetails({
                   <FormItem>
                     <FormLabel>Secondary Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="email@example.com" {...field} disabled={!isEditing} />
+                      <Input
+                        placeholder="email@example.com"
+                        {...field}
+                        disabled={!isEditing}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -263,7 +277,13 @@ export default function BasicDetails({
   );
 }
 
-const Avatar = ({ avatar, onUpdate }: { avatar: string; onUpdate: (data: { avatar: string }) => void }) => {
+const Avatar = ({
+  avatar,
+  onUpdate,
+}: {
+  avatar: string;
+  onUpdate: (data: { avatar: string }) => void;
+}) => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -292,24 +312,24 @@ const Avatar = ({ avatar, onUpdate }: { avatar: string; onUpdate: (data: { avata
   };
 
   return (
-    <div className="relative group">
-      <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-gray-200">
+    <div className="group relative">
+      <div className="h-48 w-48 overflow-hidden rounded-full border-4 border-gray-200">
         <Image
           src={avatar || "/placeholder.jpg"}
           alt="Profile Avatar"
-          className="w-full h-full object-cover"
+          className="h-full w-full object-cover"
           width={192}
           height={192}
         />
 
         {isUploading && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <div className="loading-spinner text-white" />
           </div>
         )}
       </div>
 
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
         <Button
           variant="secondary"
           size="sm"

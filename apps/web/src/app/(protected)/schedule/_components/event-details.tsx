@@ -32,7 +32,9 @@ export function EventDetails({ event, onClose }: EventDetailsProps) {
     <AlertDialog open={true} onOpenChange={onClose}>
       <AlertDialogContent className="sm:max-w-[425px]">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-xl font-bold">{event.name}</AlertDialogTitle>
+          <AlertDialogTitle className="text-xl font-bold">
+            {event.name}
+          </AlertDialogTitle>
         </AlertDialogHeader>
         <AlertDialogDescription>
           <div className="space-y-4">

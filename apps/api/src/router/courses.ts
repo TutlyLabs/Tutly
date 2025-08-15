@@ -1,8 +1,7 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { db } from "@tutly/db";
-
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { db } from '../lib/db';
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 export async function getEnrolledCourseIds(username: string) {
   const enrolledCourses = await db.enrolledUsers.findMany({
@@ -17,9 +16,7 @@ export async function getEnrolledCourseIds(username: string) {
     },
   });
 
-  return enrolledCourses
-    .map((enrolled) => enrolled.courseId)
-    .filter((id): id is string => id !== null);
+  return enrolledCourses.map((enrolled) => enrolled.courseId).filter((id): id is string => id !== null);
 }
 
 export async function getEnrolledCourses(username: string) {
@@ -98,7 +95,7 @@ export const coursesRouter = createTRPCRouter({
     const currentUser = ctx.session.user;
     try {
       let courses;
-      if (currentUser.role === "INSTRUCTOR") {
+      if (currentUser.role === 'INSTRUCTOR') {
         courses = await ctx.db.course.findMany({
           where: {
             OR: [
@@ -120,7 +117,7 @@ export const coursesRouter = createTRPCRouter({
             },
           },
         });
-      } else if (currentUser.role === "MENTOR") {
+      } else if (currentUser.role === 'MENTOR') {
         courses = await ctx.db.course.findMany({
           where: {
             enrolledUsers: {
@@ -160,9 +157,9 @@ export const coursesRouter = createTRPCRouter({
 
       return { success: true, data: courses };
     } catch (e) {
-      console.error("Detailed error while fetching courses:", e);
+      console.error('Detailed error while fetching courses:', e);
       return {
-        error: "Failed to fetch courses",
+        error: 'Failed to fetch courses',
         details: e instanceof Error ? e.message : String(e),
       };
     }
@@ -186,7 +183,7 @@ export const coursesRouter = createTRPCRouter({
           Folder: true,
         },
         orderBy: {
-          createdAt: "asc",
+          createdAt: 'asc',
         },
       });
       return { success: true, data: classes };
@@ -249,7 +246,7 @@ export const coursesRouter = createTRPCRouter({
 
     const publishedCourses = courses.filter((course) => course.isPublished);
 
-    if (currentUser.role === "INSTRUCTOR") {
+    if (currentUser.role === 'INSTRUCTOR') {
       return { success: true, data: courses };
     }
     return { success: true, data: publishedCourses };
@@ -271,9 +268,7 @@ export const coursesRouter = createTRPCRouter({
         },
       })
       .then((enrolledCourses) =>
-        enrolledCourses
-          .map((enrolled) => enrolled.courseId)
-          .filter((id): id is string => id !== null),
+        enrolledCourses.map((enrolled) => enrolled.courseId).filter((id): id is string => id !== null),
       );
 
     const courses = await ctx.db.course.findMany({
@@ -341,12 +336,12 @@ export const coursesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (!currentUser.organization) {
-        throw new Error("User must belong to an organization");
+        throw new Error('User must belong to an organization');
       }
 
       const students = await ctx.db.user.findMany({
         where: {
-          role: "STUDENT",
+          role: 'STUDENT',
           enrolledUsers: {
             some: {
               mentorUsername: currentUser.username,
@@ -362,7 +357,7 @@ export const coursesRouter = createTRPCRouter({
           enrolledUsers: true,
         },
         orderBy: {
-          username: "asc",
+          username: 'asc',
         },
       });
 
@@ -379,7 +374,7 @@ export const coursesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (!currentUser.organization) {
-        throw new Error("User must belong to an organization");
+        throw new Error('User must belong to an organization');
       }
 
       const students = await ctx.db.user.findMany({
@@ -399,7 +394,7 @@ export const coursesRouter = createTRPCRouter({
           enrolledUsers: true,
         },
         orderBy: {
-          username: "asc",
+          username: 'asc',
         },
       });
 
@@ -415,7 +410,7 @@ export const coursesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (!currentUser.organization) {
-        throw new Error("User must belong to an organization");
+        throw new Error('User must belong to an organization');
       }
 
       const students = await ctx.db.user.findMany({
@@ -427,7 +422,7 @@ export const coursesRouter = createTRPCRouter({
               },
             },
           },
-          role: "STUDENT",
+          role: 'STUDENT',
           organization: {
             id: currentUser.organization.id,
           },
@@ -444,12 +439,12 @@ export const coursesRouter = createTRPCRouter({
   getAllStudents: protectedProcedure.query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
     if (!currentUser.organization) {
-      throw new Error("User must belong to an organization");
+      throw new Error('User must belong to an organization');
     }
 
     const students = await ctx.db.user.findMany({
       where: {
-        role: "STUDENT",
+        role: 'STUDENT',
         organization: {
           id: currentUser.organization.id,
         },
@@ -472,12 +467,12 @@ export const coursesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (!currentUser.organization) {
-        throw new Error("User must belong to an organization");
+        throw new Error('User must belong to an organization');
       }
 
       const students = await ctx.db.user.findMany({
         where: {
-          role: "MENTOR",
+          role: 'MENTOR',
           enrolledUsers: {
             some: {
               course: {
@@ -508,9 +503,9 @@ export const coursesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") return { error: "Unauthorized" };
+      if (currentUser.role !== 'INSTRUCTOR') return { error: 'Unauthorized' };
       if (!input.title.trim()) {
-        return { error: "Title is required" };
+        return { error: 'Title is required' };
       }
 
       const newCourse = await ctx.db.course.create({
@@ -540,7 +535,7 @@ export const coursesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       if (!input.title.trim()) {
-        return { error: "Title is required" };
+        return { error: 'Title is required' };
       }
 
       const course = await ctx.db.course.update({
@@ -607,13 +602,13 @@ export const coursesRouter = createTRPCRouter({
         });
 
         if (!classDetails) {
-          return { success: false, error: "Class not found" };
+          return { success: false, error: 'Class not found' };
         }
 
         return { success: true, data: classDetails };
       } catch (error) {
-        console.error("Error fetching class details:", error);
-        return { success: false, error: "Failed to fetch class details" };
+        console.error('Error fetching class details:', error);
+        return { success: false, error: 'Failed to fetch class details' };
       }
     }),
 
@@ -642,8 +637,8 @@ export const coursesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized to enroll student to course" };
+        if (currentUser.role !== 'INSTRUCTOR') {
+          return { error: 'Unauthorized to enroll student to course' };
         }
 
         const user = await ctx.db.user.findUnique({
@@ -651,7 +646,7 @@ export const coursesRouter = createTRPCRouter({
         });
 
         if (!user) {
-          return { error: "User not found" };
+          return { error: 'User not found' };
         }
 
         const course = await ctx.db.course.findUnique({
@@ -659,7 +654,7 @@ export const coursesRouter = createTRPCRouter({
         });
 
         if (!course) {
-          return { error: "Course not found" };
+          return { error: 'Course not found' };
         }
 
         const existingEnrollment = await ctx.db.enrolledUsers.findFirst({
@@ -670,7 +665,7 @@ export const coursesRouter = createTRPCRouter({
         });
 
         if (existingEnrollment) {
-          return { error: "User is already enrolled in the course" };
+          return { error: 'User is already enrolled in the course' };
         }
 
         const newEnrollment = await ctx.db.enrolledUsers.create({
@@ -682,7 +677,7 @@ export const coursesRouter = createTRPCRouter({
 
         await ctx.db.events.create({
           data: {
-            eventCategory: "STUDENT_ENROLLMENT_IN_COURSE",
+            eventCategory: 'STUDENT_ENROLLMENT_IN_COURSE',
             causedById: currentUser.id,
             eventCategoryDataId: newEnrollment.id,
           },
@@ -690,7 +685,7 @@ export const coursesRouter = createTRPCRouter({
 
         return { success: true, data: newEnrollment };
       } catch {
-        return { error: "Failed to enroll student" };
+        return { error: 'Failed to enroll student' };
       }
     }),
 
@@ -704,8 +699,8 @@ export const coursesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized to unenroll student from course" };
+        if (currentUser.role !== 'INSTRUCTOR') {
+          return { error: 'Unauthorized to unenroll student from course' };
         }
 
         const user = await ctx.db.user.findUnique({
@@ -713,7 +708,7 @@ export const coursesRouter = createTRPCRouter({
         });
 
         if (!user) {
-          return { error: "User not found" };
+          return { error: 'User not found' };
         }
 
         const course = await ctx.db.course.findUnique({
@@ -721,7 +716,7 @@ export const coursesRouter = createTRPCRouter({
         });
 
         if (!course) {
-          return { error: "Course not found" };
+          return { error: 'Course not found' };
         }
 
         const existingEnrollment = await ctx.db.enrolledUsers.findFirst({
@@ -732,7 +727,7 @@ export const coursesRouter = createTRPCRouter({
         });
 
         if (!existingEnrollment) {
-          return { error: "User is not enrolled in the course" };
+          return { error: 'User is not enrolled in the course' };
         }
 
         await ctx.db.enrolledUsers.delete({
@@ -743,7 +738,7 @@ export const coursesRouter = createTRPCRouter({
 
         return { success: true, data: existingEnrollment };
       } catch {
-        return { error: "Failed to unenroll student" };
+        return { error: 'Failed to unenroll student' };
       }
     }),
 
@@ -751,14 +746,14 @@ export const coursesRouter = createTRPCRouter({
     .input(
       z.object({
         username: z.string(),
-        role: z.enum(["STUDENT", "MENTOR"]),
+        role: z.enum(['STUDENT', 'MENTOR']),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
         const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized to update user role" };
+        if (currentUser.role !== 'INSTRUCTOR') {
+          return { error: 'Unauthorized to update user role' };
         }
 
         const user = await ctx.db.user.findUnique({
@@ -766,7 +761,7 @@ export const coursesRouter = createTRPCRouter({
         });
 
         if (!user) {
-          return { error: "User not found" };
+          return { error: 'User not found' };
         }
 
         const updatedUser = await ctx.db.user.update({
@@ -780,7 +775,7 @@ export const coursesRouter = createTRPCRouter({
 
         return { success: true, data: updatedUser };
       } catch {
-        return { error: "Failed to update user role" };
+        return { error: 'Failed to update user role' };
       }
     }),
 
@@ -795,8 +790,8 @@ export const coursesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized to update mentor" };
+        if (currentUser.role !== 'INSTRUCTOR') {
+          return { error: 'Unauthorized to update mentor' };
         }
 
         const enrolledUser = await ctx.db.enrolledUsers.findFirst({
@@ -807,7 +802,7 @@ export const coursesRouter = createTRPCRouter({
         });
 
         if (!enrolledUser) {
-          return { error: "User is not enrolled in the course" };
+          return { error: 'User is not enrolled in the course' };
         }
 
         const updatedUser = await ctx.db.enrolledUsers.update({
@@ -821,7 +816,7 @@ export const coursesRouter = createTRPCRouter({
 
         return { success: true, data: updatedUser };
       } catch {
-        return { error: "Failed to update mentor" };
+        return { error: 'Failed to update mentor' };
       }
     }),
 
@@ -833,7 +828,7 @@ export const coursesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") return { error: "Unauthorized" };
+      if (currentUser.role !== 'INSTRUCTOR') return { error: 'Unauthorized' };
 
       try {
         await ctx.db.course.delete({
@@ -845,7 +840,80 @@ export const coursesRouter = createTRPCRouter({
 
         return { success: true };
       } catch {
-        return { error: "Failed to delete course" };
+        return { error: 'Failed to delete course' };
       }
     }),
+
+  getCourseManagementUsers: protectedProcedure
+    .input(z.object({ courseId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const currentUser = ctx.session.user;
+
+        if (currentUser.role !== 'INSTRUCTOR') {
+          return { success: false, error: 'Only instructors can manage courses' };
+        }
+
+        const allUsers = await ctx.db.user.findMany({
+          where: {
+            organizationId: currentUser.organizationId,
+          },
+          include: {
+            enrolledUsers: {
+              where: {
+                courseId: input.courseId,
+              },
+            },
+          },
+        });
+
+        return {
+          success: true,
+          data: allUsers,
+        };
+      } catch (error) {
+        console.error('Error fetching course management users:', error);
+        return {
+          success: false,
+          error: 'Failed to fetch course management users',
+          details: error instanceof Error ? error.message : String(error),
+        };
+      }
+    }),
+
+  checkUserEnrolledCourses: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const currentUser = ctx.session.user;
+
+      if (currentUser.role !== 'INSTRUCTOR' && currentUser.role !== 'MENTOR') {
+        return { success: false, error: 'Unauthorized access' };
+      }
+
+      const enrolledCourses = await ctx.db.enrolledUsers.findMany({
+        where: {
+          username: currentUser.username,
+          courseId: {
+            not: null,
+          },
+        },
+        select: {
+          courseId: true,
+        },
+      });
+
+      return {
+        success: true,
+        data: {
+          hasEnrolledCourses: enrolledCourses.length > 0,
+        },
+      };
+    } catch (error) {
+      console.error('Error checking user enrolled courses:', error);
+      return {
+        success: false,
+        error: 'Failed to check enrolled courses',
+        details: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }),
 });

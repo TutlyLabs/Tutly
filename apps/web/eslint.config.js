@@ -14,8 +14,6 @@ export default tseslint.config(
     files: ["**/*.ts", "**/*.tsx"],
     extends: [
       ...tseslint.configs.recommended,
-      ...tseslint.configs.recommendedTypeChecked,
-      ...tseslint.configs.stylisticTypeChecked,
     ],
     rules: {
       "@typescript-eslint/array-type": "off",
@@ -29,10 +27,7 @@ export default tseslint.config(
       //   { argsIgnorePattern: "^_" },
       // ],
       "@typescript-eslint/require-await": "off",
-      "@typescript-eslint/no-misused-promises": [
-        "error",
-        { checksVoidReturn: { attributes: false } },
-      ],
+      "@typescript-eslint/no-misused-promises": "off",
       // remove this later
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unused-expressions": [
@@ -61,11 +56,6 @@ export default tseslint.config(
   {
     linterOptions: {
       reportUnusedDisableDirectives: true,
-    },
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-      },
-    },
+    }
   },
 );

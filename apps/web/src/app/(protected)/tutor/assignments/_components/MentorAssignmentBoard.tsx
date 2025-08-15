@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { Course, User } from "@prisma/client";
+import type { Course, User } from "@tutly/api/schema";
 
 import NoDataFound from "@/components/NoDataFound";
 import { Input } from "@/components/ui/input";
@@ -58,10 +58,14 @@ const MentorAssignmentBoard = ({
   role: string;
   currentUser: { username: string };
 }) => {
-  const [currentCourse, setCurrentCourse] = useState<string>(courses[0]?.id || "");
+  const [currentCourse, setCurrentCourse] = useState<string>(
+    courses[0]?.id || "",
+  );
   const [isMounted, setIsMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [sortCriteria, setSortCriteria] = useState<"username" | "name">("username");
+  const [sortCriteria, setSortCriteria] = useState<"username" | "name">(
+    "username",
+  );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const router = useRouter();
@@ -71,7 +75,9 @@ const MentorAssignmentBoard = ({
     if (role === "INSTRUCTOR") {
       return true;
     } else if (role === "MENTOR") {
-      return student.enrolledUsers?.some((x) => x.mentorUsername === currentUser.username);
+      return student.enrolledUsers?.some(
+        (x) => x.mentorUsername === currentUser.username,
+      );
     }
     return false;
   });
@@ -81,7 +87,7 @@ const MentorAssignmentBoard = ({
       (student: StudentWithRelations) =>
         student.enrolledUsers?.some((x) => x.courseId === currentCourse) &&
         (student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          student.username.toLowerCase().includes(searchQuery.toLowerCase()))
+          student.username.toLowerCase().includes(searchQuery.toLowerCase())),
     )
     .sort((a: StudentWithRelations, b: StudentWithRelations) => {
       let comparison = 0;
@@ -112,7 +118,9 @@ const MentorAssignmentBoard = ({
               className={`rounded p-2 ${currentCourse === course.id && "rounded border"}`}
               key={course.id}
             >
-              <h1 className="max-w-xs truncate text-sm font-medium">{course.title}</h1>
+              <h1 className="max-w-xs truncate text-sm font-medium">
+                {course.title}
+              </h1>
             </button>
           ))}
         </div>
@@ -123,7 +131,7 @@ const MentorAssignmentBoard = ({
           >
             Evaluate
           </a> */}
-          <div className="m-auto flex items-center rounded border bg-secondary-200 text-black md:m-0">
+          <div className="bg-secondary-200 m-auto flex items-center rounded border text-black md:m-0">
             <Input
               title="input"
               placeholder="Search here"
@@ -137,11 +145,13 @@ const MentorAssignmentBoard = ({
       {sortedStudents.length > 0 ? (
         sortedStudents
           .filter((student: StudentWithRelations) =>
-            student.enrolledUsers?.find((x) => x.courseId === currentCourse)
+            student.enrolledUsers?.find((x) => x.courseId === currentCourse),
           )
           .map((student: StudentWithRelations, index: number) => (
             <div
-              hidden={student.role === "INSTRUCTOR" || student.role === "MENTOR"}
+              hidden={
+                student.role === "INSTRUCTOR" || student.role === "MENTOR"
+              }
               key={index}
               className={`${index < sortedStudents.length - 1 && "border-b pb-3"}`}
             >
@@ -187,9 +197,7 @@ const MentorAssignmentBoard = ({
                 {student?.role === "STUDENT" && (
                   <div
                     onClick={() =>
-                      router.push(
-                        `/tutor/assignments/${student.username}`
-                      )
+                      router.push(`/tutor/assignments/${student.username}`)
                     }
                     className="cursor-pointer rounded-lg bg-blue-600 p-2 text-sm font-medium text-white"
                   >
@@ -200,7 +208,10 @@ const MentorAssignmentBoard = ({
             </div>
           ))
       ) : (
-        <NoDataFound message="No students found!" additionalMessage="It’s a ghost town in here — not a student in sight!" />
+        <NoDataFound
+          message="No students found!"
+          additionalMessage="Students? Never heard of 'em!"
+        />
       )}
     </div>
   );

@@ -13,11 +13,19 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
     styling: 0,
     other: 0,
   });
-  const [feedback, setFeedback] = useState<string | null>(submission.overallFeedback || null);
+  const [feedback, setFeedback] = useState<string | null>(
+    submission.overallFeedback || null,
+  );
 
-  const rValue = submission.points.find((point: any) => point.category === "RESPOSIVENESS");
-  const sValue = submission.points.find((point: any) => point.category === "STYLING");
-  const oValue = submission.points.find((point: any) => point.category === "OTHER");
+  const rValue = submission.points.find(
+    (point: any) => point.category === "RESPOSIVENESS",
+  );
+  const sValue = submission.points.find(
+    (point: any) => point.category === "STYLING",
+  );
+  const oValue = submission.points.find(
+    (point: any) => point.category === "OTHER",
+  );
 
   const totalScore = [rValue, sValue, oValue].reduce((acc, currentValue) => {
     return acc + (currentValue ? currentValue.score : 0);
@@ -43,15 +51,17 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
     },
   });
 
-  const deleteSubmissionMutation = api.submissions.deleteSubmission.useMutation({
-    onSuccess: () => {
-      toast.success("Submission deleted successfully");
-      window.location.reload();
+  const deleteSubmissionMutation = api.submissions.deleteSubmission.useMutation(
+    {
+      onSuccess: () => {
+        toast.success("Submission deleted successfully");
+        window.location.reload();
+      },
+      onError: () => {
+        toast.error("Failed to delete submission");
+      },
     },
-    onError: () => {
-      toast.error("Failed to delete submission");
-    },
-  });
+  );
 
   const handleFeedback = async (submissionId: string) => {
     try {
@@ -67,9 +77,15 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
 
   const handleEdit = () => {
     setIsEditing(true);
-    const rValue = submission?.points.find((point: any) => point.category === "RESPOSIVENESS");
-    const sValue = submission?.points.find((point: any) => point.category === "STYLING");
-    const oValue = submission?.points.find((point: any) => point.category === "OTHER");
+    const rValue = submission?.points.find(
+      (point: any) => point.category === "RESPOSIVENESS",
+    );
+    const sValue = submission?.points.find(
+      (point: any) => point.category === "STYLING",
+    );
+    const oValue = submission?.points.find(
+      (point: any) => point.category === "OTHER",
+    );
     setEditedScores({
       responsiveness: rValue ? rValue.score : 0,
       styling: sValue ? sValue.score : 0,
@@ -102,7 +118,9 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
   };
 
   const handleDelete = async () => {
-    const response = confirm("Are you sure you want to delete this submission?");
+    const response = confirm(
+      "Are you sure you want to delete this submission?",
+    );
     if (!response) return;
 
     try {
@@ -116,13 +134,13 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
 
   return (
     <div className="overflow-x-scroll rounded-lg">
-      <table className="w-full text-center text-black bg-white border-b">
-        <thead className="sticky top-0 bg-secondary-300 text-secondary-700 border-b">
+      <table className="w-full border-b bg-white text-center text-black">
+        <thead className="bg-secondary-300 text-secondary-700 sticky top-0 border-b">
           <tr>
-            <th className="sticky left-0 z-10 bg-secondary-300 px-2 py-1 text-xs font-medium uppercase text-secondary-700">
+            <th className="bg-secondary-300 text-secondary-700 sticky left-0 z-10 px-2 py-1 text-xs font-medium uppercase">
               username
             </th>
-            <th className="sticky left-0 bg-secondary-300 px-2 py-1 text-xs font-medium uppercase text-secondary-700">
+            <th className="bg-secondary-300 text-secondary-700 sticky left-0 px-2 py-1 text-xs font-medium uppercase">
               name
             </th>
             <th scope="col" className="px-2 py-1 text-xs font-medium uppercase">
@@ -156,9 +174,11 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
               </td>
               <td className="">{submission.enrolledUser.user.name}</td>
               <td className="px-2 py-1">
-                {day(submission.submissionDate).format("DD MMM YYYY hh:mm:ss A")}
+                {day(submission.submissionDate).format(
+                  "DD MMM YYYY hh:mm:ss A",
+                )}
               </td>
-              <td className="whitespace-nowrap px-2 py-1">
+              <td className="px-2 py-1 whitespace-nowrap">
                 {isEditing ? (
                   <input
                     title="null"
@@ -175,13 +195,13 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
                     }}
                     min={0}
                     max={10}
-                    className="w-20 rounded-lg border-2 border-black bg-transparent px-2 text-background"
+                    className="text-background w-20 rounded-lg border-2 border-black bg-transparent px-2"
                   />
                 ) : (
                   rValue?.score || "NA"
                 )}
               </td>
-              <td className="whitespace-nowrap px-2 py-1">
+              <td className="px-2 py-1 whitespace-nowrap">
                 {isEditing ? (
                   <input
                     title="null"
@@ -198,13 +218,13 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
                     }}
                     min={0}
                     max={10}
-                    className="w-20 rounded-lg border-2 border-black bg-transparent px-2 text-background"
+                    className="text-background w-20 rounded-lg border-2 border-black bg-transparent px-2"
                   />
                 ) : (
                   sValue?.score || "NA"
                 )}
               </td>
-              <td className="whitespace-nowrap px-2 py-1">
+              <td className="px-2 py-1 whitespace-nowrap">
                 {isEditing ? (
                   <input
                     title="null"
@@ -221,14 +241,16 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
                     }}
                     min={0}
                     max={10}
-                    className="w-20 rounded-lg border-2 border-black bg-transparent px-2 text-background"
+                    className="text-background w-20 rounded-lg border-2 border-black bg-transparent px-2"
                   />
                 ) : (
                   oValue?.score || "NA"
                 )}
               </td>
-              <td className="whitespace-nowrap px-2 py-1">
-                {rValue?.score || sValue?.score || oValue?.score ? totalScore : "NA"}
+              <td className="px-2 py-1 whitespace-nowrap">
+                {rValue?.score || sValue?.score || oValue?.score
+                  ? totalScore
+                  : "NA"}
               </td>
               <td>
                 {isEditing ? (
@@ -238,14 +260,14 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
                     onChange={(e) => {
                       setFeedback(e.target.value);
                     }}
-                    className="m-2 block min-w-16 overflow-y-hidden rounded-lg border-2 border-black bg-transparent px-2 text-start text-background"
+                    className="text-background m-2 block min-w-16 overflow-y-hidden rounded-lg border-2 border-black bg-transparent px-2 text-start"
                   ></textarea>
                 ) : (
                   submission.overallFeedback || "NA"
                 )}
               </td>
               {
-                <td className="whitespace-nowrap px-2 py-1">
+                <td className="px-2 py-1 whitespace-nowrap">
                   {isEditing ? (
                     <div className="flex items-center justify-center gap-5">
                       <button
@@ -263,7 +285,10 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-5">
-                      <button onClick={handleEdit} className="font-semibold text-blue-600">
+                      <button
+                        onClick={handleEdit}
+                        className="font-semibold text-blue-600"
+                      >
                         Edit
                       </button>
                       <button

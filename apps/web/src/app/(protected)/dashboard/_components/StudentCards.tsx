@@ -8,7 +8,13 @@ import Image from "next/image";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import {
   Dialog,
@@ -37,7 +43,6 @@ import ProfessionalProfiles from "@/app/(protected)/profile/_components/Professi
 import { api } from "@/trpc/react";
 
 import Component from "./charts";
-import type { StudentDashboardData } from "../types";
 
 interface Assignment {
   id: string;
@@ -51,9 +56,7 @@ interface Assignment {
   points?: number;
 }
 
-
 interface Props {
-  data: StudentDashboardData;
   selectedCourse: string;
 }
 
@@ -69,11 +72,17 @@ const StatCard = ({
   label: string;
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-center w-full sm:w-80 rounded-md bg-white p-4 text-gray-900 shadow-xl">
-      <div className="h-20 w-20 flex items-center justify-center">
-        <Image src={imgSrc} alt={alt} width={80} height={80} className="object-contain" />
+    <div className="flex w-full flex-col items-center rounded-md bg-white p-4 text-gray-900 shadow-xl sm:w-80 sm:flex-row">
+      <div className="flex h-20 w-20 items-center justify-center">
+        <Image
+          src={imgSrc}
+          alt={alt}
+          width={80}
+          height={80}
+          className="object-contain"
+        />
       </div>
-      <div className="sm:ml-4 text-center">
+      <div className="text-center sm:ml-4">
         <p className="pt-3 text-2xl font-bold text-blue-600">{value}</p>
         <h1 className="p-1 text-sm font-bold text-gray-700">{label}</h1>
       </div>
@@ -101,7 +110,13 @@ const AssignmentTable = ({
           {searchFilteredAssignments.map((assignment) => (
             <TableRow key={assignment.id} className="cursor-pointer text-left">
               <TableCell>
-                <Badge variant={assignment.status === "Submitted" ? "default" : "destructive"}>
+                <Badge
+                  variant={
+                    assignment.status === "Submitted"
+                      ? "default"
+                      : "destructive"
+                  }
+                >
                   {assignment.status}
                 </Badge>
               </TableCell>
@@ -109,8 +124,9 @@ const AssignmentTable = ({
               <TableCell>{assignment.submissions?.length ?? 0}</TableCell>
               <TableCell>
                 {assignment.submissions?.reduce(
-                  (total, submission) => total + (submission.points?.[0]?.score ?? 0),
-                  0
+                  (total, submission) =>
+                    total + (submission.points?.[0]?.score ?? 0),
+                  0,
                 )}
               </TableCell>
             </TableRow>
@@ -132,8 +148,10 @@ const ProgressBars = ({
 }) => {
   return (
     <Card className="flex-1 px-10 py-6">
-      <h2 className="text-lg font-semibold text-center dark:text-white">Submission Summary</h2>
-      <div className="flex flex-col justify-center h-full space-y-6">
+      <h2 className="text-center text-lg font-semibold dark:text-white">
+        Submission Summary
+      </h2>
+      <div className="flex h-full flex-col justify-center space-y-6">
         {[
           {
             label: "Successfully Submitted",
@@ -147,14 +165,14 @@ const ProgressBars = ({
           },
         ].map((item) => (
           <div key={item.label} className="space-y-2">
-            <div className="flex justify-between items-center text-base font-medium dark:text-white">
+            <div className="flex items-center justify-between text-base font-medium dark:text-white">
               <span>{item.label}</span>
               <span>
                 {item.count}/{totalAssignments} (
                 {((item.count / totalAssignments) * 100).toFixed(2)}%)
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3.5 dark:bg-gray-700">
+            <div className="h-3.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
               <div
                 className={`${item.color} h-3.5 rounded-full`}
                 style={{
@@ -169,18 +187,18 @@ const ProgressBars = ({
   );
 };
 
-
 interface Platforms {
   codechef?: string;
   codeforces?: string;
   hackerrank?: string;
   interviewbit?: string;
   leetcode?: string;
-  github?: string
+  github?: string;
 }
 
 const PlatformScores = () => {
-  const { data: platformScoresData, isLoading } = api.codingPlatforms.getPlatformScores.useQuery();
+  const { data: platformScoresData, isLoading } =
+    api.codingPlatforms.getPlatformScores.useQuery();
   const { mutate: updateProfile } = api.users.updateUserProfile.useMutation({
     onSuccess: () => {
       toast.success("Profile updated successfully");
@@ -190,7 +208,13 @@ const PlatformScores = () => {
     },
   });
 
-  const platforms = ["codechef", "codeforces", "hackerrank", "interviewbit", "leetcode"];
+  const platforms = [
+    "codechef",
+    "codeforces",
+    "hackerrank",
+    "interviewbit",
+    "leetcode",
+  ];
   const colors = [
     "hsl(var(--chart-1))",
     "hsl(var(--chart-2))",
@@ -211,21 +235,21 @@ const PlatformScores = () => {
   const data =
     platformScoresData?.success && platformScoresData.data
       ? platforms.map((platform) => ({
-        name: platform,
-        value: platformScoresData.data.percentages[platform] ?? 0,
-      }))
+          name: platform,
+          value: platformScoresData.data.percentages[platform] ?? 0,
+        }))
       : dummyData;
 
   const renderChart = () => (
     <div
-      className={`flex flex-col items-center gap-8 w-full ${shouldShowUpdateProfile ? "opacity-30" : ""}`}
+      className={`flex w-full flex-col items-center gap-8 ${shouldShowUpdateProfile ? "opacity-30" : ""}`}
     >
-      <div className="w-full h-[180px] relative">
+      <div className="relative h-[180px] w-full">
         {shouldShowUpdateProfile && (
           <Dialog>
             <DialogTrigger asChild>
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className="bg-gray-800/80 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700/80 transition-colors">
+              <div className="absolute inset-0 z-10 flex items-center justify-center">
+                <div className="cursor-pointer rounded-lg bg-gray-800/80 px-4 py-2 text-white transition-colors hover:bg-gray-700/80">
                   Update Profile
                 </div>
               </div>
@@ -243,14 +267,19 @@ const PlatformScores = () => {
                   hackerrank: "",
                   interviewbit: "",
                 }}
-                onUpdate={async (profile: { professionalProfiles: Platforms }) => {
+                onUpdate={async (profile: {
+                  professionalProfiles: Platforms;
+                }) => {
                   try {
                     const handles = {
                       codechef: profile.professionalProfiles?.codechef ?? "",
-                      codeforces: profile.professionalProfiles?.codeforces ?? "",
-                      hackerrank: profile.professionalProfiles?.hackerrank ?? "",
+                      codeforces:
+                        profile.professionalProfiles?.codeforces ?? "",
+                      hackerrank:
+                        profile.professionalProfiles?.hackerrank ?? "",
                       leetcode: profile.professionalProfiles?.leetcode ?? "",
-                      interviewbit: profile.professionalProfiles?.interviewbit ?? "",
+                      interviewbit:
+                        profile.professionalProfiles?.interviewbit ?? "",
                       github: profile.professionalProfiles?.github ?? "",
                     };
 
@@ -273,9 +302,9 @@ const PlatformScores = () => {
             platforms.map((platform, index) => [
               platform,
               { label: platform, color: colors[index] ?? "" },
-            ])
+            ]),
           )}
-          className="w-full h-[180px] relative"
+          className="relative h-[180px] w-full"
         >
           <ResponsiveContainer width="100%" height="100%">
             <RechartsPieChart>
@@ -289,7 +318,10 @@ const PlatformScores = () => {
                 dataKey="value"
               >
                 {data.map((_entry, index) => (
-                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={colors[index % colors.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip content={<ChartTooltipContent />} />
@@ -299,30 +331,41 @@ const PlatformScores = () => {
       </div>
       <div className="w-full space-y-2">
         {platforms.map((platform, index) => {
-          const score = platformScoresData?.success ? platformScoresData.data?.[platform] : null;
-          const percentage = platformScoresData?.success ? platformScoresData.data?.percentages[platform] ?? 0 : 0;
+          const score = platformScoresData?.success
+            ? platformScoresData.data?.[platform]
+            : null;
+          const percentage = platformScoresData?.success
+            ? (platformScoresData.data?.percentages[platform] ?? 0)
+            : 0;
 
           return (
             <div key={platform} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[index] }} />
+              <div
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: colors[index] }}
+              />
               <div className="flex-1">
                 <div className="flex flex-col">
-                  <div className="flex justify-between items-center">
-                    <span className="capitalize text-xs font-medium text-gray-800 dark:text-gray-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-800 capitalize dark:text-gray-200">
                       {platform}
                     </span>
                     <span className="text-xs font-medium text-gray-800 dark:text-gray-200">
-                      {platformScoresData?.success ? `${percentage.toFixed(1)}%` : "20%"}
+                      {platformScoresData?.success
+                        ? `${percentage.toFixed(1)}%`
+                        : "20%"}
                     </span>
                   </div>
-                  {score && typeof score === 'object' && 'problemCount' in score && (
-                    <div className="flex justify-between text-[10px] text-gray-600 dark:text-gray-400">
-                      <span>Problems: {score.problemCount ?? 0}</span>
-                      {score.currentRating && (
-                        <span>Rating: {Math.round(score.currentRating)}</span>
-                      )}
-                    </div>
-                  )}
+                  {score &&
+                    typeof score === "object" &&
+                    "problemCount" in score && (
+                      <div className="flex justify-between text-[10px] text-gray-600 dark:text-gray-400">
+                        <span>Problems: {score.problemCount ?? 0}</span>
+                        {score.currentRating && (
+                          <span>Rating: {Math.round(score.currentRating)}</span>
+                        )}
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
@@ -334,13 +377,13 @@ const PlatformScores = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 animate-pulse">
-        <div className="h-48 w-48 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto"></div>
+      <div className="flex animate-pulse flex-col gap-4">
+        <div className="mx-auto h-48 w-48 rounded-full bg-gray-200 dark:bg-gray-700"></div>
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center gap-2">
               <div className="h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-              <div className="h-4 flex-1 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-4 flex-1 rounded bg-gray-200 dark:bg-gray-700"></div>
             </div>
           ))}
         </div>
@@ -351,45 +394,65 @@ const PlatformScores = () => {
   return renderChart();
 };
 
-export function StudentCards({ data, selectedCourse }: Props) {
-  const course = data.courses.find((c) => c.courseId === selectedCourse);
-
-  const groupedAssignments: Record<string, (Assignment & { status: string })[]> = course?.assignments?.reduce(
-    (acc, assignment) => {
-      const submissionsCount = assignment.submissions?.length ?? 0;
-      let status = "Not Submitted";
-      if (submissionsCount > 0) {
-        status = "Submitted";
-      }
-
-      acc[status] ??= [];
-      acc[status]?.push({ ...assignment, status, submissions: assignment.submissions ?? [] });
-      return acc;
-    },
-    {} as Record<string, (Assignment & { status: string })[]>
-  ) ?? {};
-
+export function StudentCards({ selectedCourse }: Props) {
+  const { data: studentDataResponse, isLoading } =
+    api.dashboard.getStudentDashboardData.useQuery();
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  if (isLoading) {
+    return <div>Loading student data...</div>;
+  }
+
+  if (!studentDataResponse?.success || !studentDataResponse.data) {
+    return <div>No student data available</div>;
+  }
+
+  const studentData = studentDataResponse.data;
+  const course = studentData.courses.find((c) => c.courseId === selectedCourse);
+
+  const groupedAssignments: Record<
+    string,
+    (Assignment & { status: string })[]
+  > =
+    course?.assignments?.reduce(
+      (acc, assignment) => {
+        const submissionsCount = assignment.submissions?.length ?? 0;
+        let status = "Not Submitted";
+        if (submissionsCount > 0) {
+          status = "Submitted";
+        }
+
+        acc[status] ??= [];
+        acc[status]?.push({
+          ...assignment,
+          status,
+          submissions: assignment.submissions ?? [],
+        });
+        return acc;
+      },
+      {} as Record<string, (Assignment & { status: string })[]>,
+    ) ?? {};
 
   const filteredAssignments =
     selectedStatus === "All"
       ? Object.values(groupedAssignments).flat()
-      : groupedAssignments[selectedStatus] ?? [];
+      : (groupedAssignments[selectedStatus] ?? []);
 
   const searchFilteredAssignments = filteredAssignments.filter((assignment) =>
-    assignment.title.toLowerCase().includes(searchQuery.toLowerCase())
+    assignment.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const totalAssignments = course?.assignments.length ?? 0;
   const submittedCount = groupedAssignments?.Submitted?.length ?? 0;
   const notSubmittedCount = groupedAssignments?.["Not Submitted"]?.length ?? 0;
 
-  const completionPercentage = Math.round((submittedCount / totalAssignments) * 100) ?? 0;
+  const completionPercentage =
+    Math.round((submittedCount / totalAssignments) * 100) ?? 0;
 
   return (
     <>
-      <div className="flex flex-wrap justify-center gap-4 mb-6 md:mb-10 md:gap-10">
+      <div className="mb-6 flex flex-wrap justify-center gap-4 md:mb-10 md:gap-10">
         {[
           {
             imgSrc: "/score.png",
@@ -413,26 +476,32 @@ export function StudentCards({ data, selectedCourse }: Props) {
           <StatCard key={index} {...item} />
         ))}
       </div>
-      <div className="flex flex-col lg:flex-row gap-4">
-        <Card className="w-full lg:w-2/3 mb-3 ">
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row">
+        <Card className="mb-3 w-full lg:w-2/3">
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Assignments</CardTitle>
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col gap-4 md:flex-row">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="py-1.5 px-2 w-full text-sm font-medium border text-gray-400 border-gray-300 rounded-md"
+                    className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm font-medium text-gray-400"
                   >
                     {selectedStatus}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setSelectedStatus("All")}>All</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedStatus("Submitted")}>
+                  <DropdownMenuItem onClick={() => setSelectedStatus("All")}>
+                    All
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSelectedStatus("Submitted")}
+                  >
                     Submitted
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedStatus("Not Submitted")}>
+                  <DropdownMenuItem
+                    onClick={() => setSelectedStatus("Not Submitted")}
+                  >
                     Not Submitted
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -440,30 +509,34 @@ export function StudentCards({ data, selectedCourse }: Props) {
               <Input
                 type="text"
                 placeholder="Search by assignment name"
-                className="p-2 w-full border border-gray-300 rounded-md"
+                className="w-full rounded-md border border-gray-300 p-2"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </CardHeader>
           <CardContent>
-            <AssignmentTable searchFilteredAssignments={searchFilteredAssignments} />
+            <AssignmentTable
+              searchFilteredAssignments={searchFilteredAssignments}
+            />
           </CardContent>
         </Card>
 
-        <div className="w-full lg:w-1/3 pb-3">
+        <div className="w-full pb-3 lg:w-1/3">
           <Card>
             <CardHeader className="relative">
               <div className="flex items-center justify-center gap-4">
                 <CardTitle>Platform Scores</CardTitle>
                 <a
                   href="/coding-platforms/leaderboard"
-                  className="absolute right-2 text-xs font-medium text-primary hover:text-primary/80 dark:text-primary dark:hover:text-primary/80 underline-offset-4 hover:underline"
+                  className="text-primary hover:text-primary/80 dark:text-primary dark:hover:text-primary/80 absolute right-2 text-xs font-medium underline-offset-4 hover:underline"
                 >
                   Leaderboard
                 </a>
               </div>
-              <CardDescription>Your scores on various coding platforms</CardDescription>
+              <CardDescription>
+                Your scores on various coding platforms
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <PlatformScores />
@@ -473,9 +546,12 @@ export function StudentCards({ data, selectedCourse }: Props) {
       </div>
 
       {Number(totalAssignments) > 0 && (
-        <div className="flex flex-col md:flex-row justify-around mb-3 gap-3">
+        <div className="mb-3 flex flex-col justify-around gap-3 md:flex-row">
           <div className="flex-1">
-            <Component notSubmitted={notSubmittedCount} submitted={submittedCount} />
+            <Component
+              notSubmitted={notSubmittedCount}
+              submitted={submittedCount}
+            />
           </div>
           <ProgressBars
             submittedCount={submittedCount}

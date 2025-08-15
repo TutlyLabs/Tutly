@@ -1,6 +1,6 @@
 "use client";
 
-import { FileType } from "@prisma/client";
+import { FileType } from "@tutly/api/schema";
 import axios from "axios";
 import imageCompression from "browser-image-compression";
 import { useState } from "react";
@@ -11,13 +11,26 @@ import { getExtension } from "@/utils/file";
 
 export type FileUploadOptions = {
   fileType: FileType;
-  onUpload?: (file: { id: string; name: string; publicUrl: string | null }) => Promise<void>;
+  onUpload?: (file: {
+    id: string;
+    name: string;
+    publicUrl: string | null;
+  }) => Promise<void>;
   allowedExtensions?: string[];
 };
 
 export const isPublicFileTypes: FileType[] = [FileType.AVATAR];
 
-const ExtImage: string[] = ["jpeg", "jpg", "png", "gif", "svg", "bmp", "webp", "jfif"];
+const ExtImage: string[] = [
+  "jpeg",
+  "jpg",
+  "png",
+  "gif",
+  "svg",
+  "bmp",
+  "webp",
+  "jfif",
+];
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -27,8 +40,10 @@ export const useFileUpload = (options: FileUploadOptions) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadPercent, setUploadPercent] = useState<number | null>(null);
 
-  const { mutateAsync: createFile } = api.fileupload.createFileAndGetUploadUrl.useMutation();
-  const { mutateAsync: markFileUploaded } = api.fileupload.markFileUploaded.useMutation();
+  const { mutateAsync: createFile } =
+    api.fileupload.createFileAndGetUploadUrl.useMutation();
+  const { mutateAsync: markFileUploaded } =
+    api.fileupload.markFileUploaded.useMutation();
 
   const uploadFile = async (file: File, associatingId?: string) => {
     setIsUploading(true);
@@ -39,7 +54,10 @@ export const useFileUpload = (options: FileUploadOptions) => {
       const ext: string = getExtension(file.name) || "";
       const extWithoutDot = ext.slice(1);
 
-      if (allowedExtensions && !allowedExtensions.includes(extWithoutDot.toLowerCase())) {
+      if (
+        allowedExtensions &&
+        !allowedExtensions.includes(extWithoutDot.toLowerCase())
+      ) {
         throw new Error(`File type not allowed: ${extWithoutDot}`);
       }
 
@@ -69,13 +87,19 @@ export const useFileUpload = (options: FileUploadOptions) => {
       if (!result) throw new Error("Failed to create file");
       const { signedUrl, file: uploadedFile } = result;
 
-      if (!signedUrl || !uploadedFile) throw new Error("Failed to get upload URL");
+      if (!signedUrl || !uploadedFile)
+        throw new Error("Failed to get upload URL");
 
       await axios.put(signedUrl, fileToUpload, {
         headers: { "Content-Type": fileToUpload.type },
-        onUploadProgress: (progressEvent: { loaded: number; total?: number }) => {
+        onUploadProgress: (progressEvent: {
+          loaded: number;
+          total?: number;
+        }) => {
           if (progressEvent.total) {
-            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
             setUploadPercent(percent);
           }
         },
@@ -91,7 +115,9 @@ export const useFileUpload = (options: FileUploadOptions) => {
       onUpload && (await onUpload(updatedFile));
       return updatedFile;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Error uploading file");
+      toast.error(
+        error instanceof Error ? error.message : "Error uploading file",
+      );
       return null;
     } finally {
       setIsUploading(false);

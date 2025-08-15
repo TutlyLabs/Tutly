@@ -9,7 +9,11 @@ import { MdEventRepeat } from "react-icons/md";
 import { PiTagChevronBold } from "react-icons/pi";
 
 import { Card } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { EventDetails } from "./event-details";
@@ -26,27 +30,27 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
 
     if (type === "Holiday" || type === "Assignment") {
       return (
-        <span className="ml-auto text-xs font-medium text-blue-700 bg-blue-100 px-3 py-1.5 rounded-full">
+        <span className="ml-auto rounded-full bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-700">
           {type}
         </span>
       );
     }
     if (now.isBetween(start, end, null, "[]")) {
       return (
-        <span className="flex justify-center gap-1 ml-auto text-xs font-medium text-purple-500 bg-purple-100 px-3 py-1.5 rounded-full">
-          <CiStreamOn className="text-base font-bold " /> Live
+        <span className="ml-auto flex justify-center gap-1 rounded-full bg-purple-100 px-3 py-1.5 text-xs font-medium text-purple-500">
+          <CiStreamOn className="text-base font-bold" /> Live
         </span>
       );
     }
     if (end.isBefore(now)) {
       return (
-        <span className="ml-auto text-xs font-medium text-red-500 bg-red-100 px-3 py-1.5 rounded-full">
+        <span className="ml-auto rounded-full bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500">
           Completed
         </span>
       );
     } else {
       return (
-        <span className="ml-auto text-xs font-medium text-green-800 bg-green-100 px-3 py-1.5 rounded-full">
+        <span className="ml-auto rounded-full bg-green-100 px-3 py-1.5 text-xs font-medium text-green-800">
           Upcoming
         </span>
       );
@@ -56,12 +60,14 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
   const renderEventItem = (event: any) => (
     <div
       key={event.id}
-      className="flex items-center p-3 gap-3 bg-gray-100 dark:bg-gray-800 rounded-md mb-2 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+      className="mb-2 flex cursor-pointer items-center gap-3 rounded-md bg-gray-100 p-3 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-gray-800"
       onClick={() => setSelectedEvent(event)}
     >
       <PiTagChevronBold className="h-5 w-5 text-gray-600 dark:text-gray-300" />
       <div>
-        <h1 className="text-sm font-semibold text-gray-800 dark:text-gray-100">{event.name}</h1>
+        <h1 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+          {event.name}
+        </h1>
       </div>
       {getStatusBadge(event.startDate, event.endDate, event.type)}
     </div>
@@ -70,7 +76,7 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
   const renderAssignmentItem = (assignment: any) => (
     <div
       key={assignment.id}
-      className="flex items-center p-3 gap-3 bg-gray-100 dark:bg-gray-800 rounded-md mb-2 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+      className="mb-2 flex cursor-pointer items-center gap-3 rounded-md bg-gray-100 p-3 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-gray-800"
       onClick={() => setSelectedEvent(assignment)}
     >
       <div>
@@ -78,7 +84,11 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
           {assignment.name}
         </h1>
       </div>
-      {getStatusBadge(assignment.startDate, assignment.endDate, assignment.type)}
+      {getStatusBadge(
+        assignment.startDate,
+        assignment.endDate,
+        assignment.type,
+      )}
     </div>
   );
 
@@ -88,17 +98,21 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
 
   // live events
   const liveEvents = otherEvents?.filter((event) =>
-    now.isBetween(dayjs(event.startDate), dayjs(event.endDate), null, "[]")
+    now.isBetween(dayjs(event.startDate), dayjs(event.endDate), null, "[]"),
   );
 
   // upcoming events
-  const upcomingEvents = otherEvents?.filter((event) => dayjs(event.startDate).isAfter(now));
+  const upcomingEvents = otherEvents?.filter((event) =>
+    dayjs(event.startDate).isAfter(now),
+  );
 
   // completed events
-  const completedEvents = otherEvents?.filter((event) => dayjs(event.endDate).isBefore(now));
+  const completedEvents = otherEvents?.filter((event) =>
+    dayjs(event.endDate).isBefore(now),
+  );
 
   const renderEmptyState = (message: string) => (
-    <div className="flex items-center justify-center text-muted-foreground py-1">
+    <div className="text-muted-foreground flex items-center justify-center py-1">
       <span className="text-xs">{message}</span>
     </div>
   );
@@ -107,56 +121,71 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
     title: string,
     eventList: any[],
     emptyMessage: string,
-    defaultOpen = false
+    defaultOpen = false,
   ) => (
     <Collapsible defaultOpen={defaultOpen} className="space-y-1">
-      <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md p-2 text-left hover:bg-accent">
-        <h2 className="text-base font-bold text-foreground">{title}</h2>
-        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+      <CollapsibleTrigger className="hover:bg-accent flex w-full items-center justify-between rounded-md p-2 text-left">
+        <h2 className="text-foreground text-base font-bold">{title}</h2>
+        <ChevronDown className="text-muted-foreground h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-1">
-        {eventList.length === 0 ? (
-          renderEmptyState(emptyMessage)
-        ) : (
-          eventList.map(renderEventItem)
-        )}
+        {eventList.length === 0
+          ? renderEmptyState(emptyMessage)
+          : eventList.map(renderEventItem)}
       </CollapsibleContent>
     </Collapsible>
   );
 
   const renderAssignmentSection = (assignments: any[], defaultOpen = false) => (
     <Collapsible defaultOpen={defaultOpen} className="space-y-1">
-      <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md p-2 text-left hover:bg-accent">
-        <h2 className="text-base font-bold text-foreground">Assignments</h2>
-        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+      <CollapsibleTrigger className="hover:bg-accent flex w-full items-center justify-between rounded-md p-2 text-left">
+        <h2 className="text-foreground text-base font-bold">Assignments</h2>
+        <ChevronDown className="text-muted-foreground h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-1">
-        {assignments.length === 0 ? (
-          renderEmptyState("No assignments available")
-        ) : (
-          assignments.map(renderAssignmentItem)
-        )}
+        {assignments.length === 0
+          ? renderEmptyState("No assignments available")
+          : assignments.map(renderAssignmentItem)}
       </CollapsibleContent>
     </Collapsible>
   );
 
   // Determine if we have content for the sidebar
-  const hasEvents = liveEvents.length > 0 || upcomingEvents.length > 0 || completedEvents.length > 0 || assignments.length > 0;
+  const hasEvents =
+    liveEvents.length > 0 ||
+    upcomingEvents.length > 0 ||
+    completedEvents.length > 0 ||
+    assignments.length > 0;
 
   return (
     <div className="w-full md:w-[260px]">
-      <Card className="w-full rounded-lg bg-background p-3 shadow-md">
+      <Card className="bg-background w-full rounded-lg p-3 shadow-md">
         <ScrollArea className="max-h-[calc(100vh-10rem)]">
           <div className="space-y-2 pb-1">
-            {renderEventSection("Live Events", liveEvents, "No live events", true)}
-            {renderEventSection("Upcoming Events", upcomingEvents, "No upcoming events", true)}
+            {renderEventSection(
+              "Live Events",
+              liveEvents,
+              "No live events",
+              true,
+            )}
+            {renderEventSection(
+              "Upcoming Events",
+              upcomingEvents,
+              "No upcoming events",
+              true,
+            )}
             {renderAssignmentSection(assignments, false)}
-            {renderEventSection("Completed Events", completedEvents, "No completed events", false)}
-            
+            {renderEventSection(
+              "Completed Events",
+              completedEvents,
+              "No completed events",
+              false,
+            )}
+
             {!hasEvents && (
-              <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-                <MdEventRepeat className="h-8 w-8 text-muted-foreground/50" />
-                <p className="mt-2 text-sm text-center">No events scheduled</p>
+              <div className="text-muted-foreground flex flex-col items-center justify-center py-4">
+                <MdEventRepeat className="text-muted-foreground/50 h-8 w-8" />
+                <p className="mt-2 text-center text-sm">No events scheduled</p>
               </div>
             )}
           </div>
@@ -164,7 +193,10 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
       </Card>
 
       {selectedEvent && (
-        <EventDetails event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+        <EventDetails
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
       )}
     </div>
   );

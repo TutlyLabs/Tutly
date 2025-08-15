@@ -3,7 +3,12 @@
 import { AlertCircle, Search, UserPlus, UserX, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { FaSort, FaSortAlphaDown, FaSortAlphaDownAlt, FaUserPlus } from "react-icons/fa";
+import {
+  FaSort,
+  FaSortAlphaDown,
+  FaSortAlphaDownAlt,
+  FaUserPlus,
+} from "react-icons/fa";
 import { FaUserXmark } from "react-icons/fa6";
 import { MdOutlineBlock } from "react-icons/md";
 
@@ -79,7 +84,7 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
     if (!matchesSearch) return false;
 
     const isEnrolled = user.enrolledUsers.some(
-      (enrolled) => enrolled.courseId === courseId
+      (enrolled) => enrolled.courseId === courseId,
     );
 
     switch (activeTab) {
@@ -101,7 +106,7 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
   const mentors = users.filter(
     (user) =>
       user.role === "MENTOR" &&
-      user.enrolledUsers.some((enrolled) => enrolled.courseId === courseId)
+      user.enrolledUsers.some((enrolled) => enrolled.courseId === courseId),
   );
 
   const handleNotifyUsers = async () => {
@@ -168,7 +173,10 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
     }
   };
 
-  const handleMentorChange = async (username: string, mentorUsername: string) => {
+  const handleMentorChange = async (
+    username: string,
+    mentorUsername: string,
+  ) => {
     const toastId = toast.loading("Updating mentor...");
     try {
       setLoading(true);
@@ -200,7 +208,7 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
   };
 
   const enrolledCount = users.filter((user) =>
-    user.enrolledUsers.some((enrolled) => enrolled.courseId === courseId)
+    user.enrolledUsers.some((enrolled) => enrolled.courseId === courseId),
   ).length;
 
   const notEnrolledCount = users.length - enrolledCount;
@@ -218,15 +226,21 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
           ? (a.name || "").localeCompare(b.name || "")
           : (b.name || "").localeCompare(a.name || "");
       } else if (sortColumn === "role") {
-        return sortOrder === "asc" ? a.role.localeCompare(b.role) : b.role.localeCompare(a.role);
+        return sortOrder === "asc"
+          ? a.role.localeCompare(b.role)
+          : b.role.localeCompare(a.role);
       } else if (sortColumn === "email") {
         return sortOrder === "asc"
           ? (a.email || "").localeCompare(b.email || "")
           : (b.email || "").localeCompare(a.email || "");
       }
     } else {
-      const aEnrolled = a.enrolledUsers.some((enrolled) => enrolled.courseId === courseId);
-      const bEnrolled = b.enrolledUsers.some((enrolled) => enrolled.courseId === courseId);
+      const aEnrolled = a.enrolledUsers.some(
+        (enrolled) => enrolled.courseId === courseId,
+      );
+      const bEnrolled = b.enrolledUsers.some(
+        (enrolled) => enrolled.courseId === courseId,
+      );
 
       if (aEnrolled && !bEnrolled) return -1;
       if (!aEnrolled && bEnrolled) return 1;
@@ -249,9 +263,9 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
         <CardTitle className="text-2xl">User Management</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="mb-6 flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-x-4 md:space-y-0">
+        <div className="mb-6 flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 md:space-x-4">
           <div className="relative w-full max-w-md">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
             <Input
               type="text"
               placeholder="Search by username, name or email..."
@@ -295,39 +309,46 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
           </Dialog>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
-            <TabsTrigger value="all" className="gap-2">
-              <Users className="h-4 w-4" />
-              All
-              <Badge variant="outline" className="ml-1">
-                {users.length}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="enrolled" className="gap-2">
-              <UserPlus className="h-4 w-4" />
-              Enrolled
-              <Badge variant="outline" className="ml-1">
-                {enrolledCount}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="not-enrolled" className="gap-2">
-              <UserX className="h-4 w-4" />
-              Not Enrolled
-              <Badge variant="outline" className="ml-1">
-                {notEnrolledCount}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="mentors" className="gap-2">
-              Mentors
-              <Badge variant="outline" className="ml-1">
-                {mentorCount}
-              </Badge>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+            <div className="w-full max-w-3xl overflow-x-auto rounded-md">
+              <TabsList className="flex w-max min-w-full">
+                <TabsTrigger value="all" className="flex-shrink-0 gap-2">
+                  <Users className="h-4 w-4" />
+                  All
+                  <Badge variant="outline" className="ml-1">
+                    {users.length}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="enrolled" className="flex-shrink-0 gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Enrolled
+                  <Badge variant="outline" className="ml-1">
+                    {enrolledCount}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="not-enrolled"
+                  className="flex-shrink-0 gap-2"
+                >
+                  <UserX className="h-4 w-4" />
+                  Not Enrolled
+                  <Badge variant="outline" className="ml-1">
+                    {notEnrolledCount}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="mentors" className="flex-shrink-0 gap-2">
+                  Mentors
+                  <Badge variant="outline" className="ml-1">
+                    {mentorCount}
+                  </Badge>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </Tabs>
+        </div>
 
-        <div className="rounded-md border w-full">
+        <div className="w-full rounded-md border">
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
@@ -338,7 +359,9 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
                     onClick={() => handleSort("username")}
                   >
                     Username
-                    {sortColumn !== "username" && <FaSort className="ml-1 h-3 w-3" />}
+                    {sortColumn !== "username" && (
+                      <FaSort className="ml-1 h-3 w-3" />
+                    )}
                     {sortColumn === "username" && sortOrder === "asc" && (
                       <FaSortAlphaDown className="ml-1 h-3 w-3" />
                     )}
@@ -353,7 +376,9 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
                     onClick={() => handleSort("name")}
                   >
                     Name
-                    {sortColumn !== "name" && <FaSort className="ml-1 h-3 w-3" />}
+                    {sortColumn !== "name" && (
+                      <FaSort className="ml-1 h-3 w-3" />
+                    )}
                     {sortColumn === "name" && sortOrder === "asc" && (
                       <FaSortAlphaDown className="ml-1 h-3 w-3" />
                     )}
@@ -368,7 +393,9 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
                     onClick={() => handleSort("role")}
                   >
                     Role
-                    {sortColumn !== "role" && <FaSort className="ml-1 h-3 w-3" />}
+                    {sortColumn !== "role" && (
+                      <FaSort className="ml-1 h-3 w-3" />
+                    )}
                     {sortColumn === "role" && sortOrder === "asc" && (
                       <FaSortAlphaDown className="ml-1 h-3 w-3" />
                     )}
@@ -383,7 +410,9 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
                     onClick={() => handleSort("email")}
                   >
                     Email
-                    {sortColumn !== "email" && <FaSort className="ml-1 h-3 w-3" />}
+                    {sortColumn !== "email" && (
+                      <FaSort className="ml-1 h-3 w-3" />
+                    )}
                     {sortColumn === "email" && sortOrder === "asc" && (
                       <FaSortAlphaDown className="ml-1 h-3 w-3" />
                     )}
@@ -401,8 +430,10 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center">
                     <div className="flex items-center justify-center space-x-2">
-                      <MdOutlineBlock className="h-5 w-5 text-muted-foreground" />
-                      <span className="text-muted-foreground">No users found</span>
+                      <MdOutlineBlock className="text-muted-foreground h-5 w-5" />
+                      <span className="text-muted-foreground">
+                        No users found
+                      </span>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -425,25 +456,33 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
                   </TableCell>
                   <TableCell>{user.name}</TableCell>
                   <TableCell>
-                    <Badge variant={user.role === "INSTRUCTOR" ? "secondary" : "outline"}>
+                    <Badge
+                      variant={
+                        user.role === "INSTRUCTOR" ? "secondary" : "outline"
+                      }
+                    >
                       {user.role}
                     </Badge>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     {user.role === "STUDENT" &&
-                      user.enrolledUsers.some((enrolled) => enrolled.courseId === courseId) ? (
+                    user.enrolledUsers.some(
+                      (enrolled) => enrolled.courseId === courseId,
+                    ) ? (
                       <div className="w-32">
                         <select
                           title="mentor"
                           value={
                             user.enrolledUsers.find(
-                              (enrolled) => enrolled.courseId === courseId
+                              (enrolled) => enrolled.courseId === courseId,
                             )?.mentorUsername || ""
                           }
-                          onChange={(e) => handleMentorChange(user.username, e.target.value)}
+                          onChange={(e) =>
+                            handleMentorChange(user.username, e.target.value)
+                          }
                           disabled={loading}
-                          className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                          className="border-input bg-background ring-offset-background focus:ring-primary w-full rounded-md border px-3 py-1 text-sm focus:ring-2 focus:ring-offset-2 focus:outline-none"
                         >
                           <option value="">None</option>
                           {mentors.map((mentor) => (
@@ -458,32 +497,36 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {!user.enrolledUsers.some((enrolled) => enrolled.courseId === courseId)
+                    {!user.enrolledUsers.some(
+                      (enrolled) => enrolled.courseId === courseId,
+                    )
                       ? user.role !== "INSTRUCTOR" && (
-                        <Button
-                          size="sm"
-                          className="gap-1"
-                          disabled={loading}
-                          onClick={() => handleEnroll(user.username)}
-                          variant="outline"
-                        >
-                          <FaUserPlus className="h-4 w-4" />
-                          Enroll
-                        </Button>
-                      )
+                          <Button
+                            size="sm"
+                            className="gap-1"
+                            disabled={loading}
+                            onClick={() => handleEnroll(user.username)}
+                            variant="outline"
+                          >
+                            <FaUserPlus className="h-4 w-4" />
+                            Enroll
+                          </Button>
+                        )
                       : user.role !== "INSTRUCTOR" && (
-                        <Button
-                          size="sm"
-                          className="gap-1"
-                          disabled={loading}
-                          onClick={() => handleUnenroll(user.username)}
-                          variant="destructive"
-                        >
-                          <FaUserXmark className="h-4 w-4" />
-                          Unenroll
-                        </Button>
-                      )}
-                    {user.role === "INSTRUCTOR" && <Badge variant="outline">No Action</Badge>}
+                          <Button
+                            size="sm"
+                            className="gap-1"
+                            disabled={loading}
+                            onClick={() => handleUnenroll(user.username)}
+                            variant="destructive"
+                          >
+                            <FaUserXmark className="h-4 w-4" />
+                            Unenroll
+                          </Button>
+                        )}
+                    {user.role === "INSTRUCTOR" && (
+                      <Badge variant="outline">No Action</Badge>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

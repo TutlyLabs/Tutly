@@ -1,30 +1,33 @@
-import { notFound, redirect } from "next/navigation";
-import { getServerSessionOrRedirect } from "@tutly/auth";
-import { db } from "@tutly/db";
+"use client";
 
-export default async function ReportPage() {
-  const session = await getServerSessionOrRedirect();
-  const user = session.user;
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { api } from "@/trpc/react";
 
-  if (!user || (user.role !== "INSTRUCTOR" && user.role !== "MENTOR")) {
-    return notFound();
+export default function ReportPage() {
+  const router = useRouter();
+  const { data: coursesData, isLoading } =
+    api.courses.checkUserEnrolledCourses.useQuery();
+
+  useEffect(() => {
+    if (!isLoading && coursesData) {
+      if (!coursesData.success) {
+        router.push("/instructor/no-courses");
+        return;
+      }
+
+      if (!coursesData.data?.hasEnrolledCourses) {
+        router.push("/instructor/no-courses");
+        return;
+      }
+
+      router.push("/tutor/report/all");
+    }
+  }, [coursesData, isLoading, router]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
-  const enrolledCourses = await db.enrolledUsers.findMany({
-    where: {
-      username: user.username,
-      courseId: {
-        not: null,
-      },
-    },
-    select: {
-      courseId: true,
-    },
-  });
-
-  if (!enrolledCourses?.length) {
-    redirect("/instructor/no-courses");
-  }
-
-  redirect(`/tutor/report/all`);
-} 
+  return <div>Redirecting...</div>;
+}

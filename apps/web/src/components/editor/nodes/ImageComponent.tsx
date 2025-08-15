@@ -88,14 +88,14 @@ export default function ImageComponent({
         width:
           typeof currentWidth === "number"
             ? currentWidth
-            : imageRef.current?.offsetWidth ?? 0,
+            : (imageRef.current?.offsetWidth ?? 0),
         height:
           typeof currentHeight === "number"
             ? currentHeight
-            : imageRef.current?.offsetHeight ?? 0,
+            : (imageRef.current?.offsetHeight ?? 0),
       };
     },
-    [currentWidth, currentHeight]
+    [currentWidth, currentHeight],
   );
 
   const handleResize = useCallback(
@@ -104,14 +104,17 @@ export default function ImageComponent({
 
       const deltaX = e.clientX - resizeStartPos.current.x;
 
-      const aspectRatio = originalDimensions.current.width / originalDimensions.current.height;
-      const newWidth = Math.round(Math.max(100, originalDimensions.current.width + deltaX));
+      const aspectRatio =
+        originalDimensions.current.width / originalDimensions.current.height;
+      const newWidth = Math.round(
+        Math.max(100, originalDimensions.current.width + deltaX),
+      );
       const newHeight = Math.round(Math.max(100, newWidth / aspectRatio));
 
       setCurrentWidth(newWidth);
       setCurrentHeight(newHeight);
     },
-    [isResizing]
+    [isResizing],
   );
 
   const stopResize = useCallback(() => {
@@ -147,7 +150,7 @@ export default function ImageComponent({
 
   return (
     <Suspense fallback={null}>
-      <div className="image-container relative inline-block group">
+      <div className="image-container group relative inline-block">
         <LazyImage
           className={`editor-image ${isResizing ? "pointer-events-none" : ""}`}
           src={src}
@@ -159,7 +162,7 @@ export default function ImageComponent({
         />
         {resizable && (
           <div
-            className="absolute -bottom-0.5 -right-0.5 w-4 h-4 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute -right-0.5 -bottom-0.5 h-4 w-4 cursor-se-resize opacity-0 transition-opacity group-hover:opacity-100"
             onMouseDown={startResize}
             style={{
               transform: "translate(50%, 50%)",

@@ -81,14 +81,32 @@ const LoginTemplete = ({
               boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
             }}
           >
-            <p style={{ margin: "0 0 12px 0", fontSize: "15px", color: "#4a5568" }}>
+            <p
+              style={{
+                margin: "0 0 12px 0",
+                fontSize: "15px",
+                color: "#4a5568",
+              }}
+            >
               A new login was detected from: <strong>{email}</strong>
             </p>
-            <p style={{ margin: "0 0 12px 0", fontSize: "15px", color: "#4a5568" }}>
+            <p
+              style={{
+                margin: "0 0 12px 0",
+                fontSize: "15px",
+                color: "#4a5568",
+              }}
+            >
               Time: <strong>{time}</strong>
             </p>
             {device && (
-              <p style={{ margin: "0 0 12px 0", fontSize: "15px", color: "#4a5568" }}>
+              <p
+                style={{
+                  margin: "0 0 12px 0",
+                  fontSize: "15px",
+                  color: "#4a5568",
+                }}
+              >
                 Device: <strong>{device}</strong>
               </p>
             )}
@@ -113,8 +131,8 @@ const LoginTemplete = ({
             }}
           >
             <p style={{ margin: "0" }}>
-              <strong>Security Notice:</strong> If you didn&apos;t perform this login, please secure your
-              account immediately.
+              <strong>Security Notice:</strong> If you didn&apos;t perform this
+              login, please secure your account immediately.
             </p>
           </div>
         </div>
@@ -129,7 +147,9 @@ const LoginTemplete = ({
           }}
         >
           <p style={{ margin: "0" }}>&copy; 2025 Tutly. All rights reserved.</p>
-          <p style={{ margin: "5px 0 0 0" }}>Terms of Service | Privacy Policy</p>
+          <p style={{ margin: "5px 0 0 0" }}>
+            Terms of Service | Privacy Policy
+          </p>
         </div>
       </div>
     </div>

@@ -14,13 +14,14 @@ const Header = ({
   const { data: courses } = api.courses.getAllCourses.useQuery();
 
   return (
-    <div className="flex justify-between mx-4 md:mx-8 mb-4">
-      <div className="flex flex-wrap gap-2 items-center">
+    <div className="mx-4 mb-4 flex justify-between md:mx-8">
+      <div className="flex flex-wrap items-center gap-2">
         {courses?.data?.map((course) => (
           <a
             href={`/tutor/statistics/${course.id}${userRole === "MENTOR" ? "?mentor=" + username : ""}`}
-            className={`p-2 px-4 border rounded-lg transition-colors hover:bg-accent ${course.id === courseId ? "border-primary bg-accent" : ""
-              }`}
+            className={`hover:bg-accent rounded-lg border p-2 px-4 transition-colors ${
+              course.id === courseId ? "border-primary bg-accent" : ""
+            }`}
             key={course.id}
           >
             {course.title}

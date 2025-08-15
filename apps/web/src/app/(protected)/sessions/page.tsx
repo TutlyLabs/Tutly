@@ -1,31 +1,29 @@
-import { redirect } from "next/navigation";
+"use client";
 
-import { db } from "@tutly/db";
+import { api } from "@/trpc/react";
 import Sessions from "./_components/Sessions";
-import { getServerSession } from "@tutly/auth";
 
-export default async function SessionsPage() {
-  const session = await getServerSession();
-  if (!session?.user) {
-    redirect("/sign-in");
+export default function SessionsPage() {
+  const { data: sessionsData, isLoading } =
+    api.users.getUserSessions.useQuery();
+
+  if (isLoading) {
+    return <div>Loading sessions...</div>;
   }
 
-  const sessions = await db.session.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: "desc" },
-  });
+  if (!sessionsData?.success || !sessionsData.data) {
+    return <div>Failed to load sessions data.</div>;
+  }
 
-  const accounts = await db.account.findMany({
-    where: { userId: session.user.id },
-  });
+  const { sessions, accounts, currentSessionId } = sessionsData.data;
 
   return (
-    <div className="w-full max-w-[600px] mx-auto p-6">
+    <div className="mx-auto w-full max-w-[600px] p-6">
       <Sessions
         sessions={sessions}
         accounts={accounts}
-        currentSessionId={session.session?.id}
+        currentSessionId={currentSessionId}
       />
     </div>
   );
-} 
+}
