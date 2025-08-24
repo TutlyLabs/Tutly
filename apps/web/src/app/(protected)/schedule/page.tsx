@@ -1,16 +1,9 @@
-"use client";
-
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 import { Calendar } from "./_components/calendar";
 import { EventsSidebar } from "./_components/events";
 
-export default function SchedulePage() {
-  const { data: scheduleData, isLoading } =
-    api.schedule.getScheduleData.useQuery();
-
-  if (isLoading) {
-    return <div>Loading schedule...</div>;
-  }
+export default async function SchedulePage() {
+  const scheduleData = await api.schedule.getScheduleData();
 
   if (!scheduleData?.success || !scheduleData.data) {
     return <div>Failed to load schedule data.</div>;

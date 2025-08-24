@@ -2,21 +2,28 @@ import "@/styles/globals.css";
 import { RefreshCw } from "lucide-react";
 import { getVersion } from "@/lib/version";
 import ThemeToggle from "@/components/ThemeToggle";
-import posthog from "posthog-js";
+import { posthog } from "@/lib/posthog";
+import { getServerSession } from "@/lib/auth";
+import { FeatureFlagsProvider } from "./_components/FeatureFlagsProvider";
 
 type Props = {
   children: React.ReactNode;
 };
 
-export default function AuthLayout({ children }: Props) {
+export default async function AuthLayout({ children }: Props) {
   const version = getVersion();
+  const session = await getServerSession();
+  const currentUser = session?.user;
 
-  if (typeof window !== "undefined") {
-    posthog.init("phc_fkSt1fQ3v4zrEcSB1TWZMHGA5B0Q0hAB70JlZcINrMU", {
-      api_host: "https://us.i.posthog.com",
-      person_profiles: "identified_only",
-    });
-  }
+  const isGoogleSignInEnabled = await posthog.isFeatureEnabled(
+    "google_sign_in",
+    currentUser?.id ?? "unauthenticated",
+  );
+
+  const isGithubSignInEnabled = await posthog.isFeatureEnabled(
+    "github_sign_in",
+    currentUser?.id ?? "unauthenticated",
+  );
 
   return (
     <>
@@ -33,7 +40,12 @@ export default function AuthLayout({ children }: Props) {
       <div className="fixed top-4 right-4">
         <ThemeToggle />
       </div>
-      {children}
+      <FeatureFlagsProvider
+        isGoogleSignInEnabled={isGoogleSignInEnabled || false}
+        isGithubSignInEnabled={isGithubSignInEnabled || false}
+      >
+        {children}
+      </FeatureFlagsProvider>
     </>
   );
 }

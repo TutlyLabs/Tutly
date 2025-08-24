@@ -1,6 +1,6 @@
 "use client";
 
-import type { Account, Session } from "@tutly/api/schema";
+import type { Account, Session } from "@prisma/client";
 import { HardDrive, Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -27,20 +27,19 @@ export default function Sessions({
   currentSessionId,
 }: SessionsModalProps) {
   const router = useRouter();
-  // todo: fix this
-  // const { mutate: deleteSession } = api.users.deleteSession.useMutation({
-  //   onSuccess: () => {
-  //     toast.success("Session deleted successfully");
-  //     router.refresh();
-  //   },
-  //   onError: (error) => {
-  //     toast.error(error.message || "Failed to delete session");
-  //   },
-  // });
+  const { mutate: deleteSession } = api.users.deleteSession.useMutation({
+    onSuccess: () => {
+      toast.success("Session deleted successfully");
+      router.refresh();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete session");
+    },
+  });
 
   const handleDeleteSession = async (sessionId: string) => {
     try {
-      // deleteSession({ sessionId });
+      deleteSession({ sessionId });
     } catch (error) {
       console.error("Failed to delete session:", error);
     }
@@ -123,10 +122,9 @@ export default function Sessions({
           <TabsContent value="connections" className="mt-6 space-y-4">
             {Object.entries(providers).map(([key, _]) => {
               if (key === "credentials") return null;
-              // const isConnected = accounts.some(
-              //   // (account) => account.provider === key,
-              // );
-              const isConnected = false
+              const isConnected = accounts.some(
+                (account) => account.providerId === key,
+              );
 
               return (
                 <div

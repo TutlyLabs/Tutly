@@ -6,7 +6,13 @@ import { toast } from "sonner";
 import day from "@/lib/dayjs";
 import { api } from "@/trpc/react";
 
-const EvaluateSubmission = ({ submission }: { submission: any }) => {
+const EvaluateSubmission = ({
+  submission,
+  showActions,
+}: {
+  submission: any;
+  showActions: boolean;
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedScores, setEditedScores] = useState({
     responsiveness: 0,
@@ -161,9 +167,14 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
             <th scope="col" className="px-2 py-1 text-xs font-medium uppercase">
               Feedback
             </th>
-            <th scope="col" className="px-2 py-1 text-xs font-medium uppercase">
-              Actions
-            </th>
+            {showActions && (
+              <th
+                scope="col"
+                className="px-2 py-1 text-xs font-medium uppercase"
+              >
+                Actions
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 bg-white text-xs">
@@ -266,7 +277,7 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
                   submission.overallFeedback || "NA"
                 )}
               </td>
-              {
+              {showActions && (
                 <td className="px-2 py-1 whitespace-nowrap">
                   {isEditing ? (
                     <div className="flex items-center justify-center gap-5">
@@ -300,7 +311,7 @@ const EvaluateSubmission = ({ submission }: { submission: any }) => {
                     </div>
                   )}
                 </td>
-              }
+              )}
             </tr>
           }
         </tbody>

@@ -18,7 +18,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/server/auth/client";
+import { SocialSignin } from "./SocialSignin";
+import { useFeatureFlags } from "./FeatureFlagsProvider";
 
 const signUpSchema = z
   .object({
@@ -41,6 +43,7 @@ export function SignUp() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { isGoogleSignInEnabled, isGithubSignInEnabled } = useFeatureFlags();
 
   const form = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
@@ -258,6 +261,11 @@ export function SignUp() {
                 {isLoading ? "Signing up..." : "Sign up"}
               </Button>
             </form>
+            <SocialSignin
+              isGoogleSignInEnabled={isGoogleSignInEnabled}
+              isGithubSignInEnabled={isGithubSignInEnabled}
+              isLoading={isLoading}
+            />
           </Form>
         </CardContent>
       </Card>

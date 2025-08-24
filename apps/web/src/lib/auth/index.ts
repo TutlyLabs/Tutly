@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/server/auth/client";
 import { headers } from "next/headers";
 import type { Course, Organization, Role, User } from "@prisma/client";
 import type { Session } from "better-auth";

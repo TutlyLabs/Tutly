@@ -1,40 +1,26 @@
-"use client";
-
-import { useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { api } from "@/trpc/react";
+import { redirect } from "next/navigation";
+import { api } from "@/trpc/server";
 import Report from "./_components/Report";
 
-export default function CourseReportPage() {
-  const router = useRouter();
-  const params = useParams<{ courseId: string }>();
-  const courseId = params.courseId;
+interface CourseReportPageProps {
+  params: Promise<{ courseId: string }>;
+}
 
-  const {
-    data: reportData,
-    isLoading,
-    error,
-  } = api.report.getReportPageData.useQuery(
-    { courseId: courseId! },
-    { enabled: !!courseId },
-  );
+export default async function CourseReportPage({
+  params,
+}: CourseReportPageProps) {
+  const { courseId } = await params;
 
-  useEffect(() => {
-    if (reportData?.success === false) {
-      if (reportData.redirectTo) {
-        router.push(reportData.redirectTo);
-      } else {
-        router.push("/404");
-      }
+  const reportData = await api.report.getReportPageData({
+    courseId,
+  });
+
+  if (reportData?.success === false) {
+    if (reportData.redirectTo) {
+      redirect(reportData.redirectTo);
+    } else {
+      redirect("/404");
     }
-  }, [reportData, router]);
-
-  if (isLoading) {
-    return <div>Loading report...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading report</div>;
   }
 
   if (!reportData?.success || !reportData.data) {

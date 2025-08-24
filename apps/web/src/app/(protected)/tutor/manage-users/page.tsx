@@ -1,31 +1,36 @@
-"use client";
-
-import { useSearchParams } from "next/navigation";
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 import UserPage from "./_components/UserPage";
 
-export default function ManageUsersPage() {
-  const searchParams = useSearchParams();
-  const search = searchParams.get("search") || undefined;
-  const sort = searchParams.get("sort") || "name";
-  const direction = searchParams.get("direction") || "asc";
-  const filter = searchParams.getAll("filter");
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "10");
+interface ManageUsersPageProps {
+  searchParams: Promise<{
+    search?: string;
+    sort?: string;
+    direction?: string;
+    filter?: string[];
+    page?: string;
+    limit?: string;
+  }>;
+}
 
-  const { data: manageUsersData, isLoading } =
-    api.users.getTutorManageUsersData.useQuery({
-      search,
-      sort,
-      direction,
-      filter,
-      page,
-      limit,
-    });
+export default async function ManageUsersPage({
+  searchParams,
+}: ManageUsersPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const search = resolvedSearchParams.search || undefined;
+  const sort = resolvedSearchParams.sort || "name";
+  const direction = resolvedSearchParams.direction || "asc";
+  const filter = resolvedSearchParams.filter || [];
+  const page = parseInt(resolvedSearchParams.page || "1");
+  const limit = parseInt(resolvedSearchParams.limit || "10");
 
-  if (isLoading) {
-    return <div>Loading users data...</div>;
-  }
+  const manageUsersData = await api.users.getTutorManageUsersData({
+    search,
+    sort,
+    direction,
+    filter,
+    page,
+    limit,
+  });
 
   if (!manageUsersData?.success || !manageUsersData.data) {
     return <div>Failed to load users data or access denied.</div>;

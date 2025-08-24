@@ -1,72 +1,57 @@
-"use client";
-
-import { useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { api } from "@/trpc/react";
+import { redirect } from "next/navigation";
+import { api } from "@/trpc/server";
 import { NOTIFICATION_HREF_MAP } from "@/components/Notifications";
 import type { causedObjects } from "@/components/Notifications";
 
-export default function NotificationRedirectPage() {
-  const router = useRouter();
-  const params = useParams<{ id: string }>();
-  const id = params.id;
+interface NotificationRedirectPageProps {
+  params: Promise<{ id: string }>;
+}
 
-  const {
-    data: notificationData,
-    isLoading,
-    error,
-  } = api.notifications.getNotificationRedirectData.useQuery(
-    { notificationId: id! },
-    { enabled: !!id },
-  );
+export default async function NotificationRedirectPage({
+  params,
+}: NotificationRedirectPageProps) {
+  try {
+    const { id: notificationId } = await params;
+    if (!notificationId) {
+      redirect("/notifications");
+    }
 
-  useEffect(() => {
+    const notificationData =
+      await api.notifications.getNotificationRedirectData({
+        notificationId,
+      });
+
     if (!notificationData?.success) {
-      if (error || notificationData?.error) {
-        router.push("/notifications");
-      }
-      return;
+      redirect("/notifications");
     }
 
     const { data } = notificationData;
 
     if (!data) {
-      router.push("/notifications");
-      return;
+      redirect("/notifications");
     }
 
     // Handle custom link redirect
     if (data.redirectUrl) {
-      router.push(data.redirectUrl);
-      return;
+      redirect(data.redirectUrl);
     }
 
     // Handle event-based redirect
     if (!data.eventType || !(data.eventType in NOTIFICATION_HREF_MAP)) {
-      router.push("/notifications");
-      return;
+      redirect("/notifications");
     }
 
     const getLinkFn =
       NOTIFICATION_HREF_MAP[
-      data.eventType as keyof typeof NOTIFICATION_HREF_MAP
+        data.eventType as keyof typeof NOTIFICATION_HREF_MAP
       ];
     if (!getLinkFn) {
-      router.push("/notifications");
-      return;
+      redirect("/notifications");
     }
 
     const redirectUrl = getLinkFn(data.causedObj as causedObjects);
-    router.push(redirectUrl);
-  }, [notificationData, error, router]);
-
-  if (isLoading) {
-    return <div>Loading notification...</div>;
+    redirect(redirectUrl);
+  } catch (error) {
+    redirect("/notifications");
   }
-
-  if (!id) {
-    return <div>Loading...</div>;
-  }
-
-  return null;
 }

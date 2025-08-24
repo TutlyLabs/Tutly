@@ -1,4 +1,4 @@
-import { type FileType } from "@tutly/api/schema";
+import { type FileType } from "@prisma/client";
 import {
   $isListNode,
   INSERT_CHECK_LIST_COMMAND,

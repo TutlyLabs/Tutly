@@ -18,7 +18,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/server/auth/client";
+import { setBearerToken } from "@/lib/auth-utils";
+import { SocialSignin } from "./SocialSignin";
+import { useFeatureFlags } from "./FeatureFlagsProvider";
 
 const signInSchema = z.object({
   email: z.string().min(1, "Username or email is required"),
@@ -30,7 +33,7 @@ type SignInInput = z.infer<typeof signInSchema>;
 export function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  // const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const { isGoogleSignInEnabled, isGithubSignInEnabled } = useFeatureFlags();
 
   const form = useForm<SignInInput>({
     resolver: zodResolver(signInSchema),
@@ -60,6 +63,16 @@ export function SignIn() {
       const result = await authClient.signIn.email({
         email: values.email,
         password: values.password,
+        rememberMe: true,
+        fetchOptions: {
+          onSuccess: (ctx) => {
+            const authToken = ctx.response.headers.get("set-auth-token");
+            if (authToken) {
+              setBearerToken(authToken);
+            }
+          },
+        },
+        callbackURL: "/dashboard",
       });
       if (result?.data?.user) {
         window.location.href = "/dashboard";
@@ -79,28 +92,6 @@ export function SignIn() {
       setIsLoading(false);
     }
   };
-
-  // const handleGoogleSignIn = async () => {
-  //   try {
-  //     setIsGoogleLoading(true);
-
-  //     const currentUrl = new URL(window.location.href);
-  //     const error = currentUrl.searchParams.get("error");
-
-  //     if (error) {
-  //       throw new Error(decodeURIComponent(error).replace(/\+/g, " "));
-  //     }
-
-  //     window.location.href = "/api/auth/signin/google";
-  //   } catch (error) {
-  //     toast.error(error instanceof Error ? error.message : "Failed to initiate Google sign in", {
-  //       duration: 3000,
-  //       position: "top-center",
-  //     });
-  //   } finally {
-  //     setIsGoogleLoading(false);
-  //   }
-  // };
 
   return (
     <div className="flex min-h-screen items-center justify-center p-2">
@@ -187,17 +178,11 @@ export function SignIn() {
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
-            {/* <div className="flex flex-col gap-3 mt-6">
-              <Button
-                variant="outline"
-                className="bg-white/20 hover:bg-white/30 dark:bg-gray-900/20 dark:hover:bg-gray-800/30 backdrop-blur-sm border-white/30 dark:border-gray-700/50 w-full"
-                onClick={handleGoogleSignIn}
-                disabled={isGoogleLoading || isLoading}
-              >
-                {isGoogleLoading && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
-                {isGoogleLoading ? "Connecting..." : "Sign in with Google"}
-              </Button>
-            </div> */}
+            <SocialSignin
+              isGoogleSignInEnabled={isGoogleSignInEnabled}
+              isGithubSignInEnabled={isGithubSignInEnabled}
+              isLoading={isLoading}
+            />
           </Form>
         </CardContent>
       </Card>

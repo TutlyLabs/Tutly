@@ -1,7 +1,4 @@
-"use client";
-
-import { useSearchParams } from "next/navigation";
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 import Playground from "../_components/Playground";
 
 type SandpackFile = {
@@ -15,19 +12,23 @@ type SandpackFiles = {
   [key: string]: SandpackFile;
 };
 
-export default function HtmlCssJsPlaygroundPage() {
-  const searchParams = useSearchParams();
-  const assignmentId = searchParams.get("assignmentId") || undefined;
-  const submissionId = searchParams.get("submissionId") || undefined;
+interface HtmlCssJsPlaygroundPageProps {
+  searchParams: Promise<{
+    assignmentId?: string;
+    submissionId?: string;
+  }>;
+}
 
-  const { data: submissionData, isLoading } =
-    api.submissions.getSubmissionForPlayground.useQuery(
-      { submissionId: submissionId! },
-      { enabled: !!submissionId },
-    );
+export default async function HtmlCssJsPlaygroundPage({
+  searchParams,
+}: HtmlCssJsPlaygroundPageProps) {
+  const { assignmentId, submissionId } = await searchParams;
 
-  if (isLoading) {
-    return <div>Loading playground...</div>;
+  let submissionData;
+  if (submissionId) {
+    submissionData = await api.submissions.getSubmissionForPlayground({
+      submissionId,
+    });
   }
 
   if (submissionId && (!submissionData?.success || !submissionData.data)) {

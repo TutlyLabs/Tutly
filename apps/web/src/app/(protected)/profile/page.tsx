@@ -1,11 +1,9 @@
-"use client";
-
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 import ProfilePage from "./_components/ProfilePage";
-import type { Profile } from "@tutly/api/schema";
+import type { Profile } from "@prisma/client";
 
-export default function Profile() {
-  const userProfile = api.users.getUserProfile.useQuery();
+export default async function Profile() {
+  const userProfile = await api.users.getUserProfile();
 
-  return <ProfilePage userProfile={userProfile.data} />;
+  return <ProfilePage userProfile={userProfile} />;
 }

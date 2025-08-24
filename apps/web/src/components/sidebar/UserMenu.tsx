@@ -29,7 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/server/auth/client";
 import { useRouter } from "next/navigation";
 
 interface UserMenuProps {

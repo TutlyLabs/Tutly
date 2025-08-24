@@ -55,6 +55,7 @@ interface Props {
     totalPages: number;
     pageSize: number;
   };
+  isSandboxSubmissionEnabled: boolean;
 }
 
 export default function AssignmentPage({
@@ -66,9 +67,12 @@ export default function AssignmentPage({
   username,
   mentors,
   pagination,
+  isSandboxSubmissionEnabled,
 }: Props) {
   const haveAdminAccess =
     currentUser && (currentUser.role === "INSTRUCTOR" || isCourseAdmin);
+  const isSandboxConfigured =
+    isSandboxSubmissionEnabled && assignment.sandboxTemplate !== null;
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -226,9 +230,21 @@ export default function AssignmentPage({
       </h1>
 
       <div className="my-4 flex items-center justify-between text-xs font-medium md:text-sm">
-        <p className="bg-secondary-500 rounded p-1 px-2 text-white">
-          # {assignment?.class?.course?.title}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="bg-secondary-500 rounded p-1 px-2 text-white">
+            # {assignment?.class?.course?.title}
+          </p>
+          {assignment?.class?.course && (
+            <a
+              href={`/courses/${assignment.class.course.id}/classes/${assignment.class.id}`}
+              className="rounded bg-blue-500 p-1 px-2 text-white transition hover:bg-blue-600"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {assignment.class.title}
+            </a>
+          )}
+        </div>
         <div className="flex items-center justify-center gap-4">
           {assignment?.dueDate != null && (
             <div
@@ -249,6 +265,20 @@ export default function AssignmentPage({
           <h1 className="rounded-md border p-1 text-sm">
             Max responses : {assignment?.maxSubmissions}
           </h1>
+          {haveAdminAccess && isSandboxSubmissionEnabled && (
+            <Button
+              asChild
+              className="rounded-md bg-blue-600 p-1 px-3 hover:bg-blue-700"
+            >
+              <a
+                href={`/playgrounds/sandbox?assignmentId=${assignment.id}&editTemplate=true`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {isSandboxConfigured ? "Update Sandbox" : "Configure Sandbox"}
+              </a>
+            </Button>
+          )}
           {haveAdminAccess && (
             <Dialog
               open={isEditClassDialogOpen}
@@ -307,6 +337,7 @@ export default function AssignmentPage({
           <StudentAssignmentSubmission
             courseId={assignment.courseId}
             assignment={assignment}
+            isSandboxConfigured={isSandboxConfigured}
           />
         ) : (
           <AdminAssignmentTable
@@ -335,6 +366,7 @@ export default function AssignmentPage({
             modal={modal}
             setModal={setModal}
             onSend={handleSend}
+            isSandboxConfigured={isSandboxConfigured}
           />
         )}
       </div>
@@ -353,9 +385,11 @@ export default function AssignmentPage({
 const StudentAssignmentSubmission = ({
   assignment,
   courseId,
+  isSandboxConfigured,
 }: {
   assignment: any;
   courseId: string;
+  isSandboxConfigured: boolean;
 }) => {
   const [externalLink, setExternalLink] = useState("");
   const router = useRouter();
@@ -393,7 +427,8 @@ const StudentAssignmentSubmission = ({
 
   const isMaxSubmissionsReached =
     assignment?.maxSubmissions <= assignment.submissions.length;
-  const isPlaygroundSubmission = assignment.submissionMode === "HTML_CSS_JS";
+  const isPlaygroundSubmission =
+    assignment.submissionMode === "HTML_CSS_JS" || isSandboxConfigured;
 
   return (
     <div className="space-y-6">
@@ -405,7 +440,7 @@ const StudentAssignmentSubmission = ({
         ) : isPlaygroundSubmission ? (
           <Button asChild>
             <a
-              href={`/playgrounds/html-css-js?assignmentId=${assignment.id}`}
+              href={`/playgrounds/${isSandboxConfigured ? "sandbox" : "html-css-js"}?assignmentId=${assignment.id}`}
               target="_blank"
             >
               {assignment?.submissions.length === 0
@@ -481,7 +516,7 @@ const StudentAssignmentSubmission = ({
                 0,
               );
               const submissionUrl = isPlaygroundSubmission
-                ? `/playgrounds/html-css-js?submissionId=${submission.id}`
+                ? `/playgrounds/sandbox?submissionId=${submission.id}`
                 : submission.submissionLink;
 
               return (
@@ -546,6 +581,7 @@ type AdminTableProps = {
   modal: boolean;
   setModal: (value: boolean) => void;
   onSend: (message: string) => void;
+  isSandboxConfigured: boolean;
 };
 
 const AdminAssignmentTable = ({
@@ -574,6 +610,7 @@ const AdminAssignmentTable = ({
   modal,
   setModal,
   onSend,
+  isSandboxConfigured,
 }: AdminTableProps) => {
   const router = useRouter();
   const messages = [
@@ -860,8 +897,9 @@ const AdminAssignmentTable = ({
                               <Button variant="ghost" size="icon" asChild>
                                 <a
                                   href={
-                                    assignment.submissionMode === "HTML_CSS_JS"
-                                      ? `/playgrounds/html-css-js?submissionId=${submission.id}`
+                                    assignment.submissionMode ===
+                                      "HTML_CSS_JS" || isSandboxConfigured
+                                      ? `/playgrounds/sandbox?submissionId=${submission.id}`
                                       : submission.submissionLink
                                   }
                                   target="_blank"

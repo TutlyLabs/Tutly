@@ -1,36 +1,17 @@
-"use client";
-
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { api } from "@/trpc/react";
+import { redirect } from "next/navigation";
+import { api } from "@/trpc/server";
 import NoDataFound from "@/components/NoDataFound";
 import SingleAssignmentBoard from "../_components/assignmentBoard";
 
-export default function GetByAssignmentPage() {
-  const router = useRouter();
+export default async function GetByAssignmentPage() {
+  const assignmentData = await api.assignments.getByAssignmentPageData();
 
-  const {
-    data: assignmentData,
-    isLoading,
-    error,
-  } = api.assignments.getByAssignmentPageData.useQuery();
-
-  useEffect(() => {
-    if (assignmentData?.success === false) {
-      if (assignmentData.redirectTo) {
-        router.push(assignmentData.redirectTo);
-      } else {
-        router.push("/assignments");
-      }
+  if (assignmentData?.success === false) {
+    if (assignmentData.redirectTo) {
+      redirect(assignmentData.redirectTo);
+    } else {
+      redirect("/assignments");
     }
-  }, [assignmentData, router]);
-
-  if (isLoading) {
-    return <div>Loading assignments...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading assignments</div>;
   }
 
   if (!assignmentData?.success || !assignmentData.data) {
@@ -51,10 +32,7 @@ export default function GetByAssignmentPage() {
             assignments={sortedAssignments}
           />
         ) : (
-          <NoDataFound
-            message="No Course found!"
-            additionalMessage="All quiet... even the books took a break!"
-          />
+          <NoDataFound message="No Course found!" />
         )}
       </div>
     </div>

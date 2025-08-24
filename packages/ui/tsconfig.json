@@ -1,10 +1,5 @@
 {
-  "extends": "@tutly/tsconfig/internal-package.json",
-  "compilerOptions": {
-    "lib": ["ES2022", "dom", "dom.iterable"],
-    "jsx": "preserve",
-    "rootDir": "."
-  },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+  "extends": "@tutly/typescript-config/react-library.json",
+  "include": ["."],
+  "exclude": ["dist", "build", "node_modules"]
 }

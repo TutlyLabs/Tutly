@@ -1,24 +1,14 @@
-"use client";
-
 import AssignmentBoard from "./_components/AssignmentBoard";
 import NoDataFound from "@/components/NoDataFound";
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 
-export default function AssignmentsPage() {
-  const { data: assignmentsData, isLoading } =
-    api.assignments.getAssignmentsPageData.useQuery();
-
-  if (isLoading) {
-    return <div>Loading assignments...</div>;
-  }
+export default async function AssignmentsPage() {
+  const assignmentsData = await api.assignments.getAssignmentsPageData();
 
   if (!assignmentsData?.success || !assignmentsData.data) {
     return (
       <div className="mt-20 p-4 text-center font-semibold">
-        <NoDataFound
-          message="No Assignments available"
-          additionalMessage="Assignment-free moment!"
-        />
+        <NoDataFound message="No Assignments available" />
       </div>
     );
   }
@@ -29,10 +19,7 @@ export default function AssignmentsPage() {
     <div className="mx-2 flex flex-col gap-4 px-2 py-2 md:px-6">
       {!courses || courses.length === 0 ? (
         <div className="mt-20 p-4 text-center font-semibold">
-          <NoDataFound
-            message="No Course available"
-            additionalMessage="Nothing to see here - the schedule's on vacation!"
-          />
+          <NoDataFound message="No Course available" />
         </div>
       ) : (
         <AssignmentBoard

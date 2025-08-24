@@ -1,15 +1,8 @@
-"use client";
-
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 import StudentCertificate from "./_components/StudentCertificate";
 
-export default function CertificatePage() {
-  const { data: certificateData, isLoading } =
-    api.certificates.getStudentCertificateData.useQuery();
-
-  if (isLoading) {
-    return <div>Loading certificate data...</div>;
-  }
+export default async function CertificatePage() {
+  const certificateData = await api.certificates.getStudentCertificateData();
 
   if (!certificateData?.success || !certificateData.data) {
     return <div>Failed to load certificate data or access denied.</div>;

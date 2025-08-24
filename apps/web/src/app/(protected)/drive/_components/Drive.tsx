@@ -1,6 +1,6 @@
 "use client";
 
-import type { File } from "@tutly/api/schema";
+import type { File } from "@prisma/client";
 import { formatDistanceToNow } from "date-fns";
 import { Download, FileText, Plus, Trash2 } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
@@ -12,11 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFileUpload } from "@/components/useFileUpload";
 import { api } from "@/trpc/react";
+import { useRouter } from "next/navigation";
 
 const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteReason, setDeleteReason] = useState("");
+  const router = useRouter();
 
   const { uploadFile } = useFileUpload({
     fileType: "OTHER",
@@ -55,7 +57,14 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
 
     const file = e.target.files[0];
     if (!file) return;
-    await uploadFile(file);
+    try {
+      await uploadFile(file);
+      toast.success("File uploaded successfully");
+    } catch (err) {
+      toast.error("Upload failed");
+      console.error("Upload error:", err);
+    }
+    router.refresh();
     setIsUploading(false);
   };
 
@@ -68,6 +77,7 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
       fileId,
       reason: deleteReason,
     });
+    router.refresh();
   };
 
   const fileTypes = ["ALL", "OTHER", "NOTES", "ATTACHMENT", "AVATAR"] as const;

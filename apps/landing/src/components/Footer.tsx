@@ -28,10 +28,26 @@ const defaultSections = [
 ];
 
 const defaultSocialLinks = [
-  { icon: <FaTwitter className="size-5" />, href: "https://x.com/tutlydotin", label: "Twitter" },
-  { icon: <FaTelegram className="size-5" />, href: "https://t.me/tutlydotin", label: "Telegram" },
-  { icon: <FaInstagram className="size-5" />, href: "https://www.instagram.com/tutlydotin", label: "Instagram" },
-  { icon: <FaLinkedinIn className="size-5" />, href: "https://www.linkedin.com/company/tutly/", label: "LinkedIn" },
+  {
+    icon: <FaTwitter className="size-5" />,
+    href: "https://x.com/tutlydotin",
+    label: "Twitter",
+  },
+  {
+    icon: <FaTelegram className="size-5" />,
+    href: "https://t.me/tutlydotin",
+    label: "Telegram",
+  },
+  {
+    icon: <FaInstagram className="size-5" />,
+    href: "https://www.instagram.com/tutlydotin",
+    label: "Instagram",
+  },
+  {
+    icon: <FaLinkedinIn className="size-5" />,
+    href: "https://www.linkedin.com/company/tutly/",
+    label: "LinkedIn",
+  },
 ];
 
 const defaultLegalLinks = [
@@ -49,12 +65,18 @@ export default function Footer() {
               <h2 className="text-3xl font-black sm:text-5xl">Tutly</h2>
             </div>
             <p className="max-w-[70%] text-sm text-gray-300 max-sm:hidden">
-              A cutting-edge Learning Management System (LMS) that revolutionizes education by providing powerful tools for course creation, student management, and performance analytics.
+              A cutting-edge Learning Management System (LMS) that
+              revolutionizes education by providing powerful tools for course
+              creation, student management, and performance analytics.
             </p>
             <ul className="flex items-center space-x-6 text-gray-300">
               {defaultSocialLinks.map((social, idx) => (
                 <li key={idx} className="font-medium hover:text-white">
-                  <a href={social.href} target="_blank" aria-label={social.label}>
+                  <a
+                    href={social.href}
+                    target="_blank"
+                    aria-label={social.label}
+                  >
                     {social.icon}
                   </a>
                 </li>
@@ -64,7 +86,9 @@ export default function Footer() {
           <div className="grid w-full gap-6 md:grid-cols-3 lg:gap-12">
             {defaultSections.map((section, sectionIdx) => (
               <div key={sectionIdx}>
-                <h3 className="mb-3 font-semibold text-white">{section.title}</h3>
+                <h3 className="mb-3 font-semibold text-white">
+                  {section.title}
+                </h3>
                 <ul className="space-y-2 text-sm text-gray-300">
                   {section.links.map((link, linkIdx) => (
                     <li key={linkIdx} className="font-medium hover:text-white">
@@ -77,7 +101,9 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-6 flex flex-col justify-between gap-4 border-t border-gray-700 py-6 text-xs font-medium text-gray-300 md:flex-row md:items-center md:text-left">
-          <p className="order-2 lg:order-1">Copyright ©2025 Tutly. All rights reserved.</p>
+          <p className="order-2 lg:order-1">
+            Copyright ©2025 Tutly. All rights reserved.
+          </p>
           <ul className="order-1 flex flex-col gap-2 md:order-2 md:flex-row">
             {defaultLegalLinks.map((link, idx) => (
               <li key={idx} className="hover:text-white">

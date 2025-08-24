@@ -1,6 +1,6 @@
 "use client";
 
-import { FileType } from "@tutly/api/schema";
+import { FileType } from "@prisma/client";
 import axios from "axios";
 import imageCompression from "browser-image-compression";
 import { useState } from "react";

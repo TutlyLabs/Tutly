@@ -1,15 +1,8 @@
-"use client";
-
 import Community from "./_components/CommunityPage";
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 
-export default function CommunityPage() {
-  const { data: doubtsData, isLoading } =
-    api.doubts.getEnrolledCoursesDoubts.useQuery();
-
-  if (isLoading) {
-    return <div>Loading community data...</div>;
-  }
+export default async function CommunityPage() {
+  const doubtsData = await api.doubts.getEnrolledCoursesDoubts();
 
   if (!doubtsData?.success || !doubtsData.data) {
     return <div>No community data available</div>;

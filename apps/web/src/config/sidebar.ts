@@ -1,12 +1,14 @@
-import type { Role } from "@tutly/api/schema";
+import type { Role } from "@prisma/client";
 import {
   BarChart,
   Bookmark,
+  Brain,
   Calendar,
   ClipboardList,
   GraduationCap,
   HardDrive,
   Home,
+  Plug,
   Terminal,
   Users,
   Users2,
@@ -382,22 +384,47 @@ const StudentItems = [
 export function getDefaultSidebarItems({
   role,
   isAdmin = false,
+  isIntegrationsEnabled = false,
+  isAIAssistantEnabled = false,
 }: {
   role: Role;
   isAdmin?: boolean;
+  isIntegrationsEnabled?: boolean;
+  isAIAssistantEnabled?: boolean;
 }): SidebarItem[] {
-  switch (role) {
-    case "INSTRUCTOR":
-      if (isAdmin) {
-        return AdminItems as SidebarItem[];
-      } else {
-        return InstructorItems as SidebarItem[];
-      }
-    case "MENTOR":
-      return MentorItems as SidebarItem[];
-    case "STUDENT":
-      return StudentItems as SidebarItem[];
-    default:
-      return [];
+  let items: SidebarItem[] = [];
+  if (role === "INSTRUCTOR") {
+    if (isAdmin) {
+      items = AdminItems as SidebarItem[];
+    } else {
+      items = InstructorItems as SidebarItem[];
+    }
+  } else if (role === "MENTOR") {
+    items = MentorItems as SidebarItem[];
+  } else if (role === "STUDENT") {
+    items = StudentItems as SidebarItem[];
+  } else {
+    items = [];
   }
+  if (isIntegrationsEnabled) {
+    items = [
+      ...items,
+      {
+        title: "Integrations",
+        url: "/integrations",
+        icon: Plug,
+      },
+    ];
+  }
+  if (isAIAssistantEnabled) {
+    items = [
+      ...items,
+      {
+        title: "AI Assistant",
+        url: "/ai",
+        icon: Brain,
+      },
+    ];
+  }
+  return items;
 }

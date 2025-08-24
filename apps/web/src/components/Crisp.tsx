@@ -1,20 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
+import { useLayout } from "@/providers/layout-provider";
 
 interface CrispProps {
   user?: {
     email: string;
     name: string;
-    image: string;
-    role: string;
+    image: string | null;
+    role: { name: string } | string;
     id: string;
     username: string;
-    mobile: string;
+    mobile: string | null;
   };
   organization?: {
     orgCode: string;
-  };
+  } | null;
 }
 
 type CrispCommand = [string, ...unknown[]];
@@ -27,6 +28,8 @@ declare global {
 }
 
 export default function Crisp({ user, organization }: CrispProps) {
+  const { hideCrisp } = useLayout();
+
   useEffect(() => {
     window.$crisp = [];
     window.CRISP_WEBSITE_ID = "b1db5fec-2104-4c63-a771-59dcdcd17215";
@@ -40,11 +43,17 @@ export default function Crisp({ user, organization }: CrispProps) {
       if (user) {
         window.$crisp.push(["set", "user:email", user.email]);
         window.$crisp.push(["set", "user:nickname", user.name]);
-        window.$crisp.push(["set", "user:avatar", user.image]);
-        window.$crisp.push(["set", "user:role", user.role]);
+        if (user.image) {
+          window.$crisp.push(["set", "user:avatar", user.image]);
+        }
+        const roleName =
+          typeof user.role === "string" ? user.role : user.role.name;
+        window.$crisp.push(["set", "user:role", roleName]);
         window.$crisp.push(["set", "user:id", user.id]);
         window.$crisp.push(["set", "user:username", user.username]);
-        window.$crisp.push(["set", "user:mobile", user.mobile]);
+        if (user.mobile) {
+          window.$crisp.push(["set", "user:mobile", user.mobile]);
+        }
         if (organization) {
           window.$crisp.push([
             "set",
@@ -59,6 +68,10 @@ export default function Crisp({ user, organization }: CrispProps) {
       script.remove();
     };
   }, [user, organization]);
+
+  if (hideCrisp) {
+    return null;
+  }
 
   return null;
 }

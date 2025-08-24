@@ -1,7 +1,7 @@
 "use client";
 
-import type { Attachment, Class, Notes, Video } from "@tutly/api/schema";
-import { FileType } from "@tutly/api/schema";
+import type { Attachment } from "@prisma/client";
+import { FileType } from "@prisma/client";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -22,7 +22,6 @@ import { useDebounce } from "use-debounce";
 
 import VideoPlayer from "./videoEmbeds/VideoPlayer";
 import RichTextEditor from "@/components/editor/RichTextEditor";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +51,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { api } from "@/trpc/react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import EditClassDialog from "./EditClassDialog";
 import NewAttachmentPage from "./NewAssignments";
@@ -147,7 +147,48 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
 
   if (!classDetails?.data) {
     return (
-      <div className="flex items-center justify-center p-8">Loading...</div>
+      <div className="flex flex-col gap-2 md:m-5">
+        {/* Class Header */}
+        <div className="flex flex-wrap gap-6">
+          <div className="flex-1">
+            <div className="h-full w-full rounded-xl p-2">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-8 w-64" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+                <Skeleton className="aspect-video w-full rounded-xl" />
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full pb-4 md:m-0 md:w-96">
+            <div className="h-full w-full rounded-xl p-2">
+              <div className="space-y-4">
+                <div className="flex justify-end">
+                  <Skeleton className="h-10 w-40" />
+                </div>
+                <div className="space-y-3">
+                  <Skeleton className="h-10 w-full" />
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center space-x-4">
+                      <Skeleton className="h-16 w-full" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Notes Section */}
+        <div className="w-full rounded-xl bg-transparent p-4 shadow-lg">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      </div>
     );
   }
 

@@ -164,14 +164,7 @@ export default function MobileResponsiveStudentAssignments({
         {filteredAssignments.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <NoDataFound
-                message="No Assignments Found"
-                additionalMessage={
-                  filterOption === "all"
-                    ? "No assignments available for this course."
-                    : `No ${filterOption.replace("-", " ")} assignments found.`
-                }
-              ></NoDataFound>
+              <NoDataFound message="No Assignments Found"></NoDataFound>
             </CardContent>
           </Card>
         ) : (

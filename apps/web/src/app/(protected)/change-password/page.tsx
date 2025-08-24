@@ -1,15 +1,8 @@
-"use client";
-
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 import ChangePassword from "@/app/(protected)/profile/_components/ChangePassword";
 
-export default function ChangePasswordPage() {
-  const { data: passwordData, isLoading } =
-    api.users.checkUserPassword.useQuery();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+export default async function ChangePasswordPage() {
+  const passwordData = await api.users.checkUserPassword();
 
   if (!passwordData?.success || !passwordData.data) {
     return <div>Failed to load user data.</div>;

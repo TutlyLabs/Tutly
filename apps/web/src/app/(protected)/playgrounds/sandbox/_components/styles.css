@@ -1,0 +1,236 @@
+:root {
+  --sp-layout-height: 95vh;
+}
+
+.sp-wrapper {
+  height: 100% !important;
+}
+
+.sp-console-wrapper {
+  overflow-y: auto !important;
+  max-height: 100% !important;
+  background: linear-gradient(
+    180deg,
+    rgba(35, 35, 35, 1) 0%,
+    rgba(25, 25, 25, 1) 50%,
+    rgba(20, 20, 20, 1) 100%
+  ) !important;
+  backdrop-filter: blur(12px) !important;
+}
+.sp-console-item {
+  padding: 6px 12px !important;
+  line-height: 1.4 !important;
+  margin-bottom: 1px !important;
+  border-radius: 6px !important;
+  background: rgba(40, 40, 40, 0.6) !important;
+  margin: 2px 4px !important;
+  border: 1px solid rgba(60, 60, 60, 0.8) !important;
+  color: #ffffff !important;
+}
+.sp-console-item .sp-console-icon {
+  margin-right: 8px !important;
+}
+.sp-layout {
+  background: transparent !important;
+}
+.sp-code-editor {
+  background: rgba(0, 0, 0, 1) !important;
+  backdrop-filter: blur(12px) !important;
+}
+.sp-preview-container {
+  background: rgba(0, 0, 0, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  border-radius: 8px !important;
+}
+
+.sp-tabs-scrollable-container {
+  background: linear-gradient(
+    -90deg,
+    rgba(35, 35, 35, 1) 0%,
+    rgba(25, 25, 25, 1) 50%,
+    rgba(20, 20, 20, 1) 100%
+  ) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(100, 100, 100, 0.2) !important;
+}
+
+/* File Explorer Width Overrides */
+.file-explorer > div,
+.file-explorer li > div {
+  min-width: 100% !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+.sp-test-spec-error {
+  display: none !important;
+}
+
+.hide-test-details .sp-test-spec-error {
+  display: none !important;
+}
+
+.show-test-details .sp-test-spec-error {
+  display: block !important;
+}
+
+/* Style the built-in file explorer header */
+.file-explorer div[style*="min-height: 40px"] {
+  padding: 12px !important;
+  height: 44px !important;
+  border-bottom: 1px solid rgba(60, 60, 60, 0.4) !important;
+  backdrop-filter: blur(12px) !important;
+  background: linear-gradient(
+    90deg,
+    rgba(10, 10, 10, 0.98) 0%,
+    rgba(25, 25, 25, 0.95) 100%
+  ) !important;
+  margin: 0 !important;
+}
+
+.file-explorer div[style*="min-height: 40px"] > span {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.file-explorer div[style*="min-height: 40px"] > span::before {
+  content: "" !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background-color: #10b981 !important;
+  box-shadow: 0 0 4px rgba(16, 185, 129, 0.5) !important;
+  margin-right: 8px !important;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.file-explorer > div > div {
+  padding: 0 !important;
+}
+.file-explorer > div > div > ul {
+  padding: 8px !important;
+}
+
+.file-explorer [style*="min-width: 16px"][style*="min-height: 16px"] {
+  margin-right: 4px !important;
+}
+
+.file-explorer > div span {
+  margin-left: 4px !important;
+}
+
+.file-explorer input {
+  margin-left: 12px !important;
+  padding: 2px 6px !important;
+}
+
+/* Hide close button by default, show on hover */
+.file-explorer li > div button {
+  opacity: 0 !important;
+  transition: opacity 0.2s ease !important;
+  position: relative !important;
+}
+
+.file-explorer li > div:hover button {
+  opacity: 1 !important;
+}
+
+/* Replace cross icon with a different icon */
+.file-explorer li > div button svg {
+  display: none !important;
+}
+
+.file-explorer li > div button::after {
+  content: "" !important;
+  width: 16px !important;
+  height: 16px !important;
+  background-image: url("data:image/svg+xml,%3Csvg fill='%23a1a0a7' height='16' viewBox='0 0 16 16' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 1.152l.557 10.748A2 2 0 0 0 5.046 16h5.908a2 2 0 0 0 1.993-1.6l.557-10.748a.58.58 0 0 0-.01-1.152H11ZM9 5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0v-6Zm-3 0a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0v-6Z'/%3E%3C/svg%3E") !important;
+  background-size: 16px 16px !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  display: block !important;
+  transition: opacity 0.2s ease !important;
+}
+
+.file-explorer li > div button:hover::after {
+  background-image: url("data:image/svg+xml,%3Csvg fill='%23ff666b' height='16' viewBox='0 0 16 16' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 1.152l.557 10.748A2 2 0 0 0 5.046 16h5.908a2 2 0 0 0 1.993-1.6l.557-10.748a.58.58 0 0 0-.01-1.152H11ZM9 5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0v-6Zm-3 0a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0v-6Z'/%3E%3C/svg%3E") !important;
+}
+
+/* Hide entry label */
+.file-explorer li > div > span:nth-child(2) {
+  opacity: 0 !important;
+}
+
+/* Add left padding to folders and mask the [+]/[-] */
+.file-explorer li > div > span[style*="cursor: pointer"] {
+  padding-left: 4px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.file-explorer li > div > span[style*="cursor: pointer"] > svg {
+  margin-right: 8px !important;
+}
+
+/* Mask to hide [+]/[-] characters from the right side */
+.file-explorer li > div > span[style*="cursor: pointer"]::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 18px !important;
+  background: var(--sp-colors-surface1, #161618) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* File Explorer Item Styling */
+.sp-file-explorer * {
+  color: #f3f3f3 !important;
+}
+
+.sp-tab-button {
+  color: #888888 !important;
+  border-bottom: 2px solid transparent !important;
+  font-family:
+    "SF Pro Text",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.01em !important;
+}
+.sp-tab-button[data-active="true"] {
+  color: #ffffff !important;
+  border-bottom-color: #2fc8ee !important;
+  font-weight: 600 !important;
+}
+.sp-tab-button:hover {
+  color: #cccccc !important;
+}
+
+.cm-gutterElement {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+.cm-content.cm-lineWrapping {
+  padding: 0 6px !important;
+}

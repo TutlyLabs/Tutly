@@ -5,6 +5,7 @@ import { PiStudentBold } from "react-icons/pi";
 import { SiTicktick } from "react-icons/si";
 
 import { api } from "@/trpc/react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Props {
   selectedCourse: string;
@@ -15,7 +16,20 @@ export function MentorCards({ selectedCourse }: Props) {
     api.dashboard.getMentorDashboardData.useQuery();
 
   if (isLoading) {
-    return <div>Loading mentor data...</div>;
+    return (
+      <div className="mb-10 flex flex-wrap justify-center gap-4">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="w-80 rounded-md bg-white p-2 text-gray-900 shadow-xl"
+          >
+            <Skeleton className="mx-auto h-24 w-24 rounded-md" />
+            <Skeleton className="mx-auto mt-2 h-8 w-16" />
+            <Skeleton className="mx-auto mt-1 h-4 w-32" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (!mentorDataResponse?.success || !mentorDataResponse.data) {

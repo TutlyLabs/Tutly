@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/trpc/react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Props {
   selectedCourse: string;
@@ -35,7 +36,9 @@ export default function CourseSelector({
 
   if (isLoading) {
     return (
-      <div className="text-base font-medium text-white">Loading courses...</div>
+      <div className="text-base font-medium text-white">
+        <Skeleton className="h-8 w-32 bg-white" />
+      </div>
     );
   }
 

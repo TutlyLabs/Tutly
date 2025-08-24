@@ -1,15 +1,8 @@
-"use client";
-
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 import Sessions from "./_components/Sessions";
 
-export default function SessionsPage() {
-  const { data: sessionsData, isLoading } =
-    api.users.getUserSessions.useQuery();
-
-  if (isLoading) {
-    return <div>Loading sessions...</div>;
-  }
+export default async function SessionsPage() {
+  const sessionsData = await api.users.getUserSessions();
 
   if (!sessionsData?.success || !sessionsData.data) {
     return <div>Failed to load sessions data.</div>;
