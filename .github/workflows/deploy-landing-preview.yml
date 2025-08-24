@@ -42,7 +42,7 @@ jobs:
           pnpm install --frozen-lockfile --filter=landing
 
       - name: Install Vercel CLI
-        run: pnpm add -D vercel@latest
+        run: pnpm add -D vercel@33.2.0
 
       - name: Verify Next.js installation
         run: |

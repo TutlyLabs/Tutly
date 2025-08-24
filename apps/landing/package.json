@@ -14,8 +14,7 @@
     "framer-motion": "^12.6.5",
     "next": "^15.2.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "styled-jsx": "^5.1.2"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
