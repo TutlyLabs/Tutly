@@ -15,6 +15,10 @@ on:
       - "pnpm-lock.yaml"
       - "turbo.json"
 
+permissions:
+  issues: write
+  pull-requests: write
+
 jobs:
   Deploy-Landing-Preview:
     runs-on: ubuntu-latest
@@ -33,22 +37,35 @@ jobs:
           version: "10.6.3"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --filter=landing
 
       - name: Install Vercel CLI
-        run: npm install --global vercel@latest
+        run: pnpm add -D vercel@latest
+
+      - name: Verify Next.js installation
+        run: |
+          echo "Checking Next.js installation..."
+          pnpm list next
+          pnpm exec next --version
 
       - name: Build Landing App with Turbo
         run: |
-          pnpm turbo build --filter=landing
+          echo "Building landing app with Turbo..."
+          pnpm turbo build --filter=landing --verbose
+          echo "Turbo build completed"
 
       - name: Verify Build Output
         run: |
+          echo "Checking build output..."
+          ls -la apps/landing/
           if [ ! -d "apps/landing/.next" ]; then
             echo "❌ Build failed: .next directory not found"
             exit 1
           fi
           echo "✅ Build successful"
+          echo "Build output size: $(du -sh apps/landing/.next)"
 
       - name: Deploy to Vercel Preview
         id: deploy
@@ -56,11 +73,13 @@ jobs:
           echo "🚀 Deploying to Vercel..."
           cd apps/landing
           # Pull Vercel settings for this app
-          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          # Build for Vercel deployment
-          vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          pnpm vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          # Build for Vercel deployment using pnpm
+          echo "Building for Vercel deployment..."
+          pnpm vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          echo "Vercel build completed"
           # Deploy the built output
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          DEPLOYMENT_URL=$(pnpm vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
 
           if [ $? -eq 0 ]; then
             echo "✅ Deployment successful: $DEPLOYMENT_URL"

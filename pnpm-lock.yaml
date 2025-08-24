@@ -26,6 +26,9 @@ importers:
       prettier:
         specifier: 3.5.3
         version: 3.5.3
+      styled-jsx:
+        specifier: ^5.1.2
+        version: 5.1.6(react@19.0.0)
       turbo:
         specifier: ^2.4.4
         version: 2.4.4
@@ -125,6 +128,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.0.0(react@19.0.0)
+      styled-jsx:
+        specifier: ^5.1.2
+        version: 5.1.6(react@19.0.0)
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.3.1
@@ -381,6 +387,9 @@ importers:
       sonner:
         specifier: ^2.0.1
         version: 2.0.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      styled-jsx:
+        specifier: ^5.1.2
+        version: 5.1.6(react@19.0.0)
       superjson:
         specifier: 2.2.2
         version: 2.2.2
