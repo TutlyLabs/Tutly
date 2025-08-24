@@ -52,20 +52,15 @@ jobs:
 
       - name: Build Web App with Turbo
         run: |
-          echo "Building web app with Turbo..."
-          pnpm turbo build --filter=web --verbose
-          echo "Turbo build completed"
+          pnpm turbo build --filter=web
 
       - name: Verify Build Output
         run: |
-          echo "Checking build output..."
-          ls -la apps/web/
           if [ ! -d "apps/web/.next" ]; then
             echo "❌ Build failed: .next directory not found"
             exit 1
           fi
           echo "✅ Build successful"
-          echo "Build output size: $(du -sh apps/web/.next)"
 
       - name: Deploy to Vercel Preview
         id: deploy
@@ -75,9 +70,7 @@ jobs:
           # Pull Vercel settings for this app
           vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
           # Build for Vercel deployment
-          echo "Building for Vercel deployment..."
           vercel build --token=${{ secrets.VERCEL_TOKEN }}
-          echo "Vercel build completed"
           # Deploy the built output
           DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
 
