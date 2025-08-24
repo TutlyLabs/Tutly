@@ -39,10 +39,12 @@ function Navbar() {
               alt="logo"
             />
             <div>
-              <h1 className="text-xl sm:text-2xl text-white font-extrabold">Tutly</h1>
+              <h1 className="text-xl font-extrabold text-white sm:text-2xl">
+                Tutly
+              </h1>
             </div>
           </Link>
-          <div className="hidden lg:flex items-center gap-12">
+          <div className="hidden items-center gap-12 lg:flex">
             {links.map((link) => (
               <Link
                 key={link.name}
@@ -55,12 +57,16 @@ function Navbar() {
           </div>
         </div>
         <div className="flex items-center gap-3 sm:gap-6">
-          <Link href="https://learn.tutly.in" target="_blank" className="text-sm sm:text-base">
+          <Link
+            href="https://learn.tutly.in"
+            target="_blank"
+            className="text-sm sm:text-base"
+          >
             Login
           </Link>
           <Link
             href="mailto:sales@tutly.in"
-            className="animate-shimmer items-center justify-center rounded-full border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] p-1 px-2 text-xs sm:text-sm font-medium text-slate-400 transition-colors focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 focus:outline-none"
+            className="animate-shimmer items-center justify-center rounded-full border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] p-1 px-2 text-xs font-medium text-slate-400 transition-colors focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 focus:outline-none sm:text-sm"
           >
             Contact Us
           </Link>

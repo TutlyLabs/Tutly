@@ -43,6 +43,7 @@ import ProfessionalProfiles from "@/app/(protected)/profile/_components/Professi
 import { api } from "@/trpc/react";
 
 import Component from "./charts";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Assignment {
   id: string;
@@ -95,6 +96,10 @@ const AssignmentTable = ({
 }: {
   searchFilteredAssignments: (Assignment & { status: string })[];
 }) => {
+  const handleAssignmentClick = (assignmentId: string) => {
+    window.location.href = `/assignments/${assignmentId}`;
+  };
+
   return (
     <ScrollArea className="h-[310px] overflow-y-auto">
       <Table>
@@ -107,8 +112,12 @@ const AssignmentTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {searchFilteredAssignments.map((assignment) => (
-            <TableRow key={assignment.id} className="cursor-pointer text-left">
+          {searchFilteredAssignments.map((assignment: any) => (
+            <TableRow
+              key={assignment.id}
+              className="cursor-pointer text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => handleAssignmentClick(assignment.id)}
+            >
               <TableCell>
                 <Badge
                   variant={
@@ -120,12 +129,12 @@ const AssignmentTable = ({
                   {assignment.status}
                 </Badge>
               </TableCell>
-              <TableCell>{assignment.title}</TableCell>
-              <TableCell>{assignment.submissions?.length ?? 0}</TableCell>
+              <TableCell className="font-medium">{assignment.title}</TableCell>
+              <TableCell>{assignment.submissions?.length || 0}</TableCell>
               <TableCell>
                 {assignment.submissions?.reduce(
-                  (total, submission) =>
-                    total + (submission.points?.[0]?.score ?? 0),
+                  (total: any, submission: any) =>
+                    total + (submission.points?.[0]?.score || 0),
                   0,
                 )}
               </TableCell>
@@ -378,12 +387,12 @@ const PlatformScores = () => {
   if (isLoading) {
     return (
       <div className="flex animate-pulse flex-col gap-4">
-        <div className="mx-auto h-48 w-48 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+        <Skeleton className="mx-auto h-48 w-48 rounded-full" />
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center gap-2">
-              <div className="h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-              <div className="h-4 flex-1 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <Skeleton className="h-4 w-4 rounded-full" />
+              <Skeleton className="h-4 flex-1 rounded" />
             </div>
           ))}
         </div>
@@ -401,7 +410,59 @@ export function StudentCards({ selectedCourse }: Props) {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   if (isLoading) {
-    return <div>Loading student data...</div>;
+    return (
+      <div className="space-y-6">
+        {/* Stats Cards */}
+        <div className="mb-6 flex flex-wrap justify-center gap-4 md:mb-10 md:gap-10">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="flex w-full flex-col items-center rounded-md bg-white p-4 text-gray-900 shadow-xl sm:w-80 sm:flex-row"
+            >
+              <Skeleton className="flex h-20 w-20 items-center justify-center rounded-md" />
+              <div className="text-center sm:ml-4">
+                <Skeleton className="mt-3 h-8 w-16" />
+                <Skeleton className="mt-1 h-4 w-32" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Assignments Table */}
+        <div className="flex flex-col gap-4 lg:flex-row">
+          <div className="mb-3 w-full lg:w-2/3">
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-48" />
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full pb-3 lg:w-1/3">
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          </div>
+        </div>
+
+        {/* Charts */}
+        <div className="mb-3 flex flex-col justify-around gap-3 md:flex-row">
+          <div className="flex-1">
+            <Skeleton className="h-64 w-full" />
+          </div>
+          <div className="flex-1">
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!studentDataResponse?.success || !studentDataResponse.data) {

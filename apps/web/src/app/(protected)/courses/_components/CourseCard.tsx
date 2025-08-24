@@ -35,7 +35,7 @@ export default function CourseCard({ course, currentUser }: any) {
       >
         <div className="relative h-full w-full">
           <Image
-            src={course.image ?? "/new-course-placeholder.jpg"}
+            src={course.image || "/new-course-placeholder.jpg"}
             alt={course.title}
             className="h-full w-full object-cover"
             width={280}

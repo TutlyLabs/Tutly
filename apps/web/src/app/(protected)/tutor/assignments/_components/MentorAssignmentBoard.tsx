@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { Course, User } from "@tutly/api/schema";
+import type { Course, User } from "@prisma/client";
 
 import NoDataFound from "@/components/NoDataFound";
 import { Input } from "@/components/ui/input";
@@ -208,10 +208,7 @@ const MentorAssignmentBoard = ({
             </div>
           ))
       ) : (
-        <NoDataFound
-          message="No students found!"
-          additionalMessage="Students? Never heard of 'em!"
-        />
+        <NoDataFound message="No students found!" />
       )}
     </div>
   );

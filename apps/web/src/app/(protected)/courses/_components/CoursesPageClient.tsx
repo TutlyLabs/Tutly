@@ -1,6 +1,6 @@
 "use client";
 
-import type { Course } from "@tutly/api/schema";
+import type { Course } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import type { SessionUser } from "@/lib/auth";
 
@@ -34,7 +34,10 @@ export default function CoursesPageClient({ user }: { user: SessionUser }) {
             {user.role === "INSTRUCTOR" && !user.isAdmin ? (
               <AddCourse />
             ) : (
-              <NoDataFound message="No courses found!" />
+              <NoDataFound
+                message="No courses found!"
+                className="flex h-[80vh] w-[80vw] flex-col items-center justify-center"
+              />
             )}
           </div>
         )}

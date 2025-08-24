@@ -16,6 +16,7 @@ interface ResizablePanelLayoutProps {
   submissionId?: string;
   username?: string;
   submission: any;
+  submissionMode: any;
 }
 
 const ResizablePanelLayout = ({
@@ -25,6 +26,7 @@ const ResizablePanelLayout = ({
   submissionId,
   username,
   submission,
+  submissionMode,
 }: ResizablePanelLayoutProps) => {
   return (
     <ResizablePanelGroup direction="horizontal" className="max-h-[95vh] w-full">
@@ -39,7 +41,12 @@ const ResizablePanelLayout = ({
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel defaultSize={85}>
-        <PlaygroundPage submission={submission} />
+        <PlaygroundPage
+          submission={submission}
+          submissionMode={submissionMode}
+          assignment={assignment}
+          showActions
+        />
       </ResizablePanel>
     </ResizablePanelGroup>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import type { Profile, User } from "@tutly/api/schema";
+import type { Profile, User } from "@prisma/client";
 import { useState } from "react";
 import { toast } from "sonner";
 

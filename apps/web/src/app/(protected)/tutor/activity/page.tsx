@@ -1,27 +1,30 @@
-"use client";
-
-import { useSearchParams } from "next/navigation";
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 import UserCards from "./_components/UserCards";
 
-export default function ActivityPage() {
-  const searchParams = useSearchParams();
-  const search = searchParams.get("search") || undefined;
-  const filter = searchParams.getAll("filter");
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "10");
+interface ActivityPageProps {
+  searchParams: Promise<{
+    search?: string;
+    filter?: string[];
+    page?: string;
+    limit?: string;
+  }>;
+}
 
-  const { data: activityData, isLoading } =
-    api.users.getTutorActivityData.useQuery({
-      search,
-      filter,
-      page,
-      limit,
-    });
+export default async function ActivityPage({
+  searchParams,
+}: ActivityPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const search = resolvedSearchParams.search || undefined;
+  const filter = resolvedSearchParams.filter || [];
+  const page = parseInt(resolvedSearchParams.page || "1");
+  const limit = parseInt(resolvedSearchParams.limit || "10");
 
-  if (isLoading) {
-    return <div>Loading activity data...</div>;
-  }
+  const activityData = await api.users.getTutorActivityData({
+    search,
+    filter,
+    page,
+    limit,
+  });
 
   if (!activityData?.success || !activityData.data) {
     return <div>Failed to load activity data or access denied.</div>;

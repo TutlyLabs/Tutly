@@ -3,16 +3,18 @@ import { AppSidebar } from "@/components/sidebar/AppSidebar";
 import { AppHeader } from "@/components/sidebar/AppHeader";
 import posthog from "posthog-js";
 import { getServerSessionOrRedirect } from "@/lib/auth";
+import { posthog as posthogServer } from "@/lib/posthog";
+import { LayoutProvider } from "@/providers/layout-provider";
+import { LayoutContent } from "@/components/LayoutContent";
+import Crisp from "@/components/Crisp";
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
   title?: string;
-  forceClose?: boolean;
 }
 
 export default async function ProtectedLayout({
   children,
-  forceClose = false,
 }: ProtectedLayoutProps) {
   const session = await getServerSessionOrRedirect();
 
@@ -23,15 +25,32 @@ export default async function ProtectedLayout({
     });
   }
 
+  const isIntegrationsEnabled = await posthogServer.isFeatureEnabled(
+    "integrations_tab",
+    session.user.id,
+  );
+
+  const isAIAssistantEnabled = await posthogServer.isFeatureEnabled(
+    "ai_assistant",
+    session.user.id,
+  );
+
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <div>
-        <AppSidebar user={session.user} forceClose={forceClose} />
+    <LayoutProvider>
+      <div className="flex h-screen w-full overflow-hidden">
+        <div>
+          <AppSidebar
+            user={session.user}
+            isIntegrationsEnabled={isIntegrationsEnabled}
+            isAIAssistantEnabled={isAIAssistantEnabled}
+          />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 ease-in-out">
+          <AppHeader user={session.user} />
+          <LayoutContent>{children}</LayoutContent>
+        </div>
       </div>
-      <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 ease-in-out">
-        <AppHeader user={session.user} />
-        <main className="flex-1 overflow-auto p-4">{children}</main>
-      </div>
-    </div>
+      <Crisp user={session.user} organization={session.user.organization} />
+    </LayoutProvider>
   );
 }

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { IoCloudUploadOutline } from "react-icons/io5";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FileData {
   path: string;
@@ -201,8 +202,10 @@ const FolderUpload = ({
       {isLoading && (
         <div className="bg-opacity/50 fixed inset-0 z-50 flex items-center justify-center bg-black">
           <div className="rounded-lg bg-white p-6 shadow-xl">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-indigo-500"></div>
-            <p className="mt-4 font-semibold text-blue-600">Loading files...</p>
+            <div className="space-y-4">
+              <Skeleton className="mx-auto h-12 w-12 rounded-full" />
+              <Skeleton className="h-4 w-32" />
+            </div>
           </div>
         </div>
       )}

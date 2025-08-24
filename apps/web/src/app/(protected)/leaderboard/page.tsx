@@ -1,15 +1,8 @@
-"use client";
-
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 import Leaderboard from "./_components/leaderboard";
 
-export default function LeaderboardPage() {
-  const { data: leaderboardData, isLoading } =
-    api.leaderboard.getLeaderboardData.useQuery();
-
-  if (isLoading) {
-    return <div>Loading leaderboard...</div>;
-  }
+export default async function LeaderboardPage() {
+  const leaderboardData = await api.leaderboard.getLeaderboardData();
 
   if (!leaderboardData?.success || !leaderboardData.data) {
     return <div>Failed to load leaderboard data.</div>;

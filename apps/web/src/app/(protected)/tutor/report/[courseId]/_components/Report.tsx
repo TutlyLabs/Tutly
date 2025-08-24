@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import day from "@/lib/dayjs";
 
-import type { Course } from "@tutly/api/schema";
+import type { Course } from "@prisma/client";
 import NoDataFound from "@/components/NoDataFound";
 
 declare module "jspdf" {
@@ -319,10 +319,7 @@ const Report = ({
             <p className="mt-20 mb-5 flex items-center justify-center text-xl font-semibold">
               No data available to generate report!
             </p>
-            <NoDataFound
-              message="No data available to generate report!"
-              additionalMessage="The report’s taking a nap — no data to wake it up!"
-            />
+            <NoDataFound message="No data available to generate report!" />
           </div>
         </div>
       ) : (

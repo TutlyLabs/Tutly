@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FaCrown } from "react-icons/fa6";
 import Image from "next/image";
-import type { User, Course } from "@tutly/api/schema";
+import type { User, Course } from "@prisma/client";
 
 import NoDataFound from "@/components/NoDataFound";
 
@@ -121,10 +121,7 @@ export default function Leaderboard({
       </div>
       {/* Leaderboard */}
       {leaderboardData.length === 0 ? (
-        <NoDataFound
-          message="No data found!"
-          additionalMessage="Nothing here… like a to-do list after exams!"
-        />
+        <NoDataFound message="No data found!" />
       ) : (
         <table>
           <thead className="bg-slate-600 text-white">

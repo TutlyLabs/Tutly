@@ -1,22 +1,8 @@
-"use client";
-
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 import AttendanceClient from "./_components/Attendancefilters";
 
-export default function AttendancePage() {
-  const {
-    data: attendanceData,
-    isLoading,
-    error,
-  } = api.attendances.getAttendancePageData.useQuery();
-
-  if (isLoading) {
-    return <div>Loading attendance data...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading attendance data</div>;
-  }
+export default async function AttendancePage() {
+  const attendanceData = await api.attendances.getAttendancePageData();
 
   if (!attendanceData?.success || !attendanceData.data) {
     return <div>No attendance data found!</div>;

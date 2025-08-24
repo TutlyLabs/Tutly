@@ -5,9 +5,8 @@ import {
   type SandpackPredefinedTemplate,
   SandpackPreview,
   SandpackProvider,
-  useSandpack,
 } from "@codesandbox/sandpack-react";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { TfiFullscreen } from "react-icons/tfi";
 
 import {
@@ -19,6 +18,8 @@ import {
 import FileExplorer from "./FileExplorer";
 import MonacoEditor from "./MonacoEditor";
 import SandboxConsole from "./SandboxConsole";
+import StaticConsole from "./StaticConsole";
+import StaticPreview from "./StaticPreview";
 import SubmitAssignment from "./SubmitAssignment";
 import { useClientSession } from "@/lib/auth/client";
 import { useRouter } from "next/navigation";
@@ -43,21 +44,6 @@ const defaultFiles: SandpackFiles = {
   "/index.js": "",
 };
 
-const AutoSave = ({ assignmentId }: { assignmentId: string }) => {
-  const { sandpack } = useSandpack();
-
-  useEffect(() => {
-    if (!assignmentId) return;
-
-    localStorage.setItem(
-      `playground-${assignmentId}`,
-      JSON.stringify(sandpack.files),
-    );
-  }, [assignmentId, sandpack.files]);
-
-  return null;
-};
-
 const Playground = ({
   assignmentId,
   initialFiles,
@@ -68,32 +54,29 @@ const Playground = ({
   template?: SandpackPredefinedTemplate;
 }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [staticLogs, setStaticLogs] = useState<string[]>([]);
   const session = useClientSession();
   const currentUser = session?.data?.user;
   const router = useRouter();
+
+  const handleStaticLog = useCallback((log: string) => {
+    setStaticLogs((prev) => [...prev, log]);
+  }, []);
+
+  const handleClearStaticLogs = useCallback(() => {
+    setStaticLogs([]);
+  }, []);
+
   if (!currentUser) {
     router.push("/sign-in");
     return null;
   }
 
-  const startingFiles = (() => {
-    if (!assignmentId) return initialFiles || defaultFiles;
-
-    const savedFiles = localStorage.getItem(`playground-${assignmentId}`);
-    if (savedFiles) {
-      try {
-        return JSON.parse(savedFiles) as SandpackFiles;
-      } catch (e) {
-        console.error("Failed to parse saved files:", e);
-      }
-    }
-    return initialFiles || defaultFiles;
-  })();
+  const startingFiles = initialFiles || defaultFiles;
 
   return (
     <div className="relative h-[95vh]">
       <SandpackProvider files={startingFiles} template={template} theme="light">
-        {assignmentId && <AutoSave assignmentId={assignmentId} />}
         {isFullScreen && (
           <div className="fixed inset-0 z-50 bg-white">
             <button
@@ -102,11 +85,18 @@ const Playground = ({
             >
               Exit Fullscreen
             </button>
-            <SandpackPreview
-              showNavigator
-              showOpenInCodeSandbox={false}
-              className="h-[95vh] overflow-y-scroll"
-            />
+            {template === "static" ? (
+              <StaticPreview
+                onConsoleLog={handleStaticLog}
+                onClear={handleClearStaticLogs}
+              />
+            ) : (
+              <SandpackPreview
+                showNavigator
+                showOpenInCodeSandbox={false}
+                className="h-[95vh] overflow-y-scroll"
+              />
+            )}
           </div>
         )}
 
@@ -127,7 +117,7 @@ const Playground = ({
               direction="vertical"
               className="h-[95vh] overflow-y-scroll"
             >
-              <ResizablePanel defaultSize={95}>
+              <ResizablePanel defaultSize={70}>
                 <div className="relative h-[95vh] overflow-y-scroll">
                   <div className="border-b bg-white text-black">
                     <h1 className="text-center text-xl font-bold">Preview</h1>
@@ -136,16 +126,30 @@ const Playground = ({
                       onClick={() => setIsFullScreen(true)}
                     />
                   </div>
-                  <SandpackPreview
-                    showOpenNewtab
-                    showOpenInCodeSandbox={false}
-                    className="h-[95vh] overflow-y-scroll"
-                  />
+                  {template === "static" ? (
+                    <StaticPreview
+                      onConsoleLog={handleStaticLog}
+                      onClear={handleClearStaticLogs}
+                    />
+                  ) : (
+                    <SandpackPreview
+                      showOpenNewtab
+                      showOpenInCodeSandbox={false}
+                      className="h-[95vh] overflow-y-scroll"
+                    />
+                  )}
                 </div>
               </ResizablePanel>
               <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={5}>
-                <SandboxConsole />
+              <ResizablePanel defaultSize={30}>
+                {template === "static" ? (
+                  <StaticConsole
+                    logs={staticLogs}
+                    onClear={handleClearStaticLogs}
+                  />
+                ) : (
+                  <SandboxConsole />
+                )}
               </ResizablePanel>
             </ResizablePanelGroup>
           </ResizablePanel>

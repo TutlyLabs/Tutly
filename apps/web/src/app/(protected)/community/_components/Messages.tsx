@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { SessionUser } from "@/lib/auth";
 import { api } from "@/trpc/react";
 import { useClientSession } from "@/lib/auth/client";
 import { useRouter } from "next/navigation";
@@ -74,18 +73,17 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
   const [message, setMessage] = useState<string>("");
   const [reply, setReply] = useState<string>("");
   const [replyId, setReplyId] = useState<string>("");
-  const addDoubtRef = useRef<HTMLTextAreaElement>(null);
 
   const { data } = useClientSession();
   const currentUser = data?.user;
   const router = useRouter();
+  const utils = api.useUtils();
+  const addDoubtRef = useRef<HTMLTextAreaElement>(null);
 
   if (!currentUser) {
     router.push("/sign-in");
     return;
   }
-
-  const utils = api.useUtils();
 
   const createDoubt = api.doubts.createDoubt.useMutation({
     onSuccess: () => {
@@ -206,7 +204,6 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
     return `${formattedDate} , ${formattedTime}`;
   }
 
-
   return (
     <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6 md:min-w-[800px] lg:px-8">
       <div className="flex flex-col items-center space-y-4 text-sm font-medium">
@@ -255,8 +252,9 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
           {doubts?.map((qa, index) => (
             <div
               key={index}
-              className={`relative rounded-md bg-white p-4 transition-shadow duration-300 ease-in-out ${openAccordion === index ? "shadow-xl" : "shadow-md"
-                }w-full`}
+              className={`relative rounded-md bg-white p-4 transition-shadow duration-300 ease-in-out ${
+                openAccordion === index ? "shadow-xl" : "shadow-md"
+              }w-full`}
             >
               <div className="flex flex-col justify-between gap-4 p-2 sm:flex-row">
                 <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
@@ -298,7 +296,7 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
                       <p className="max-w-[150px] truncate text-xs font-semibold sm:max-w-xs">
                         {qa?.user?.name}{" "}
                       </p>
-                      <p className="test-gray-500 text-xs font-medium">
+                      <p className="text-xs font-medium text-gray-500">
                         {" "}
                         [ {qa.user?.username} ]
                       </p>
@@ -333,11 +331,11 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
                         {(currentUser.role === "INSTRUCTOR" ||
                           (currentUser.role === "MENTOR" &&
                             qa.user.id === currentUser.id)) && (
-                            <DropdownMenuItem>
-                              <MdDelete className="mr-2 h-4 w-4" />
-                              <AlertDialogTrigger>Delete</AlertDialogTrigger>
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem>
+                            <MdDelete className="mr-2 h-4 w-4" />
+                            <AlertDialogTrigger>Delete</AlertDialogTrigger>
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <AlertDialogContent>
@@ -475,31 +473,31 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
                         >
                           {(currentUser.role === "MENTOR" ||
                             currentUser.role === "INSTRUCTOR") && (
-                              <AlertDialog>
-                                <AlertDialogTrigger>
-                                  <MdDelete className="h-5 w-5 cursor-pointer text-red-600" />
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Are you absolutely sure?
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This action cannot be undone. This will
-                                      permanently delete the reply.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDeleteReply(r.id)}
-                                    >
-                                      Continue
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
+                            <AlertDialog>
+                              <AlertDialogTrigger>
+                                <MdDelete className="h-5 w-5 cursor-pointer text-red-600" />
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Are you absolutely sure?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will
+                                    permanently delete the reply.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteReply(r.id)}
+                                  >
+                                    Continue
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                         </div>
                       </div>
                       <div className="mt-4 -mb-2 text-sm font-semibold">

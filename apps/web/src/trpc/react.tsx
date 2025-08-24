@@ -7,9 +7,10 @@ import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import { useState } from "react";
 import SuperJSON from "superjson";
 
-import { type AppRouter } from "@tutly/api";
+import { type AppRouter } from "@/server/api/root";
 import { createQueryClient } from "./query-client";
 import { BACKEND_URL, NODE_ENV } from "@/lib/constants";
+import { getBearerToken } from "@/lib/auth-utils";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {
@@ -52,16 +53,17 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         }),
         httpBatchStreamLink({
           transformer: SuperJSON,
-          url: `${BACKEND_URL}/trpc`,
-          headers: {
-            "x-trpc-source": "nextjs-react",
-            "trpc-accept": "application/jsonl",
-          },
-          fetch(url, options) {
-            return fetch(url, {
-              ...options,
-              credentials: "include",
-            });
+          url: `${BACKEND_URL}/api/trpc`,
+          headers: () => {
+            const headers = new Headers();
+            headers.set("x-trpc-source", "nextjs-react");
+
+            const token = getBearerToken();
+            if (token) {
+              headers.set("authorization", `Bearer ${token}`);
+            }
+
+            return headers;
           },
         }),
       ],

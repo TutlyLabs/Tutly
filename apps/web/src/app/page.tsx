@@ -15,10 +15,7 @@ const Page = async () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
-      <NoDataFound
-        message="You are not supposed to be on this page"
-        additionalMessage="You’ve taken a wrong turn! Let’s get you back on track."
-      />
+      <NoDataFound message="You are not supposed to be on this page" />
       <Link href="/dashboard">
         <Button className="mt-4">Return to Home</Button>
       </Link>

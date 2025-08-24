@@ -1,6 +1,6 @@
 import React from "react";
-import Link from "next/link";
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Tutly | Terms of Service",
@@ -9,21 +9,24 @@ export const metadata: Metadata = {
 
 function Page() {
   return (
-    <div className="min-h-screen mx-auto px-4 container">
+    <div className="container mx-auto min-h-screen px-4">
       <div className="flex h-64 flex-col items-center justify-center gap-8 border-b border-gray-200">
         <h1 className="text-center text-4xl font-bold tracking-wider uppercase">
           Terms of Service
         </h1>
-        <h2 className="text-sm text-center font-medium text-gray-500">
+        <h2 className="text-center text-sm font-medium text-gray-500">
           Last Updated: February 25, 2025
         </h2>
       </div>
-      <div className="py-12 text-base font-light space-y-8">
+      <div className="space-y-8 py-12 text-base font-light">
         <p className="leading-relaxed">
           Welcome to Tutly! These Terms and Conditions{" "}
           <span className="font-semibold">(&ldquo;Terms&rdquo;)</span> govern
           your use of Tutly and its learning platform (
-          <Link className="text-blue-500 hover:underline" href="https://learn.tutly.in">
+          <Link
+            className="text-blue-500 hover:underline"
+            href="https://learn.tutly.in"
+          >
             learn.tutly.in
           </Link>
           ). By accessing or using our services, you agree to these Terms. If
@@ -34,12 +37,12 @@ function Page() {
           materials provided by their instructors.
         </p>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             1. Account Registration and Responsibilities
           </h2>
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-bold tracking-wide uppercase mb-3">
+              <h3 className="mb-3 text-lg font-bold tracking-wide uppercase">
                 1.1 Instructor Accounts
               </h3>
               <p className="leading-relaxed">
@@ -55,7 +58,7 @@ function Page() {
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-bold tracking-wide uppercase mb-3">
+              <h3 className="mb-3 text-lg font-bold tracking-wide uppercase">
                 1.2 Student Accounts
               </h3>
               <p className="leading-relaxed">
@@ -70,7 +73,7 @@ function Page() {
           </div>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             2. Course Content and Intellectual Property
           </h2>
           <p className="leading-relaxed">
@@ -84,7 +87,7 @@ function Page() {
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             3. User Management and Data Access
           </h2>
           <p className="leading-relaxed">
@@ -98,7 +101,7 @@ function Page() {
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             4. Payments and Refunds
           </h2>
           <p className="leading-relaxed">
@@ -111,7 +114,7 @@ function Page() {
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             5. Prohibited Activities
           </h2>
           <div className="leading-relaxed">
@@ -133,7 +136,7 @@ function Page() {
           </div>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             6. Liability and Disclaimers
           </h2>
           <div className="leading-relaxed">
@@ -156,7 +159,7 @@ function Page() {
           </div>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             7. Changes to Terms
           </h2>
           <p className="leading-relaxed">
@@ -166,12 +169,13 @@ function Page() {
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             8. Contact Us
           </h2>
           <p className="leading-relaxed">
             If you have any questions or concerns regarding these Terms, please
-            contact us at <span className="text-blue-500">support@tutly.in</span>
+            contact us at{" "}
+            <span className="text-blue-500">support@tutly.in</span>
           </p>
         </div>
       </div>

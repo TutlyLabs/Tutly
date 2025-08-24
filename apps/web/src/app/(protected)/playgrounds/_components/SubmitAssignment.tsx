@@ -3,6 +3,7 @@
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import Submit from "./Submit";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SubmitAssignment = ({
   currentUser,
@@ -26,6 +27,8 @@ const SubmitAssignment = ({
 
   if (!assignmentId) return null;
 
+  if (currentUser?.role !== "STUDENT") return null;
+
   return res ? (
     <Submit
       user={currentUser}
@@ -34,7 +37,16 @@ const SubmitAssignment = ({
       isLoading={isPending}
     />
   ) : (
-    <h1 className="text-2xl font-bold">Loading...</h1>
+    <div className="space-y-6 p-6">
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-96" />
+      </div>
+      <div className="space-y-4">
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    </div>
   );
 };
 

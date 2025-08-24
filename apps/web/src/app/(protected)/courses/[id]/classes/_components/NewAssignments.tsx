@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Attachment } from "@tutly/api/schema";
-import type { attachmentType, submissionMode } from "@tutly/api/schema";
-import { FileType } from "@tutly/api/schema";
+import type { Attachment } from "@prisma/client";
+import type { attachmentType, submissionMode } from "@prisma/client";
+import { FileType } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -267,10 +267,12 @@ const NewAttachmentPage = ({
                     >
                       HTML CSS JS
                     </SelectItem>
-                    {/* todo: add react */}
-                    {/* <SelectItem className="text-base hover:bg-secondary-800" value="REACT">
-                      REACT
-                    </SelectItem> */}
+                    <SelectItem
+                      className="hover:bg-secondary-800 text-base"
+                      value="SANDBOX"
+                    >
+                      SANDBOX
+                    </SelectItem>
                     <SelectItem
                       className="hover:bg-secondary-800 text-base"
                       value="EXTERNAL_LINK"
@@ -324,7 +326,7 @@ const NewAttachmentPage = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-secondary-700 bg-background text-base text-white">
-                    {classes.map((c: any) => (
+                    {(classes || []).map((c: any) => (
                       <SelectItem
                         key={c.id}
                         value={c.id}

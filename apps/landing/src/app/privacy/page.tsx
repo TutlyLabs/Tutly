@@ -1,6 +1,6 @@
 import React from "react";
-import Link from "next/link";
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Tutly | Privacy Policy",
@@ -9,20 +9,23 @@ export const metadata: Metadata = {
 
 function Page() {
   return (
-    <div className="min-h-screen container mx-auto px-4">
+    <div className="container mx-auto min-h-screen px-4">
       <div className="flex h-64 flex-col items-center justify-center gap-8 border-b border-gray-200">
         <h1 className="text-center text-4xl font-bold tracking-wider uppercase">
           Privacy Policy
         </h1>
-        <h2 className="text-sm text-center font-medium text-gray-500">
+        <h2 className="text-center text-sm font-medium text-gray-500">
           Last Updated: February 25, 2025
         </h2>
       </div>
-      <div className="py-12 text-base font-light space-y-8">
+      <div className="space-y-8 py-12 text-base font-light">
         <p className="leading-relaxed">
           This Privacy Policy explains how we collect, use, disclose, and
           safeguard your personal information when you visit our websites,
-          <Link href="https://tutly.in" className="font-semibold text-blue-500 hover:underline">
+          <Link
+            href="https://tutly.in"
+            className="font-semibold text-blue-500 hover:underline"
+          >
             tutly.in
           </Link>{" "}
           and{" "}
@@ -47,10 +50,10 @@ function Page() {
           Indian IT Act 2000.
         </p>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             1. Information We Collect
           </h2>
-          <p className="leading-relaxed mb-4">
+          <p className="mb-4 leading-relaxed">
             When you use Tutly, we collect various types of data to provide a
             seamless and efficient learning experience. This includes
             information that you provide directly, data collected automatically,
@@ -58,7 +61,7 @@ function Page() {
           </p>
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-bold tracking-wide uppercase mb-3">
+              <h3 className="mb-3 text-lg font-bold tracking-wide uppercase">
                 1.1 Personal Information Provided by Users
               </h3>
               <p className="leading-relaxed">
@@ -76,7 +79,7 @@ function Page() {
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-bold tracking-wide uppercase mb-3">
+              <h3 className="mb-3 text-lg font-bold tracking-wide uppercase">
                 1.2 Automatically Collected Data
               </h3>
               <p className="leading-relaxed">
@@ -91,7 +94,7 @@ function Page() {
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-bold tracking-wide uppercase mb-3">
+              <h3 className="mb-3 text-lg font-bold tracking-wide uppercase">
                 1.3 Information from Third-Party Integrations
               </h3>
               <p className="leading-relaxed">
@@ -107,10 +110,10 @@ function Page() {
           </div>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             2. How We Use Your Data
           </h2>
-          <p className="leading-relaxed mb-4">
+          <p className="mb-4 leading-relaxed">
             The primary reason for collecting user data is to ensure the smooth
             operation of Tutly and provide a personalized learning experience.
             We use the information to create instructor accounts, enroll
@@ -130,10 +133,10 @@ function Page() {
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             3. Data Sharing and Disclosure
           </h2>
-          <p className="leading-relaxed mb-4">
+          <p className="mb-4 leading-relaxed">
             Tutly does not sell or rent user data to third parties. However, we
             may share specific data in cases where it is necessary for platform
             functionality or legal compliance. Instructors have access to
@@ -149,10 +152,10 @@ function Page() {
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             4. Data Security Measures
           </h2>
-          <p className="leading-relaxed mb-4">
+          <p className="mb-4 leading-relaxed">
             We take data security seriously and implement advanced security
             measures to safeguard user information. All data transmissions on
             Tutly are encrypted using SSL/TLS encryption to prevent unauthorized
@@ -169,26 +172,26 @@ function Page() {
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             5. Cookies and Tracking Technologies
           </h2>
-          <p className="leading-relaxed mb-4">
+          <p className="mb-4 leading-relaxed">
             Tutly uses cookies and similar tracking technologies to enhance the
             user experience. Cookies help us remember user preferences, track
             login sessions securely, and analyze platform usage to improve
-            functionality. These small data files are stored on users&apos; devices
-            and allow for a smoother browsing experience. <br /> Users have the
-            option to disable cookies through their browser settings. However,
-            disabling certain cookies may limit access to some platform
+            functionality. These small data files are stored on users&apos;
+            devices and allow for a smoother browsing experience. <br /> Users
+            have the option to disable cookies through their browser settings.
+            However, disabling certain cookies may limit access to some platform
             features, including personalized learning recommendations and
             session tracking.
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             6. User Rights and Data Control
           </h2>
-          <p className="leading-relaxed mb-4">
+          <p className="mb-4 leading-relaxed">
             As a Tutly user, you have the right to access, modify, and delete
             your personal data. Instructors and students can update their
             profile information through the account settings page. If a user
@@ -201,10 +204,10 @@ function Page() {
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             7. Data Retention Policy
           </h2>
-          <p className="leading-relaxed mb-4">
+          <p className="mb-4 leading-relaxed">
             We retain user data for as long as it is necessary to provide our
             services. Instructor and student data remain stored as long as their
             respective courses are active. If an account remains inactive for 24
@@ -216,10 +219,10 @@ function Page() {
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             8. Changes to This Privacy Policy
           </h2>
-          <p className="leading-relaxed mb-4">
+          <p className="mb-4 leading-relaxed">
             Tutly reserves the right to update this Privacy Policy periodically.
             Any significant changes will be communicated through email
             notifications or platform announcements. Users are encouraged to
@@ -229,12 +232,13 @@ function Page() {
           </p>
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-wide uppercase mb-4">
+          <h2 className="mb-4 text-xl font-bold tracking-wide uppercase">
             9. Contact Information
           </h2>
           <p className="leading-relaxed">
             For any questions or concerns regarding this Privacy Policy, users
-            can reach out to us at: <span className="text-blue-500">support@tutly.in</span>
+            can reach out to us at:{" "}
+            <span className="text-blue-500">support@tutly.in</span>
           </p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { getServerSessionOrRedirect } from "@/lib/auth";
 import { notFound } from "next/navigation";
-import type { Role } from "@tutly/api/schema";
+import type { Role } from "@prisma/client";
 
 export default async function ProtectedLayout({
   children,

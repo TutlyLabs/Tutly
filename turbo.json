@@ -25,7 +25,11 @@
       ],
       "outputLogs": "new-only"
     },
-    "lint": {},
+    "lint": {
+      "dependsOn": [
+        "^build"
+      ]
+    },
     "typecheck": {
       "dependsOn": [
         "^build"
@@ -40,39 +44,15 @@
     "//#clean": {
       "cache": false
     },
-    "push": {
-      "cache": false,
-      "interactive": true
-    },
-    "studio": {
-      "cache": false,
-      "persistent": true
-    },
     "ui-add": {
       "cache": false,
       "interactive": true
     }
   },
-  "globalEnv": [
-    "DATABASE_URL",
-    "PORT",
-    "AWS_BUCKET_NAME",
-    "AWS_BUCKET_REGION",
-    "AWS_ACCESS_KEY",
-    "AWS_SECRET_KEY",
-    "AWS_ENDPOINT",
-    "AWS_S3_URL",
-    "RESEND_API_KEY",
-    "VAPID_SUBJECT",
-    "VAPID_PRIVATE_KEY",
-    "NEXT_PUBLIC_VAPID_PUBLIC_KEY"
-  ],
+  "globalEnv": [],
   "globalPassThroughEnv": [
     "NODE_ENV",
     "CI",
-    "VERCEL",
-    "VERCEL_ENV",
-    "VERCEL_URL",
     "npm_lifecycle_event"
   ]
 }

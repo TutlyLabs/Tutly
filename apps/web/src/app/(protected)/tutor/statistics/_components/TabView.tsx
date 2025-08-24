@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import { api } from "@/trpc/react";
-import type { User } from "@tutly/api/schema";
+import type { User } from "@prisma/client";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

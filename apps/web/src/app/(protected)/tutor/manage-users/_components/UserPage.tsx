@@ -1,12 +1,22 @@
 "use client";
 
-import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  Eye,
+  EyeOff,
+  Loader2,
+  UserX,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { MdLockReset } from "react-icons/md";
 
 import DisplayTable, { type Column } from "@/components/table/DisplayTable";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
 import {
   Dialog,
   DialogContent,
@@ -39,6 +49,20 @@ const columns: Column[] = [
       regex: /^[A-Za-z0-9\s]{2,50}$/,
       message: "Name must be 2-50 characters, letters and numbers only",
     },
+    render: (value: string, row: any) => (
+      <div className="flex items-center gap-2">
+        {row.disabledAt && (
+          <div title="Account Disabled">
+            <AlertCircle className="text-destructive h-4 w-4" />
+          </div>
+        )}
+        <span
+          className={row.disabledAt ? "text-muted-foreground line-through" : ""}
+        >
+          {value}
+        </span>
+      </div>
+    ),
   },
   {
     key: "username",
@@ -110,6 +134,24 @@ const columns: Column[] = [
     sortable: false,
     filterable: false,
     hideInTable: true,
+  },
+  {
+    key: "disabledAt",
+    name: "Status",
+    label: "Status",
+    type: "text",
+    sortable: true,
+    filterable: true,
+    render: (value: string) => {
+      return (
+        <Badge
+          variant={value ? "destructive" : "default"}
+          className={value ? "bg-red-500" : "bg-green-500"}
+        >
+          {value ? "Disabled" : "Active"}
+        </Badge>
+      );
+    },
   },
 ];
 
@@ -267,6 +309,25 @@ const UserPage = ({
                   onClick: (user: any) => {
                     setSelectedUser(user);
                     setOpen(true);
+                  },
+                },
+                {
+                  label: "Disable/Enable User",
+                  icon: <UserX className="mr-2 h-5 w-5 text-red-500" />,
+                  onClick: async (user: any) => {
+                    try {
+                      const mutation = api.users.disableUser.useMutation();
+                      const result = await mutation.mutateAsync({
+                        id: user.id,
+                      });
+                      toast.success(result.message);
+                      window.location.reload();
+                    } catch (error: any) {
+                      toast.error(
+                        error?.message ||
+                          "An error occurred while updating user status",
+                      );
+                    }
                   },
                 },
               ]

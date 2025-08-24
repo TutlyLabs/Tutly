@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@tutly/api/schema";
+import type { Profile } from "@prisma/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaQuora } from "react-icons/fa";

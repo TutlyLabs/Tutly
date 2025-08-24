@@ -1,14 +1,12 @@
-"use client";
-
 import { NotesComponent } from "./_components/Notes";
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/server";
 
-export default function NotesPage() {
-  const notes = api.notes.getNotes.useQuery();
+export default async function NotesPage() {
+  const notes = await api.notes.getNotes();
 
   return (
     <div className="container mx-auto py-6">
-      <NotesComponent notes={notes.data?.data ?? []} />
+      <NotesComponent notes={notes.data ?? []} />
     </div>
   );
 }

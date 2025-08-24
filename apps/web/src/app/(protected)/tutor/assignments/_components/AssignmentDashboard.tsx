@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import MentorAssignmentBoard from "./MentorAssignmentBoard";
 
@@ -26,7 +27,39 @@ const AssignmentDashboard = () => {
   }
 
   if (isLoading) {
-    return <div className="text-center">Loading assignments dashboard...</div>;
+    return (
+      <div className="mx-2 flex flex-col gap-4 px-2 py-2 md:mx-14 md:px-8">
+        <div className="space-y-6">
+          {/* Dashboard Header */}
+          <div className="space-y-4">
+            <Skeleton className="mx-auto h-8 w-64" />
+            <Skeleton className="mx-auto h-4 w-96" />
+          </div>
+
+          {/* Dashboard Content */}
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <Skeleton className="h-6 w-32" />
+            </div>
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center space-x-4 rounded-lg border p-4"
+                >
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -55,7 +88,18 @@ const AssignmentDashboard = () => {
       {courses === null || courses.length === 0 ? (
         <div className="text-center">No courses available!</div>
       ) : (
-        <Suspense fallback={<h1> Loading...</h1>}>
+        <Suspense
+          fallback={
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-48" />
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            </div>
+          }
+        >
           <div className="flex justify-end">
             {currentUser.role !== "STUDENT" && (
               <Link

@@ -1,5 +1,5 @@
 import { SignIn } from "../_components/Signin";
 
-export default async function SignInPage() {
+export default function SignInPage() {
   return <SignIn />;
 }

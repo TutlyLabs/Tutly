@@ -1,6 +1,6 @@
 "use client";
 
-import type { Class, Folder } from "@tutly/api/schema";
+import type { Class, Folder } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { FaFolder, FaFolderOpen } from "react-icons/fa6";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";

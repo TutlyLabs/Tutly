@@ -6,6 +6,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { LayoutProvider } from "@/providers/layout-provider";
 import { Toaster } from "sonner";
 import Crisp from "@/components/Crisp";
 import PageLoader from "@/components/loader/PageLoader";
@@ -35,12 +36,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TRPCReactProvider>
-            <NuqsAdapter>
-              <PageLoader />
-              <Toaster />
-              <Crisp />
-              {children}
-            </NuqsAdapter>
+            <LayoutProvider>
+              <NuqsAdapter>
+                <PageLoader />
+                <Toaster />
+                <Crisp />
+                {children}
+              </NuqsAdapter>
+            </LayoutProvider>
           </TRPCReactProvider>
         </ThemeProvider>
       </body>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Course } from "@tutly/api/schema";
+import type { Course } from "@prisma/client";
 import NoDataFound from "@/components/NoDataFound";
 
 type SimpleCourse = {
@@ -89,30 +89,15 @@ const SingleAssignmentBoard = ({
       </div>
 
       {filteredAssignments.length == 0 && (
-        <NoDataFound
-          message="No Assignments Found"
-          additionalMessage="There are no assignments available for the selected course."
-        />
+        <NoDataFound message="No Assignments Found" />
       )}
       {filteredAssignments.map((course) => {
         if (course.id !== currentCourse) return null;
         if (!course.classes || course.classes.length === 0) {
-          return (
-            <NoDataFound
-              key={course.id}
-              message="No Classes Found"
-              additionalMessage="Nothing to see here - the schedule's on vacation!"
-            />
-          );
+          return <NoDataFound key={course.id} message="No Classes Found" />;
         }
         if (!course.classes.some((cls) => cls.attachments.length > 0)) {
-          return (
-            <NoDataFound
-              key={course.id}
-              message="No Assignments Found"
-              additionalMessage="Zero attachments, zero stress... for now!"
-            />
-          );
+          return <NoDataFound key={course.id} message="No Assignments Found" />;
         }
 
         return course.classes.map((cls) =>

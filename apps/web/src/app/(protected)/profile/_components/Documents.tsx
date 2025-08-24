@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@tutly/api/schema";
-import { FileType } from "@tutly/api/schema";
+import type { Profile } from "@prisma/client";
+import { FileType } from "@prisma/client";
 import { Loader2, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 import { useForm } from "react-hook-form";

@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams, useParams } from "next/navigation";
-import { api } from "@/trpc/react";
+import { redirect } from "next/navigation";
+import { api } from "@/trpc/server";
 import { Barchart } from "../_components/barchart";
 import { Linechart } from "../_components/linechart";
 import { Piechart } from "../_components/piechart";
@@ -15,57 +12,33 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import MenteeCount from "../_components/MenteeCount";
 
-export default function StatisticsDetailPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const params = useParams<{ courseId: string }>();
-  const [mentorUsername, setMentorUsername] = useState<string | undefined>(
-    undefined,
-  );
-  const [studentUsername, setStudentUsername] = useState<string | undefined>(
-    undefined,
-  );
+interface StatisticsDetailPageProps {
+  params: Promise<{ courseId: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
 
-  const courseId = params.courseId ?? null;
+export default async function StatisticsDetailPage({
+  params,
+  searchParams,
+}: StatisticsDetailPageProps) {
+  const { courseId } = await params;
+  const resolvedSearchParams = await searchParams;
 
-  useEffect(() => {
-    if (searchParams) {
-      const mentor = searchParams.get("mentor") as string | undefined;
-      const student = searchParams.get("student") as string | undefined;
-      setMentorUsername(mentor);
-      setStudentUsername(student);
+  const mentorUsername = resolvedSearchParams.mentor as string | undefined;
+  const studentUsername = resolvedSearchParams.student as string | undefined;
+
+  const statisticsData = await api.statistics.getStatisticsPageData({
+    courseId,
+    mentorUsername,
+    studentUsername,
+  });
+
+  if (statisticsData?.success === false) {
+    if (statisticsData.redirectTo) {
+      redirect(statisticsData.redirectTo);
+    } else {
+      redirect("/");
     }
-  }, [searchParams]);
-
-  const {
-    data: statisticsData,
-    isLoading,
-    error,
-  } = api.statistics.getStatisticsPageData.useQuery(
-    {
-      courseId: courseId!,
-      mentorUsername,
-      studentUsername,
-    },
-    { enabled: !!courseId },
-  );
-
-  useEffect(() => {
-    if (statisticsData?.success === false) {
-      if (statisticsData.redirectTo) {
-        router.push(statisticsData.redirectTo);
-      } else {
-        router.push("/");
-      }
-    }
-  }, [statisticsData, router]);
-
-  if (isLoading) {
-    return <div>Loading statistics...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading statistics</div>;
   }
 
   if (!statisticsData?.success || !statisticsData.data) {

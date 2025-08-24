@@ -55,7 +55,7 @@ export const HeroParallax = ({
   return (
     <div
       ref={ref}
-      className="relative flex flex-col self-auto overflow-hidden pt-16 sm:pt-32 md:pt-52 antialiased [perspective:1000px] [transform-style:preserve-3d]"
+      className="relative flex flex-col self-auto overflow-hidden pt-16 antialiased [perspective:1000px] [transform-style:preserve-3d] sm:pt-32 md:pt-52"
     >
       <Header />
       <motion.div
@@ -67,7 +67,7 @@ export const HeroParallax = ({
         }}
         className="relative"
       >
-        <motion.div className="mb-8 sm:mb-20 flex flex-row-reverse space-x-8 sm:space-x-20 space-x-reverse">
+        <motion.div className="mb-8 flex flex-row-reverse space-x-8 space-x-reverse sm:mb-20 sm:space-x-20">
           {firstRow.map((product) => (
             <ProductCard
               product={product}
@@ -76,7 +76,7 @@ export const HeroParallax = ({
             />
           ))}
         </motion.div>
-        <motion.div className="mb-8 sm:mb-20 flex flex-row space-x-8 sm:space-x-20">
+        <motion.div className="mb-8 flex flex-row space-x-8 sm:mb-20 sm:space-x-20">
           {secondRow.map((product) => (
             <ProductCard
               product={product}
@@ -101,11 +101,11 @@ export const HeroParallax = ({
 
 export const Header = () => {
   return (
-    <div className="relative mx-auto w-full max-w-7xl px-4 py-4 sm:py-6 md:py-10 lg:py-20 z-50">
+    <div className="relative z-50 mx-auto w-full max-w-7xl px-4 py-4 sm:py-6 md:py-10 lg:py-20">
       <h1 className="text-2xl font-bold md:text-7xl dark:text-white">
         The Future of <br /> Education Starts Here
       </h1>
-      <p className="mt-3 sm:mt-4 md:mt-8 max-w-2xl text-sm sm:text-base md:text-xl dark:text-neutral-200">
+      <p className="mt-3 max-w-2xl text-sm sm:mt-4 sm:text-base md:mt-8 md:text-xl dark:text-neutral-200">
         Revolutionizing education with seamless course management, smart
         analytics, and an engaging learning experience.
       </p>
@@ -128,7 +128,7 @@ export const ProductCard = ({
       style={{
         x: translate,
       }}
-      className="group/product relative h-52 sm:h-80 w-[18rem] sm:w-[30rem] flex-shrink-0"
+      className="group/product relative h-52 w-[18rem] flex-shrink-0 sm:h-80 sm:w-[30rem]"
     >
       <div className="block group-hover/product:shadow-2xl">
         <Image
@@ -140,7 +140,7 @@ export const ProductCard = ({
         />
       </div>
       <div className="pointer-events-none absolute inset-0 h-full w-full bg-black opacity-0"></div>
-      <h2 className="absolute -top-4 sm:-top-8 left-0 text-xs sm:text-base text-gray-500 italic opacity-0 group-hover/product:opacity-100">
+      <h2 className="absolute -top-4 left-0 text-xs text-gray-500 italic opacity-0 group-hover/product:opacity-100 sm:-top-8 sm:text-base">
         {product.title}
       </h2>
     </motion.div>
