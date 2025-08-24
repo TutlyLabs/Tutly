@@ -1,0 +1,81 @@
+name: Deploy Web App to Production
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+  TURBO_FORCE: ${{ github.event_name == 'workflow_dispatch' && contains(github.event.inputs.labels, 'disable cache') && 'true' || '' }}
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "tooling/**"
+      - "turbo/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "turbo.json"
+  workflow_dispatch:
+
+jobs:
+  Deploy-Web-Production:
+    name: Deploy Web App to Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.18.0"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10.6.3"
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --filter=web
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@33.2.0
+
+      - name: Build Web App with Turbo
+        run: |
+          pnpm turbo build --filter=web
+
+      - name: Verify Build Output
+        run: |
+          if [ ! -d "apps/web/.next" ]; then
+            echo "❌ Build failed: .next directory not found"
+            exit 1
+          fi
+          echo "✅ Build successful"
+
+      - name: Deploy to Vercel Production
+        id: deploy
+        run: |
+          echo "🚀 Deploying to Vercel Production..."
+          cd apps/web
+          # Pull Vercel settings for this app
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          # Build for Vercel deployment
+          vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          # Deploy the built output to production
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Production deployment successful: $DEPLOYMENT_URL"
+            echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Production deployment failed"
+            exit 1
+          fi
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}

@@ -90,5 +90,14 @@ export const auth = betterAuth({
       };
     }),
   ],
-  trustedOrigins: [FRONTEND_URL],
+  trustedOrigins: (() => {
+    const origins = [];
+    origins.push(FRONTEND_URL);
+    origins.push("http://localhost:3000");
+    if (process.env.VERCEL_URL) {
+      origins.push(`https://${process.env.VERCEL_URL}`);
+    }
+
+    return origins;
+  })(),
 });

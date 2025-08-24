@@ -1,0 +1,126 @@
+name: Deploy Web App Preview
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+  TURBO_FORCE: ${{ contains(github.event.pull_request.labels.*.name, 'disable cache') && 'true' || '' }}
+
+on:
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "tooling/**"
+      - "turbo/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "turbo.json"
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  Deploy-Web-Preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.18.0"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10.6.3"
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --filter=web
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@33.2.0
+
+      - name: Verify Next.js installation
+        run: |
+          echo "Checking Next.js installation..."
+          pnpm list next
+          pnpm exec next --version
+
+      - name: Build Web App with Turbo
+        run: |
+          pnpm turbo build --filter=web
+
+      - name: Verify Build Output
+        run: |
+          if [ ! -d "apps/web/.next" ]; then
+            echo "❌ Build failed: .next directory not found"
+            exit 1
+          fi
+          echo "✅ Build successful"
+
+      - name: Deploy to Vercel Preview
+        id: deploy
+        run: |
+          echo "🚀 Deploying to Vercel..."
+          cd apps/web
+          # Pull Vercel settings for this app
+          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          # Build for Vercel deployment
+          vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          # Deploy the built output
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Deployment successful: $DEPLOYMENT_URL"
+            echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Deployment failed"
+            exit 1
+          fi
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploymentUrl = '${{ steps.deploy.outputs.deployment_url }}';
+            const comment = `🚀 **Web App Preview Deployed!**
+
+            **Preview URL:** ${deploymentUrl}
+
+            This deployment was triggered by changes to the web app. Test your changes and let us know if everything looks good!`;
+
+            const existingComments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+
+            const botComment = existingComments.data.find(comment => 
+              comment.body.includes('🚀 **Web App Preview Deployed!**') &&
+              comment.user.login === 'github-actions[bot]'
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
