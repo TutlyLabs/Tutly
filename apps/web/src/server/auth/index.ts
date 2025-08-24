@@ -9,7 +9,7 @@ import {
   bearer,
 } from "better-auth/plugins";
 
-import { getPreviewUrl } from "@/lib/constants";
+import { FRONTEND_URL } from "@/lib/constants";
 import { db } from "../../lib/db";
 
 export const auth = betterAuth({
@@ -90,5 +90,14 @@ export const auth = betterAuth({
       };
     }),
   ],
-  trustedOrigins: [getPreviewUrl() || "http://localhost:3000"],
+  trustedOrigins: (() => {
+    const origins = [];
+    origins.push(FRONTEND_URL);
+    origins.push("http://localhost:3000");
+    if (process.env.VERCEL_URL) {
+      origins.push(`https://${process.env.VERCEL_URL}`);
+    }
+
+    return origins;
+  })(),
 });
