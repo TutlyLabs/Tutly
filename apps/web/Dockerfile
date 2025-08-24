@@ -22,6 +22,7 @@ RUN npm install -g pnpm
 
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/full/apps/web/prisma ./apps/web/prisma
 RUN pnpm install
 
 # Build the project
@@ -39,6 +40,10 @@ ENV TURBO_TEAM=$TURBO_TEAM
 ARG TURBO_TOKEN
 ENV TURBO_TOKEN=$TURBO_TOKEN
 
+WORKDIR /app/apps/web
+RUN pnpm prisma generate
+
+WORKDIR /app
 RUN pnpm turbo build
 
 FROM base AS runner
