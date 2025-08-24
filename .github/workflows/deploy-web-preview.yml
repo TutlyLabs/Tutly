@@ -41,10 +41,9 @@ jobs:
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Build Web App
+      - name: Build Web App with Turbo
         run: |
-          cd apps/web
-          pnpm build
+          pnpm turbo build --filter=web
 
       - name: Verify Build Output
         run: |
@@ -59,6 +58,9 @@ jobs:
         run: |
           echo "🚀 Deploying to Vercel..."
           cd apps/web
+          # Build for Vercel deployment
+          vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          # Deploy the built output
           DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
 
           if [ $? -eq 0 ]; then
