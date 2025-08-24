@@ -37,4 +37,11 @@ export const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
 
 export const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
-export const PREVIEW_URL = VERCEL_URL || FRONTEND_URL;
+export const getPreviewUrl = () => {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return FRONTEND_URL || VERCEL_URL;
+};
+
+export const PREVIEW_URL = getPreviewUrl();
