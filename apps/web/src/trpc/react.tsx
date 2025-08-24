@@ -9,7 +9,7 @@ import SuperJSON from "superjson";
 
 import { type AppRouter } from "@/server/api/root";
 import { createQueryClient } from "./query-client";
-import { BACKEND_URL, NODE_ENV } from "@/lib/constants";
+import { PREVIEW_URL, NODE_ENV } from "@/lib/constants";
 import { getBearerToken } from "@/lib/auth-utils";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
@@ -24,7 +24,8 @@ const getQueryClient = () => {
   return clientQueryClientSingleton;
 };
 
-export const api = createTRPCReact<AppRouter>();
+export const api: ReturnType<typeof createTRPCReact<AppRouter>> =
+  createTRPCReact<AppRouter>();
 
 /**
  * Inference helper for inputs.
@@ -53,7 +54,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         }),
         httpBatchStreamLink({
           transformer: SuperJSON,
-          url: `${BACKEND_URL}/api/trpc`,
+          url: `${PREVIEW_URL}/api/trpc`,
           headers: () => {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");

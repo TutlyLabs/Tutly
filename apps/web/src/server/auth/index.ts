@@ -9,7 +9,7 @@ import {
   bearer,
 } from "better-auth/plugins";
 
-import { FRONTEND_URL } from "@/lib/constants";
+import { PREVIEW_URL } from "@/lib/constants";
 import { db } from "../../lib/db";
 
 export const auth = betterAuth({
@@ -90,5 +90,5 @@ export const auth = betterAuth({
       };
     }),
   ],
-  trustedOrigins: [FRONTEND_URL],
+  trustedOrigins: [PREVIEW_URL],
 });

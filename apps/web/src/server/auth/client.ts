@@ -6,11 +6,11 @@ import {
   apiKeyClient,
   usernameClient,
 } from "better-auth/client/plugins";
-import { FRONTEND_URL } from "@/lib/constants";
+import { PREVIEW_URL } from "@/lib/constants";
 import { getBearerToken } from "@/lib/auth-utils";
 
 export const authClient = createAuthClient({
-  baseURL: FRONTEND_URL,
+  baseURL: PREVIEW_URL,
   plugins: [
     usernameClient(),
     adminClient(),
