@@ -18,6 +18,7 @@ env:
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   NODE_OPTIONS: "--max-old-space-size=8192"
+  TURBO_FORCE: ${{ contains(github.event.pull_request.labels.*.name, 'disable cache') && 'true' || '' }}
 
 jobs:
   build:
