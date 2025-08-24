@@ -5,18 +5,6 @@ env:
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
 
 on:
-  push:
-    branches-ignore:
-      - main
-      - master
-    paths:
-      - "apps/web/**"
-      - "packages/**"
-      - "tooling/**"
-      - "turbo/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "turbo.json"
   pull_request:
     paths:
       - "apps/web/**"
@@ -96,9 +84,29 @@ jobs:
 
             This deployment was triggered by changes to the web app. Test your changes and let us know if everything looks good!`;
 
-            github.rest.issues.createComment({
+            const existingComments = await github.rest.issues.listComments({
               issue_number: context.issue.number,
               owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
+              repo: context.repo.repo
             });
+
+            const botComment = existingComments.data.find(comment => 
+              comment.body.includes('🚀 **Web App Preview Deployed!**') &&
+              comment.user.login === 'github-actions[bot]'
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
