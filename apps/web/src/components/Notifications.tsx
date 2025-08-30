@@ -5,7 +5,6 @@ import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import {
   Bell,
-  BellOff,
   BookOpen,
   Eye,
   EyeOff,
@@ -17,7 +16,7 @@ import {
   UserMinus,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -41,11 +40,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useIsMobile } from "@/hooks/use-mobile";
 import type { SessionUser } from "@/lib/auth";
 import day from "@/lib/dayjs";
 import { cn } from "@/lib/utils";
-import { NEXT_PUBLIC_VAPID_PUBLIC_KEY } from "@/lib/constants";
 
 interface NotificationLink {
   href: string;
@@ -176,17 +173,6 @@ const filterCategories = Object.entries(NOTIFICATION_TYPES).map(
   }),
 );
 
-type SubscriptionStatus =
-  | "NotSubscribed"
-  | "SubscribedOnThisDevice"
-  | "SubscribedOnAnotherDevice";
-
-interface PushSubscriptionConfig {
-  endpoint: string;
-  p256dh: string;
-  auth: string;
-}
-
 function getNotificationLink(notification: Notification): string | null {
   const config =
     NOTIFICATION_TYPES[notification.eventType] || DEFAULT_NOTIFICATION_CONFIG;
@@ -196,9 +182,6 @@ function getNotificationLink(notification: Notification): string | null {
 
 export default function Notifications({ user }: { user: SessionUser }) {
   const router = useRouter();
-  const [isSubscribing, setIsSubscribing] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] =
-    useState<SubscriptionStatus>("NotSubscribed");
   const [activeTab, setActiveTab] = useState("all");
 
   const {
@@ -224,208 +207,6 @@ export default function Notifications({ user }: { user: SessionUser }) {
         toast.error("Failed to mark all as read");
       },
     });
-  const { data: notificationConfig } =
-    api.notifications.getNotificationConfig.useQuery(
-      { userId: user.id },
-      { enabled: !!user.id },
-    );
-  const { mutate: updateNotificationConfig } =
-    api.notifications.updateNotificationConfig.useMutation({
-      onError: () => {
-        toast.error("Failed to update notification config");
-      },
-    });
-
-  const subscribe = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      setIsSubscribing(true);
-
-      if (!("serviceWorker" in navigator)) {
-        toast.error("Service Workers are not supported in this browser");
-        return;
-      }
-
-      if (!("PushManager" in window)) {
-        toast.error("Push notifications are not supported in this browser");
-        return;
-      }
-
-      if (Notification.permission === "denied") {
-        toast.warning("Notification permission denied");
-        return;
-      }
-
-      if (Notification.permission !== "granted") {
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          toast.warning("Notification permission denied");
-          return;
-        }
-      }
-
-      const public_key = NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!public_key) {
-        toast.error("Push notification public key not configured");
-        return;
-      }
-
-      try {
-        const sw = await navigator.serviceWorker.ready;
-        if (!sw.pushManager) {
-          toast.error("Push manager not available");
-          return;
-        }
-
-        const subscription = await sw.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: public_key,
-        });
-
-        if (!subscription) {
-          toast.error("Failed to create subscription");
-          return;
-        }
-
-        const p256dh = btoa(
-          String.fromCharCode.apply(
-            null,
-            Array.from(new Uint8Array(subscription.getKey("p256dh")!)),
-          ),
-        );
-
-        const auth = btoa(
-          String.fromCharCode.apply(
-            null,
-            Array.from(new Uint8Array(subscription.getKey("auth")!)),
-          ),
-        );
-
-        const config: PushSubscriptionConfig = {
-          endpoint: subscription.endpoint,
-          p256dh: p256dh,
-          auth: auth,
-        };
-
-        updateNotificationConfig({ userId: user.id, config });
-
-        setSubscriptionStatus("SubscribedOnThisDevice");
-        toast.success("Subscribed successfully");
-      } catch {
-        toast.error("Service worker subscription failed");
-        return;
-      }
-    } catch {
-      toast.error("Subscription failed");
-    } finally {
-      setIsSubscribing(false);
-    }
-  }, [user?.id, updateNotificationConfig]);
-
-  const unsubscribe = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      if (!reg.pushManager) {
-        toast.error("Push manager not available");
-        return;
-      }
-
-      setIsSubscribing(true);
-      const subscription = await reg.pushManager.getSubscription();
-
-      if (subscription) {
-        await subscription.unsubscribe();
-
-        updateNotificationConfig({
-          userId: user.id,
-          config: {
-            endpoint: "",
-            p256dh: "",
-            auth: "",
-          },
-        });
-
-        setSubscriptionStatus("NotSubscribed");
-        toast.warning("Unsubscribed successfully");
-      }
-    } catch {
-      toast.error("Unsubscribe failed");
-    } finally {
-      setIsSubscribing(false);
-    }
-  }, [user?.id, updateNotificationConfig]);
-
-  const handleSubscribeClick = useCallback(() => {
-    if (!navigator.serviceWorker) {
-      toast.error("Push notifications are not supported in this browser");
-      return;
-    }
-
-    if (subscriptionStatus === "SubscribedOnThisDevice") {
-      void unsubscribe();
-    } else {
-      void subscribe();
-    }
-  }, [subscriptionStatus, subscribe, unsubscribe]);
-
-  const initialSubscriptionState = useCallback(async () => {
-    try {
-      if (!user?.id) return;
-
-      const reg = await navigator.serviceWorker.ready;
-      const subscription = await reg.pushManager.getSubscription();
-
-      // If no config endpoint exists, user is not subscribed anywhere
-      if (!notificationConfig?.endpoint) {
-        // If we have a subscription on this device but no config, clean it up
-        if (subscription) {
-          await subscription.unsubscribe();
-        }
-        setSubscriptionStatus("NotSubscribed");
-        return;
-      }
-
-      // If there's a subscription on this device
-      if (subscription) {
-        // Compare current subscription endpoint with stored config
-        if (subscription.endpoint === notificationConfig.endpoint) {
-          setSubscriptionStatus("SubscribedOnThisDevice");
-        } else {
-          // Different subscription exists on this device - clean up and
-          // recognize the one on the server as the valid one
-          console.log(
-            "Different subscription exists - cleaning up local subscription",
-          );
-          await subscription.unsubscribe(); // Clean up old subscription
-          setSubscriptionStatus("SubscribedOnAnotherDevice");
-        }
-      } else {
-        // No subscription on this device, but config exists
-        setSubscriptionStatus("SubscribedOnAnotherDevice");
-      }
-    } catch (error) {
-      console.error("Failed to fetch subscription status:", error);
-      toast.error("Failed to fetch subscription status");
-    }
-  }, [user?.id, notificationConfig]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const checkSubscription = async () => {
-      if (!mounted) return;
-      await initialSubscriptionState();
-    };
-
-    void checkSubscription();
-
-    return () => {
-      mounted = false;
-    };
-  }, [initialSubscriptionState]);
 
   const unreadCount = useMemo(
     () => notifications.filter((n: Notification) => !n.readAt).length,
@@ -471,42 +252,6 @@ export default function Notifications({ user }: { user: SessionUser }) {
     }
   };
 
-  const getSubscriptionButtonText = () => {
-    switch (subscriptionStatus) {
-      case "SubscribedOnThisDevice":
-        return "Unsubscribe";
-      case "SubscribedOnAnotherDevice":
-        return "Subscribe on this device";
-      case "NotSubscribed":
-      default:
-        return "Subscribe";
-    }
-  };
-
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    if (isMobile && subscriptionStatus === "NotSubscribed") {
-      const lastToastTime = localStorage.getItem("lastNotificationToastTime");
-      const currentTime = new Date().getTime();
-      const oneWeek = 7 * 24 * 60 * 60 * 1000; // One week in milliseconds
-
-      if (!lastToastTime || currentTime - parseInt(lastToastTime) > oneWeek) {
-        toast.message("Enable notifications", {
-          description: "Stay updated with your course notifications",
-          action: {
-            label: "Subscribe",
-            onClick: handleSubscribeClick,
-          },
-        });
-        localStorage.setItem(
-          "lastNotificationToastTime",
-          currentTime.toString(),
-        );
-      }
-    }
-  }, [isMobile, subscriptionStatus, handleSubscribeClick]);
-
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -546,22 +291,6 @@ export default function Notifications({ user }: { user: SessionUser }) {
               </TabsTrigger>
             </TabsList>
             <div className="mt-2 flex w-full flex-wrap items-center justify-end gap-2 sm:mt-0 sm:w-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSubscribeClick}
-                disabled={isSubscribing}
-                className="text-muted-foreground hover:text-primary flex h-8 items-center gap-1.5 px-1 text-xs"
-              >
-                {isSubscribing ? (
-                  <RefreshCcw className="h-3.5 w-3.5 animate-spin" />
-                ) : subscriptionStatus === "SubscribedOnThisDevice" ? (
-                  <BellOff className="h-3.5 w-3.5" />
-                ) : (
-                  <Bell className="h-3.5 w-3.5" />
-                )}
-                <span>{getSubscriptionButtonText()}</span>
-              </Button>
               <Button
                 variant="ghost"
                 size="icon"

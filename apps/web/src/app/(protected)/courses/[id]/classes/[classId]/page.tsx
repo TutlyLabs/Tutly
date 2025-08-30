@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import ClassSidebar from "../_components/classSidebar";
 import Class from "../_components/Class";
+import { PageLayout } from "@/components/PageLayout";
 
 export default async function ClassPage({
   params,
@@ -15,16 +16,18 @@ export default async function ClassPage({
   const { id, classId } = await params;
 
   return (
-    <div className="flex w-full items-start">
-      <ClassSidebar
-        courseId={id}
-        title="Assignments"
-        currentUser={session.user}
-        isCourseAdmin={session.user.role === "INSTRUCTOR"}
-      />
-      <div className="m-3 w-full">
-        <Class courseId={id} classId={classId} currentUser={session.user} />
+    <PageLayout forceClose={true}>
+      <div className="flex w-full items-start">
+        <ClassSidebar
+          courseId={id}
+          title="Assignments"
+          currentUser={session.user}
+          isCourseAdmin={session.user.role === "INSTRUCTOR"}
+        />
+        <div className="m-3 w-full">
+          <Class courseId={id} classId={classId} currentUser={session.user} />
+        </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

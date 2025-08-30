@@ -18,15 +18,6 @@ export const AWS_S3_URL =
 // Email Service
 export const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_123456";
 
-// Vapid keys for push notifications
-export const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:dev@tutly.in";
-export const VAPID_PRIVATE_KEY =
-  process.env.VAPID_PRIVATE_KEY ||
-  "bm1K6-J0Jvao8lo_M32di0m0e-hQxg4OlR7usWIVG9Q";
-export const NEXT_PUBLIC_VAPID_PUBLIC_KEY =
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
-  "BBdmd8iX5h_y1dwMs-UHTyPBL3CWbfDG7Jf_JMnTuv7Q7l86WdUjYkeMGUlvIEpm3xN_-dcuLWvEcoJ0ULXRWSA";
-
 // Port for local development
 export const PORT = process.env.PORT || 3000;
 

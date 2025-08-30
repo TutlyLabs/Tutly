@@ -1,56 +1,8 @@
 import { NotificationEvent, NotificationMedium } from "@prisma/client";
-import webPush from "web-push";
 import { z } from "zod";
 
-import {
-  NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY,
-  VAPID_SUBJECT,
-} from "@/lib/constants";
 import { db } from "@/lib/db";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-
-webPush.setVapidDetails(
-  VAPID_SUBJECT,
-  NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY,
-);
-
-async function sendPushNotification(
-  userId: string,
-  message: string,
-  notificationId: string,
-) {
-  const subscription = await db.pushSubscription.findFirst({
-    where: { userId },
-  });
-
-  if (!subscription) return;
-
-  try {
-    await webPush.sendNotification(
-      {
-        endpoint: subscription.endpoint,
-        keys: {
-          p256dh: subscription.p256dh,
-          auth: subscription.auth,
-        },
-      },
-      JSON.stringify({
-        message,
-        id: notificationId,
-        type: "NOTIFICATION",
-      }),
-    );
-  } catch (error) {
-    console.error("Failed to send push notification:", error);
-    if ((error as { statusCode?: number }).statusCode === 410) {
-      await db.pushSubscription.delete({
-        where: { endpoint: subscription.endpoint },
-      });
-    }
-  }
-}
 
 export const notificationsRouter = createTRPCRouter({
   getNotifications: protectedProcedure.query(async ({ ctx }) => {
@@ -173,8 +125,6 @@ export const notificationsRouter = createTRPCRouter({
         },
       });
 
-      await sendPushNotification(input.userId, input.message, notification.id);
-
       return notification;
     }),
 
@@ -221,21 +171,6 @@ export const notificationsRouter = createTRPCRouter({
             },
           }),
         ),
-      );
-
-      await Promise.all(
-        enrolledUsers.map(async (enrolled) => {
-          const notification = notifications.find(
-            (n) => n.intendedForId === enrolled.user.id,
-          );
-          if (notification) {
-            await sendPushNotification(
-              enrolled.user.id,
-              input.message,
-              notification.id,
-            );
-          }
-        }),
       );
 
       return notifications;

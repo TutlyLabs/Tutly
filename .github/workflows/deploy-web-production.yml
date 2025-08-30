@@ -1,8 +1,6 @@
 name: Deploy Web App to Production
 
 env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
   TURBO_FORCE: ${{ github.event_name == 'workflow_dispatch' && contains(github.event.inputs.labels, 'disable cache') && 'true' || '' }}
 
 on:
@@ -42,9 +40,6 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm install --frozen-lockfile --filter=web
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel@33.2.0
-
       - name: Build Web App with Turbo
         run: |
           pnpm turbo build --filter=web
@@ -57,25 +52,25 @@ jobs:
           fi
           echo "✅ Build successful"
 
-      - name: Deploy to Vercel Production
+      - name: Deploy to Production
         id: deploy
         run: |
-          echo "🚀 Deploying to Vercel Production..."
-          cd apps/web
-          # Pull Vercel settings for this app
-          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          # Build for Vercel deployment
-          vercel build --token=${{ secrets.VERCEL_TOKEN }}
-          # Deploy the built output to production
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "🚀 Deploying to Production..."
+
+          # Trigger deployment via webhook
+          RESPONSE=$(curl --request GET "${COOLIFY_WEBHOOK_WEB}" \
+            --header "Authorization: Bearer ${COOLIFY_TOKEN}" \
+            --silent --show-error --fail)
 
           if [ $? -eq 0 ]; then
-            echo "✅ Production deployment successful: $DEPLOYMENT_URL"
-            echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+            echo "✅ Deployment triggered successfully"
+            echo "Response: $RESPONSE"
+            echo "deployment_status=success" >> $GITHUB_OUTPUT
           else
-            echo "❌ Production deployment failed"
+            echo "❌ Deployment failed"
+            echo "Response: $RESPONSE"
             exit 1
           fi
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+          COOLIFY_WEBHOOK_WEB: ${{ secrets.COOLIFY_WEBHOOK_WEB }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}

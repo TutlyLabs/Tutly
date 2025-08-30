@@ -1,5 +1,6 @@
 import { getServerSessionOrRedirect } from "@/lib/auth";
 import CourseDetailsClient from "./_components/CourseDetailsClient";
+import { PageLayout } from "@/components/PageLayout";
 
 export default async function CoursePage({
   params,
@@ -8,5 +9,9 @@ export default async function CoursePage({
 }) {
   const { user } = await getServerSessionOrRedirect();
   const { id } = await params;
-  return <CourseDetailsClient user={user} courseId={id} />;
+  return (
+    <PageLayout forceClose={true}>
+      <CourseDetailsClient user={user} courseId={id} />
+    </PageLayout>
+  );
 }
