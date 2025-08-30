@@ -25,33 +25,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.18.0"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: "10.6.3"
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm install --frozen-lockfile --filter=web
-
-      - name: Build Web App with Turbo
-        run: |
-          pnpm turbo build --filter=web
-
-      - name: Verify Build Output
-        run: |
-          if [ ! -d "apps/web/.next" ]; then
-            echo "❌ Build failed: .next directory not found"
-            exit 1
-          fi
-          echo "✅ Build successful"
-
       - name: Deploy to Production
         id: deploy
         run: |
