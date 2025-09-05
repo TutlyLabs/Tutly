@@ -10,7 +10,7 @@
     "build": "next build",
     "check": "next lint && tsc --noEmit",
     "clean": "git clean -xdf .cache .next .turbo node_modules",
-    "dev": "next dev",
+    "dev": "next dev --turbopack --port 3000",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "next lint",
