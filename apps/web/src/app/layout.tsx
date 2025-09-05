@@ -3,6 +3,7 @@ import "@/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Suspense } from "react";
 
 import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -38,7 +39,9 @@ export default function RootLayout({
           <TRPCReactProvider>
             <LayoutProvider>
               <NuqsAdapter>
-                <PageLoader />
+                <Suspense fallback={null}>
+                  <PageLoader />
+                </Suspense>
                 <Toaster />
                 <Crisp />
                 {children}

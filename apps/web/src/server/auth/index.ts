@@ -90,14 +90,14 @@ export const auth = betterAuth({
       };
     }),
   ],
-  trustedOrigins: (() => {
-    const origins = [];
-    origins.push(FRONTEND_URL);
-    origins.push("http://localhost:3000");
+  trustedOrigins: async () => {
+    const origins = ["http://localhost:3000", "*.tutly.in"];
+    if (FRONTEND_URL) {
+      origins.push(FRONTEND_URL);
+    }
     if (process.env.VERCEL_URL) {
       origins.push(`https://${process.env.VERCEL_URL}`);
     }
-
     return origins;
-  })(),
+  },
 });

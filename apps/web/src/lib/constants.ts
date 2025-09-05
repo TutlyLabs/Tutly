@@ -33,10 +33,7 @@ export const getPreviewUrl = () => {
     if (VERCEL_URL) {
       return `https://${VERCEL_URL}`;
     }
-    if (FRONTEND_URL && FRONTEND_URL !== "http://localhost:3000") {
-      return FRONTEND_URL;
-    }
-    return "http://localhost:3000";
+    return FRONTEND_URL;
   }
 
   return window.location.origin;
