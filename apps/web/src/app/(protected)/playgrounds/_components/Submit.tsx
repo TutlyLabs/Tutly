@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { IoWarningOutline } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
+import Link from "next/link";
 
 import {
   AlertDialog,
@@ -107,13 +108,13 @@ const Submit = ({
           <AlertDialogTitle>Confirm Submission</AlertDialogTitle>
           <p className="mb-2">
             Are you sure you want to submit the
-            <a
+            <Link
               href={`${assignmentDetails.link}`}
               target="_blank"
               className="text-blue-500"
             >
               &nbsp;{assignmentDetails.title}
-            </a>{" "}
+            </Link>{" "}
             ?
           </p>
           <p className="mb-6 flex items-center gap-1 text-sm text-gray-500">

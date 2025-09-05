@@ -3,6 +3,7 @@
 import { ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 import {
   Collapsible,
@@ -226,7 +227,7 @@ export function AppSidebar({
                                   children: (
                                     <div className="bg-popover text-popover-foreground flex w-[160px] flex-col overflow-hidden rounded-md border shadow-md">
                                       {item.items?.map((subItem) => (
-                                        <a
+                                        <Link
                                           key={subItem.title}
                                           href={subItem.url}
                                           className={cn(
@@ -239,7 +240,7 @@ export function AppSidebar({
                                           <span className="truncate">
                                             {subItem.title}
                                           </span>
-                                        </a>
+                                        </Link>
                                       ))}
                                     </div>
                                   ),
@@ -276,9 +277,9 @@ export function AppSidebar({
                                           subItem.className ?? "",
                                         )}
                                       >
-                                        <a href={subItem.url}>
+                                        <Link href={subItem.url}>
                                           <span>{subItem.title}</span>
-                                        </a>
+                                        </Link>
                                       </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                   ))}
@@ -287,7 +288,7 @@ export function AppSidebar({
                             )}
                           </>
                         ) : (
-                          <a href={item.url}>
+                          <Link href={item.url}>
                             <SidebarMenuButton
                               tooltip={isOpen ? "" : item.title}
                               className={cn(
@@ -300,7 +301,7 @@ export function AppSidebar({
                               <ItemIcon className="size-6" />
                               {isOpen && <span>{item.title}</span>}
                             </SidebarMenuButton>
-                          </a>
+                          </Link>
                         )}
                       </SidebarMenuItem>
                     </Collapsible>
@@ -318,7 +319,7 @@ export function AppSidebar({
                 const TabIcon = tab.icon;
                 return (
                   <li key={tab.title} className="flex-1">
-                    <a
+                    <Link
                       href={tab.url}
                       aria-current={tab.active ? "page" : undefined}
                       className={cn(
@@ -337,7 +338,7 @@ export function AppSidebar({
                         <TabIcon className={cn("size-5")} />
                       </div>
                       <span className="leading-none">{tab.title}</span>
-                    </a>
+                    </Link>
                   </li>
                 );
               })}

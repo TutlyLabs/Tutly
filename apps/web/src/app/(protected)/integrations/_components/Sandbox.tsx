@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import Link from "next/link";
 
 import {
   Accordion,
@@ -243,26 +244,26 @@ export const SandboxIntegration = ({
               <ol className="list-inside list-decimal space-y-1">
                 <li>
                   Create or log into your{" "}
-                  <a
+                  <Link
                     href="https://codesandbox.io/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-orange-700 underline"
                   >
                     CodeSandbox account
-                  </a>
+                  </Link>
                   .
                 </li>
                 <li>
                   Create an API key at{" "}
-                  <a
+                  <Link
                     href="https://codesandbox.io/t/api"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-orange-700 underline"
                   >
                     codesandbox.io/t/api
-                  </a>{" "}
+                  </Link>{" "}
                   (enable all scopes).
                 </li>
                 <li>Click on validate button to validate the API key.</li>

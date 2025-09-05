@@ -1,22 +1,11 @@
 "use client";
 
-import { Download, LockIcon, LogOut, UserIcon } from "lucide-react";
+import { LockIcon, LogOut, UserIcon } from "lucide-react";
 // import {  Settings } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaCaretDown } from "react-icons/fa";
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import Link from "next/link";
 import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
 import type { SessionUser } from "@/lib/auth";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -97,18 +86,18 @@ export function UserMenu({ user }: UserMenuProps) {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <a href="/profile">
+            <Link href="/profile">
               <DropdownMenuItem className="flex cursor-pointer items-center gap-2">
                 <UserIcon className="h-5 w-5" />
                 Profile
               </DropdownMenuItem>
-            </a>
-            <a href={`/change-password`}>
+            </Link>
+            <Link href={`/change-password`}>
               <DropdownMenuItem className="flex cursor-pointer items-center gap-2">
                 <LockIcon className="h-5 w-5" />
                 Manage Password
               </DropdownMenuItem>
-            </a>
+            </Link>
             {/* {user.role === "STUDENT" && (
               <a href="/certificate">
                 <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">

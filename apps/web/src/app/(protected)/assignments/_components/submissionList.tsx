@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import Link from "next/link";
 
 import SortBy from "./SortBy";
 
@@ -81,7 +82,7 @@ export const SubmissionList = ({
             }
 
             return (
-              <a
+              <Link
                 key={index}
                 href={hrefLink}
                 onClick={(e) => {
@@ -115,7 +116,7 @@ export const SubmissionList = ({
                     </p>
                   )}
                 </div>
-              </a>
+              </Link>
             );
           })}
       </div>

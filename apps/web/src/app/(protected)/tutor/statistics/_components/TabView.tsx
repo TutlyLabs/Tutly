@@ -5,6 +5,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { api } from "@/trpc/react";
 import type { User } from "@prisma/client";
+import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -129,7 +130,7 @@ export default function TabView({
                       </Card>
                     ))
                   : filteredMentors.map((mentor: UserWithMentor) => (
-                      <a
+                      <Link
                         key={mentor.username}
                         href={getHref("mentor", mentor.username)}
                         className="block h-[120px]"
@@ -176,7 +177,7 @@ export default function TabView({
                             </div>
                           </CardContent>
                         </Card>
-                      </a>
+                      </Link>
                     ))}
               </div>
             </TabsContent>
@@ -193,18 +194,18 @@ export default function TabView({
                   <p className="text-muted-foreground text-sm">
                     Filtered by mentor:{" "}
                     <span className="font-medium">{mentorName}</span>
-                    <a
+                    <Link
                       href={`/tutor/statistics/${courseId}`}
                       className="text-primary ml-2 hover:underline"
                     >
                       Clear filter
-                    </a>
+                    </Link>
                   </p>
                 </div>
               )}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredMentees.map((mentee) => (
-                  <a
+                  <Link
                     key={mentee.username}
                     href={getHref("student", mentee.username)}
                     className="block h-[120px]"
@@ -254,7 +255,7 @@ export default function TabView({
                         </div>
                       </CardContent>
                     </Card>
-                  </a>
+                  </Link>
                 ))}
               </div>
             </TabsContent>
@@ -282,7 +283,7 @@ export default function TabView({
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredMentees.map((mentee) => (
-                  <a
+                  <Link
                     key={mentee.username}
                     href={getHref("student", mentee.username)}
                     className="block h-[120px]"
@@ -327,7 +328,7 @@ export default function TabView({
                         </div>
                       </CardContent>
                     </Card>
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>

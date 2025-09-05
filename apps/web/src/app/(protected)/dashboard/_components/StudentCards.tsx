@@ -5,6 +5,7 @@ import { Cell, Pie, Tooltip } from "recharts";
 import { PieChart as RechartsPieChart, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import Image from "next/image";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -588,12 +589,12 @@ export function StudentCards({ selectedCourse }: Props) {
             <CardHeader className="relative">
               <div className="flex items-center justify-center gap-4">
                 <CardTitle>Platform Scores</CardTitle>
-                <a
+                <Link
                   href="/coding-platforms/leaderboard"
                   className="text-primary hover:text-primary/80 dark:text-primary dark:hover:text-primary/80 absolute right-2 text-xs font-medium underline-offset-4 hover:underline"
                 >
                   Leaderboard
-                </a>
+                </Link>
               </div>
               <CardDescription>
                 Your scores on various coding platforms

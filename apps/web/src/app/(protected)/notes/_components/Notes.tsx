@@ -4,6 +4,7 @@ import type { NoteCategory, Notes } from "@prisma/client";
 import { formatDistanceToNow } from "date-fns";
 import { BookOpen, FileQuestion, ScrollText } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 import MarkdownPreview from "@/components/MarkdownPreview";
 import {
@@ -54,7 +55,10 @@ export const NotesComponent = ({ notes }: { notes: Notes[] }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  const categories = ["ALL", ...new Set(notes.map((n) => n.category))];
+  const categories = [
+    "ALL",
+    ...Array.from(new Set(notes.map((n) => n.category))),
+  ];
   const allTags = Array.from(new Set(notes.flatMap((note) => note.tags)));
 
   const filteredNotes = notes.filter((note) => {
@@ -151,12 +155,12 @@ export const NotesComponent = ({ notes }: { notes: Notes[] }) => {
                               addSuffix: true,
                             })}
                           </CardDescription>
-                          <a
+                          <Link
                             href={details.href}
                             className="text-muted-foreground hover:text-primary ml-auto text-xs transition-colors"
                           >
                             View
-                          </a>
+                          </Link>
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-2 py-2">

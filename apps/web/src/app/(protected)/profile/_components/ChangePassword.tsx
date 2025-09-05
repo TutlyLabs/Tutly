@@ -3,6 +3,7 @@
 import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,12 +123,12 @@ const ChangePassword = ({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="old-password">Current Password</Label>
-            <a
+            <Link
               href={`/reset-password?email=${email}`}
               className="text-primary text-sm hover:underline"
             >
               Forgot Password?
-            </a>
+            </Link>
           </div>
           <div className="relative">
             <Input

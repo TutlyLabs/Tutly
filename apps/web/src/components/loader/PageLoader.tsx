@@ -1,41 +1,149 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 export default function PageLoader() {
   const loaderRef = useRef<HTMLDivElement>(null);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const elementsWithAttachedHandlers = useRef<HTMLElement[]>([]);
 
   useEffect(() => {
     const loader = loaderRef.current;
     if (!loader) return;
 
-    const handleRouteChangeStart = () => {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
-      loader.classList.add("loading");
-    };
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
 
-    const handleRouteChangeComplete = () => {
-      const startTime = performance.now();
-      const loadTime = performance.now() - startTime;
-      const remainingTime = Math.max(0, 400 - loadTime);
+    loadingTimeoutRef.current = setTimeout(() => {
+      loader.classList.remove("loading");
+    }, 100);
+  }, [pathname, searchParams]);
 
-      loadingTimeoutRef.current = setTimeout(() => {
+  useEffect(() => {
+    const loader = loaderRef.current;
+    if (!loader) return;
+
+    if (document.readyState === "complete") {
+      loader.classList.remove("loading");
+    } else {
+      const handleLoad = () => {
         loader.classList.remove("loading");
-      }, remainingTime);
+      };
+      window.addEventListener("load", handleLoad);
+      return () => window.removeEventListener("load", handleLoad);
+    }
+  }, []);
+
+  useEffect(() => {
+    const loader = loaderRef.current;
+    if (!loader) return;
+
+    let timer: NodeJS.Timeout;
+
+    const startProgress = () => {
+      timer = setTimeout(() => {
+        loader.classList.add("loading");
+      }, 50);
     };
 
-    window.addEventListener("beforeunload", handleRouteChangeStart);
-    window.addEventListener("load", handleRouteChangeComplete);
+    const stopProgress = () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+
+    const handleAnchorClick = (event: MouseEvent) => {
+      if (event.defaultPrevented) return;
+
+      const target = event.target as HTMLElement;
+      const anchorElement = event.currentTarget as HTMLAnchorElement;
+
+      const preventProgress =
+        target?.getAttribute("data-prevent-page-loader") === "true" ||
+        anchorElement?.getAttribute("data-prevent-page-loader") === "true";
+
+      if (preventProgress) return;
+
+      if (anchorElement.target === "_blank") return;
+
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+        return;
+
+      const href = anchorElement.href;
+      if (!href) return;
+
+      try {
+        const targetUrl = new URL(href);
+        const currentUrl = new URL(location.href);
+
+        if (
+          targetUrl.pathname === currentUrl.pathname &&
+          targetUrl.search === currentUrl.search
+        ) {
+          return;
+        }
+
+        if (targetUrl.origin !== currentUrl.origin) return;
+
+        if (
+          href.startsWith("tel:") ||
+          href.startsWith("mailto:") ||
+          href.startsWith("blob:") ||
+          href.startsWith("javascript:")
+        ) {
+          return;
+        }
+
+        startProgress();
+      } catch (error) {
+        return;
+      }
+    };
+
+    const handleMutation = () => {
+      const anchorElements = Array.from(document.querySelectorAll("a"));
+
+      const validAnchorElements = anchorElements.filter((anchor) => {
+        const href = anchor.href;
+        const isPageLoaderDisabled =
+          anchor.getAttribute("data-disable-page-loader") === "true";
+        const isNotSpecialProtocol =
+          href &&
+          !href.startsWith("tel:") &&
+          !href.startsWith("mailto:") &&
+          !href.startsWith("blob:") &&
+          !href.startsWith("javascript:");
+
+        return (
+          !isPageLoaderDisabled &&
+          isNotSpecialProtocol &&
+          anchor.target !== "_blank"
+        );
+      });
+
+      validAnchorElements.forEach((anchor) => {
+        anchor.addEventListener("click", handleAnchorClick, true);
+      });
+
+      elementsWithAttachedHandlers.current = validAnchorElements;
+    };
+
+    const mutationObserver = new MutationObserver(handleMutation);
+    mutationObserver.observe(document, { childList: true, subtree: true });
+
+    handleMutation();
 
     return () => {
-      window.removeEventListener("beforeunload", handleRouteChangeStart);
-      window.removeEventListener("load", handleRouteChangeComplete);
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
+      mutationObserver.disconnect();
+      elementsWithAttachedHandlers.current.forEach((anchor) => {
+        anchor.removeEventListener("click", handleAnchorClick, true);
+      });
+      elementsWithAttachedHandlers.current = [];
+      stopProgress();
     };
   }, []);
 

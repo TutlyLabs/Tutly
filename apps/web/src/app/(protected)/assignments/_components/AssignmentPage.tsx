@@ -8,6 +8,7 @@ import { FaEye } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { MdOutlineDelete } from "react-icons/md";
 import { RiWhatsappLine } from "react-icons/ri";
+import Link from "next/link";
 
 import MarkdownPreview from "@/components/MarkdownPreview";
 import { Pagination } from "@/components/table/Pagination";
@@ -235,14 +236,14 @@ export default function AssignmentPage({
             # {assignment?.class?.course?.title}
           </p>
           {assignment?.class?.course && (
-            <a
+            <Link
               href={`/courses/${assignment.class.course.id}/classes/${assignment.class.id}`}
               className="rounded bg-blue-500 p-1 px-2 text-white transition hover:bg-blue-600"
               target="_blank"
               rel="noopener noreferrer"
             >
               {assignment.class.title}
-            </a>
+            </Link>
           )}
         </div>
         <div className="flex items-center justify-center gap-4">
@@ -270,13 +271,13 @@ export default function AssignmentPage({
               asChild
               className="rounded-md bg-blue-600 p-1 px-3 hover:bg-blue-700"
             >
-              <a
+              <Link
                 href={`/playgrounds/sandbox?assignmentId=${assignment.id}&editTemplate=true`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 {isSandboxConfigured ? "Update Sandbox" : "Configure Sandbox"}
-              </a>
+              </Link>
             </Button>
           )}
           {haveAdminAccess && (
@@ -324,13 +325,13 @@ export default function AssignmentPage({
 
       <div className="my-4 flex flex-col gap-4 text-black">
         <div>
-          <a
+          <Link
             target="_blank"
             href={`${assignment?.link}`}
             className="text-sm font-semibold break-words text-blue-400"
           >
             {assignment?.link}
-          </a>
+          </Link>
         </div>
 
         {currentUser?.role === "STUDENT" ? (
@@ -439,14 +440,14 @@ const StudentAssignmentSubmission = ({
           </div>
         ) : isPlaygroundSubmission ? (
           <Button asChild>
-            <a
+            <Link
               href={`/playgrounds/${isSandboxConfigured ? "sandbox" : "html-css-js"}?assignmentId=${assignment.id}`}
               target="_blank"
             >
               {assignment?.submissions.length === 0
                 ? "Submit through Playground"
                 : "Submit another response"}
-            </a>
+            </Link>
           </Button>
         ) : (
           <Dialog>
@@ -524,9 +525,9 @@ const StudentAssignmentSubmission = ({
                   <TableCell className="text-foreground">{index + 1}</TableCell>
                   <TableCell>
                     <Button variant="link" asChild>
-                      <a href={submissionUrl} target="_blank">
+                      <Link href={submissionUrl} target="_blank">
                         View
-                      </a>
+                      </Link>
                     </Button>
                   </TableCell>
                   <TableCell className="text-foreground">
@@ -895,7 +896,7 @@ const AdminAssignmentTable = ({
                           ) : (
                             <div className="flex items-center gap-2">
                               <Button variant="ghost" size="icon" asChild>
-                                <a
+                                <Link
                                   href={
                                     assignment.submissionMode ===
                                       "HTML_CSS_JS" || isSandboxConfigured
@@ -905,7 +906,7 @@ const AdminAssignmentTable = ({
                                   target="_blank"
                                 >
                                   <FaEye className="h-4 w-4 text-white" />
-                                </a>
+                                </Link>
                               </Button>
                               <Button
                                 variant="ghost"
@@ -928,11 +929,11 @@ const AdminAssignmentTable = ({
                         </TableCell>
                         <TableCell>
                           <Button variant="link" asChild>
-                            <a
+                            <Link
                               href={`/assignments/${assignmentId}/evaluate?submissionId=${submission.id}`}
                             >
                               Evaluate
-                            </a>
+                            </Link>
                           </Button>
                         </TableCell>
                       </>

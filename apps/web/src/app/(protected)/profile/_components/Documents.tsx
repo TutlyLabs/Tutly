@@ -8,6 +8,7 @@ import { type ChangeEvent, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -128,14 +129,14 @@ export default function Documents({ documents, onUpdate }: DocumentsProps) {
                         )}
                       </div>
                       {field.value && (
-                        <a
+                        <Link
                           href={field.value}
                           className="text-lg text-blue-500 hover:underline"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
                           View Current Resume
-                        </a>
+                        </Link>
                       )}
                     </div>
                   </FormControl>

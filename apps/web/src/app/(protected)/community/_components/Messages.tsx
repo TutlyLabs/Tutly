@@ -33,7 +33,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 import { useClientSession } from "@/lib/auth/client";
-import { useRouter } from "next/navigation";
 
 interface Doubt {
   id: string;
@@ -74,16 +73,14 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
   const [reply, setReply] = useState<string>("");
   const [replyId, setReplyId] = useState<string>("");
 
-  const { data } = useClientSession();
-  const currentUser = data?.user;
-  const router = useRouter();
+  const { data, isPending } = useClientSession();
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
+
+  const currentUser = data?.user!;
   const utils = api.useUtils();
   const addDoubtRef = useRef<HTMLTextAreaElement>(null);
-
-  if (!currentUser) {
-    router.push("/sign-in");
-    return;
-  }
 
   const createDoubt = api.doubts.createDoubt.useMutation({
     onSuccess: () => {

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import Link from "next/link";
 
 import {
   Accordion,
@@ -164,14 +165,14 @@ export const GeminiIntegration = ({
               <ol className="list-inside list-decimal space-y-1">
                 <li>
                   Go to{" "}
-                  <a
+                  <Link
                     href="https://aistudio.google.com/app/apikey"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-700 underline"
                   >
                     Google AI Studio
-                  </a>{" "}
+                  </Link>{" "}
                   and create an API key.
                 </li>
                 <li>Copy the API key and paste it below.</li>

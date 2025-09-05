@@ -1,6 +1,7 @@
 "use client";
 
 import { HiChevronDoubleLeft } from "react-icons/hi";
+import Link from "next/link";
 
 import {
   AlertDialog,
@@ -44,9 +45,9 @@ export function EventDetails({ event, onClose }: EventDetailsProps) {
         <AlertDialogFooter>
           {event.type !== "Holiday" && (
             <AlertDialogAction>
-              <a href={event.link} className="hover:underline">
+              <Link href={event.link} className="hover:underline">
                 View
-              </a>
+              </Link>
             </AlertDialogAction>
           )}
           <AlertDialogCancel onClick={onClose}>

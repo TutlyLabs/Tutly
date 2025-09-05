@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -174,10 +175,10 @@ export function SandboxHeader({
           asChild
           className="text-gray-300 hover:text-white"
         >
-          <a href="/playgrounds" className="flex items-center gap-1">
+          <Link href="/playgrounds" className="flex items-center gap-1">
             <ArrowLeft className="h-4 w-4" />
             Back
-          </a>
+          </Link>
         </Button>
         <div className="text-sm font-medium text-white">
           {templateName} Playground

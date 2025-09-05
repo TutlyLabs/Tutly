@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import Link from "next/link";
 import {
   FaBookmark,
   FaExternalLinkAlt,
@@ -239,17 +240,17 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
   const renderAttachmentLink = (attachment: Attachment) => {
     if (attachment.attachmentType === "ASSIGNMENT") {
       return (
-        <a href={`/assignments/${attachment.id}`}>
+        <Link href={`/assignments/${attachment.id}`}>
           <FaExternalLinkAlt className="m-auto h-4 w-4" />
-        </a>
+        </Link>
       );
     }
 
     if (attachment.link) {
       return (
-        <a href={attachment.link} className="text-sm">
+        <Link href={attachment.link} className="text-sm">
           <FaExternalLinkAlt className="m-auto h-4 w-4" />
-        </a>
+        </Link>
       );
     }
 

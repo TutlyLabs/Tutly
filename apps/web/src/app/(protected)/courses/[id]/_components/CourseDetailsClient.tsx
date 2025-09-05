@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import type { SessionUser } from "@/lib/auth";
+import Link from "next/link";
 
 import ClassSidebar from "../classes/_components/classSidebar";
 import { api } from "@/trpc/react";
@@ -54,12 +55,12 @@ export default function CourseDetailsClient({
               }}
             >
               <div className="mb-2 flex items-center justify-between">
-                <a
+                <Link
                   href={`/assignments/${attachment.id}`}
                   className="cursor-pointer text-base font-semibold text-blue-600 hover:text-blue-500"
                 >
                   {attachment.title}
-                </a>
+                </Link>
                 <div className="gadiv-2 flex items-center text-sm font-medium">
                   {attachment.dueDate &&
                     new Date(attachment.dueDate).toLocaleDateString()}
@@ -84,14 +85,14 @@ export default function CourseDetailsClient({
               </p>
               {attachment.link && (
                 <div className="flex items-center justify-start space-x-2 text-sm hover:opacity-90">
-                  <a
+                  <Link
                     href={attachment.link}
                     className="text-blue-600 hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     View Assignment
-                  </a>
+                  </Link>
                   <FaExternalLinkAlt className="h-3 w-3" />
                 </div>
               )}

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { FaFolder, FaFolderOpen } from "react-icons/fa6";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { MdOndemandVideo } from "react-icons/md";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -76,10 +77,10 @@ function ClassSidebar({
       asChild
       className="w-full justify-start gap-2"
     >
-      <a href={`/courses/${courseId}/classes/${classItem.id}`}>
+      <Link href={`/courses/${courseId}/classes/${classItem.id}`}>
         <MdOndemandVideo className="h-4 w-4" />
         {classItem.title}
-      </a>
+      </Link>
     </Button>
   );
 
@@ -93,9 +94,9 @@ function ClassSidebar({
         )}
       >
         <div className={cn("border-b px-3 py-2", isCollapsed && "hidden")}>
-          <a href={`/courses/${courseId}`} className="hover:opacity-80">
+          <Link href={`/courses/${courseId}`} className="hover:opacity-80">
             <h1 className="text-sm font-semibold">{title}</h1>
-          </a>
+          </Link>
         </div>
 
         <ScrollArea className={cn("flex-1 px-1", isCollapsed && "hidden")}>

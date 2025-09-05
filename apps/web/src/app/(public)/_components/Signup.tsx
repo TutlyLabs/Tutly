@@ -6,6 +6,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -245,12 +246,12 @@ export function SignUp() {
                 )}
               />
               <div className="mt-1 flex items-center justify-start">
-                <a
+                <Link
                   href="/sign-in"
                   className="text-primary text-sm hover:underline"
                 >
                   Already have an account? Sign In
-                </a>
+                </Link>
               </div>
               <Button
                 type="submit"
