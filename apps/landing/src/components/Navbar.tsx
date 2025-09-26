@@ -1,6 +1,9 @@
+'use client';
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const links = [
   {
@@ -15,17 +18,21 @@ const links = [
     name: "FAQ",
     link: "#faqs",
   },
-  {
-    name: "Pricing",
-    link: "#",
-  },
-  {
-    name: "Developers",
-    link: "https://github.com/tutlyLabs/",
-  },
+  // {
+  //   name: "Pricing",
+  //   link: "#",
+  // },
+  // {
+  //   name: "Developers",
+  //   link: "https://github.com/tutlyLabs/",
+  // },
 ];
 
 function Navbar() {
+  const pathname = usePathname();
+
+  if(pathname === "/maintenance") return null;
+
   return (
     <div className="sticky top-0 z-50 bg-[#0F1427] py-4">
       <div className="container flex items-center justify-between">

@@ -7,7 +7,7 @@ const defaultSections = [
     title: "Explore",
     links: [
       { name: "Contribute", href: "https://github.com/tutlyLabs/" },
-      { name: "Pricing", href: "#" },
+      // { name: "Pricing", href: "#" },
       { name: "Reviews", href: "#testimonials" },
     ],
   },
