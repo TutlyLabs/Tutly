@@ -33,7 +33,7 @@ export default function UnderMaintenance() {
 const maintenanceNavbar = () => {
 
   return (
-    <div className="sticky top-0 z-50 bg-[#11172e] shadow-md py-4">
+    <div className="sticky top-0 z-50 bg-[#11172e] shadow-sm py-4">
       <div className="container flex items-center justify-between">
         <div className="flex items-center gap-4 sm:gap-20">
           <Link href="/" className="flex items-center space-x-2">
