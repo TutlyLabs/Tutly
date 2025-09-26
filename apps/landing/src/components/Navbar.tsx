@@ -65,6 +65,7 @@ function Navbar() {
           </div>
         </div>
         <div className="flex items-center gap-3 sm:gap-6">
+          <GithubButton variant={"outline"} size={"sm"} label="Star on GitHub" repoUrl="https://github.com/TutlyLabs/Tutly/" />
           <Link
             href="https://learn.tutly.in"
             target="_blank"
@@ -78,7 +79,6 @@ function Navbar() {
           >
             Mail Us
         </Link> */}
-          <GithubButton variant={"outline"} size={"sm"} label="Star on GitHub" repoUrl="https://github.com/TutlyLabs/Tutly/" />
         </div>
       </div>
     </div>
