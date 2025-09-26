@@ -14,10 +14,13 @@
   },
   "dependencies": {
     "@tabler/icons-react": "^3.31.0",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.6.5",
+    "motion": "^12.23.22",
     "next": "^15.2.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.0.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

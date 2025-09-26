@@ -1,6 +1,10 @@
+'use client';
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { GithubButton } from "./ui/gitstar-button";
 
 const links = [
   {
@@ -15,10 +19,10 @@ const links = [
     name: "FAQ",
     link: "#faqs",
   },
-  {
-    name: "Pricing",
-    link: "#",
-  },
+  // {
+  //   name: "Pricing",
+  //   link: "#",
+  // },
   {
     name: "Developers",
     link: "https://github.com/tutlyLabs/",
@@ -26,6 +30,10 @@ const links = [
 ];
 
 function Navbar() {
+  const pathname = usePathname();
+
+  if(pathname === "/maintenance") return null;
+
   return (
     <div className="sticky top-0 z-50 bg-[#0F1427] py-4">
       <div className="container flex items-center justify-between">
@@ -57,6 +65,7 @@ function Navbar() {
           </div>
         </div>
         <div className="flex items-center gap-3 sm:gap-6">
+          <GithubButton variant={"outline"} size={"sm"} label="Star on GitHub" repoUrl="https://github.com/TutlyLabs/Tutly/" />
           <Link
             href="https://learn.tutly.in"
             target="_blank"
@@ -64,12 +73,12 @@ function Navbar() {
           >
             Login
           </Link>
-          <Link
+          {/* <Link
             href="mailto:sales@tutly.in"
             className="animate-shimmer items-center justify-center rounded-full border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] p-1 px-2 text-xs font-medium text-slate-400 transition-colors focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 focus:outline-none sm:text-sm"
           >
-            Contact Us
-          </Link>
+            Mail Us
+        </Link> */}
         </div>
       </div>
     </div>

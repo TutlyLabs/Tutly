@@ -1,13 +1,44 @@
+import Image from "next/image";
 import Link from "next/link";
 import { FaLinkedinIn } from "react-icons/fa";
 import { FaInstagram, FaTelegram, FaTwitter } from "react-icons/fa6";
+// import { AnimatedTooltip } from "./ui/animated-tooltip";
+
+
+// const people = [
+//   {
+//     id: 1,
+//     name: "Uday Sagar",
+//     link: "https://github.com/UdaySagar-Git",
+//     image: "https://i.postimg.cc/VsWLXt25/image.png",
+//   },
+//   {
+//     id: 2,
+//     name: "Vighnesh",
+//     link: "https://github.com/vighnesh-7",
+//     image: "https://i.postimg.cc/y6mWnt3C/image.png",
+//   },
+//   {
+//     id: 3,
+//     name: "Goutham",
+//     link: "https://github.com/goutham4126",
+//     image: "https://i.postimg.cc/vZRqM1Hz/image.png",
+//   },
+//   {
+//     id: 4,
+//     name: "Kalyan",
+//     link: "https://github.com/kalyan-2005",
+//     image: "https://i.postimg.cc/GpC5P4Wt/image.png",
+//   },
+// ];
+ 
 
 const defaultSections = [
   {
     title: "Explore",
     links: [
       { name: "Contribute", href: "https://github.com/tutlyLabs/" },
-      { name: "Pricing", href: "#" },
+      // { name: "Pricing", href: "#" },
       { name: "Reviews", href: "#testimonials" },
     ],
   },
@@ -62,6 +93,13 @@ export default function Footer() {
         <div className="flex w-full flex-col justify-between gap-8 lg:flex-row lg:items-start lg:text-left">
           <div className="flex w-full flex-col justify-between gap-4 lg:items-start">
             <div className="flex items-center gap-2 lg:justify-start">
+              <Image
+                src="/logo.png"
+                className="rounded"
+                width={44}
+                height={44}
+                alt="logo"
+              />
               <h2 className="text-3xl font-black sm:text-5xl">Tutly</h2>
             </div>
             <p className="max-w-[70%] text-sm text-gray-300 max-sm:hidden">
@@ -82,6 +120,9 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
+            {/* <div className="flex flex-row items-center justify-center">
+              <AnimatedTooltip items={people} />
+            </div> */}
           </div>
           <div className="grid w-full gap-6 md:grid-cols-3 lg:gap-12">
             {defaultSections.map((section, sectionIdx) => (
