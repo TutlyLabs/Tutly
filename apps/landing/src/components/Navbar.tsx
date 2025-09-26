@@ -35,7 +35,7 @@ function Navbar() {
   if(pathname === "/maintenance") return null;
 
   return (
-    <div className="sticky top-0 z-50 bg-[#0F1427] py-4">
+    <div className="sticky top-0 z-50 bg-[#11172e] shadow-md py-4">
       <div className="container flex items-center justify-between">
         <div className="flex items-center gap-4 sm:gap-20">
           <Link href="/" className="flex items-center space-x-2">
@@ -65,6 +65,7 @@ function Navbar() {
           </div>
         </div>
         <div className="flex items-center gap-3 sm:gap-6">
+          <GithubButton variant={"outline"} size={"sm"} label="Star on GitHub" repoUrl="https://github.com/TutlyLabs/Tutly/" />
           <Link
             href="https://learn.tutly.in"
             target="_blank"
@@ -78,7 +79,6 @@ function Navbar() {
           >
             Mail Us
         </Link> */}
-          <GithubButton variant={"outline"} size={"sm"} label="Star on GitHub" repoUrl="https://github.com/TutlyLabs/Tutly/" />
         </div>
       </div>
     </div>
