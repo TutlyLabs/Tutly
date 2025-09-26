@@ -15,7 +15,7 @@ const faqs = [
   {
     question: "What is Tutly?",
     answer:
-      "Tutly is a powerful Learning Management System (LMS) that simplifies teaching, mentoring, and learning. It enables instructors to create and manage courses, assign mentors to students, track progress, and evaluate assignments—all in one seamless platform.",
+      "Tutly is a powerful Learning Management System (LMS) that simplifies teaching, mentoring, and learning. It enables instructors to create and manage courses, assign mentors to students, track progress, and evaluate assignments.",
     icon: <FaGraduationCap />,
   },
   {
@@ -45,7 +45,7 @@ const faqs = [
   {
     question: "Can assignments be submitted through Tutly?",
     answer:
-      "Yes! Students can upload their assignments directly on Tutly, and instructors or mentors can review, grade, and provide feedback—all within the platform.",
+      "Yes! Students can upload their assignments directly on Tutly, and instructors or mentors can review, grade, and provide feedback; all within the platform.",
     icon: <FaFileUpload />,
   },
   {

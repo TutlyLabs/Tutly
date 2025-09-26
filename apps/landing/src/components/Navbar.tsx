@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { GithubButton } from "./ui/gitstar-button";
 
 const links = [
   {
@@ -22,10 +23,10 @@ const links = [
   //   name: "Pricing",
   //   link: "#",
   // },
-  // {
-  //   name: "Developers",
-  //   link: "https://github.com/tutlyLabs/",
-  // },
+  {
+    name: "Developers",
+    link: "https://github.com/tutlyLabs/",
+  },
 ];
 
 function Navbar() {
@@ -71,12 +72,13 @@ function Navbar() {
           >
             Login
           </Link>
-          <Link
+          {/* <Link
             href="mailto:sales@tutly.in"
             className="animate-shimmer items-center justify-center rounded-full border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] p-1 px-2 text-xs font-medium text-slate-400 transition-colors focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 focus:outline-none sm:text-sm"
           >
-            Contact Us
-          </Link>
+            Mail Us
+        </Link> */}
+          <GithubButton variant={"outline"} size={"sm"} label="Star on GitHub" repoUrl="https://github.com/TutlyLabs/Tutly/" />
         </div>
       </div>
     </div>
