@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaLinkedinIn } from "react-icons/fa";
 import { FaInstagram, FaTelegram, FaTwitter } from "react-icons/fa6";
-// import { AnimatedTooltip } from "./ui/animated-tooltip";
 
+// import { AnimatedTooltip } from "./ui/animated-tooltip";
 
 // const people = [
 //   {
@@ -31,7 +31,6 @@ import { FaInstagram, FaTelegram, FaTwitter } from "react-icons/fa6";
 //     image: "https://i.postimg.cc/GpC5P4Wt/image.png",
 //   },
 // ];
- 
 
 const defaultSections = [
   {
