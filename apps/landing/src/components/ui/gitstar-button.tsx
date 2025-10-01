@@ -1,34 +1,40 @@
-'use client';
+"use client";
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { Star } from 'lucide-react';
-import { motion, useInView, type SpringOptions, type UseInViewOptions } from 'motion/react';
-import { cn } from '@/lib/utils';
+import type { VariantProps } from "class-variance-authority";
+import type { SpringOptions, UseInViewOptions } from "motion/react";
+import React, { useCallback, useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import { cva } from "class-variance-authority";
+import { Star } from "lucide-react";
+import { motion, useInView } from "motion/react";
 
 const githubButtonVariants = cva(
-  'cursor-pointer relative overflow-hidden will-change-transform backface-visibility-hidden transform-gpu transition-transform duration-200 ease-out hover:scale-105 group whitespace-nowrap focus-visible:outline-hidden inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background disabled:pointer-events-none disabled:opacity-60 [&_svg]:shrink-0',
+  "backface-visibility-hidden group ring-offset-background relative inline-flex transform-gpu cursor-pointer items-center justify-center overflow-hidden font-medium whitespace-nowrap transition-transform duration-200 ease-out will-change-transform hover:scale-105 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-60 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          'bg-zinc-950 hover:bg-zinc-900 text-white border-gray-700 dark:bg-zinc-50 dark:border-gray-300 dark:text-zinc-950 dark:hover:bg-zinc-50',
-        outline: 'bg-background text-accent-foreground border border-input hover:bg-accent',
+          "border-gray-700 bg-zinc-950 text-white hover:bg-zinc-900 dark:border-gray-300 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-50",
+        outline:
+          "bg-background text-accent-foreground border-input hover:bg-accent border",
       },
       size: {
-        default: 'h-8.5 rounded-md px-3 gap-2 text-[0.8125rem] leading-none [&_svg]:size-4 ',
-        sm: 'h-7 rounded-md px-2.5 gap-1.5 text-xs leading-none [&_svg]:size-3.5 ',
-        lg: 'h-10 rounded-md px-4 gap-2.5 text-sm leading-none [&_svg]:size-5 ',
+        default:
+          "h-8.5 gap-2 rounded-md px-3 text-[0.8125rem] leading-none [&_svg]:size-4",
+        sm: "h-7 gap-1.5 rounded-md px-2.5 text-xs leading-none [&_svg]:size-3.5",
+        lg: "h-10 gap-2.5 rounded-md px-4 text-sm leading-none [&_svg]:size-5",
       },
     },
     defaultVariants: {
-      variant: 'default',
-      size: 'default',
+      variant: "default",
+      size: "default",
     },
   },
 );
 
-interface GithubButtonProps extends React.ComponentProps<'button'>, VariantProps<typeof githubButtonVariants> {
+interface GithubButtonProps
+  extends React.ComponentProps<"button">,
+    VariantProps<typeof githubButtonVariants> {
   /** Whether to round stars */
   roundStars?: boolean;
   /** Whether to show Github icon */
@@ -70,14 +76,14 @@ interface GithubButtonProps extends React.ComponentProps<'button'>, VariantProps
 function GithubButton({
   initialStars = 0,
   targetStars = 0,
-  starsClass = '',
+  starsClass = "",
   fixedWidth = true,
   animationDuration = 2,
   animationDelay = 0,
   autoAnimate = true,
   className,
-  variant = 'default',
-  size = 'default',
+  variant = "default",
+  size = "default",
   showGithubIcon = true,
   showStarIcon = true,
   roundStars = false,
@@ -85,7 +91,7 @@ function GithubButton({
   filled = false,
   repoUrl,
   onClick,
-  label = '',
+  label = "",
   useInViewTrigger = false,
   inViewOptions = { once: true },
   transition,
@@ -98,7 +104,7 @@ function GithubButton({
 
   // Format number with units
   const formatNumber = (num: number) => {
-    const units = ['k', 'M', 'B', 'T'];
+    const units = ["k", "M", "B", "T"];
 
     if (roundStars && num >= 1000) {
       let unitIndex = -1;
@@ -114,7 +120,7 @@ function GithubButton({
       return `${formatted}${units[unitIndex]}`;
     }
 
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
   // Start animation
@@ -135,7 +141,9 @@ function GithubButton({
       const easeOutQuart = 1 - Math.pow(1 - progress, 4);
 
       // Update star count from 0 to target with more frequent updates
-      const newStars = Math.round(startValue + (endValue - startValue) * easeOutQuart);
+      const newStars = Math.round(
+        startValue + (endValue - startValue) * easeOutQuart,
+      );
       setCurrentStars(newStars);
 
       // Update star fill progress (0 to 100)
@@ -154,7 +162,13 @@ function GithubButton({
     setTimeout(() => {
       requestAnimationFrame(animate);
     }, animationDelay * 1000);
-  }, [isAnimating, hasAnimated, targetStars, animationDuration, animationDelay]);
+  }, [
+    isAnimating,
+    hasAnimated,
+    targetStars,
+    animationDuration,
+    animationDelay,
+  ]);
 
   // Use in-view detection if enabled
   const ref = React.useRef(null);
@@ -185,10 +199,10 @@ function GithubButton({
     // Next.js compatible navigation approach
     try {
       // Create a temporary anchor element for reliable navigation
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = repoUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
 
       // Temporarily add to DOM and click
       document.body.appendChild(link);
@@ -197,7 +211,7 @@ function GithubButton({
     } catch {
       // Fallback to window.open
       try {
-        window.open(repoUrl, '_blank', 'noopener,noreferrer');
+        window.open(repoUrl, "_blank", "noopener,noreferrer");
       } catch {
         // Final fallback
         window.location.href = repoUrl;
@@ -220,7 +234,7 @@ function GithubButton({
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     // Handle Enter and Space key presses for accessibility
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
 
       if (repoUrl) {
@@ -234,7 +248,10 @@ function GithubButton({
   return (
     <button
       ref={ref}
-      className={cn(githubButtonVariants({ variant, size, className }), separator && 'ps-0')}
+      className={cn(
+        githubButtonVariants({ variant, size, className }),
+        separator && "ps-0",
+      )}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       role="button"
@@ -245,8 +262,8 @@ function GithubButton({
       {showGithubIcon && (
         <div
           className={cn(
-            'h-full relative flex items-center justify-center',
-            separator && 'w-9 bg-muted/60 border-e border-input',
+            "relative flex h-full items-center justify-center",
+            separator && "bg-muted/60 border-input w-9 border-e",
           )}
         >
           <svg role="img" viewBox="0 0 24 24" fill="currentColor">
@@ -260,9 +277,12 @@ function GithubButton({
       {/* Animated Star Icon */}
       {showStarIcon && (
         <div className="relative inline-flex shrink-0">
-          <Star className="fill-muted-foreground text-muted-foreground" aria-hidden="true" />
           <Star
-            className="absolute top-0 start-0 text-yellow-400 fill-yellow-400"
+            className="fill-muted-foreground text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Star
+            className="absolute start-0 top-0 fill-yellow-400 text-yellow-400"
             size={18}
             aria-hidden="true"
             style={{

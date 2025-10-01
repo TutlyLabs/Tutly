@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import { GithubButton } from "./ui/gitstar-button";
 
 const links = [
@@ -32,7 +33,7 @@ const links = [
 function Navbar() {
   const pathname = usePathname();
 
-  if(pathname === "/maintenance") return null;
+  if (pathname === "/maintenance") return null;
 
   return (
     <div className="sticky top-0 z-50 bg-[#0F1427] py-4">
@@ -65,7 +66,12 @@ function Navbar() {
           </div>
         </div>
         <div className="flex items-center gap-3 sm:gap-6">
-          <GithubButton variant={"outline"} size={"sm"} label="Star on GitHub" repoUrl="https://github.com/TutlyLabs/Tutly/" />
+          <GithubButton
+            variant={"outline"}
+            size={"sm"}
+            label="Star on GitHub"
+            repoUrl="https://github.com/TutlyLabs/Tutly/"
+          />
           <Link
             href="https://learn.tutly.in"
             target="_blank"

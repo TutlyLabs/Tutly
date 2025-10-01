@@ -24,7 +24,7 @@
 //   const springConfig = { stiffness: 100, damping: 15 };
 //   const x = useMotionValue(0);
 //   const animationFrameRef = useRef<number | null>(null);
-    
+
 //   const rotate = useSpring(
 //     useTransform(x, [-100, 100], [-45, 45]),
 //     springConfig,
