@@ -5,6 +5,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { posthog } from "@/lib/posthog";
 import { getServerSession } from "@/lib/auth";
 import { FeatureFlagsProvider } from "./_components/FeatureFlagsProvider";
+import { redirect } from "next/navigation";
 
 type Props = {
   children: React.ReactNode;
@@ -15,14 +16,18 @@ export default async function AuthLayout({ children }: Props) {
   const session = await getServerSession();
   const currentUser = session?.user;
 
+  if (currentUser) {
+    redirect("/dashboard");
+  }
+
   const isGoogleSignInEnabled = await posthog.isFeatureEnabled(
     "google_sign_in",
-    currentUser?.id ?? "unauthenticated",
+    "unauthenticated",
   );
 
   const isGithubSignInEnabled = await posthog.isFeatureEnabled(
     "github_sign_in",
-    currentUser?.id ?? "unauthenticated",
+    "unauthenticated",
   );
 
   return (

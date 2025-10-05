@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +36,7 @@ interface DocumentsProps {
 export default function Documents({ documents, onUpdate }: DocumentsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const router = useRouter();
 
   const { uploadFile } = useFileUpload({
     fileType: FileType.OTHER,
@@ -47,7 +49,7 @@ export default function Documents({ documents, onUpdate }: DocumentsProps) {
           },
         });
         toast.success("Resume uploaded successfully");
-        window.location.reload();
+        router.refresh();
       } catch (error) {
         toast.error("Failed to upload resume");
       }

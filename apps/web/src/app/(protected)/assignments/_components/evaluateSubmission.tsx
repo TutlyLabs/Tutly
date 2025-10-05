@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 import day from "@/lib/dayjs";
 import { api } from "@/trpc/react";
@@ -22,6 +23,7 @@ const EvaluateSubmission = ({
   const [feedback, setFeedback] = useState<string | null>(
     submission.overallFeedback || null,
   );
+  const router = useRouter();
 
   const rValue = submission.points.find(
     (point: any) => point.category === "RESPOSIVENESS",
@@ -40,7 +42,7 @@ const EvaluateSubmission = ({
   const addPointsMutation = api.points.addPoints.useMutation({
     onSuccess: () => {
       toast.success("Scores saved successfully");
-      window.location.reload();
+      router.refresh();
     },
     onError: () => {
       toast.error("Failed to save scores");
@@ -50,7 +52,7 @@ const EvaluateSubmission = ({
   const addFeedbackMutation = api.submissions.addOverallFeedback.useMutation({
     onSuccess: () => {
       toast.success("Feedback saved successfully");
-      window.location.reload();
+      router.refresh();
     },
     onError: () => {
       toast.error("Failed to save feedback");
@@ -61,7 +63,7 @@ const EvaluateSubmission = ({
     {
       onSuccess: () => {
         toast.success("Submission deleted successfully");
-        window.location.reload();
+        router.refresh();
       },
       onError: () => {
         toast.error("Failed to delete submission");

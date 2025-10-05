@@ -43,7 +43,7 @@ export const GoogleIntegration = ({
       });
 
       if (result.data && "url" in result.data) {
-        window.location.href = result.data.url;
+        window.open(result.data.url, "_blank");
       } else {
         throw new Error("Failed to get OAuth URL");
       }

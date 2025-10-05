@@ -6,6 +6,7 @@ import { PieChart as RechartsPieChart, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,8 +98,10 @@ const AssignmentTable = ({
 }: {
   searchFilteredAssignments: (Assignment & { status: string })[];
 }) => {
+  const router = useRouter();
+
   const handleAssignmentClick = (assignmentId: string) => {
-    window.location.href = `/assignments/${assignmentId}`;
+    router.push(`/assignments/${assignmentId}`);
   };
 
   return (
@@ -245,9 +248,9 @@ const PlatformScores = () => {
   const data =
     platformScoresData?.success && platformScoresData.data
       ? platforms.map((platform) => ({
-          name: platform,
-          value: platformScoresData.data.percentages[platform] ?? 0,
-        }))
+        name: platform,
+        value: platformScoresData.data.percentages[platform] ?? 0,
+      }))
       : dummyData;
 
   const renderChart = () => (

@@ -20,9 +20,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/server/auth/client";
-import { setBearerToken } from "@/lib/auth-utils";
 import { SocialSignin } from "./SocialSignin";
 import { useFeatureFlags } from "./FeatureFlagsProvider";
+import { useRouter } from "next/navigation";
 
 const signInSchema = z.object({
   email: z.string().min(1, "Username or email is required"),
@@ -35,6 +35,7 @@ export function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { isGoogleSignInEnabled, isGithubSignInEnabled } = useFeatureFlags();
+  const router = useRouter();
 
   const form = useForm<SignInInput>({
     resolver: zodResolver(signInSchema),
@@ -61,22 +62,38 @@ export function SignIn() {
   const handleSubmit = async (values: SignInInput) => {
     try {
       setIsLoading(true);
-      const result = await authClient.signIn.email({
-        email: values.email,
-        password: values.password,
-        rememberMe: true,
-        fetchOptions: {
+
+      const isEmail = values.email.includes("@");
+
+      const result = isEmail
+        ? await authClient.signIn.email({
+          email: values.email,
+          password: values.password,
+          rememberMe: true,
+          callbackURL: "/dashboard",
+        }, {
           onSuccess: (ctx) => {
             const authToken = ctx.response.headers.get("set-auth-token");
             if (authToken) {
-              setBearerToken(authToken);
+              localStorage.setItem("bearer_token", authToken);
             }
-          },
-        },
-        callbackURL: "/dashboard",
-      });
+          }
+        })
+        : await authClient.signIn.username({
+          username: values.email,
+          password: values.password,
+          rememberMe: true,
+          callbackURL: "/dashboard",
+        }, {
+          onSuccess: (ctx) => {
+            const authToken = ctx.response.headers.get("set-auth-token");
+            if (authToken) {
+              localStorage.setItem("bearer_token", authToken);
+            }
+          }
+        });
       if (result?.data?.user) {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
         return;
       }
       toast.error(result?.error?.message || "Failed to sign in", {

@@ -1,5 +1,5 @@
-import { SignUp } from "../_components/Signup";
+import { notFound } from "next/navigation";
 
 export default function SignUpPage() {
-  return <SignUp />;
+  return notFound();
 }

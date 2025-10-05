@@ -3,6 +3,7 @@
 import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
   const [showPasswordStrength, setShowPasswordStrength] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [canResend, setCanResend] = useState(true);
+  const router = useRouter();
 
   const { mutate: sendOTP } = api.reset_password.sendOTP.useMutation({
     onSuccess: () => {
@@ -75,7 +77,7 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
     api.reset_password.resetPassword.useMutation({
       onSuccess: () => {
         toast.success("Password reset successfully");
-        window.location.href = "/sign-in";
+        router.push("/sign-in");
       },
       onError: (error) => {
         if (error.data?.zodError) {

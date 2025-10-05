@@ -7,16 +7,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const SortBy = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const params = new URLSearchParams(searchParams.toString());
 
   const handleValueChange = (value: string) => {
     params.set("sortBy", value);
-    window.history.pushState(null, "", `?${params.toString()}`);
-    window.location.reload();
+    router.push(`?${params.toString()}`);
   };
 
   return (

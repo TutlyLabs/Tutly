@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FaPlus } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +46,7 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
     new Date().toISOString().split("T")[0],
   );
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   const createClass = api.classes.createClass.useMutation();
   const getFolders = api.courses.foldersByCourseId.useQuery({ id: courseId });
@@ -80,13 +82,13 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
         setSelectedFolder("");
         setFolderName("");
         setIsOpen(false);
-        window.location.href = `/courses/${courseId}/classes/${result.id}`;
+        router.push(`/courses/${courseId}/classes/${result.id}`);
       }
     } catch (error: unknown) {
       toast.error("Failed to add new class");
     } finally {
       setTextValue("Create Class");
-      window.location.reload();
+      router.refresh();
     }
   };
 

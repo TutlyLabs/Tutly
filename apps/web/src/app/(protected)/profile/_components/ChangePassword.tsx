@@ -4,6 +4,7 @@ import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ const ChangePassword = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [showPasswordStrength, setShowPasswordStrength] = useState(false);
+  const router = useRouter();
 
   const { mutate: changePassword } = api.users.changePassword.useMutation({
     onSuccess: (data) => {
@@ -33,7 +35,7 @@ const ChangePassword = ({
       setNewPassword("");
       setConfirmPassword("");
       setShowPasswordStrength(false);
-      window.location.href = "/sign-in";
+      router.push("/sign-in");
     },
     onError: (error) => {
       toast.error(error.message || "Failed to change password");

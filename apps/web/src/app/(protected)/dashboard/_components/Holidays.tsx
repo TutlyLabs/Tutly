@@ -4,6 +4,7 @@ import day from "@/lib/dayjs";
 import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -27,11 +28,12 @@ import { api } from "@/trpc/react";
 export default function AddHolidayDialog() {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const router = useRouter();
 
   const { mutate: addHoliday } = api.holidays.addHoliday.useMutation({
     onSuccess: () => {
       toast.success("Holiday added successfully");
-      window.location.reload();
+      router.refresh();
     },
     onError: (error) => {
       toast.error(error.message || "Something went wrong");

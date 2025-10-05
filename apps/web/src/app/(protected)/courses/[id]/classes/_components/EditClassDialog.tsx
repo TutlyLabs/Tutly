@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FaPlus } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +64,7 @@ const EditClassDialog = ({
   const [createdAt, setCreatedAt] = useState(
     new Date().toISOString().split("T")[0],
   );
+  const router = useRouter();
 
   const updateClass = api.classes.updateClass.useMutation();
   const getFolders = api.courses.foldersByCourseId.useQuery({ id: courseId });
@@ -111,7 +113,7 @@ const EditClassDialog = ({
 
       toast.success("Class updated successfully");
       onOpenChange(false);
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       toast.error("Failed to update class");
     } finally {

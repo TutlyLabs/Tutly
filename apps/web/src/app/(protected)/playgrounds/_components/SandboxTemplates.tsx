@@ -2,10 +2,13 @@
 
 import type { Template } from "../templetes";
 import { templates } from "../templetes";
+import { useRouter } from "next/navigation";
 
 export default function SandboxTemplates() {
+  const router = useRouter();
+
   const handleTemplateClick = (template: Template) => {
-    window.location.href = `/playgrounds/sandbox?template=${template.template}&name=${encodeURIComponent(template.name)}`;
+    router.push(`/playgrounds/sandbox?template=${template.template}&name=${encodeURIComponent(template.name)}`);
   };
 
   return (

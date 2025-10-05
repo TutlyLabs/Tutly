@@ -1,3 +1,5 @@
+"use server";
+
 import { redirect } from "next/navigation";
 import { authClient } from "@/server/auth/client";
 import { headers } from "next/headers";
@@ -18,15 +20,20 @@ export type SessionWithUser = {
 
 export const getServerSession = cache(
   async (): Promise<SessionWithUser | null> => {
-    const session = await authClient.getSession({
-      fetchOptions: {
-        headers: await headers(),
-      },
-    });
-    if (session.error) {
+    try {
+      const session = await authClient.getSession({
+        fetchOptions: {
+          headers: await headers(),
+        },
+      });
+      if (session.error) {
+        return null;
+      }
+      return session.data as any;
+    } catch (error) {
+      console.error("Server session error:", error);
       return null;
     }
-    return session.data as any;
   },
 );
 

@@ -37,21 +37,18 @@ model User {
   id       String  @id @default(uuid())
   name     String
   username String  @unique
-  email    String  @unique
+  email    String? @unique
   image    String?
+  password String?
   mobile   String?
   role     Role    @default(STUDENT)
-
-  displayUsername String?
-  banned          Boolean?
-  banReason       String?
-  banExpires      DateTime?
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
-  lastSeen      DateTime?
-  emailVerified Boolean   @default(false)
+  lastSeen        DateTime?
+  emailVerified   DateTime?
+  isEmailVerified Boolean   @default(false)
 
   isProfilePublic Boolean @default(true)
 
@@ -65,7 +62,6 @@ model User {
   isAdmin    Boolean   @default(false)
   disabledAt DateTime?
 
-  accounts        Account[]
   course          Course[]
   profile         Profile?
   doubt           Doubt[]
@@ -75,8 +71,7 @@ model User {
   assignedMentees EnrolledUsers[] @relation(name: "mentor")
   adminForCourses Course[]        @relation("CourseAdmins")
 
-  sessions Session[]
-  Events   Events[]
+  Events Events[]
 
   notificationsFor    Notification[] @relation("notificationIntendedFor")
   notificationsCaused Notification[] @relation("notificationCausedBy")
@@ -87,7 +82,11 @@ model User {
   archivedFiles File[]          @relation("archivedFiles")
   ScheduleEvent ScheduleEvent[]
 
-  @@map("user")
+  displayUsername String?
+  sessions        Session[]
+  accounts        Account[]
+
+  @@map("User")
 }
 
 model Profile {
@@ -416,20 +415,19 @@ enum submissionMode {
 }
 
 model Attachment {
-  id             String         @id @default(uuid())
-  title          String         @default("Attachment")
-  details        String?
-  attachmentType attachmentType
-  link           String?
-  submissions    submission[]
-  maxSubmissions Int?           @default(1)
-  classId        String?
-  class          Class?         @relation(fields: [classId], references: [id])
-  courseId       String?
-  course         Course?        @relation(fields: [courseId], references: [id])
-  submissionMode submissionMode @default(HTML_CSS_JS)
-
-  sandboxTemplate String? @db.Text
+  id              String         @id @default(uuid())
+  title           String         @default("Attachment")
+  details         String?
+  attachmentType  attachmentType
+  link            String?
+  submissions     submission[]
+  maxSubmissions  Int?           @default(1)
+  classId         String?
+  class           Class?         @relation(fields: [classId], references: [id])
+  courseId        String?
+  course          Course?        @relation(fields: [courseId], references: [id])
+  submissionMode  submissionMode @default(HTML_CSS_JS)
+  sandboxTemplate String?        @db.Text
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -477,47 +475,6 @@ model Point {
   updatedAt DateTime @updatedAt
 
   @@unique([submissionId, category])
-}
-
-model Account {
-  id                    String    @id @default(uuid())
-  providerId            String
-  accountId             String
-  refreshToken          String?
-  accessToken           String?
-  idToken               String?
-  scope                 String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  password              String?
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("account")
-}
-
-model Session {
-  id String @id @default(uuid())
-
-  expiresAt DateTime
-  ipAddress String?
-  userAgent String?
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  token          String
-  impersonatedBy String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([token])
-  @@map("session")
 }
 
 enum EventCategory {
@@ -620,13 +577,58 @@ model Otp {
   @@index([email, otp])
 }
 
+model FeatureFlag {
+  id           String  @id @default(uuid())
+  key          String  @unique
+  enabled      Boolean @default(true)
+  payload      Json?
+  allowedRoles Role[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
 model Verification {
-  id         String    @id
+  id         String   @id
   identifier String
   value      String
   expiresAt  DateTime
-  createdAt  DateTime?
-  updatedAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
 }
