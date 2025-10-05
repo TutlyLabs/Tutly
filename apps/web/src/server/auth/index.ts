@@ -2,9 +2,13 @@ import { compare, hash } from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { customSession, bearer, username } from "better-auth/plugins";
-import { FRONTEND_URL } from "@/lib/constants";
+import { FRONTEND_URL, RESEND_API_KEY } from "@/lib/constants";
 import { db } from "../../lib/db";
 import { randomUUID } from "crypto";
+import ResetPasswordEmailTemplate from "@/components/email/ResetPasswordEmailTemplate";
+import { Resend } from "resend";
+
+const resend = new Resend(RESEND_API_KEY);
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -38,6 +42,36 @@ export const auth = betterAuth({
         const isValidPassword = await compare(data.password, data.hash);
         return isValidPassword;
       },
+    },
+    sendResetPassword: async ({ user, url}) => {
+      const userData = await db.user.findUnique({
+        where: { id: user.id },
+        select: { name: true },
+      });
+
+      const userName = userData?.name || "User";
+
+      try {
+        const { data, error } = await resend.emails.send({
+          from: "Tutly <no-reply@otp.tutly.in>",
+          to: [user.email],
+          subject: "Reset Your Password - Tutly",
+          react: ResetPasswordEmailTemplate({
+            resetLink: url,
+            name: userName,
+          }),
+        });
+
+        if (error) {
+          console.error("Error sending password reset email:", error);
+          throw new Error("Failed to send password reset email");
+        }
+
+        console.log("Password reset email sent successfully:", data);
+      } catch (error) {
+        console.error("Error in sendResetPassword:", error);
+        throw error;
+      }
     },
   },
   emailVerification: {
