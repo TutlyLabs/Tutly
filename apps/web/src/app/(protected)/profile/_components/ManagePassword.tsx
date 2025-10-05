@@ -421,7 +421,7 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-      <div className="bg-background mx-auto w-full max-w-sm rounded-lg p-8 shadow-sm">
+      <div className="bg-background mx-auto w-full min-w-[300px] max-w-sm rounded-lg shadow-sm">
         {step === "email" && renderEmailStep()}
         {step === "otp" && renderOTPStep()}
         {step === "password" && renderPasswordStep()}
