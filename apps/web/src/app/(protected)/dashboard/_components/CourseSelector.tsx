@@ -58,7 +58,7 @@ export default function CourseSelector({
         onValueChange={onCourseChange}
         defaultValue={courses[0]?.courseId ?? ""}
       >
-        <SelectTrigger className="ml-2 rounded-md bg-white px-2 py-1 text-gray-900">
+        <SelectTrigger className="ml-2 rounded-md !bg-white px-2 py-1 text-gray-900">
           <SelectValue placeholder="Select a course" />
         </SelectTrigger>
         <SelectContent align="end">

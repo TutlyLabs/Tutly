@@ -82,8 +82,8 @@ const AssignmentDashboard = () => {
 
   return (
     <div className="mx-2 flex flex-col gap-4 px-2 py-2 md:mx-14 md:px-8">
-      <h1 className="mt-4 py-2 text-center text-xl font-bold">
-        Student-wise Assignments
+      <h1 className="mt-4 py-2 text-center text-xl font-bold uppercase">
+        Assignments
       </h1>
       {courses === null || courses.length === 0 ? (
         <div className="text-center">No courses available!</div>

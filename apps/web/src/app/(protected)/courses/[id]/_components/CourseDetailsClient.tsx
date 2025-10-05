@@ -16,9 +16,10 @@ export default function CourseDetailsClient({
   courseId: string;
 }) {
   const router = useRouter();
-  const { data: assignments } = api.attachments.getCourseAssignments.useQuery({
+  const { data: assignmentsResponse } = api.attachments.getCourseAssignments.useQuery({
     courseId,
   });
+  const assignments = assignmentsResponse?.data;
 
   if (!user) {
     router.push("/sign-in");
@@ -39,13 +40,13 @@ export default function CourseDetailsClient({
         </h1>
 
         <div className="mt-3 grid grid-cols-1 gap-4 p-2 sm:grid-cols-2 md:grid-cols-3">
-          {assignments?.data?.length === 0 && (
+          {assignments?.length === 0 && (
             <div className="dark:text-secondary-300 mt-5 text-xl">
               No assignments yet...
             </div>
           )}
 
-          {assignments?.data?.map((attachment) => (
+          {assignments?.map((attachment) => (
             <div
               key={attachment.id}
               className="rounded-lg p-4 text-zinc-600 backdrop-blur-2xl dark:bg-slate-800"
