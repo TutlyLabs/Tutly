@@ -2,7 +2,7 @@ import "@/styles/globals.css";
 import { RefreshCw } from "lucide-react";
 import { getVersion } from "@/lib/version";
 import ThemeToggle from "@/components/ThemeToggle";
-import { posthog } from "@/lib/posthog";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 import { getServerSession } from "@/lib/auth";
 import { FeatureFlagsProvider } from "./_components/FeatureFlagsProvider";
 import { redirect } from "next/navigation";
@@ -20,15 +20,9 @@ export default async function AuthLayout({ children }: Props) {
     redirect("/dashboard");
   }
 
-  const isGoogleSignInEnabled = await posthog.isFeatureEnabled(
-    "google_sign_in",
-    "unauthenticated",
-  );
+  const isGoogleSignInEnabled = await isFeatureEnabled("google_sign_in", currentUser || { id: "unauthenticated", role: "STUDENT" });
 
-  const isGithubSignInEnabled = await posthog.isFeatureEnabled(
-    "github_sign_in",
-    "unauthenticated",
-  );
+  const isGithubSignInEnabled = await isFeatureEnabled("github_sign_in", currentUser || { id: "unauthenticated", role: "STUDENT" });
 
   return (
     <>

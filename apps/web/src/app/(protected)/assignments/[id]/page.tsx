@@ -3,7 +3,7 @@ import { getServerSessionOrRedirect } from "@/lib/auth";
 import { db } from "@/lib/db";
 import AssignmentPage from "../_components/AssignmentPage";
 import type { Attachment, submission as Submission } from "@prisma/client";
-import { posthog } from "@/lib/posthog";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 
 interface AssignmentPageProps {
   params: Promise<{ id: string }>;
@@ -106,27 +106,27 @@ export default async function AssignmentDetailPage({
                   AND: [
                     selectedMentor && selectedMentor !== "all"
                       ? {
-                          enrolledUser: {
-                            mentorUsername: selectedMentor,
-                          },
-                        }
+                        enrolledUser: {
+                          mentorUsername: selectedMentor,
+                        },
+                      }
                       : {},
                     searchQuery
                       ? {
-                          enrolledUser: {
-                            username: {
-                              contains: searchQuery,
-                              mode: "insensitive",
-                            },
+                        enrolledUser: {
+                          username: {
+                            contains: searchQuery,
+                            mode: "insensitive",
                           },
-                        }
+                        },
+                      }
                       : {},
                     username
                       ? {
-                          enrolledUser: {
-                            username: username,
-                          },
-                        }
+                        enrolledUser: {
+                          username: username,
+                        },
+                      }
                       : {},
                   ],
                 },
@@ -175,27 +175,27 @@ export default async function AssignmentDetailPage({
               AND: [
                 selectedMentor && selectedMentor !== "all"
                   ? {
-                      enrolledUser: {
-                        mentorUsername: selectedMentor,
-                      },
-                    }
+                    enrolledUser: {
+                      mentorUsername: selectedMentor,
+                    },
+                  }
                   : {},
                 searchQuery
                   ? {
-                      enrolledUser: {
-                        username: {
-                          contains: searchQuery,
-                          mode: "insensitive",
-                        },
+                    enrolledUser: {
+                      username: {
+                        contains: searchQuery,
+                        mode: "insensitive",
                       },
-                    }
+                    },
+                  }
                   : {},
                 username
                   ? {
-                      enrolledUser: {
-                        username: username,
-                      },
-                    }
+                    enrolledUser: {
+                      username: username,
+                    },
+                  }
                   : {},
               ],
             },
@@ -228,20 +228,20 @@ export default async function AssignmentDetailPage({
                     },
                     username
                       ? {
-                          enrolledUser: {
-                            username: username,
-                          },
-                        }
+                        enrolledUser: {
+                          username: username,
+                        },
+                      }
                       : {},
                     searchQuery
                       ? {
-                          enrolledUser: {
-                            username: {
-                              contains: searchQuery,
-                              mode: "insensitive",
-                            },
+                        enrolledUser: {
+                          username: {
+                            contains: searchQuery,
+                            mode: "insensitive",
                           },
-                        }
+                        },
+                      }
                       : {},
                   ],
                 },
@@ -293,20 +293,20 @@ export default async function AssignmentDetailPage({
                 },
                 username
                   ? {
-                      enrolledUser: {
-                        username: username,
-                      },
-                    }
+                    enrolledUser: {
+                      username: username,
+                    },
+                  }
                   : {},
                 searchQuery
                   ? {
-                      enrolledUser: {
-                        username: {
-                          contains: searchQuery,
-                          mode: "insensitive",
-                        },
+                    enrolledUser: {
+                      username: {
+                        contains: searchQuery,
+                        mode: "insensitive",
                       },
-                    }
+                    },
+                  }
                   : {},
               ],
             },
@@ -387,25 +387,22 @@ export default async function AssignmentDetailPage({
     user.role === "INSTRUCTOR"
       ? user.id === assignment.course?.createdById
       : (user?.adminForCourses?.some(
-          (course) => course.id === assignment.courseId,
-        ) ?? false);
+        (course) => course.id === assignment.courseId,
+      ) ?? false);
 
   const totalPages = Math.ceil((assignment.totalCount ?? 0) / limit);
 
   const mentors = assignment?.course?.enrolledUsers
     ? Array.from(
-        new Set(
-          assignment.course.enrolledUsers
-            .map((enrolledUser) => enrolledUser.mentorUsername)
-            .filter(Boolean),
-        ),
-      )
+      new Set(
+        assignment.course.enrolledUsers
+          .map((enrolledUser) => enrolledUser.mentorUsername)
+          .filter(Boolean),
+      ),
+    )
     : [];
 
-  const isSandboxSubmissionEnabled = await posthog.isFeatureEnabled(
-    "sandbox_submission",
-    user.id,
-  );
+  const isSandboxSubmissionEnabled = await isFeatureEnabled("sandbox_submission", user);
 
   return (
     <AssignmentPage

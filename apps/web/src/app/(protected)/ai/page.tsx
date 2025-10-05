@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSessionOrRedirect } from "@/lib/auth";
-import { posthog } from "@/lib/posthog";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 import AIChat from "./_components/AIChat";
 
 export default async function AIPage() {
@@ -11,10 +11,7 @@ export default async function AIPage() {
     redirect("/404");
   }
 
-  const isAIAssistantEnabled = await posthog.isFeatureEnabled(
-    "ai_assistant",
-    user.id,
-  );
+  const isAIAssistantEnabled = await isFeatureEnabled("ai_assistant", user);
   if (!isAIAssistantEnabled) {
     redirect("/404");
   }

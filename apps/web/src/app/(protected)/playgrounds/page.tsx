@@ -2,7 +2,7 @@ import { RiReactjsFill } from "react-icons/ri";
 import { IoLogoHtml5 } from "react-icons/io5";
 import Link from "next/link";
 import SandboxTemplates from "./_components/SandboxTemplates";
-import { posthog } from "@/lib/posthog";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 import { getServerSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
@@ -14,10 +14,7 @@ export default async function PlaygroundsPage() {
     redirect("/sign-in");
   }
 
-  const isSandboxEnabled = await posthog.isFeatureEnabled(
-    "sandbox_templates",
-    currentUser.id,
-  );
+  const isSandboxEnabled = await isFeatureEnabled("sandbox_templates", currentUser);
 
   return (
     <div className="flex flex-col gap-8">
