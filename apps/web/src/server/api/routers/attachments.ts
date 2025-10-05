@@ -164,13 +164,30 @@ export const attachmentsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       try {
+        const currentUser = ctx.session.user;
+
+        const enrolledUser = await ctx.db.enrolledUsers.findFirst({
+          where: {
+            username: currentUser.username,
+            courseId: input.courseId,
+          },
+        });
+
+        if (!enrolledUser) {
+          return { success: true, data: [] };
+        }
+
         const assignments = await ctx.db.attachment.findMany({
           where: {
             courseId: input.courseId,
             attachmentType: "ASSIGNMENT",
           },
           include: {
-            submissions: true,
+            submissions: {
+              where: {
+                enrolledUserId: enrolledUser.id,
+              },
+            },
           },
           orderBy: {
             createdAt: "desc",

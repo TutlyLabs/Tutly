@@ -6,6 +6,7 @@ import type { SessionUser } from "@/lib/auth";
 import Link from "next/link";
 
 import ClassSidebar from "../classes/_components/classSidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/trpc/react";
 
 export default function CourseDetailsClient({
@@ -16,7 +17,7 @@ export default function CourseDetailsClient({
   courseId: string;
 }) {
   const router = useRouter();
-  const { data: assignmentsResponse } = api.attachments.getCourseAssignments.useQuery({
+  const { data: assignmentsResponse, isLoading: assignmentsLoading } = api.attachments.getCourseAssignments.useQuery({
     courseId,
   });
   const assignments = assignmentsResponse?.data;
@@ -40,13 +41,38 @@ export default function CourseDetailsClient({
         </h1>
 
         <div className="mt-3 grid grid-cols-1 gap-4 p-2 sm:grid-cols-2 md:grid-cols-3">
-          {assignments?.length === 0 && (
+          {assignmentsLoading && (
+            <>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-lg p-4 text-zinc-600 backdrop-blur-2xl dark:bg-slate-800"
+                  style={{
+                    boxShadow:
+                      "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
+                  }}
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <Skeleton className="h-5 w-32" />
+                    <div className="flex items-center space-x-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                  </div>
+                  <Skeleton className="mt-2 mb-2 h-4 w-full" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+            </>
+          )}
+
+          {!assignmentsLoading && assignments?.length === 0 && (
             <div className="dark:text-secondary-300 mt-5 text-xl">
               No assignments yet...
             </div>
           )}
 
-          {assignments?.map((attachment) => (
+          {!assignmentsLoading && assignments?.map((attachment) => (
             <div
               key={attachment.id}
               className="rounded-lg p-4 text-zinc-600 backdrop-blur-2xl dark:bg-slate-800"
