@@ -66,9 +66,8 @@ export default function StudentWiseAssignments({
             return (
               <button
                 onClick={() => setCurrentCourse(course.id)}
-                className={`rounded p-2 sm:w-auto ${
-                  currentCourse === course.id && "rounded border"
-                }`}
+                className={`rounded p-2 sm:w-auto ${currentCourse === course.id && "rounded border"
+                  }`}
                 key={course.id}
               >
                 <h1 className="max-w-xs truncate text-sm font-medium">
@@ -174,7 +173,7 @@ export default function StudentWiseAssignments({
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-white md:gap-6">
                         {assignment.submissions.length === 0 ? (
-                          <div className="itens-center flex gap-6">
+                          <div className="items-center flex gap-6">
                             <div className="bg-secondary-600 rounded-full p-2.5">
                               not submitted
                             </div>
@@ -195,18 +194,16 @@ export default function StudentWiseAssignments({
                                     </div>
                                   );
                                 } else {
-                                  let total = 0;
+                                  const total = eachSubmission.points.reduce(
+                                    (sum: number, point: any) => sum + (point.score || 0),
+                                    0,
+                                  );
                                   return (
                                     <div
                                       className="flex items-center gap-6"
                                       key={index}
                                     >
                                       <div className="flex items-center rounded-full bg-green-600 p-2.5">
-                                        {eachSubmission.points.forEach(
-                                          (point: any) => {
-                                            total += point.score;
-                                          },
-                                        )}
                                         <h1>Score : {total}</h1>
                                         <MdOutlineSportsScore className="inline sm:h-5 sm:w-5" />
                                       </div>

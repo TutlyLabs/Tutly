@@ -4,7 +4,6 @@ import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -20,11 +19,11 @@ import { InboxIcon } from "lucide-react";
 const chartConfig = {
   present: {
     label: "Present",
-    color: "hsl(var(--chart-1))",
+    color: "var(--color-chart-1)",
   },
   absent: {
     label: "Absent",
-    color: "hsl(var(--chart-5))",
+    color: "var(--color-chart-5)",
   },
 } satisfies ChartConfig;
 
@@ -48,7 +47,7 @@ export function Radialchart({ data, thisWeek }: any) {
   const chartData = [{ present: data, absent: (100 - data).toFixed(2) }];
   return (
     <Card className="h-[300px] w-full">
-      <CardHeader className="pb-10 text-center">
+      <CardHeader className="pb-2 text-center">
         <CardTitle>Attendance</CardTitle>
       </CardHeader>
       <CardContent className="relative flex h-[250px] flex-col items-center pb-0">
@@ -105,7 +104,7 @@ export function Radialchart({ data, thisWeek }: any) {
             />
           </RadialBarChart>
         </ChartContainer>
-        <CardFooter className="absolute bottom-0 m-auto text-sm">
+        <CardFooter className="absolute bottom-2 m-auto text-sm pt-0">
           This week &nbsp; <TrendingUp className="mr-2 h-4 w-4" />{" "}
           <span
             className={`${thisWeek < 0 ? "text-red-500" : "text-green-500"}`}

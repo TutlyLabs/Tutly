@@ -14,7 +14,7 @@ import { InboxIcon } from "lucide-react";
 const chartConfig = {
   submissions: {
     label: "Submissions",
-    color: "hsl(var(--chart-1))",
+    color: "var(--color-chart-1)",
   },
 } satisfies ChartConfig;
 

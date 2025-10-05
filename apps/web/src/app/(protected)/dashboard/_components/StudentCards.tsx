@@ -229,11 +229,11 @@ const PlatformScores = () => {
     "leetcode",
   ];
   const colors = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
+    "var(--color-chart-1)",
+    "var(--color-chart-2)",
+    "var(--color-chart-3)",
+    "var(--color-chart-4)",
+    "var(--color-chart-5)",
   ];
 
   const dummyData = platforms.map((platform) => ({
@@ -550,7 +550,7 @@ export function StudentCards({ selectedCourse }: Props) {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm font-medium text-gray-400"
+                    className="w-full md:w-auto min-w-[140px] rounded-md border border-gray-300 px-2 py-1.5 text-sm font-medium text-gray-400"
                   >
                     {selectedStatus}
                   </Button>
@@ -573,8 +573,8 @@ export function StudentCards({ selectedCourse }: Props) {
               </DropdownMenu>
               <Input
                 type="text"
-                placeholder="Search by assignment name"
-                className="w-full rounded-md border border-gray-300 p-2"
+                placeholder="Search assignment..."
+                className="w-full md:flex-1 rounded-md border border-gray-300 p-2"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />

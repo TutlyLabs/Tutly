@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { FaCrown } from "react-icons/fa";
 import { HiOutlineDotsHorizontal } from "react-icons/hi";
@@ -30,7 +30,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 import { useClientSession } from "@/lib/auth/client";
 
@@ -63,35 +62,15 @@ interface Response {
 
 interface MessagesProps {
   doubts: Doubt[];
-  currentCourseId: string;
 }
 
-export default function Messages({ doubts, currentCourseId }: MessagesProps) {
+export default function Messages({ doubts }: MessagesProps) {
   const [openAccordion, setOpenAccordion] = useState<number>(0);
-  const [show, setShow] = useState<boolean>(false);
-  const [message, setMessage] = useState<string>("");
   const [reply, setReply] = useState<string>("");
   const [replyId, setReplyId] = useState<string>("");
 
   const { data, isPending } = useClientSession();
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
-  const currentUser = data?.user!;
   const utils = api.useUtils();
-  const addDoubtRef = useRef<HTMLTextAreaElement>(null);
-
-  const createDoubt = api.doubts.createDoubt.useMutation({
-    onSuccess: () => {
-      void utils.doubts.getUserDoubtsByCourseId.invalidate();
-      toast.success("Doubt added successfully");
-      setMessage("");
-    },
-    onError: () => {
-      toast.error("Failed to add doubt");
-    },
-  });
 
   const createResponse = api.doubts.createResponse.useMutation({
     onSuccess: () => {
@@ -125,13 +104,11 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
     },
   });
 
-  const handleAddDoubt = async (data: { message: string }) => {
-    await createDoubt.mutateAsync({
-      courseId: currentCourseId,
-      title: "",
-      description: data.message,
-    });
-  };
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
+
+  const currentUser = data?.user!;
 
   const handleReply = async (id: string) => {
     if (!reply) return;
@@ -154,34 +131,12 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
     });
   };
 
-  const handleCtrlEnterDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && e.ctrlKey) {
-      void handleSubmit(e);
-    }
-  };
 
   const toggleAccordion = (index: number) => {
     setOpenAccordion(openAccordion === index ? -1 : index);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setShow(false);
-    const data = {
-      message: message,
-    };
-    if (!data.message) {
-      toast.error("Please enter a message");
-      return;
-    }
-    await handleAddDoubt(data);
-    setShow(false);
-  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    e.preventDefault();
-    setMessage(e.target.value);
-  };
 
   function formatDateTime(dateTimeString: string) {
     const dateTime = new Date(dateTimeString);
@@ -202,43 +157,7 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6 md:min-w-[800px] lg:px-8">
-      <div className="flex flex-col items-center space-y-4 text-sm font-medium">
-        <div className="sticky top-0 z-10 mb-4 flex w-full justify-center py-2">
-          <AlertDialog open={show} onOpenChange={setShow}>
-            <AlertDialogTrigger className="w-full sm:w-auto">
-              <Button className="rounded-md bg-gray-500 px-4 py-3 text-white hover:bg-gray-600">
-                {currentUser.role === "STUDENT"
-                  ? "Ask a Doubt"
-                  : "Raise a Query"}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Share Your Queries Here</AlertDialogTitle>
-                <AlertDialogDescription>
-                  <Textarea
-                    ref={addDoubtRef}
-                    id="message"
-                    placeholder="Start typing your doubt here..."
-                    onChange={handleChange}
-                    onKeyDown={handleCtrlEnterDown}
-                    rows={4}
-                    value={message}
-                    className="my-2 w-full resize-none rounded-md border border-gray-300 p-3 font-semibold text-gray-300 focus:border-transparent focus:ring-2 focus:ring-fuchsia-500 focus:outline-none"
-                  />
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleSubmit}>
-                  Continue
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </div>
+    <div className="">
 
       {doubts?.length !== 0 && (
         <Card
@@ -249,9 +168,8 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
           {doubts?.map((qa, index) => (
             <div
               key={index}
-              className={`relative rounded-md bg-white p-4 transition-shadow duration-300 ease-in-out ${
-                openAccordion === index ? "shadow-xl" : "shadow-md"
-              }w-full`}
+              className={`relative rounded-md bg-white p-4 transition-shadow duration-300 ease-in-out ${openAccordion === index ? "shadow-xl" : "shadow-md"
+                }w-full`}
             >
               <div className="flex flex-col justify-between gap-4 p-2 sm:flex-row">
                 <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
@@ -328,11 +246,11 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
                         {(currentUser.role === "INSTRUCTOR" ||
                           (currentUser.role === "MENTOR" &&
                             qa.user.id === currentUser.id)) && (
-                          <DropdownMenuItem>
-                            <MdDelete className="mr-2 h-4 w-4" />
-                            <AlertDialogTrigger>Delete</AlertDialogTrigger>
-                          </DropdownMenuItem>
-                        )}
+                            <DropdownMenuItem>
+                              <MdDelete className="mr-2 h-4 w-4" />
+                              <AlertDialogTrigger>Delete</AlertDialogTrigger>
+                            </DropdownMenuItem>
+                          )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <AlertDialogContent>
@@ -470,31 +388,31 @@ export default function Messages({ doubts, currentCourseId }: MessagesProps) {
                         >
                           {(currentUser.role === "MENTOR" ||
                             currentUser.role === "INSTRUCTOR") && (
-                            <AlertDialog>
-                              <AlertDialogTrigger>
-                                <MdDelete className="h-5 w-5 cursor-pointer text-red-600" />
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you absolutely sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete the reply.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteReply(r.id)}
-                                  >
-                                    Continue
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
+                              <AlertDialog>
+                                <AlertDialogTrigger>
+                                  <MdDelete className="h-5 w-5 cursor-pointer text-red-600" />
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Are you absolutely sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will
+                                      permanently delete the reply.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteReply(r.id)}
+                                    >
+                                      Continue
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                         </div>
                       </div>
                       <div className="mt-4 -mb-2 text-sm font-semibold">

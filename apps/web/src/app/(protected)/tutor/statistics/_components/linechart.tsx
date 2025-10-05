@@ -17,7 +17,7 @@ import { InboxIcon } from "lucide-react";
 const chartConfig = {
   attendees: {
     label: "Present",
-    color: "hsl(var(--chart-1))",
+    color: "var(--color-chart-1)",
   },
 } satisfies ChartConfig;
 
