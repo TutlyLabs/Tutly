@@ -559,24 +559,6 @@ model Holidays {
   endDate     DateTime
 }
 
-enum OTPType {
-  PASSWORD_RESET
-}
-
-model Otp {
-  id        String   @id @default(uuid())
-  email     String
-  otp       String
-  type      OTPType  @default(PASSWORD_RESET)
-  expiresAt DateTime @default(dbgenerated("(NOW() + interval '15 minutes')"))
-  used      Boolean  @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([email, otp])
-}
-
 model FeatureFlag {
   id           String  @id @default(uuid())
   key          String  @unique
