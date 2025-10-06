@@ -1,5 +1,4 @@
 import "@/styles/globals.css";
-import { RefreshCw } from "lucide-react";
 import { getVersion } from "@/lib/version";
 import ThemeToggle from "@/components/ThemeToggle";
 import { isFeatureEnabled } from "@/lib/featureFlags";
@@ -34,13 +33,6 @@ export default async function AuthLayout({ children }: Props) {
     <>
       <div className="text-muted-foreground fixed bottom-2 left-2 flex items-center gap-1.5 px-2 text-xs">
         <span>{version}</span>
-        <button
-          id="checkUpdate"
-          className="hover:bg-muted inline-flex items-center gap-1 rounded-md px-1.5 py-0.5"
-          title="Check for updates"
-        >
-          <RefreshCw className="h-3 w-3 transition-transform" />
-        </button>
       </div>
       <div className="fixed top-4 right-4">
         <ThemeToggle />
