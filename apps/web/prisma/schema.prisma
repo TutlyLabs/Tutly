@@ -39,7 +39,6 @@ model User {
   username String  @unique
   email    String? @unique
   image    String?
-  password String?
   mobile   String?
   role     Role    @default(STUDENT)
 

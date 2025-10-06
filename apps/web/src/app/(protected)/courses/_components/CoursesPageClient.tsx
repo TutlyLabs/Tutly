@@ -13,7 +13,10 @@ interface CoursesPageClientProps {
   coursesData: { success: boolean; data: Course[] } | undefined;
 }
 
-export default function CoursesPageClient({ user, coursesData }: CoursesPageClientProps) {
+export default function CoursesPageClient({
+  user,
+  coursesData,
+}: CoursesPageClientProps) {
   const router = useRouter();
 
   if (!user) {
