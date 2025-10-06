@@ -159,9 +159,10 @@ const ResetPasswordEmailTemplate = ({
             }}
           >
             <p style={{ margin: "0" }}>
-              <strong>Security Note:</strong> This password reset link will expire
-              in 1 hour for security reasons. If you didn't request this reset,
-              please ignore this email and your password will remain unchanged.
+              <strong>Security Note:</strong> This password reset link will
+              expire in 1 hour for security reasons. If you didn't request this
+              reset, please ignore this email and your password will remain
+              unchanged.
             </p>
           </div>
 
@@ -187,7 +188,10 @@ const ResetPasswordEmailTemplate = ({
             color: "#666666",
           }}
         >
-          <p>If you didn&apos;t request this password reset, please ignore this email.</p>
+          <p>
+            If you didn&apos;t request this password reset, please ignore this
+            email.
+          </p>
         </div>
 
         <div

@@ -24,7 +24,10 @@ export default async function SandboxPage({
   const submissionId = (searchParams.submissionId as string) || "";
   const editTemplate = searchParams.editTemplate as string;
 
-  const isSandboxEnabled = await isFeatureEnabled("sandbox_templates", currentUser);
+  const isSandboxEnabled = await isFeatureEnabled(
+    "sandbox_templates",
+    currentUser,
+  );
 
   if (!isSandboxEnabled) {
     redirect("/playgrounds");
@@ -32,17 +35,17 @@ export default async function SandboxPage({
 
   const submission = submissionId
     ? await db.submission.findUnique({
-      where: { id: submissionId },
-      include: {
-        enrolledUser: {
-          include: {
-            user: true,
+        where: { id: submissionId },
+        include: {
+          enrolledUser: {
+            include: {
+              user: true,
+            },
           },
+          points: true,
+          assignment: true,
         },
-        points: true,
-        assignment: true,
-      },
-    })
+      })
     : null;
 
   const studentAccess =
@@ -61,11 +64,11 @@ export default async function SandboxPage({
 
   const assignment = assignmentId
     ? await db.attachment.findUnique({
-      where: {
-        id: assignmentId,
-        attachmentType: "ASSIGNMENT",
-      },
-    })
+        where: {
+          id: assignmentId,
+          attachmentType: "ASSIGNMENT",
+        },
+      })
     : null;
 
   let decodedSandboxTemplate = null;
@@ -83,9 +86,9 @@ export default async function SandboxPage({
 
   const assignmentWithDecodedTemplate = assignment
     ? {
-      ...assignment,
-      sandboxTemplate: decodedSandboxTemplate,
-    }
+        ...assignment,
+        sandboxTemplate: decodedSandboxTemplate,
+      }
     : null;
 
   const validTemplates = Object.keys(SANDBOX_TEMPLATES);

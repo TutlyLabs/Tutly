@@ -445,7 +445,7 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
                       </td>
                       <td className="px-4 py-2">
                         {attachment.attachmentType === "ASSIGNMENT" &&
-                          attachment.dueDate
+                        attachment.dueDate
                           ? dayjs(attachment.dueDate).format("MMM D, YYYY")
                           : "-"}
                       </td>

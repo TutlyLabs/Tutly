@@ -43,7 +43,7 @@ export const auth = betterAuth({
         return isValidPassword;
       },
     },
-    sendResetPassword: async ({ user, url}) => {
+    sendResetPassword: async ({ user, url }) => {
       const userData = await db.user.findUnique({
         where: { id: user.id },
         select: { name: true },

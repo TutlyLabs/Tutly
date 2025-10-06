@@ -17,9 +17,10 @@ export default function CourseDetailsClient({
   courseId: string;
 }) {
   const router = useRouter();
-  const { data: assignmentsResponse, isLoading: assignmentsLoading } = api.attachments.getCourseAssignments.useQuery({
-    courseId,
-  });
+  const { data: assignmentsResponse, isLoading: assignmentsLoading } =
+    api.attachments.getCourseAssignments.useQuery({
+      courseId,
+    });
   const assignments = assignmentsResponse?.data;
 
   if (!user) {
@@ -72,59 +73,60 @@ export default function CourseDetailsClient({
             </div>
           )}
 
-          {!assignmentsLoading && assignments?.map((attachment) => (
-            <div
-              key={attachment.id}
-              className="rounded-lg p-4 text-zinc-600 backdrop-blur-2xl dark:bg-slate-800"
-              style={{
-                boxShadow:
-                  "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
-              }}
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <Link
-                  href={`/assignments/${attachment.id}`}
-                  className="cursor-pointer text-base font-semibold text-blue-600 hover:text-blue-500"
-                >
-                  {attachment.title}
-                </Link>
-                <div className="gadiv-2 flex items-center text-sm font-medium">
-                  {attachment.dueDate &&
-                    new Date(attachment.dueDate).toLocaleDateString()}
-                  {"  "}
-                  {user.role === "STUDENT" && (
-                    <div className="text-white">
-                      {attachment.submissions.length !== 0 ? (
-                        <h1 className="ml-1 rounded-full border-2 border-green-600/80 bg-green-500/40 px-2 py-1 text-xs text-green-600 dark:text-green-400">
-                          submitted
-                        </h1>
-                      ) : (
-                        <h1 className="ml-1 rounded-full border-2 border-red-700 bg-red-500/40 px-2 py-1 text-xs text-red-600 dark:text-red-400">
-                          not submitted
-                        </h1>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <p className="mt-2 mb-2 text-sm font-semibold text-gray-500/85 dark:text-gray-400">
-                {/* Markdown preview would go here */}
-              </p>
-              {attachment.link && (
-                <div className="flex items-center justify-start space-x-2 text-sm hover:opacity-90">
+          {!assignmentsLoading &&
+            assignments?.map((attachment) => (
+              <div
+                key={attachment.id}
+                className="rounded-lg p-4 text-zinc-600 backdrop-blur-2xl dark:bg-slate-800"
+                style={{
+                  boxShadow:
+                    "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
+                }}
+              >
+                <div className="mb-2 flex items-center justify-between">
                   <Link
-                    href={attachment.link}
-                    className="text-blue-600 hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`/assignments/${attachment.id}`}
+                    className="cursor-pointer text-base font-semibold text-blue-600 hover:text-blue-500"
                   >
-                    View Assignment
+                    {attachment.title}
                   </Link>
-                  <FaExternalLinkAlt className="h-3 w-3" />
+                  <div className="gadiv-2 flex items-center text-sm font-medium">
+                    {attachment.dueDate &&
+                      new Date(attachment.dueDate).toLocaleDateString()}
+                    {"  "}
+                    {user.role === "STUDENT" && (
+                      <div className="text-white">
+                        {attachment.submissions.length !== 0 ? (
+                          <h1 className="ml-1 rounded-full border-2 border-green-600/80 bg-green-500/40 px-2 py-1 text-xs text-green-600 dark:text-green-400">
+                            submitted
+                          </h1>
+                        ) : (
+                          <h1 className="ml-1 rounded-full border-2 border-red-700 bg-red-500/40 px-2 py-1 text-xs text-red-600 dark:text-red-400">
+                            not submitted
+                          </h1>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+                <p className="mt-2 mb-2 text-sm font-semibold text-gray-500/85 dark:text-gray-400">
+                  {/* Markdown preview would go here */}
+                </p>
+                {attachment.link && (
+                  <div className="flex items-center justify-start space-x-2 text-sm hover:opacity-90">
+                    <Link
+                      href={attachment.link}
+                      className="text-blue-600 hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View Assignment
+                    </Link>
+                    <FaExternalLinkAlt className="h-3 w-3" />
+                  </div>
+                )}
+              </div>
+            ))}
         </div>
       </div>
     </div>

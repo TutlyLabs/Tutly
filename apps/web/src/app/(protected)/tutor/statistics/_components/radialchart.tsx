@@ -104,7 +104,7 @@ export function Radialchart({ data, thisWeek }: any) {
             />
           </RadialBarChart>
         </ChartContainer>
-        <CardFooter className="absolute bottom-2 m-auto text-sm pt-0">
+        <CardFooter className="absolute bottom-2 m-auto pt-0 text-sm">
           This week &nbsp; <TrendingUp className="mr-2 h-4 w-4" />{" "}
           <span
             className={`${thisWeek < 0 ? "text-red-500" : "text-green-500"}`}

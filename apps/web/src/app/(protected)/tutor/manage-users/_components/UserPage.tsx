@@ -305,34 +305,34 @@ const UserPage = ({
         actions={
           shouldAllowActions
             ? [
-              {
-                label: "Reset Password",
-                icon: <MdLockReset className="mr-2 h-5 w-5 text-red-500" />,
-                onClick: (user: any) => {
-                  setSelectedUser(user);
-                  setOpen(true);
+                {
+                  label: "Reset Password",
+                  icon: <MdLockReset className="mr-2 h-5 w-5 text-red-500" />,
+                  onClick: (user: any) => {
+                    setSelectedUser(user);
+                    setOpen(true);
+                  },
                 },
-              },
-              {
-                label: "Disable/Enable User",
-                icon: <UserX className="mr-2 h-5 w-5 text-red-500" />,
-                onClick: async (user: any) => {
-                  try {
-                    const mutation = api.users.disableUser.useMutation();
-                    const result = await mutation.mutateAsync({
-                      id: user.id,
-                    });
-                    toast.success(result.message);
-                    router.refresh();
-                  } catch (error: any) {
-                    toast.error(
-                      error?.message ||
-                      "An error occurred while updating user status",
-                    );
-                  }
+                {
+                  label: "Disable/Enable User",
+                  icon: <UserX className="mr-2 h-5 w-5 text-red-500" />,
+                  onClick: async (user: any) => {
+                    try {
+                      const mutation = api.users.disableUser.useMutation();
+                      const result = await mutation.mutateAsync({
+                        id: user.id,
+                      });
+                      toast.success(result.message);
+                      router.refresh();
+                    } catch (error: any) {
+                      toast.error(
+                        error?.message ||
+                          "An error occurred while updating user status",
+                      );
+                    }
+                  },
                 },
-              },
-            ]
+              ]
             : []
         }
       />

@@ -66,32 +66,38 @@ export function SignIn() {
       const isEmail = values.email.includes("@");
 
       const result = isEmail
-        ? await authClient.signIn.email({
-          email: values.email,
-          password: values.password,
-          rememberMe: true,
-          callbackURL: "/dashboard",
-        }, {
-          onSuccess: (ctx) => {
-            const authToken = ctx.response.headers.get("set-auth-token");
-            if (authToken) {
-              localStorage.setItem("bearer_token", authToken);
-            }
-          }
-        })
-        : await authClient.signIn.username({
-          username: values.email,
-          password: values.password,
-          rememberMe: true,
-          callbackURL: "/dashboard",
-        }, {
-          onSuccess: (ctx) => {
-            const authToken = ctx.response.headers.get("set-auth-token");
-            if (authToken) {
-              localStorage.setItem("bearer_token", authToken);
-            }
-          }
-        });
+        ? await authClient.signIn.email(
+            {
+              email: values.email,
+              password: values.password,
+              rememberMe: true,
+              callbackURL: "/dashboard",
+            },
+            {
+              onSuccess: (ctx) => {
+                const authToken = ctx.response.headers.get("set-auth-token");
+                if (authToken) {
+                  localStorage.setItem("bearer_token", authToken);
+                }
+              },
+            },
+          )
+        : await authClient.signIn.username(
+            {
+              username: values.email,
+              password: values.password,
+              rememberMe: true,
+              callbackURL: "/dashboard",
+            },
+            {
+              onSuccess: (ctx) => {
+                const authToken = ctx.response.headers.get("set-auth-token");
+                if (authToken) {
+                  localStorage.setItem("bearer_token", authToken);
+                }
+              },
+            },
+          );
       if (result?.data?.user) {
         router.push("/dashboard");
         return;

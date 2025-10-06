@@ -66,8 +66,9 @@ export default function StudentWiseAssignments({
             return (
               <button
                 onClick={() => setCurrentCourse(course.id)}
-                className={`rounded p-2 sm:w-auto ${currentCourse === course.id && "rounded border"
-                  }`}
+                className={`rounded p-2 sm:w-auto ${
+                  currentCourse === course.id && "rounded border"
+                }`}
                 key={course.id}
               >
                 <h1 className="max-w-xs truncate text-sm font-medium">
@@ -173,7 +174,7 @@ export default function StudentWiseAssignments({
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-white md:gap-6">
                         {assignment.submissions.length === 0 ? (
-                          <div className="items-center flex gap-6">
+                          <div className="flex items-center gap-6">
                             <div className="bg-secondary-600 rounded-full p-2.5">
                               not submitted
                             </div>
@@ -195,7 +196,8 @@ export default function StudentWiseAssignments({
                                   );
                                 } else {
                                   const total = eachSubmission.points.reduce(
-                                    (sum: number, point: any) => sum + (point.score || 0),
+                                    (sum: number, point: any) =>
+                                      sum + (point.score || 0),
                                     0,
                                   );
                                   return (

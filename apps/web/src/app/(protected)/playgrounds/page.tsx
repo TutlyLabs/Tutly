@@ -14,7 +14,10 @@ export default async function PlaygroundsPage() {
     redirect("/sign-in");
   }
 
-  const isSandboxEnabled = await isFeatureEnabled("sandbox_templates", currentUser);
+  const isSandboxEnabled = await isFeatureEnabled(
+    "sandbox_templates",
+    currentUser,
+  );
 
   return (
     <div className="flex flex-col gap-8">

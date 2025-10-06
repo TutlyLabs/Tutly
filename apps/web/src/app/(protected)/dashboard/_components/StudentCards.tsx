@@ -248,9 +248,9 @@ const PlatformScores = () => {
   const data =
     platformScoresData?.success && platformScoresData.data
       ? platforms.map((platform) => ({
-        name: platform,
-        value: platformScoresData.data.percentages[platform] ?? 0,
-      }))
+          name: platform,
+          value: platformScoresData.data.percentages[platform] ?? 0,
+        }))
       : dummyData;
 
   const renderChart = () => (
@@ -550,7 +550,7 @@ export function StudentCards({ selectedCourse }: Props) {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="w-full md:w-auto min-w-[140px] rounded-md border border-gray-300 px-2 py-1.5 text-sm font-medium text-gray-400"
+                    className="w-full min-w-[140px] rounded-md border border-gray-300 px-2 py-1.5 text-sm font-medium text-gray-400 md:w-auto"
                   >
                     {selectedStatus}
                   </Button>
@@ -574,7 +574,7 @@ export function StudentCards({ selectedCourse }: Props) {
               <Input
                 type="text"
                 placeholder="Search assignment..."
-                className="w-full md:flex-1 rounded-md border border-gray-300 p-2"
+                className="w-full rounded-md border border-gray-300 p-2 md:flex-1"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />

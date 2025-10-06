@@ -118,8 +118,10 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
 
   const renderEmptyState = (message: string) => (
     <div className="flex flex-col items-center justify-center gap-2 py-4">
-      <MdEventRepeat className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground/50" />
-      <span className="text-xs text-muted-foreground text-center">{message}</span>
+      <MdEventRepeat className="text-muted-foreground/50 h-12 w-12 md:h-16 md:w-16" />
+      <span className="text-muted-foreground text-center text-xs">
+        {message}
+      </span>
     </div>
   );
 

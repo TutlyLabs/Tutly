@@ -76,24 +76,25 @@ export function SignUp() {
   const handleSubmit = async (values: SignUpInput) => {
     try {
       setIsLoading(true);
-      const result = await authClient.signUp.email({
-        email: values.email,
-        password: values.password,
-        name: values.name,
-        username: values.username,
-        callbackURL: "/dashboard",
-      }, {
-        onSuccess: (ctx) => {
-          const authToken = ctx.response.headers.get("set-auth-token");
-          if (authToken) {
-            localStorage.setItem("bearer_token", authToken);
-          }
-        }
-      });
+      const result = await authClient.signUp.email(
+        {
+          email: values.email,
+          password: values.password,
+          name: values.name,
+          username: values.username,
+          callbackURL: "/dashboard",
+        },
+        {
+          onSuccess: (ctx) => {
+            const authToken = ctx.response.headers.get("set-auth-token");
+            if (authToken) {
+              localStorage.setItem("bearer_token", authToken);
+            }
+          },
+        },
+      );
       if (result?.data?.user) {
-        toast.success(
-          "Sign up successful!"
-        );
+        toast.success("Sign up successful!");
         router.push("/dashboard");
         return;
       }

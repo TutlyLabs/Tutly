@@ -10,7 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/server/auth/client";
 
-const ManagePassword = ({ initialEmail, token }: { initialEmail?: string, token?: string }) => {
+const ManagePassword = ({
+  initialEmail,
+  token,
+}: {
+  initialEmail?: string;
+  token?: string;
+}) => {
   const [email, setEmail] = useState(initialEmail ?? "");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -116,9 +122,10 @@ const ManagePassword = ({ initialEmail, token }: { initialEmail?: string, token?
   const renderEmailStep = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Reset Your Password</h2>
-        <p className="text-sm text-muted-foreground">
-          Enter your email address and we'll send you a link to reset your password.
+        <h2 className="mb-2 text-2xl font-bold">Reset Your Password</h2>
+        <p className="text-muted-foreground text-sm">
+          Enter your email address and we'll send you a link to reset your
+          password.
         </p>
       </div>
 
@@ -146,19 +153,19 @@ const ManagePassword = ({ initialEmail, token }: { initialEmail?: string, token?
           )}
         </Button>
       </form>
-    </div >
+    </div>
   );
 
   const renderEmailSentStep = () => (
     <div className="space-y-6 text-center">
-      <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
-        <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
+      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+        <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
       </div>
-      <h2 className="text-2xl font-bold mb-2">Check Your Email</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <h2 className="mb-2 text-2xl font-bold">Check Your Email</h2>
+      <p className="text-muted-foreground mb-4 text-sm">
         We've sent a password reset link to <strong>{email}</strong>
       </p>
-      <p className="text-xs text-muted-foreground mb-6">
+      <p className="text-muted-foreground mb-6 text-xs">
         Click the link in your email to continue with resetting your password.
         The link will expire in 1 hour.
       </p>
@@ -178,8 +185,8 @@ const ManagePassword = ({ initialEmail, token }: { initialEmail?: string, token?
   const renderPasswordStep = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Set New Password</h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 className="mb-2 text-2xl font-bold">Set New Password</h2>
+        <p className="text-muted-foreground text-sm">
           Enter your new password below.
         </p>
       </div>
@@ -286,7 +293,9 @@ const ManagePassword = ({ initialEmail, token }: { initialEmail?: string, token?
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center"
-              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              aria-label={
+                showConfirmPassword ? "Hide password" : "Show password"
+              }
             >
               {showConfirmPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -327,7 +336,7 @@ const ManagePassword = ({ initialEmail, token }: { initialEmail?: string, token?
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-      <div className="bg-background mx-auto w-full min-w-[300px] max-w-sm rounded-lg shadow-sm p-6">
+      <div className="bg-background mx-auto w-full max-w-sm min-w-[300px] rounded-lg p-6 shadow-sm">
         {!emailSent && !token && renderEmailStep()}
         {emailSent && !token && renderEmailSentStep()}
         {token && renderPasswordStep()}

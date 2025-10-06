@@ -12,17 +12,23 @@ export default async function IntegrationsPage() {
   const session = await getServerSessionOrRedirect();
   const currentUser = session.user;
 
-  const isIntegrationsEnabled = await isFeatureEnabled("integrations_tab", currentUser);
+  const isIntegrationsEnabled = await isFeatureEnabled(
+    "integrations_tab",
+    currentUser,
+  );
   if (!isIntegrationsEnabled) {
     redirect("/");
   }
 
-  const features = (await getFeatureFlagPayload("integrations_tab", currentUser)) as Record<
-    string,
-    boolean
-  >;
+  const features = (await getFeatureFlagPayload(
+    "integrations_tab",
+    currentUser,
+  )) as Record<string, boolean>;
 
-  const isAIAssistantEnabled = await isFeatureEnabled("ai_assistant", currentUser);
+  const isAIAssistantEnabled = await isFeatureEnabled(
+    "ai_assistant",
+    currentUser,
+  );
 
   const sandbox = await db.account.findFirst({
     where: {

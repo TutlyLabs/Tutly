@@ -8,7 +8,9 @@ export default function SandboxTemplates() {
   const router = useRouter();
 
   const handleTemplateClick = (template: Template) => {
-    router.push(`/playgrounds/sandbox?template=${template.template}&name=${encodeURIComponent(template.name)}`);
+    router.push(
+      `/playgrounds/sandbox?template=${template.template}&name=${encodeURIComponent(template.name)}`,
+    );
   };
 
   return (

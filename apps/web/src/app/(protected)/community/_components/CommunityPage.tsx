@@ -103,10 +103,11 @@ export default function Community({ allDoubts }: MainPageProps) {
               course.isPublished && (
                 <Tabs
                   onClick={() => setCurrentCourse(course.id)}
-                  className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 sm:text-base ${currentCourse === course.id
+                  className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 sm:text-base ${
+                    currentCourse === course.id
                       ? "border border-blue-700 bg-blue-600 text-white shadow-lg"
                       : "border border-gray-300 bg-white text-gray-800 hover:bg-blue-50 hover:shadow-md"
-                    }`}
+                  }`}
                   key={course?.id}
                 >
                   <h1 className="max-w-[150px] truncate text-sm font-semibold">
@@ -119,7 +120,7 @@ export default function Community({ allDoubts }: MainPageProps) {
         <div className="flex-shrink-0">
           <AlertDialog open={show} onOpenChange={setShow}>
             <AlertDialogTrigger asChild>
-              <Button className="rounded-md bg-gray-500 px-4 py-2 text-white hover:bg-gray-600 text-sm font-medium">
+              <Button className="rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600">
                 {currentUser.role === "STUDENT"
                   ? "Ask a Doubt"
                   : "Raise a Query"}
@@ -152,9 +153,7 @@ export default function Community({ allDoubts }: MainPageProps) {
       </div>
       <div className="flex flex-col gap-2">
         {filteredallDoubts?.[0]?.doubts && (
-          <Messages
-            doubts={filteredallDoubts[0].doubts}
-          />
+          <Messages doubts={filteredallDoubts[0].doubts} />
         )}
       </div>
       <div>

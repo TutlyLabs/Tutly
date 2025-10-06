@@ -20,9 +20,15 @@ export default async function AuthLayout({ children }: Props) {
     redirect("/dashboard");
   }
 
-  const isGoogleSignInEnabled = await isFeatureEnabled("google_sign_in", currentUser || { id: "unauthenticated", role: "STUDENT" });
+  const isGoogleSignInEnabled = await isFeatureEnabled(
+    "google_sign_in",
+    currentUser || { id: "unauthenticated", role: "STUDENT" },
+  );
 
-  const isGithubSignInEnabled = await isFeatureEnabled("github_sign_in", currentUser || { id: "unauthenticated", role: "STUDENT" });
+  const isGithubSignInEnabled = await isFeatureEnabled(
+    "github_sign_in",
+    currentUser || { id: "unauthenticated", role: "STUDENT" },
+  );
 
   return (
     <>

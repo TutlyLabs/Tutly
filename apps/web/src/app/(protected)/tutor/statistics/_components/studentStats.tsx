@@ -67,10 +67,10 @@ function StudentStats({
     typedAttendanceData.classes.length - thisWeekClasses == 0
       ? 0
       : (
-        ((typedAttendanceData.attendanceDates.length - thisWeekAttended) *
-          100) /
-        (typedAttendanceData.classes.length - thisWeekClasses)
-      ).toFixed(2);
+          ((typedAttendanceData.attendanceDates.length - thisWeekAttended) *
+            100) /
+          (typedAttendanceData.classes.length - thisWeekClasses)
+        ).toFixed(2);
 
   return (
     <div className="mx-4 flex flex-col gap-4 md:mx-8 md:gap-6">

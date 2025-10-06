@@ -22,7 +22,9 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ classes, data }) => {
   const [currentYear, setCurrentYear] = useState(startOfToday().getFullYear());
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
 
-  const generateDatesForYear = (year: number): (null | { date: Date; isPresent: boolean; isInClass: boolean })[] => {
+  const generateDatesForYear = (
+    year: number,
+  ): (null | { date: Date; isPresent: boolean; isInClass: boolean })[] => {
     const startOfYearDate = startOfYear(new Date(year, 0, 1));
     const endOfYearDate = endOfYear(new Date(year, 0, 1));
     const allDays = eachDayOfInterval({
@@ -38,7 +40,10 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ classes, data }) => {
     });
 
     const paddingDays = getDay(startOfYearDate);
-    const paddedDays = [...Array.from({ length: paddingDays }, () => null), ...allDays];
+    const paddedDays = [
+      ...Array.from({ length: paddingDays }, () => null),
+      ...allDays,
+    ];
 
     return paddedDays;
   };
@@ -70,11 +75,14 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ classes, data }) => {
 
   return (
     <Card className="flex flex-col items-center p-2 px-4">
-      <div className="flex justify-between items-center w-full mb-4">
+      <div className="mb-4 flex w-full items-center justify-between">
         <div className="font-semibold">Attendance Heatmap</div>
         <div className="flex items-center gap-2">
           <div className="text-lg font-semibold">{currentYear}</div>
-          <Button onClick={handlePreviousYear} className="rounded border p-1 hover:bg-gray-900">
+          <Button
+            onClick={handlePreviousYear}
+            className="rounded border p-1 hover:bg-gray-900"
+          >
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <Button
@@ -87,9 +95,9 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ classes, data }) => {
         </div>
       </div>
 
-      <div className="relative w-full max-w-5xl my-2">
+      <div className="relative my-2 w-full max-w-5xl">
         {/* months */}
-        <div className="mb-2 ms-16 grid grid-cols-12 gap-1">
+        <div className="ms-16 mb-2 grid grid-cols-12 gap-1">
           {months.map((month) => (
             <div key={month} className="text-xs font-medium text-gray-500">
               {month}
@@ -121,9 +129,15 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ classes, data }) => {
                 onMouseLeave={() => setHoveredDate(null)}
               >
                 {hoveredDate && isSameDay(hoveredDate, date) && (
-                  <div className="absolute border bottom-10 right-0 w-[100px] z-50 rounded bg-black px-2 py-1 text-xs text-white">
+                  <div className="absolute right-0 bottom-10 z-50 w-[100px] rounded border bg-black px-2 py-1 text-xs text-white">
                     <div>{format(date, "MMM dd, yyyy")}</div>
-                    <div>{isInClass ? (isPresent ? "Present" : "Absent") : "No Class"}</div>
+                    <div>
+                      {isInClass
+                        ? isPresent
+                          ? "Present"
+                          : "Absent"
+                        : "No Class"}
+                    </div>
                   </div>
                 )}
               </div>

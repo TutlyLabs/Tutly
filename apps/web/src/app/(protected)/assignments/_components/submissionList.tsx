@@ -82,19 +82,17 @@ export const SubmissionList = ({
             }
 
             return (
-              <Link
-                key={index}
-                href={hrefLink}
-              >
+              <Link key={index} href={hrefLink}>
                 <div
                   id={
                     singleSubmission.id === searchParams?.submissionId
                       ? `submission-${singleSubmission.id}`
                       : undefined
                   }
-                  className={`cursor-pointer border-b p-2 hover:bg-gray-100 hover:text-blue-500 ${singleSubmission.id == searchParams?.submissionId &&
+                  className={`cursor-pointer border-b p-2 hover:bg-gray-100 hover:text-blue-500 ${
+                    singleSubmission.id == searchParams?.submissionId &&
                     "bg-gray-100 text-blue-500"
-                    } ${singleSubmission.points.length > 0 && "text-green-500"}`}
+                  } ${singleSubmission.points.length > 0 && "text-green-500"}`}
                 >
                   <p className="text-sm">
                     {singleSubmission.enrolledUser.username}

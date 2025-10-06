@@ -10,7 +10,5 @@ export default async function CommunityPage() {
 
   const allDoubts = doubtsData.data;
 
-  return (
-    <Community allDoubts={allDoubts} />
-  );
+  return <Community allDoubts={allDoubts} />;
 }

@@ -131,12 +131,9 @@ export default function Messages({ doubts }: MessagesProps) {
     });
   };
 
-
   const toggleAccordion = (index: number) => {
     setOpenAccordion(openAccordion === index ? -1 : index);
   };
-
-
 
   function formatDateTime(dateTimeString: string) {
     const dateTime = new Date(dateTimeString);
@@ -158,7 +155,6 @@ export default function Messages({ doubts }: MessagesProps) {
 
   return (
     <div className="">
-
       {doubts?.length !== 0 && (
         <Card
           id="accordion-color"
@@ -168,8 +164,9 @@ export default function Messages({ doubts }: MessagesProps) {
           {doubts?.map((qa, index) => (
             <div
               key={index}
-              className={`relative rounded-md bg-white p-4 transition-shadow duration-300 ease-in-out ${openAccordion === index ? "shadow-xl" : "shadow-md"
-                }w-full`}
+              className={`relative rounded-md bg-white p-4 transition-shadow duration-300 ease-in-out ${
+                openAccordion === index ? "shadow-xl" : "shadow-md"
+              }w-full`}
             >
               <div className="flex flex-col justify-between gap-4 p-2 sm:flex-row">
                 <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
@@ -246,11 +243,11 @@ export default function Messages({ doubts }: MessagesProps) {
                         {(currentUser.role === "INSTRUCTOR" ||
                           (currentUser.role === "MENTOR" &&
                             qa.user.id === currentUser.id)) && (
-                            <DropdownMenuItem>
-                              <MdDelete className="mr-2 h-4 w-4" />
-                              <AlertDialogTrigger>Delete</AlertDialogTrigger>
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem>
+                            <MdDelete className="mr-2 h-4 w-4" />
+                            <AlertDialogTrigger>Delete</AlertDialogTrigger>
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <AlertDialogContent>
@@ -388,31 +385,31 @@ export default function Messages({ doubts }: MessagesProps) {
                         >
                           {(currentUser.role === "MENTOR" ||
                             currentUser.role === "INSTRUCTOR") && (
-                              <AlertDialog>
-                                <AlertDialogTrigger>
-                                  <MdDelete className="h-5 w-5 cursor-pointer text-red-600" />
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Are you absolutely sure?
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This action cannot be undone. This will
-                                      permanently delete the reply.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDeleteReply(r.id)}
-                                    >
-                                      Continue
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
+                            <AlertDialog>
+                              <AlertDialogTrigger>
+                                <MdDelete className="h-5 w-5 cursor-pointer text-red-600" />
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Are you absolutely sure?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will
+                                    permanently delete the reply.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteReply(r.id)}
+                                  >
+                                    Continue
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                         </div>
                       </div>
                       <div className="mt-4 -mb-2 text-sm font-semibold">

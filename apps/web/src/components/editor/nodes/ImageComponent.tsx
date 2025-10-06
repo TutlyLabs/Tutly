@@ -10,7 +10,7 @@ const imagePromises = new Map<string, Promise<void>>();
 const loadedImages = new Set<string>();
 
 function useSuspenseImage(src: string) {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return;
   }
 
@@ -59,7 +59,7 @@ function LazyImage({
   const imageWidth = width === "inherit" ? 500 : width;
   const imageHeight = height === "inherit" ? 300 : height;
 
-  // todo: fix duplicate image fetching 
+  // todo: fix duplicate image fetching
 
   return (
     <Image
@@ -177,16 +177,18 @@ export default function ImageComponent({
   }, [isResizing, currentWidth, currentHeight, nodeKey, editor]);
 
   return (
-    <Suspense fallback={
-      <div
-        className="image-container group relative inline-block animate-pulse bg-gray-200 dark:bg-gray-700 rounded-md"
-        style={{
-          width: typeof currentWidth === "number" ? currentWidth : 500,
-          height: typeof currentHeight === "number" ? currentHeight : 300,
-          maxWidth: maxWidth,
-        }}
-      />
-    }>
+    <Suspense
+      fallback={
+        <div
+          className="image-container group relative inline-block animate-pulse rounded-md bg-gray-200 dark:bg-gray-700"
+          style={{
+            width: typeof currentWidth === "number" ? currentWidth : 500,
+            height: typeof currentHeight === "number" ? currentHeight : 300,
+            maxWidth: maxWidth,
+          }}
+        />
+      }
+    >
       <div className="image-container group relative inline-block">
         <LazyImage
           className={`editor-image ${isResizing ? "pointer-events-none" : ""}`}

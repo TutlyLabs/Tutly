@@ -28,13 +28,14 @@ export default async function StatisticsDetailPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-2 items-center mx-4 md:mx-8 mb-2">
+      <div className="mx-4 mb-2 flex items-center gap-2 md:mx-8">
         {courses?.map((course: any) => (
           <Link
             key={course.id}
             href={`/statistics/${course.id}`}
-            className={`p-1 px-2 border rounded-lg ${course.id === courseId ? "border-primary" : ""
-              }`}
+            className={`rounded-lg border p-1 px-2 ${
+              course.id === courseId ? "border-primary" : ""
+            }`}
           >
             {course.title}
           </Link>
