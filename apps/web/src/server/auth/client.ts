@@ -6,12 +6,27 @@ import {
 } from "better-auth/client/plugins";
 import type { auth } from "@/server/auth";
 import { getPreviewUrl } from "@/lib/constants";
-import { nextCookies } from "better-auth/next-js";
 
 export const authClient = createAuthClient({
   baseURL: getPreviewUrl(),
+  fetchOptions: {
+    onSuccess: (ctx) => {
+      const authToken = ctx.response.headers.get("set-auth-token");
+      if (authToken && typeof window !== "undefined") {
+        localStorage.setItem("bearer_token", authToken);
+      }
+    },
+    auth: {
+      type: "Bearer",
+      token: () => {
+        if (typeof window !== "undefined") {
+          return localStorage.getItem("bearer_token") || "";
+        }
+        return "";
+      },
+    },
+  },
   plugins: [
-    nextCookies(),
     customSessionClient<typeof auth>(),
     inferAdditionalFields<typeof auth>(),
     usernameClient(),

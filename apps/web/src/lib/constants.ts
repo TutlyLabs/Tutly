@@ -6,6 +6,9 @@ export const DATABASE_URL =
   process.env.DATABASE_URL ||
   "postgresql://postgres:postgres@localhost:5432/tutly_local";
 
+// Better Auth Configuration
+export const BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET || "topsecret";
+
 // AWS Configuration
 export const AWS_BUCKET_NAME = process.env.AWS_BUCKET_NAME || "tutly-local";
 export const AWS_BUCKET_REGION = process.env.AWS_BUCKET_REGION || "us-east-1";

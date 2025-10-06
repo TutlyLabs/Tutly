@@ -11,6 +11,7 @@ import {
   GITHUB_CLIENT_SECRET,
   ZOOM_CLIENT_ID,
   ZOOM_CLIENT_SECRET,
+  BETTER_AUTH_SECRET,
 } from "@/lib/constants";
 import { db } from "../../lib/db";
 import { randomUUID } from "crypto";
@@ -20,6 +21,7 @@ import { Resend } from "resend";
 const resend = new Resend(RESEND_API_KEY);
 
 export const auth = betterAuth({
+  secret: BETTER_AUTH_SECRET,
   database: prismaAdapter(db, {
     provider: "postgresql",
   }),
@@ -96,21 +98,30 @@ export const auth = betterAuth({
   },
   roles: ["STUDENT", "INSTRUCTOR", "ADMIN"],
   socialProviders: {
-    google: {
-      clientId: GOOGLE_CLIENT_ID,
-      clientSecret: GOOGLE_CLIENT_SECRET,
-      disableSignUp: true,
-    },
-    github: {
-      clientId: GITHUB_CLIENT_ID,
-      clientSecret: GITHUB_CLIENT_SECRET,
-      disableSignUp: true,
-    },
-    zoom: {
-      clientId: ZOOM_CLIENT_ID,
-      clientSecret: ZOOM_CLIENT_SECRET,
-      disableSignUp: true,
-    },
+    ...(GOOGLE_CLIENT_ID &&
+      GOOGLE_CLIENT_SECRET && {
+        google: {
+          clientId: GOOGLE_CLIENT_ID,
+          clientSecret: GOOGLE_CLIENT_SECRET,
+          disableSignUp: true,
+        },
+      }),
+    ...(GITHUB_CLIENT_ID &&
+      GITHUB_CLIENT_SECRET && {
+        github: {
+          clientId: GITHUB_CLIENT_ID,
+          clientSecret: GITHUB_CLIENT_SECRET,
+          disableSignUp: true,
+        },
+      }),
+    ...(ZOOM_CLIENT_ID &&
+      ZOOM_CLIENT_SECRET && {
+        zoom: {
+          clientId: ZOOM_CLIENT_ID,
+          clientSecret: ZOOM_CLIENT_SECRET,
+          disableSignUp: true,
+        },
+      }),
   },
   plugins: [
     username({
