@@ -18,6 +18,14 @@ export const AWS_S3_URL =
 // Email Service
 export const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_123456";
 
+// OAuth Provider Configuration
+export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
+export const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || "";
+export const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || "";
+export const ZOOM_CLIENT_ID = process.env.ZOOM_CLIENT_ID || "";
+export const ZOOM_CLIENT_SECRET = process.env.ZOOM_CLIENT_SECRET || "";
+
 // Port for local development
 export const PORT = process.env.PORT || 3000;
 

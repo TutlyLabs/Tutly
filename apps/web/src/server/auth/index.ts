@@ -2,7 +2,16 @@ import { compare, hash } from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { customSession, bearer, username } from "better-auth/plugins";
-import { FRONTEND_URL, RESEND_API_KEY } from "@/lib/constants";
+import {
+  FRONTEND_URL,
+  RESEND_API_KEY,
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET,
+  ZOOM_CLIENT_ID,
+  ZOOM_CLIENT_SECRET,
+} from "@/lib/constants";
 import { db } from "../../lib/db";
 import { randomUUID } from "crypto";
 import ResetPasswordEmailTemplate from "@/components/email/ResetPasswordEmailTemplate";
@@ -88,13 +97,18 @@ export const auth = betterAuth({
   roles: ["STUDENT", "INSTRUCTOR", "ADMIN"],
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
       disableSignUp: true,
     },
     github: {
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      clientId: GITHUB_CLIENT_ID,
+      clientSecret: GITHUB_CLIENT_SECRET,
+      disableSignUp: true,
+    },
+    zoom: {
+      clientId: ZOOM_CLIENT_ID,
+      clientSecret: ZOOM_CLIENT_SECRET,
       disableSignUp: true,
     },
   },
