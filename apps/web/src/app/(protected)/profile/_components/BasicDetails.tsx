@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import MobileInput from "@/components/MobileInput";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -76,11 +77,12 @@ export default function BasicDetails({
   onUpdate,
 }: BasicDetailsProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const router = useRouter();
 
   const { mutate: updateAvatar } = api.users.updateUserAvatar.useMutation({
     onSuccess: () => {
       toast.success("Profile picture updated successfully");
-      window.location.reload();
+      router.refresh();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update profile picture");

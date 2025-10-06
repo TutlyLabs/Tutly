@@ -1,6 +1,6 @@
 // Prisma Schema for AI Query Generation
 // This file contains the complete schema structure for AI to understand database relationships
-
+// todo: update this schema
 export const PRISMA_SCHEMA = `
 // Enums
 enum Role {
@@ -97,10 +97,6 @@ enum EventAttachmentType {
   VIDEOCRYPT
   DOCUMENT
   OTHER
-}
-
-enum OTPType {
-  PASSWORD_RESET
 }
 
 // Models
@@ -508,19 +504,6 @@ model Holidays {
   description String?
   startDate   DateTime
   endDate     DateTime
-}
-
-model Otp {
-  id        String   @id @default(uuid())
-  email     String
-  otp       String
-  type      OTPType  @default(PASSWORD_RESET)
-  expiresAt DateTime @default(dbgenerated("(NOW() + interval '15 minutes')"))
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@index([email, otp])
 }
 `.trim();
 

@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/server/auth/client";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface SocialSigninProps {
   isGoogleSignInEnabled: boolean;
@@ -21,6 +22,7 @@ export function SocialSignin({
 }: SocialSigninProps) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isGithubLoading, setIsGithubLoading] = useState(false);
+  const router = useRouter();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -39,12 +41,12 @@ export function SocialSignin({
       });
 
       if (result?.data && "user" in result.data) {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
         return;
       }
 
       if (result?.data && "url" in result.data && result.data.url) {
-        window.location.href = result.data.url;
+        router.push(result.data.url);
         return;
       }
 
@@ -80,12 +82,12 @@ export function SocialSignin({
       });
 
       if (result?.data && "user" in result.data) {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
         return;
       }
 
       if (result?.data && "url" in result.data && result.data.url) {
-        window.location.href = result.data.url;
+        router.push(result.data.url);
         return;
       }
 

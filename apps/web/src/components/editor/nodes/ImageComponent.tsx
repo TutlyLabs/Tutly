@@ -6,14 +6,35 @@ import * as React from "react";
 import { ImageNode } from "./ImageNode";
 import Image from "next/image";
 
-const imageCache = new Set();
+const imagePromises = new Map<string, Promise<void>>();
+const loadedImages = new Set<string>();
 
 function useSuspenseImage(src: string) {
-  if (!imageCache.has(src)) {
-    const error = new Error("Image not loaded");
-    error.name = "ImageLoadingError";
-    throw error;
+  if (typeof window === "undefined") {
+    return;
   }
+
+  if (loadedImages.has(src)) {
+    return;
+  }
+
+  if (imagePromises.has(src)) {
+    throw imagePromises.get(src)!;
+  }
+
+  const promise = new Promise<void>((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => {
+      loadedImages.add(src);
+      resolve();
+    };
+    img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+    img.src = src;
+  });
+
+  imagePromises.set(src, promise);
+
+  throw promise;
 }
 
 function LazyImage({
@@ -34,6 +55,12 @@ function LazyImage({
   width: "inherit" | number;
 }): React.ReactElement {
   useSuspenseImage(src);
+
+  const imageWidth = width === "inherit" ? 500 : width;
+  const imageHeight = height === "inherit" ? 300 : height;
+
+  // todo: fix duplicate image fetching
+
   return (
     <Image
       className={className ?? undefined}
@@ -45,8 +72,9 @@ function LazyImage({
         maxWidth,
         width,
       }}
-      width={width === "inherit" ? undefined : width}
-      height={height === "inherit" ? undefined : height}
+      width={imageWidth}
+      height={imageHeight}
+      unoptimized={true}
     />
   );
 }
@@ -149,7 +177,18 @@ export default function ImageComponent({
   }, [isResizing, currentWidth, currentHeight, nodeKey, editor]);
 
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <div
+          className="image-container group relative inline-block animate-pulse rounded-md bg-gray-200 dark:bg-gray-700"
+          style={{
+            width: typeof currentWidth === "number" ? currentWidth : 500,
+            height: typeof currentHeight === "number" ? currentHeight : 300,
+            maxWidth: maxWidth,
+          }}
+        />
+      }
+    >
       <div className="image-container group relative inline-block">
         <LazyImage
           className={`editor-image ${isResizing ? "pointer-events-none" : ""}`}

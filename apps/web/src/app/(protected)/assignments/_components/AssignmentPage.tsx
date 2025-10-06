@@ -307,7 +307,7 @@ export default function AssignmentPage({
                     onCancel={() => setIsEditClassDialogOpen(false)}
                     onComplete={() => {
                       setIsEditClassDialogOpen(false);
-                      window.location.reload();
+                      router.refresh();
                     }}
                   />
                 )}

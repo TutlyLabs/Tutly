@@ -1,7 +1,6 @@
 "use client";
 
 import { FaRankingStar } from "react-icons/fa6";
-import Image from "next/image";
 import { api } from "@/trpc/react";
 
 import CalendarHeatmap from "./heatmap";
@@ -16,22 +15,20 @@ interface AttendanceData {
 function StudentStats({
   courseId,
   studentUsername,
-  mentorUsername,
 }: {
   courseId: string;
-  studentUsername: string;
-  mentorUsername?: string;
+  studentUsername?: string;
 }) {
   const { data: studentData, isLoading: studentDataLoading } =
     api.statistics.studentBarchartData.useQuery({
       courseId,
-      studentUsername,
+      studentUsername: studentUsername || undefined,
     });
 
   const { data: attendanceData, isLoading: attendanceDataLoading } =
     api.statistics.studentHeatmapData.useQuery({
       courseId,
-      studentUsername,
+      studentUsername: studentUsername || undefined,
     });
 
   if (

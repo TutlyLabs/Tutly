@@ -2,9 +2,10 @@ import "@/styles/globals.css";
 import { RefreshCw } from "lucide-react";
 import { getVersion } from "@/lib/version";
 import ThemeToggle from "@/components/ThemeToggle";
-import { posthog } from "@/lib/posthog";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 import { getServerSession } from "@/lib/auth";
 import { FeatureFlagsProvider } from "./_components/FeatureFlagsProvider";
+import { redirect } from "next/navigation";
 
 type Props = {
   children: React.ReactNode;
@@ -15,14 +16,18 @@ export default async function AuthLayout({ children }: Props) {
   const session = await getServerSession();
   const currentUser = session?.user;
 
-  const isGoogleSignInEnabled = await posthog.isFeatureEnabled(
+  if (currentUser) {
+    redirect("/dashboard");
+  }
+
+  const isGoogleSignInEnabled = await isFeatureEnabled(
     "google_sign_in",
-    currentUser?.id ?? "unauthenticated",
+    currentUser || { id: "unauthenticated", role: "STUDENT" },
   );
 
-  const isGithubSignInEnabled = await posthog.isFeatureEnabled(
+  const isGithubSignInEnabled = await isFeatureEnabled(
     "github_sign_in",
-    currentUser?.id ?? "unauthenticated",
+    currentUser || { id: "unauthenticated", role: "STUDENT" },
   );
 
   return (

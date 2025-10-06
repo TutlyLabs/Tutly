@@ -6,6 +6,7 @@ import { PieChart as RechartsPieChart, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,8 +98,10 @@ const AssignmentTable = ({
 }: {
   searchFilteredAssignments: (Assignment & { status: string })[];
 }) => {
+  const router = useRouter();
+
   const handleAssignmentClick = (assignmentId: string) => {
-    window.location.href = `/assignments/${assignmentId}`;
+    router.push(`/assignments/${assignmentId}`);
   };
 
   return (
@@ -206,9 +209,14 @@ interface Platforms {
   github?: string;
 }
 
-const PlatformScores = () => {
-  const { data: platformScoresData, isLoading } =
-    api.codingPlatforms.getPlatformScores.useQuery();
+const ProfessionalProfilesModal = ({
+  children,
+  onUpdate,
+}: {
+  children: React.ReactNode;
+  onUpdate?: (profile: { professionalProfiles: Platforms }) => void;
+}) => {
+  const { data: userProfile } = api.users.getUserProfile.useQuery();
   const { mutate: updateProfile } = api.users.updateUserProfile.useMutation({
     onSuccess: () => {
       toast.success("Profile updated successfully");
@@ -218,6 +226,58 @@ const PlatformScores = () => {
     },
   });
 
+  const existingProfiles = userProfile?.profile?.professionalProfiles as
+    | Record<string, string>
+    | undefined;
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Profile</DialogTitle>
+        </DialogHeader>
+        <ProfessionalProfiles
+          professionalProfiles={{
+            github: existingProfiles?.github ?? "",
+            leetcode: existingProfiles?.leetcode ?? "",
+            codechef: existingProfiles?.codechef ?? "",
+            codeforces: existingProfiles?.codeforces ?? "",
+            hackerrank: existingProfiles?.hackerrank ?? "",
+            interviewbit: existingProfiles?.interviewbit ?? "",
+          }}
+          onUpdate={async (profile: { professionalProfiles: Platforms }) => {
+            try {
+              const handles = {
+                codechef: profile.professionalProfiles?.codechef ?? "",
+                codeforces: profile.professionalProfiles?.codeforces ?? "",
+                hackerrank: profile.professionalProfiles?.hackerrank ?? "",
+                leetcode: profile.professionalProfiles?.leetcode ?? "",
+                interviewbit: profile.professionalProfiles?.interviewbit ?? "",
+                github: profile.professionalProfiles?.github ?? "",
+              };
+
+              updateProfile({
+                profile: {
+                  professionalProfiles: handles as Record<string, string>,
+                },
+              });
+              onUpdate?.(profile);
+            } catch (error) {
+              toast.error("Something went wrong");
+              console.error(error);
+            }
+          }}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const PlatformScores = () => {
+  const { data: platformScoresData, isLoading } =
+    api.codingPlatforms.getPlatformScores.useQuery();
+
   const platforms = [
     "codechef",
     "codeforces",
@@ -226,11 +286,11 @@ const PlatformScores = () => {
     "leetcode",
   ];
   const colors = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
+    "var(--color-chart-5)",
+    "var(--color-chart-4)",
+    "var(--color-chart-3)",
+    "var(--color-chart-2)",
+    "var(--color-chart-1)",
   ];
 
   const dummyData = platforms.map((platform) => ({
@@ -240,15 +300,20 @@ const PlatformScores = () => {
 
   const shouldShowUpdateProfile =
     !platformScoresData?.success ||
-    platforms.some((platform) => !platformScoresData.data?.[platform]);
+    !platformScoresData.data ||
+    Object.keys(platformScoresData.data.percentages).length === 0;
 
-  const data =
-    platformScoresData?.success && platformScoresData.data
-      ? platforms.map((platform) => ({
-          name: platform,
-          value: platformScoresData.data.percentages[platform] ?? 0,
-        }))
-      : dummyData;
+  const platformData = platforms.map((platform) => ({
+    name: platform,
+    value: platformScoresData?.data?.percentages[platform] ?? 0,
+    originalIndex: platforms.indexOf(platform),
+  }));
+
+  const sortedPlatformData = platformData.sort((a, b) => b.value - a.value);
+
+  const data = shouldShowUpdateProfile
+    ? dummyData
+    : sortedPlatformData.map(({ name, value }) => ({ name, value }));
 
   const renderChart = () => (
     <div
@@ -256,62 +321,19 @@ const PlatformScores = () => {
     >
       <div className="relative h-[180px] w-full">
         {shouldShowUpdateProfile && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <div className="absolute inset-0 z-10 flex items-center justify-center">
-                <div className="cursor-pointer rounded-lg bg-gray-800/80 px-4 py-2 text-white transition-colors hover:bg-gray-700/80">
-                  Update Profile
-                </div>
+          <ProfessionalProfilesModal onUpdate={() => {}}>
+            <div className="absolute inset-0 z-10 flex items-center justify-center">
+              <div className="cursor-pointer rounded-lg bg-gray-800/80 px-4 py-2 text-white transition-colors hover:bg-gray-700/80">
+                Update Profile
               </div>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Profile</DialogTitle>
-              </DialogHeader>
-              <ProfessionalProfiles
-                professionalProfiles={{
-                  github: "",
-                  leetcode: "",
-                  codechef: "",
-                  codeforces: "",
-                  hackerrank: "",
-                  interviewbit: "",
-                }}
-                onUpdate={async (profile: {
-                  professionalProfiles: Platforms;
-                }) => {
-                  try {
-                    const handles = {
-                      codechef: profile.professionalProfiles?.codechef ?? "",
-                      codeforces:
-                        profile.professionalProfiles?.codeforces ?? "",
-                      hackerrank:
-                        profile.professionalProfiles?.hackerrank ?? "",
-                      leetcode: profile.professionalProfiles?.leetcode ?? "",
-                      interviewbit:
-                        profile.professionalProfiles?.interviewbit ?? "",
-                      github: profile.professionalProfiles?.github ?? "",
-                    };
-
-                    updateProfile({
-                      profile: {
-                        professionalProfiles: handles as Record<string, string>,
-                      },
-                    });
-                  } catch (error) {
-                    toast.error("Something went wrong");
-                    console.error(error);
-                  }
-                }}
-              />
-            </DialogContent>
-          </Dialog>
+            </div>
+          </ProfessionalProfilesModal>
         )}
         <ChartContainer
           config={Object.fromEntries(
-            platforms.map((platform, index) => [
-              platform,
-              { label: platform, color: colors[index] ?? "" },
+            sortedPlatformData.map((platform, index) => [
+              platform.name,
+              { label: platform.name, color: colors[index] ?? "" },
             ]),
           )}
           className="relative h-[180px] w-full"
@@ -340,16 +362,14 @@ const PlatformScores = () => {
         </ChartContainer>
       </div>
       <div className="w-full space-y-2">
-        {platforms.map((platform, index) => {
-          const score = platformScoresData?.success
-            ? platformScoresData.data?.[platform]
-            : null;
-          const percentage = platformScoresData?.success
-            ? (platformScoresData.data?.percentages[platform] ?? 0)
-            : 0;
+        {sortedPlatformData.map((platform, index) => {
+          const score = platformScoresData?.data?.[platform.name];
+          const percentage = platform.value;
+          const isPlatformConfigured =
+            score !== null && score !== undefined && percentage > 0;
 
           return (
-            <div key={platform} className="flex items-center gap-2">
+            <div key={platform.name} className="flex items-center gap-2">
               <div
                 className="h-3 w-3 rounded-full"
                 style={{ backgroundColor: colors[index] }}
@@ -358,13 +378,19 @@ const PlatformScores = () => {
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-gray-800 capitalize dark:text-gray-200">
-                      {platform}
+                      {platform.name}
                     </span>
-                    <span className="text-xs font-medium text-gray-800 dark:text-gray-200">
-                      {platformScoresData?.success
-                        ? `${percentage.toFixed(1)}%`
-                        : "20%"}
-                    </span>
+                    {!isPlatformConfigured ? (
+                      <ProfessionalProfilesModal onUpdate={() => {}}>
+                        <span className="cursor-pointer text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                          Not Configured
+                        </span>
+                      </ProfessionalProfilesModal>
+                    ) : (
+                      <span className="text-xs font-medium text-gray-800 dark:text-gray-200">
+                        {`${percentage.toFixed(1)}%`}
+                      </span>
+                    )}
                   </div>
                   {score &&
                     typeof score === "object" &&
@@ -547,7 +573,7 @@ export function StudentCards({ selectedCourse }: Props) {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm font-medium text-gray-400"
+                    className="w-full min-w-[140px] rounded-md border border-gray-300 px-2 py-1.5 text-sm font-medium text-gray-400 md:w-auto"
                   >
                     {selectedStatus}
                   </Button>
@@ -570,8 +596,8 @@ export function StudentCards({ selectedCourse }: Props) {
               </DropdownMenu>
               <Input
                 type="text"
-                placeholder="Search by assignment name"
-                className="w-full rounded-md border border-gray-300 p-2"
+                placeholder="Search assignment..."
+                className="w-full rounded-md border border-gray-300 p-2 md:flex-1"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />

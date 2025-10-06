@@ -10,7 +10,6 @@ import SuperJSON from "superjson";
 import { type AppRouter } from "@/server/api/root";
 import { createQueryClient } from "./query-client";
 import { getPreviewUrl, NODE_ENV } from "@/lib/constants";
-import { getBearerToken } from "@/lib/auth-utils";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {
@@ -59,7 +58,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");
 
-            const token = getBearerToken();
+            const token = localStorage.getItem("bearer_token");
             if (token) {
               headers.set("authorization", `Bearer ${token}`);
             }

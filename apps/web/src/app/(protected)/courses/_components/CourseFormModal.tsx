@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
+import { useRouter } from "next/navigation";
 
 import {
   AlertDialog,
@@ -50,6 +51,7 @@ export default function CourseFormModal({
   const [img, setImg] = useState(defaultValues?.image ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const router = useRouter();
 
   const createCourse = api.courses.createCourse.useMutation();
   const updateCourse = api.courses.updateCourse.useMutation();
@@ -77,7 +79,7 @@ export default function CourseFormModal({
       }
 
       onOpenChange(false);
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       toast.error(`Failed to ${mode === "add" ? "add" : "edit"} course`);
     } finally {
@@ -94,7 +96,7 @@ export default function CourseFormModal({
 
       toast.success("Course deleted successfully");
       onOpenChange(false);
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       toast.error("Failed to delete course");
     }

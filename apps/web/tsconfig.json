@@ -9,7 +9,12 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": [
+      "node",
+      "../../node_modules/@simplewebauthn/server/esm/index.d.ts",
+      "../../node_modules/jose/dist/types/index.d.ts"
+    ]
   },
   "include": [
     "next-env.d.ts",

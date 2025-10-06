@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   getPlatformScores,
   validatePlatformHandles,
+  type PlatformScores,
 } from "@/lib/coding-platforms";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -26,8 +27,28 @@ export const codingPlatformsRouter = createTRPCRouter({
       },
     });
 
+    const professionalProfiles = profile?.professionalProfiles as
+      | Record<string, string>
+      | undefined;
+
+    if (!professionalProfiles) {
+      const emptyPlatformScores: PlatformScores = {
+        totalScore: 0,
+        percentages: {},
+        codechef: null,
+        leetcode: null,
+        codeforces: null,
+        hackerrank: null,
+        interviewbit: null,
+      };
+      return {
+        success: true,
+        data: emptyPlatformScores,
+      };
+    }
+
     const { codechef, leetcode, codeforces, hackerrank, interviewbit } =
-      profile?.professionalProfiles as Record<string, string>;
+      professionalProfiles;
 
     const platformHandles = Object.fromEntries(
       Object.entries({
@@ -36,7 +57,7 @@ export const codingPlatformsRouter = createTRPCRouter({
         codeforces,
         hackerrank,
         interviewbit,
-      }).filter(([_, value]) => value !== ""),
+      }).filter(([, value]) => value !== ""),
     ) as Record<string, string>;
 
     const result = await getPlatformScores(platformHandles);

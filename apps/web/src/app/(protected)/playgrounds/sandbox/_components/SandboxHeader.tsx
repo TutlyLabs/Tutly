@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -130,6 +131,7 @@ export function SandboxHeader({
   onConfigUpdate,
 }: SandboxHeaderProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -163,7 +165,7 @@ export function SandboxHeader({
     const params = new URLSearchParams(currentUrl.search);
     params.set("template", newTemplate);
 
-    window.location.href = `${currentUrl.pathname}?${params.toString()}`;
+    router.push(`${currentUrl.pathname}?${params.toString()}`);
   };
 
   return (

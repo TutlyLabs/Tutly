@@ -3,7 +3,7 @@ import { getServerSessionOrRedirect } from "@/lib/auth";
 import { db } from "@/lib/db";
 import AssignmentPage from "../_components/AssignmentPage";
 import type { Attachment, submission as Submission } from "@prisma/client";
-import { posthog } from "@/lib/posthog";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 
 interface AssignmentPageProps {
   params: Promise<{ id: string }>;
@@ -402,9 +402,9 @@ export default async function AssignmentDetailPage({
       )
     : [];
 
-  const isSandboxSubmissionEnabled = await posthog.isFeatureEnabled(
+  const isSandboxSubmissionEnabled = await isFeatureEnabled(
     "sandbox_submission",
-    user.id,
+    user,
   );
 
   return (

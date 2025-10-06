@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSessionOrRedirect } from "@/lib/auth";
-import { posthog } from "@/lib/posthog";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 import { SandboxWrapper } from "./_components/SandboxWrapper";
 import { SANDBOX_TEMPLATES } from "./_components/templetes";
 import { db } from "@/lib/db";
@@ -24,9 +24,9 @@ export default async function SandboxPage({
   const submissionId = (searchParams.submissionId as string) || "";
   const editTemplate = searchParams.editTemplate as string;
 
-  const isSandboxEnabled = await posthog.isFeatureEnabled(
+  const isSandboxEnabled = await isFeatureEnabled(
     "sandbox_templates",
-    currentUser.id,
+    currentUser,
   );
 
   if (!isSandboxEnabled) {

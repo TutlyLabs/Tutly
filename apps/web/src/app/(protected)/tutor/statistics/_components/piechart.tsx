@@ -10,15 +10,15 @@ import { InboxIcon } from "lucide-react";
 const chartConfig = {
   evaluated: {
     label: "Evaluated",
-    color: "hsl(var(--chart-1))",
+    color: "var(--color-chart-1)",
   },
   unreviewed: {
     label: "Unreviewed",
-    color: "hsl(var(--chart-3))",
+    color: "var(--color-chart-3)",
   },
   unsubmitted: {
     label: "Unsubmitted",
-    color: "hsl(var(--chart-5))",
+    color: "var(--color-chart-5)",
   },
 } satisfies ChartConfig;
 

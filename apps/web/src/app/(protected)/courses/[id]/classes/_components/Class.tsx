@@ -20,6 +20,7 @@ import {
 } from "react-icons/fa";
 import { RiEdit2Fill } from "react-icons/ri";
 import { useDebounce } from "use-debounce";
+import { useRouter } from "next/navigation";
 
 import VideoPlayer from "./videoEmbeds/VideoPlayer";
 import RichTextEditor from "@/components/editor/RichTextEditor";
@@ -81,6 +82,7 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
   const [debouncedNotes] = useDebounce(notes, 1000);
   const [notesStatus, setNotesStatus] = useState("");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const router = useRouter();
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [isClearNotesDialogOpen, setIsClearNotesDialogOpen] = useState(false);
@@ -264,7 +266,7 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
         id: selectedAttachment.id,
       });
       toast.success("Assignment deleted successfully");
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       toast.error("Failed to delete assignment");
     }
@@ -282,7 +284,7 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
         toast.error("failed to add bookmark");
       } else {
         toast.success(isBookmarked ? "Bookmark removed" : "Bookmark added");
-        window.location.reload();
+        router.refresh();
       }
     } catch (error) {
       toast.error("Failed to toggle bookmark");
@@ -318,7 +320,7 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
       setNotesStatus("Cleared");
       setIsClearNotesDialogOpen(false);
       toast.success("Notes cleared successfully");
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       setNotesStatus("Failed to clear");
       toast.error("Failed to clear notes");
@@ -402,7 +404,7 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
                           setIsAddAssignmentDialogOpen(false);
                         }}
                         onComplete={() => {
-                          window.location.reload();
+                          router.refresh();
                         }}
                       />
                     </ScrollArea>
@@ -593,7 +595,7 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
               }}
               onComplete={() => {
                 setIsEditAssignmentDialogOpen(false);
-                window.location.reload();
+                router.refresh();
               }}
             />
           </ScrollArea>

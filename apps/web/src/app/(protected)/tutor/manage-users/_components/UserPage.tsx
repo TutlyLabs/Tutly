@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { MdLockReset } from "react-icons/md";
+import { useRouter } from "next/navigation";
 
 import DisplayTable, { type Column } from "@/components/table/DisplayTable";
 import { Button } from "@/components/ui/button";
@@ -168,6 +169,7 @@ const UserPage = ({
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPasswordStrength, setShowPasswordStrength] = useState(false);
+  const router = useRouter();
 
   const resetPasswordMutation = api.users.instructor_resetPassword.useMutation({
     onSuccess: () => {
@@ -321,7 +323,7 @@ const UserPage = ({
                         id: user.id,
                       });
                       toast.success(result.message);
-                      window.location.reload();
+                      router.refresh();
                     } catch (error: any) {
                       toast.error(
                         error?.message ||

@@ -82,15 +82,7 @@ export const SubmissionList = ({
             }
 
             return (
-              <Link
-                key={index}
-                href={hrefLink}
-                onClick={(e) => {
-                  e.preventDefault();
-                  // todo: optimise this, temp hack to avoid partial rendering on client side params change
-                  window.location.href = hrefLink;
-                }}
-              >
+              <Link key={index} href={hrefLink}>
                 <div
                   id={
                     singleSubmission.id === searchParams?.submissionId

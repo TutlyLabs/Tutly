@@ -3,6 +3,7 @@ import { getServerSessionOrRedirect } from "@/lib/auth";
 import { db } from "@/lib/db";
 import ResizablePanelLayout from "../../_components/ResizablePanelLayout";
 import { Buffer } from "node:buffer";
+import { PageLayout } from "@/components/PageLayout";
 
 interface EvaluatePageProps {
   params: Promise<{ id: string }>;
@@ -110,14 +111,16 @@ export default async function EvaluatePage({
   );
 
   return (
-    <ResizablePanelLayout
-      assignmentId={assignmentId}
-      assignment={assignmentWithDecodedTemplate}
-      submissions={filteredSubmissions}
-      submissionId={submissionId}
-      username={username}
-      submission={submission}
-      submissionMode={assignmentWithDecodedTemplate?.submissionMode}
-    />
+    <PageLayout forceClose={true}>
+      <ResizablePanelLayout
+        assignmentId={assignmentId}
+        assignment={assignmentWithDecodedTemplate}
+        submissions={filteredSubmissions}
+        submissionId={submissionId}
+        username={username}
+        submission={submission}
+        submissionMode={assignmentWithDecodedTemplate?.submissionMode}
+      />
+    </PageLayout>
   );
 }

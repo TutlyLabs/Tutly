@@ -22,12 +22,12 @@ export default function Component({
     {
       status: "Successfully Submitted",
       assignments: submitted,
-      fill: "hsl(var(--chart-1))",
+      fill: "var(--color-chart-1)",
     },
     {
       status: "Not submitted",
       assignments: notSubmitted,
-      fill: "hsl(var(--chart-3))",
+      fill: "var(--color-chart-3)",
     },
   ];
 
@@ -37,11 +37,11 @@ export default function Component({
     },
     submitted: {
       label: "Successfully Submitted",
-      color: "hsl(var(--chart-2))",
+      color: "var(--color-chart-2)",
     },
     notSubmitted: {
       label: "Not submitted",
-      color: "hsl(var(--chart-3))",
+      color: "var(--color-chart-3)",
     },
   } satisfies ChartConfig;
 

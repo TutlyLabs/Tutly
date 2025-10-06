@@ -3,7 +3,7 @@ import { AppSidebar } from "@/components/sidebar/AppSidebar";
 import { AppHeader } from "@/components/sidebar/AppHeader";
 import posthog from "posthog-js";
 import { getServerSessionOrRedirect } from "@/lib/auth";
-import { posthog as posthogServer } from "@/lib/posthog";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 import { LayoutProvider } from "@/providers/layout-provider";
 import { LayoutContent } from "@/components/LayoutContent";
 import Crisp from "@/components/Crisp";
@@ -25,14 +25,14 @@ export default async function ProtectedLayout({
     });
   }
 
-  const isIntegrationsEnabled = await posthogServer.isFeatureEnabled(
+  const isIntegrationsEnabled = await isFeatureEnabled(
     "integrations_tab",
-    session.user.id,
+    session.user,
   );
 
-  const isAIAssistantEnabled = await posthogServer.isFeatureEnabled(
+  const isAIAssistantEnabled = await isFeatureEnabled(
     "ai_assistant",
-    session.user.id,
+    session.user,
   );
 
   return (

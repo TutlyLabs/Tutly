@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSessionOrRedirect } from "@/lib/auth";
-import { posthog } from "@/lib/posthog";
+import { isFeatureEnabled, getFeatureFlagPayload } from "@/lib/featureFlags";
 import { SandboxIntegration } from "./_components/Sandbox";
 import { ZoomIntegration } from "./_components/Zoom";
 import { GithubIntegration } from "./_components/Github";
@@ -12,30 +12,22 @@ export default async function IntegrationsPage() {
   const session = await getServerSessionOrRedirect();
   const currentUser = session.user;
 
-  const isIntegrationsEnabled = await posthog.isFeatureEnabled(
+  const isIntegrationsEnabled = await isFeatureEnabled(
     "integrations_tab",
-    currentUser.id,
+    currentUser,
   );
   if (!isIntegrationsEnabled) {
     redirect("/");
   }
 
-  const features = (await posthog.getFeatureFlagPayload(
+  const features = (await getFeatureFlagPayload(
     "integrations_tab",
-    currentUser.id,
-  )) as
-    | {
-        codesandbox?: boolean;
-        github?: boolean;
-        google?: boolean;
-        zoom?: boolean;
-        gemini?: boolean;
-      }
-    | undefined;
+    currentUser,
+  )) as Record<string, boolean>;
 
-  const isAIAssistantEnabled = await posthog.isFeatureEnabled(
+  const isAIAssistantEnabled = await isFeatureEnabled(
     "ai_assistant",
-    currentUser.id,
+    currentUser,
   );
 
   const sandbox = await db.account.findFirst({

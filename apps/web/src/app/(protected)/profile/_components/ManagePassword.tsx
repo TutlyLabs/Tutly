@@ -3,92 +3,30 @@
 import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
-import { api } from "@/trpc/react";
+import { authClient } from "@/server/auth/client";
 
-const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
+const ManagePassword = ({
+  initialEmail,
+  token,
+}: {
+  initialEmail?: string;
+  token?: string;
+}) => {
+  const [email, setEmail] = useState(initialEmail ?? "");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [step, setStep] = useState<"email" | "otp" | "password">("email");
-  const [email, setEmail] = useState(initialEmail ?? "");
-  const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [showPasswordStrength, setShowPasswordStrength] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-  const [canResend, setCanResend] = useState(true);
-
-  const { mutate: sendOTP } = api.reset_password.sendOTP.useMutation({
-    onSuccess: () => {
-      toast.success("OTP sent to your email");
-      setStep("otp");
-      startResendTimer(10 * 60 * 1000);
-    },
-    onError: (error) => {
-      if (error.data?.zodError) {
-        toast.error("Invalid email format");
-        return;
-      }
-      if (error.data?.code === "NOT_FOUND") {
-        toast.error("No account found with this email address");
-        return;
-      }
-      if (error.data?.code === "CONFLICT") {
-        setStep("otp");
-        startResendTimer(10 * 60 * 1000);
-        return;
-      }
-      toast.error("Failed to send OTP");
-    },
-  });
-
-  const { mutate: verifyOTP } = api.reset_password.verifyOTP.useMutation({
-    onSuccess: () => {
-      toast.success("OTP verified successfully");
-      setStep("password");
-    },
-    onError: (error) => {
-      if (error.data?.zodError) {
-        toast.error("Invalid OTP format");
-        return;
-      }
-      if (error.data?.code === "NOT_FOUND") {
-        toast.error("Invalid or expired OTP");
-        return;
-      }
-      toast.error("Failed to verify OTP");
-    },
-  });
-
-  const { mutate: resetPassword } =
-    api.reset_password.resetPassword.useMutation({
-      onSuccess: () => {
-        toast.success("Password reset successfully");
-        window.location.href = "/sign-in";
-      },
-      onError: (error) => {
-        if (error.data?.zodError) {
-          toast.error("Invalid password format");
-          return;
-        }
-        if (error.data?.code === "NOT_FOUND") {
-          toast.error("Invalid or expired OTP");
-          return;
-        }
-        toast.error("Failed to reset password");
-      },
-    });
+  const [emailSent, setEmailSent] = useState(false);
+  const router = useRouter();
 
   const checkStrength = (pass: string) => {
     const requirements = [
@@ -130,43 +68,24 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
     return "Strong password";
   };
 
-  const startResendTimer = (initialTime: number) => {
-    setCanResend(false);
-    setTimeRemaining(initialTime);
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev === null || prev <= 1000) {
-          clearInterval(timer);
-          setCanResend(true);
-          return null;
-        }
-        return prev - 1000;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  };
-
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      sendOTP({ email });
-    } catch (error) {
-      toast.error("An error occurred while sending OTP");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      const result = await authClient.forgetPassword({
+        email: email,
+        redirectTo: "/reset-password",
+      });
 
-  const handleOTPSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      verifyOTP({ email, otp });
+      if (result?.data) {
+        toast.success("Password reset email sent! Check your inbox.");
+        setEmailSent(true);
+      } else {
+        toast.error(result?.error?.message || "Failed to send reset email");
+      }
     } catch (error) {
-      toast.error("An error occurred while verifying OTP");
+      console.error("Error sending reset email:", error);
+      toast.error("An error occurred while sending reset email");
     } finally {
       setIsLoading(false);
     }
@@ -176,8 +95,24 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
     e.preventDefault();
     setIsResetting(true);
     try {
-      resetPassword({ email, otp, password: newPassword });
+      if (!token) {
+        toast.error("Invalid reset link. Please request a new password reset.");
+        return;
+      }
+
+      const result = await authClient.resetPassword({
+        newPassword: newPassword,
+        token: token,
+      });
+
+      if (result?.data) {
+        toast.success("Password reset successfully!");
+        router.push("/sign-in");
+      } else {
+        toast.error(result?.error?.message || "Failed to reset password");
+      }
     } catch (error) {
+      console.error("Error resetting password:", error);
       toast.error("An error occurred while resetting password");
     } finally {
       setIsResetting(false);
@@ -185,244 +120,226 @@ const ManagePassword = ({ initialEmail }: { initialEmail?: string }) => {
   };
 
   const renderEmailStep = () => (
-    <form onSubmit={handleEmailSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          Email
-        </label>
-        <Input
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Sending OTP...
-          </>
-        ) : (
-          "Send OTP"
-        )}
-      </Button>
-    </form>
-  );
-
-  const renderOTPStep = () => (
-    <form onSubmit={handleOTPSubmit} className="w-full space-y-4">
-      <div className="space-y-2">
-        <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          Enter OTP
-        </label>
-        <InputOTP
-          maxLength={6}
-          value={otp}
-          onChange={(value) => setOtp(value)}
-          className="gap-2"
-        >
-          <InputOTPGroup className="flex justify-center gap-2">
-            <InputOTPSlot index={0} />
-            <InputOTPSlot index={1} />
-            <InputOTPSlot index={2} />
-            <InputOTPSeparator />
-            <InputOTPSlot index={3} />
-            <InputOTPSlot index={4} />
-            <InputOTPSlot index={5} />
-          </InputOTPGroup>
-        </InputOTP>
-      </div>
-
-      {timeRemaining && (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="mb-2 text-2xl font-bold">Reset Your Password</h2>
         <p className="text-muted-foreground text-sm">
-          Resend available in {Math.ceil(timeRemaining / 1000)} seconds
+          Enter your email address and we'll send you a link to reset your
+          password.
         </p>
-      )}
+      </div>
 
-      <div className="flex flex-col gap-2">
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isLoading || otp.length !== 6}
-        >
+      <form onSubmit={handleEmailSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={isLoading}
+          />
+        </div>
+        <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Verifying...
+              Sending Reset Link...
             </>
           ) : (
-            "Verify OTP"
+            "Send Reset Link"
           )}
         </Button>
+      </form>
+    </div>
+  );
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          disabled={!canResend || isLoading}
-          onClick={handleEmailSubmit}
-        >
-          {!canResend ? (
-            "Wait to resend"
-          ) : isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Resending...
-            </>
-          ) : (
-            "Resend OTP"
-          )}
-        </Button>
+  const renderEmailSentStep = () => (
+    <div className="space-y-6 text-center">
+      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+        <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
       </div>
-    </form>
+      <h2 className="mb-2 text-2xl font-bold">Check Your Email</h2>
+      <p className="text-muted-foreground mb-4 text-sm">
+        We've sent a password reset link to <strong>{email}</strong>
+      </p>
+      <p className="text-muted-foreground mb-6 text-xs">
+        Click the link in your email to continue with resetting your password.
+        The link will expire in 1 hour.
+      </p>
+      <Button
+        variant="outline"
+        onClick={() => {
+          setEmailSent(false);
+          setEmail("");
+        }}
+        className="w-full"
+      >
+        Use Different Email
+      </Button>
+    </div>
   );
 
   const renderPasswordStep = () => (
-    <form onSubmit={handlePasswordSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="new-password">New Password</Label>
-        <div className="relative">
-          <Input
-            id="new-password"
-            type={showNewPassword ? "text" : "password"}
-            value={newPassword}
-            onChange={(e) => {
-              setNewPassword(e.target.value);
-              setShowPasswordStrength(true);
-            }}
-            className="pe-9"
-            aria-invalid={newPasswordScore < 4}
-            aria-describedby="password-strength"
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowNewPassword(!showNewPassword)}
-            className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center"
-            aria-label={showNewPassword ? "Hide password" : "Show password"}
-          >
-            {showNewPassword ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </button>
-        </div>
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="mb-2 text-2xl font-bold">Set New Password</h2>
+        <p className="text-muted-foreground text-sm">
+          Enter your new password below.
+        </p>
+      </div>
 
-        {showPasswordStrength && (
-          <>
-            <div
-              className="bg-border mt-3 mb-4 h-1 w-full overflow-hidden rounded-full"
-              role="progressbar"
-              aria-valuenow={newPasswordScore}
-              aria-valuemin={0}
-              aria-valuemax={4}
-              aria-label="Password strength"
+      <form onSubmit={handlePasswordSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="new-password">New Password</Label>
+          <div className="relative">
+            <Input
+              id="new-password"
+              type={showNewPassword ? "text" : "password"}
+              value={newPassword}
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                setShowPasswordStrength(true);
+              }}
+              className="pe-9"
+              aria-invalid={newPasswordScore < 4}
+              aria-describedby="password-strength"
+              required
+              disabled={isResetting}
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center"
+              aria-label={showNewPassword ? "Hide password" : "Show password"}
             >
+              {showNewPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+
+          {showPasswordStrength && (
+            <>
               <div
-                className={`h-full ${getStrengthColor(newPasswordScore)} transition-all duration-500 ease-out`}
-                style={{ width: `${(newPasswordScore / 4) * 100}%` }}
-              />
-            </div>
+                className="bg-border mt-3 mb-4 h-1 w-full overflow-hidden rounded-full"
+                role="progressbar"
+                aria-valuenow={newPasswordScore}
+                aria-valuemin={0}
+                aria-valuemax={4}
+                aria-label="Password strength"
+              >
+                <div
+                  className={`h-full ${getStrengthColor(newPasswordScore)} transition-all duration-500 ease-out`}
+                  style={{ width: `${(newPasswordScore / 4) * 100}%` }}
+                />
+              </div>
 
-            <p
-              id="password-strength"
-              className="text-foreground mb-2 text-sm font-medium"
-            >
-              {getStrengthText(newPasswordScore)}. Must contain:
-            </p>
+              <p
+                id="password-strength"
+                className="text-foreground mb-2 text-sm font-medium"
+              >
+                {getStrengthText(newPasswordScore)}. Must contain:
+              </p>
 
-            <ul className="space-y-1.5" aria-label="Password requirements">
-              {newPasswordStrength.map((req, index) => (
-                <li key={index} className="flex items-center gap-2">
-                  {req.met ? (
-                    <Check
-                      className="h-4 w-4 text-emerald-500"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <X
-                      className="text-muted-foreground/80 h-4 w-4"
-                      aria-hidden="true"
-                    />
-                  )}
-                  <span
-                    className={`text-xs ${req.met ? "text-emerald-600" : "text-muted-foreground"}`}
-                  >
-                    {req.text}
-                    <span className="sr-only">
-                      {req.met
-                        ? " - Requirement met"
-                        : " - Requirement not met"}
+              <ul className="space-y-1.5" aria-label="Password requirements">
+                {newPasswordStrength.map((req, index) => (
+                  <li key={index} className="flex items-center gap-2">
+                    {req.met ? (
+                      <Check
+                        className="h-4 w-4 text-emerald-500"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <X
+                        className="text-muted-foreground/80 h-4 w-4"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span
+                      className={`text-xs ${req.met ? "text-emerald-600" : "text-muted-foreground"}`}
+                    >
+                      {req.text}
+                      <span className="sr-only">
+                        {req.met
+                          ? " - Requirement met"
+                          : " - Requirement not met"}
+                      </span>
                     </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="confirm-password">Confirm Password</Label>
-        <div className="relative">
-          <Input
-            id="confirm-password"
-            type={showConfirmPassword ? "text" : "password"}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="pe-9"
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center"
-            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-          >
-            {showConfirmPassword ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
-      </div>
 
-      {newPassword !== confirmPassword && confirmPassword && (
-        <p className="text-destructive text-sm">Passwords do not match</p>
-      )}
+        <div className="space-y-2">
+          <Label htmlFor="confirm-password">Confirm Password</Label>
+          <div className="relative">
+            <Input
+              id="confirm-password"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="pe-9"
+              required
+              disabled={isResetting}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="text-muted-foreground/80 hover:text-foreground absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center"
+              aria-label={
+                showConfirmPassword ? "Hide password" : "Show password"
+              }
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        </div>
 
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={
-          isResetting ||
-          !newPassword ||
-          !confirmPassword ||
-          newPassword !== confirmPassword
-        }
-      >
-        {isResetting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Resetting Password...
-          </>
-        ) : (
-          "Reset Password"
+        {newPassword !== confirmPassword && confirmPassword && (
+          <p className="text-destructive text-sm">Passwords do not match</p>
         )}
-      </Button>
-    </form>
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={
+            isResetting ||
+            !newPassword ||
+            !confirmPassword ||
+            newPassword !== confirmPassword ||
+            newPasswordScore < 4
+          }
+        >
+          {isResetting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Resetting Password...
+            </>
+          ) : (
+            "Reset Password"
+          )}
+        </Button>
+      </form>
+    </div>
   );
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-      <div className="bg-background mx-auto w-full max-w-sm rounded-lg p-8 shadow-sm">
-        {step === "email" && renderEmailStep()}
-        {step === "otp" && renderOTPStep()}
-        {step === "password" && renderPasswordStep()}
+      <div className="bg-background mx-auto w-full max-w-sm min-w-[300px] rounded-lg p-6 shadow-sm">
+        {!emailSent && !token && renderEmailStep()}
+        {emailSent && !token && renderEmailSentStep()}
+        {token && renderPasswordStep()}
       </div>
     </div>
   );

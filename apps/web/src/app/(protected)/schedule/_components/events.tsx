@@ -23,6 +23,11 @@ dayjs.extend(isBetween);
 export const EventsSidebar = ({ events }: { events: any[] }) => {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
+  // Debug logging
+  console.log("EventsSidebar received events:", events);
+  console.log("Events type:", typeof events);
+  console.log("Events length:", events?.length);
+
   const getStatusBadge = (startDate: string, endDate: string, type: string) => {
     const now = dayjs();
     const start = dayjs(startDate);
@@ -112,8 +117,11 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
   );
 
   const renderEmptyState = (message: string) => (
-    <div className="text-muted-foreground flex items-center justify-center py-1">
-      <span className="text-xs">{message}</span>
+    <div className="flex flex-col items-center justify-center gap-2 py-4">
+      <MdEventRepeat className="text-muted-foreground/50 h-12 w-12 md:h-16 md:w-16" />
+      <span className="text-muted-foreground text-center text-xs">
+        {message}
+      </span>
     </div>
   );
 
@@ -158,9 +166,9 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
     assignments.length > 0;
 
   return (
-    <div className="w-full md:w-[260px]">
-      <Card className="bg-background w-full rounded-lg p-3 shadow-md">
-        <ScrollArea className="max-h-[calc(100vh-10rem)]">
+    <div className="w-[260px]">
+      <Card className="bg-background h-full rounded-lg p-3 shadow-md">
+        <ScrollArea className="h-[calc(100vh-8rem)]">
           <div className="space-y-2 pb-1">
             {renderEventSection(
               "Live Events",

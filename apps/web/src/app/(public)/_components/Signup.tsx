@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { authClient } from "@/server/auth/client";
 import { SocialSignin } from "./SocialSignin";
 import { useFeatureFlags } from "./FeatureFlagsProvider";
+import { useRouter } from "next/navigation";
 
 const signUpSchema = z
   .object({
@@ -45,6 +46,7 @@ export function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { isGoogleSignInEnabled, isGithubSignInEnabled } = useFeatureFlags();
+  const router = useRouter();
 
   const form = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
@@ -74,21 +76,26 @@ export function SignUp() {
   const handleSubmit = async (values: SignUpInput) => {
     try {
       setIsLoading(true);
-      const result = await authClient.signUp.email({
-        email: values.email,
-        password: values.password,
-        name: values.name,
-        username: values.username,
-      });
-      if (result?.data?.user) {
-        toast.success(
-          "Sign up successful! Please check your email to verify your account.",
-          {
-            position: "top-center",
-            duration: 5000,
+      const result = await authClient.signUp.email(
+        {
+          email: values.email,
+          password: values.password,
+          name: values.name,
+          username: values.username,
+          callbackURL: "/dashboard",
+        },
+        {
+          onSuccess: (ctx) => {
+            const authToken = ctx.response.headers.get("set-auth-token");
+            if (authToken) {
+              localStorage.setItem("bearer_token", authToken);
+            }
           },
-        );
-        window.location.href = "/sign-in";
+        },
+      );
+      if (result?.data?.user) {
+        toast.success("Sign up successful!");
+        router.push("/dashboard");
         return;
       }
       toast.error(result?.error?.message || "Failed to sign up", {

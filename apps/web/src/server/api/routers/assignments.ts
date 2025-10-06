@@ -1869,6 +1869,11 @@ export const assignmentsRouter = createTRPCRouter({
                     },
                     submissions: {
                       where: {
+                        enrolledUser: {
+                          user: {
+                            username: userId,
+                          },
+                        },
                         ...(currentUser.role === "MENTOR" && {
                           enrolledUser: {
                             mentorUsername: currentUser.username,
@@ -1880,6 +1885,7 @@ export const assignmentsRouter = createTRPCRouter({
                         points: {
                           select: {
                             id: true,
+                            score: true,
                           },
                         },
                         enrolledUser: {

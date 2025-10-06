@@ -7,11 +7,17 @@ import type { SessionUser } from "@/lib/auth";
 import AddCourse from "./AddCourse";
 import CourseCard from "./CourseCard";
 import NoDataFound from "../../../../components/NoDataFound";
-import { api } from "@/trpc/react";
 
-export default function CoursesPageClient({ user }: { user: SessionUser }) {
+interface CoursesPageClientProps {
+  user: SessionUser;
+  coursesData: { success: boolean; data: Course[] } | undefined;
+}
+
+export default function CoursesPageClient({
+  user,
+  coursesData,
+}: CoursesPageClientProps) {
   const router = useRouter();
-  const { data: coursesData } = api.courses.getEnrolledCourses.useQuery();
 
   if (!user) {
     router.push("/sign-in");

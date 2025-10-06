@@ -12,18 +12,16 @@ export default async function SchedulePage() {
   const { events, isAuthorized, holidays } = scheduleData.data;
 
   return (
-    <div className="bg-background h-full">
-      <div className="gap-2 md:flex">
-        <div className="md:fixed">
-          <EventsSidebar events={events} />
-        </div>
-        <div className="md:ml-[270px] md:flex-1">
-          <Calendar
-            events={events}
-            isAuthorized={isAuthorized}
-            holidays={holidays}
-          />
-        </div>
+    <div className="flex h-screen gap-4">
+      <div className="flex-shrink-0">
+        <EventsSidebar events={events} />
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <Calendar
+          events={events}
+          isAuthorized={isAuthorized}
+          holidays={holidays}
+        />
       </div>
     </div>
   );

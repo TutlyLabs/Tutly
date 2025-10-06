@@ -39,7 +39,7 @@ export const ZoomIntegration = ({ zoom }: { zoom?: Account | undefined }) => {
       });
 
       if (result.data && "url" in result.data) {
-        window.location.href = result.data.url;
+        window.open(result.data.url, "_blank");
       } else {
         throw new Error("Failed to get OAuth URL");
       }

@@ -21,7 +21,6 @@ import { notificationsRouter } from "./routers/notifications";
 import { oauthRouter } from "./routers/oauth";
 import { pointsRouter } from "./routers/points";
 import { reportRouter } from "./routers/report";
-import { resetPasswordRouter } from "./routers/reset-password";
 import { sandboxRouter } from "./routers/sandbox";
 import { scheduleRouter } from "./routers/schedule";
 import { statisticsRouter } from "./routers/statistics";
@@ -54,7 +53,6 @@ export const appRouter = createTRPCRouter({
   oauth: oauthRouter,
   points: pointsRouter,
   report: reportRouter,
-  reset_password: resetPasswordRouter,
   sandbox: sandboxRouter,
   schedule: scheduleRouter,
   statistics: statisticsRouter,

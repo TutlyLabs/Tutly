@@ -26,23 +26,23 @@ const chartConfig = {
   },
   evaluated: {
     label: "Evaluated",
-    color: "hsl(var(--chart-1))",
+    color: "var(--color-chart-1)",
   },
   unreviewed: {
     label: "Unreviewed",
-    color: "hsl(var(--chart-2))",
+    color: "var(--color-chart-2)",
   },
   unsubmitted: {
     label: "Unsubmitted",
-    color: "hsl(var(--chart-3))",
+    color: "var(--color-chart-3)",
   },
   edge: {
     label: "Edge",
-    color: "hsl(var(--chart-4))",
+    color: "var(--color-chart-4)",
   },
   other: {
     label: "Other",
-    color: "hsl(var(--chart-5))",
+    color: "var(--color-chart-5)",
   },
 } satisfies ChartConfig;
 
