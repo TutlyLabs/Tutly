@@ -176,13 +176,16 @@ export const auth = betterAuth({
     }),
   ],
   trustedOrigins: async () => {
-    const origins = ["http://localhost:3000", "*.tutly.in"];
-    if (FRONTEND_URL) {
-      origins.push(FRONTEND_URL);
-    }
-    if (process.env.VERCEL_URL) {
-      origins.push(`https://${process.env.VERCEL_URL}`);
-    }
-    return origins;
+    // TODO: Restrict this to specific origins in production
+    return ["*"];
+
+    // const origins = ["http://localhost:3000", "*.tutly.in"];
+    // if (FRONTEND_URL) {
+    //   origins.push(FRONTEND_URL);
+    // }
+    // if (process.env.VERCEL_URL) {
+    //   origins.push(`https://${process.env.VERCEL_URL}`);
+    // }
+    // return origins;
   },
 });
