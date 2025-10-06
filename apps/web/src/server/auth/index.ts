@@ -29,6 +29,10 @@ export const auth = betterAuth({
     database: {
       generateId: () => randomUUID(),
     },
+    ipAddress: {
+      ipAddressHeaders: ["x-real-ip", "x-forwarded-for"],
+      disableIpTracking: false,
+    },
   },
   session: {
     cookieCache: {
