@@ -35,7 +35,7 @@ const ReactPlayground = ({ currentUser }: { currentUser: any }) => {
             </div>
           }
         >
-          <Playground initialFiles={filesObj} template="react" />
+          <Playground initialFiles={filesObj} template="react" currentUser={currentUser} />
         </Suspense>
       )}
     </>

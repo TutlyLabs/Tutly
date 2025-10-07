@@ -21,8 +21,7 @@ import SandboxConsole from "./SandboxConsole";
 import StaticConsole from "./StaticConsole";
 import StaticPreview from "./StaticPreview";
 import SubmitAssignment from "./SubmitAssignment";
-import { useClientSession } from "@/lib/auth/client";
-import { useRouter } from "next/navigation";
+import type { SessionUser } from "@/lib/auth";
 
 const defaultFiles: SandpackFiles = {
   "/index.html": `<!DOCTYPE html>
@@ -48,16 +47,15 @@ const Playground = ({
   assignmentId,
   initialFiles,
   template = "static",
+  currentUser,
 }: {
   assignmentId?: string;
   initialFiles?: SandpackFiles;
   template?: SandpackPredefinedTemplate;
+  currentUser: SessionUser;
 }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [staticLogs, setStaticLogs] = useState<string[]>([]);
-  const session = useClientSession();
-  const currentUser = session?.data?.user;
-  const router = useRouter();
 
   const handleStaticLog = useCallback((log: string) => {
     setStaticLogs((prev) => [...prev, log]);
@@ -66,11 +64,6 @@ const Playground = ({
   const handleClearStaticLogs = useCallback(() => {
     setStaticLogs([]);
   }, []);
-
-  if (!currentUser) {
-    router.push("/sign-in");
-    return null;
-  }
 
   const startingFiles = initialFiles || defaultFiles;
 
@@ -155,7 +148,7 @@ const Playground = ({
           </ResizablePanel>
         </ResizablePanelGroup>
         {assignmentId && (
-          <div className="absolute -top-6 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute -top-6 left-1/2 z-[60] -translate-x-1/2 -translate-y-1/2">
             <SubmitAssignment
               currentUser={currentUser}
               assignmentId={assignmentId}

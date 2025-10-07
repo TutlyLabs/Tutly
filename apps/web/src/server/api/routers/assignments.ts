@@ -1073,6 +1073,93 @@ export const assignmentsRouter = createTRPCRouter({
       }
     }),
 
+  getAssignmentDetailsForSubmission: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const currentUser = ctx.session.user;
+
+        const assignment = await ctx.db.attachment.findUnique({
+          where: {
+            id: input.id,
+          },
+          include: {
+            class: {
+              include: {
+                course: true,
+              },
+            },
+            submissions: {
+              where: {
+                enrolledUser: {
+                  user: {
+                    id: currentUser.id,
+                  },
+                },
+              },
+              include: {
+                enrolledUser: {
+                  include: {
+                    submission: true,
+                  },
+                },
+                points: true,
+              },
+            },
+          },
+        });
+
+        if (!assignment) {
+          return { error: "Assignment not Found" };
+        }
+
+        if (!assignment.class?.courseId) {
+          return { error: "Course not found" };
+        }
+
+        const mentorDetails = await ctx.db.enrolledUsers.findFirst({
+          where: {
+            username: currentUser.username,
+            courseId: assignment.class.courseId,
+          },
+          select: {
+            mentor: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        });
+
+        return {
+          assignment: {
+            id: assignment.id,
+            title: assignment.title,
+            link: assignment.link,
+            class: {
+              id: assignment.class.id,
+              title: assignment.class.title,
+              courseId: assignment.class.courseId,
+              course: {
+                id: assignment.class.course?.id,
+                title: assignment.class.course?.title,
+              },
+            },
+            submissions: assignment.submissions.map((submission) => {
+              return { id: submission.id };
+            }),
+            maxSubmissions: assignment.maxSubmissions,
+          },
+          mentorDetails,
+        };
+      } catch (error) {
+        return {
+          error:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        };
+      }
+    }),
+
   submitAssignment: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {

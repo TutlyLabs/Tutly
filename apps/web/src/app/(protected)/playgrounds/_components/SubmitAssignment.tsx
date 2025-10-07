@@ -12,17 +12,11 @@ const SubmitAssignment = ({
   currentUser: any;
   assignmentId: string;
 }) => {
-  const { data: res, isPending } = api.assignments.submitAssignment.useMutation(
+  const { data: res, isPending } = api.assignments.getAssignmentDetailsForSubmission.useQuery(
+    { id: assignmentId },
     {
-      onSuccess: (data) => {
-        if (!data.assignment || !currentUser) {
-          toast.error("Error fetching assignment details");
-        }
-      },
-      onError: () => {
-        toast.error("Error fetching assignment details");
-      },
-    },
+      enabled: !!assignmentId,
+    }
   );
 
   if (!assignmentId) return null;
@@ -37,16 +31,7 @@ const SubmitAssignment = ({
       isLoading={isPending}
     />
   ) : (
-    <div className="space-y-6 p-6">
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-96" />
-      </div>
-      <div className="space-y-4">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-24 w-full" />
-      </div>
-    </div>
+    <Skeleton className="h-8 w-48" />
   );
 };
 

@@ -1,4 +1,5 @@
 import { api } from "@/trpc/server";
+import { getServerSessionOrRedirect } from "@/lib/auth";
 import Playground from "../_components/Playground";
 
 type SandpackFile = {
@@ -22,6 +23,8 @@ interface HtmlCssJsPlaygroundPageProps {
 export default async function HtmlCssJsPlaygroundPage({
   searchParams,
 }: HtmlCssJsPlaygroundPageProps) {
+  const session = await getServerSessionOrRedirect();
+  const currentUser = session.user;
   const { assignmentId, submissionId } = await searchParams;
 
   let submissionData;
@@ -44,6 +47,7 @@ export default async function HtmlCssJsPlaygroundPage({
       assignmentId={assignmentId || ""}
       initialFiles={initialFiles}
       template="static"
+      currentUser={currentUser}
     />
   );
 }
