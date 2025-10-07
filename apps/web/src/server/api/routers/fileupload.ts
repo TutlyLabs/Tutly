@@ -61,10 +61,10 @@ const s3Client = new S3Client({
     secretAccessKey: AWS_SECRET_KEY,
   },
   // only for dev (localstack)
-  ...(AWS_ENDPOINT && {
-    endpoint: AWS_ENDPOINT,
-    forcePathStyle: true,
-  }),
+  // ...(AWS_ENDPOINT && {
+  //   endpoint: AWS_ENDPOINT,
+  //   forcePathStyle: true,
+  // }),
 });
 
 function getExtension(filename: string): string {
