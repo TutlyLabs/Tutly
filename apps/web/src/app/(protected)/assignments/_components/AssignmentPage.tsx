@@ -89,6 +89,7 @@ export default function AssignmentPage({
   });
   const [feedback, setFeedback] = useState("");
   const [isEditClassDialogOpen, setIsEditClassDialogOpen] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   const addPointsMutation = api.points.addPoints.useMutation({
     onSuccess: () => {
@@ -249,11 +250,10 @@ export default function AssignmentPage({
         <div className="flex items-center justify-center gap-4">
           {assignment?.dueDate != null && (
             <div
-              className={`rounded p-1 px-2 text-white ${
-                new Date(assignment?.dueDate) > new Date()
-                  ? "bg-primary-600"
-                  : "bg-secondary-500"
-              }`}
+              className={`rounded p-1 px-2 text-white ${new Date(assignment?.dueDate) > new Date()
+                ? "bg-primary-600"
+                : "bg-secondary-500"
+                }`}
             >
               Last Date : {assignment?.dueDate.toISOString().split("T")[0]}
             </div>
@@ -339,6 +339,7 @@ export default function AssignmentPage({
             courseId={assignment.courseId}
             assignment={assignment}
             isSandboxConfigured={isSandboxConfigured}
+            setIsVideoModalOpen={setIsVideoModalOpen}
           />
         ) : (
           <AdminAssignmentTable
@@ -379,6 +380,27 @@ export default function AssignmentPage({
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
       />
+
+      {/* Video Demo Modal */}
+      <Dialog open={isVideoModalOpen} onOpenChange={setIsVideoModalOpen}>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Assignment Submission Demo</DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video w-full">
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/KImR86tLwx4"
+              title="Assignment Demo"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="rounded-lg"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -387,10 +409,12 @@ const StudentAssignmentSubmission = ({
   assignment,
   courseId,
   isSandboxConfigured,
+  setIsVideoModalOpen,
 }: {
   assignment: any;
   courseId: string;
   isSandboxConfigured: boolean;
+  setIsVideoModalOpen: (open: boolean) => void;
 }) => {
   const [externalLink, setExternalLink] = useState("");
   const router = useRouter();
@@ -405,12 +429,58 @@ const StudentAssignmentSubmission = ({
       },
     });
 
+  const validateCodeSandboxLink = async (url: string): Promise<boolean> => {
+    try {
+      const sandboxIdMatch = url.match(/codesandbox\.io\/(?:p\/sandbox\/|s\/)([a-zA-Z0-9-_]+)/);
+      if (!sandboxIdMatch) {
+        toast.error("Invalid CodeSandbox URL format");
+        return false;
+      }
+
+      const sandboxId = sandboxIdMatch[1];
+
+      // Check if sandbox is accessible (not private)
+      const response = await fetch(`https://codesandbox.io/api/v1/sandboxes/${sandboxId}`);
+
+      if (response.status === 404) {
+        toast.error("CodeSandbox not found or is private. Please make it public or unlisted.");
+        return false;
+      }
+
+      if (!response.ok) {
+        toast.error("Unable to verify CodeSandbox accessibility");
+        return false;
+      }
+
+      const data = await response.json();
+
+      // Check if sandbox is private
+      if (data.privacy === 1) { // 1 = private, 0 = public, 2 = unlisted
+        toast.error("CodeSandbox is private. Please make it public or unlisted before submitting.");
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error validating CodeSandbox link:", error);
+      toast.error("Error validating CodeSandbox link");
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (assignment.maxSubmissions <= assignment.submissions.length) {
       toast.error("Maximum submissions reached");
       return;
+    }
+
+    if (externalLink.includes("codesandbox.io")) {
+      const isValid = await validateCodeSandboxLink(externalLink);
+      if (!isValid) {
+        return;
+      }
     }
 
     try {
@@ -429,7 +499,10 @@ const StudentAssignmentSubmission = ({
   const isMaxSubmissionsReached =
     assignment?.maxSubmissions <= assignment.submissions.length;
   const isPlaygroundSubmission =
-    assignment.submissionMode === "HTML_CSS_JS" || isSandboxConfigured;
+    assignment.submissionMode === "HTML_CSS_JS";
+
+  const isExternalLinkSubmission =
+    assignment.submissionMode === "EXTERNAL_LINK";
 
   return (
     <div className="space-y-6">
@@ -441,7 +514,7 @@ const StudentAssignmentSubmission = ({
         ) : isPlaygroundSubmission ? (
           <Button asChild>
             <Link
-              href={`/playgrounds/${isSandboxConfigured ? "sandbox" : "html-css-js"}?assignmentId=${assignment.id}`}
+              href={`/playgrounds/html-css-js?assignmentId=${assignment.id}`}
               target="_blank"
             >
               {assignment?.submissions.length === 0
@@ -449,7 +522,7 @@ const StudentAssignmentSubmission = ({
                 : "Submit another response"}
             </Link>
           </Button>
-        ) : (
+        ) : isExternalLinkSubmission ? (
           <Dialog>
             <DialogTrigger asChild>
               <Button>
@@ -461,9 +534,18 @@ const StudentAssignmentSubmission = ({
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add External Link</DialogTitle>
+                <DialogDescription>
+                  Submit your assignment using a CodeSandbox link. <Button
+                    variant="link"
+                    className="ml-2 p-0 h-auto text-blue-400 hover:text-blue-500 font-light"
+                    onClick={() => setIsVideoModalOpen(true)}
+                  >
+                    View Demo
+                  </Button>
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-4 items-center gap-4">
+                <div className="grid grid-cols-6 items-center gap-4">
                   <Label htmlFor="externalLink" className="text-right">
                     Link
                   </Label>
@@ -472,15 +554,43 @@ const StudentAssignmentSubmission = ({
                     value={externalLink}
                     onChange={(e) => setExternalLink(e.target.value)}
                     placeholder="https://codesandbox.io/p/sandbox/..."
-                    className="col-span-3"
+                    className="col-span-5"
                   />
                 </div>
                 <DialogFooter>
-                  <Button type="submit">Submit</Button>
+                  <Button
+                    type="submit"
+                    disabled={submitExternalLinkMutation.isPending || !externalLink.trim()}
+                    className="min-w-[120px]"
+                  >
+                    {submitExternalLinkMutation.isPending ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Assignment"
+                    )}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
           </Dialog>
+        ) : isSandboxConfigured ? (
+          <Button asChild>
+            <Link
+              href={`/playgrounds/sandbox?assignmentId=${assignment.id}`}
+              target="_blank"
+            >
+              {assignment?.submissions.length === 0
+                ? "Submit through Playground"
+                : "Submit another response"}
+            </Link>
+          </Button>
+        ) : (
+          <div className="text-center text-gray-500">
+            No submission method available
+          </div>
         )}
       </div>
 
@@ -517,8 +627,12 @@ const StudentAssignmentSubmission = ({
                 0,
               );
               const submissionUrl = isPlaygroundSubmission
-                ? `/playgrounds/sandbox?submissionId=${submission.id}`
-                : submission.submissionLink;
+                ? `/playgrounds/html-css-js?submissionId=${submission.id}`
+                : isExternalLinkSubmission
+                  ? submission.submissionLink
+                  : isSandboxConfigured
+                    ? `/playgrounds/sandbox?submissionId=${submission.id}`
+                    : submission.submissionLink;
 
               return (
                 <TableRow key={index}>
