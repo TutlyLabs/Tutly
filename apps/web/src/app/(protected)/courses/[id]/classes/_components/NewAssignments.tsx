@@ -372,9 +372,14 @@ const NewAttachmentPage = ({
               <FormLabel className="text-base">Details</FormLabel>
               <FormControl>
                 <RichTextEditor
-                  initialValue={attachment?.detailsJson ?? attachment?.details ?? ""}
+                  initialValue={
+                    attachment?.detailsJson ?? attachment?.details ?? ""
+                  }
                   onChange={(jsonValue) => {
-                    form.setValue("detailsJson", jsonValue ? JSON.parse(jsonValue) : null)
+                    form.setValue(
+                      "detailsJson",
+                      jsonValue ? JSON.parse(jsonValue) : null,
+                    );
                   }}
                   allowUpload={true}
                   fileUploadOptions={{
@@ -401,7 +406,7 @@ const NewAttachmentPage = ({
             type="button"
             disabled={isSubmitting}
             onClick={onCancel ?? (() => router.back())}
-          // variant="destructive"
+            // variant="destructive"
           >
             Cancel
           </Button>

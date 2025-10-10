@@ -69,7 +69,12 @@ interface ClassProps {
   initialNotesData?: any;
 }
 
-export default function Class({ courseId, classId, currentUser, initialNotesData }: ClassProps) {
+export default function Class({
+  courseId,
+  classId,
+  currentUser,
+  initialNotesData,
+}: ClassProps) {
   const [selectedAttachment, setSelectedAttachment] =
     useState<Attachment | null>(null);
   const [isAddAssignmentDialogOpen, setIsAddAssignmentDialogOpen] =
@@ -149,8 +154,11 @@ export default function Class({ courseId, classId, currentUser, initialNotesData
         }
 
         if (prevValuesRef.current) {
-          const hasJsonChanged = JSON.stringify(debouncedNotesJson) !== JSON.stringify(prevValuesRef.current.descriptionJson);
-          const hasTagsChanged = JSON.stringify(tags) !== JSON.stringify(prevValuesRef.current.tags);
+          const hasJsonChanged =
+            JSON.stringify(debouncedNotesJson) !==
+            JSON.stringify(prevValuesRef.current.descriptionJson);
+          const hasTagsChanged =
+            JSON.stringify(tags) !== JSON.stringify(prevValuesRef.current.tags);
 
           if (!hasJsonChanged && !hasTagsChanged) {
             return;
@@ -185,7 +193,16 @@ export default function Class({ courseId, classId, currentUser, initialNotesData
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [debouncedNotes, debouncedNotesJson, classId, tags, isInitialLoad, updateNote, courseId, notesData]);
+  }, [
+    debouncedNotes,
+    debouncedNotesJson,
+    classId,
+    tags,
+    isInitialLoad,
+    updateNote,
+    courseId,
+    notesData,
+  ]);
 
   if (!classDetails?.data) {
     return (
@@ -486,7 +503,7 @@ export default function Class({ courseId, classId, currentUser, initialNotesData
                       </td>
                       <td className="px-4 py-2">
                         {attachment.attachmentType === "ASSIGNMENT" &&
-                          attachment.dueDate
+                        attachment.dueDate
                           ? dayjs(attachment.dueDate).format("MMM D, YYYY")
                           : "-"}
                       </td>
@@ -592,11 +609,11 @@ export default function Class({ courseId, classId, currentUser, initialNotesData
           )}
         </div>
 
-        {(initialNotesData || notesData) ? (
+        {initialNotesData || notesData ? (
           <RichTextEditor
             initialValue={notesJson ?? notes ?? ""}
             onChange={(jsonValue: string) => {
-              setNotesJson(jsonValue ? JSON.parse(jsonValue) : null)
+              setNotesJson(jsonValue ? JSON.parse(jsonValue) : null);
             }}
             height="min-h-[200px]"
             allowUpload={true}
@@ -607,7 +624,7 @@ export default function Class({ courseId, classId, currentUser, initialNotesData
             }}
           />
         ) : (
-          <div className="min-h-[200px] flex items-center justify-center rounded-md border bg-muted/50">
+          <div className="bg-muted/50 flex min-h-[200px] items-center justify-center rounded-md border">
             <div className="text-muted-foreground">Loading notes...</div>
           </div>
         )}

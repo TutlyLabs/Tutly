@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-export type SpacerOrientation = "horizontal" | "vertical"
+export type SpacerOrientation = "horizontal" | "vertical";
 
 export interface SpacerProps extends React.HTMLAttributes<HTMLDivElement> {
-  orientation?: SpacerOrientation
-  size?: string | number
+  orientation?: SpacerOrientation;
+  size?: string | number;
 }
 
 export function Spacer({
@@ -22,7 +22,7 @@ export function Spacer({
       width: orientation === "vertical" ? "1px" : size,
       height: orientation === "horizontal" ? "1px" : size,
     }),
-  }
+  };
 
-  return <div {...props} style={computedStyle} />
+  return <div {...props} style={computedStyle} />;
 }

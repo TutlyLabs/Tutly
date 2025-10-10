@@ -12,12 +12,13 @@ const SubmitAssignment = ({
   currentUser: any;
   assignmentId: string;
 }) => {
-  const { data: res, isPending } = api.assignments.getAssignmentDetailsForSubmission.useQuery(
-    { id: assignmentId },
-    {
-      enabled: !!assignmentId,
-    }
-  );
+  const { data: res, isPending } =
+    api.assignments.getAssignmentDetailsForSubmission.useQuery(
+      { id: assignmentId },
+      {
+        enabled: !!assignmentId,
+      },
+    );
 
   if (!assignmentId) return null;
 

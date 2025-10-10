@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const MoonStarIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -23,8 +23,8 @@ export const MoonStarIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-MoonStarIcon.displayName = "MoonStarIcon"
+MoonStarIcon.displayName = "MoonStarIcon";

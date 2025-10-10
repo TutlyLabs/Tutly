@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const BlockquoteIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -37,8 +37,8 @@ export const BlockquoteIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-BlockquoteIcon.displayName = "BlockquoteIcon"
+BlockquoteIcon.displayName = "BlockquoteIcon";

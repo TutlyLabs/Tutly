@@ -64,17 +64,23 @@ export const NotesComponent = ({ notes }: { notes: Notes[] }) => {
   const filteredNotes = notes.filter((note) => {
     const searchLower = searchTerm.toLowerCase();
 
-    const matchesDescription = note.description?.toLowerCase().includes(searchLower);
+    const matchesDescription = note.description
+      ?.toLowerCase()
+      .includes(searchLower);
 
-    const matchesJsonContent = note.descriptionJson && typeof note.descriptionJson === 'object'
-      ? JSON.stringify(note.descriptionJson).toLowerCase().includes(searchLower)
-      : false;
+    const matchesJsonContent =
+      note.descriptionJson && typeof note.descriptionJson === "object"
+        ? JSON.stringify(note.descriptionJson)
+            .toLowerCase()
+            .includes(searchLower)
+        : false;
 
     const matchesTags = note.tags.some((tag) =>
-      tag.toLowerCase().includes(searchLower)
+      tag.toLowerCase().includes(searchLower),
     );
 
-    const matchesSearch = matchesDescription || matchesJsonContent || matchesTags;
+    const matchesSearch =
+      matchesDescription || matchesJsonContent || matchesTags;
 
     const matchesSelectedTags =
       selectedTags.length === 0 ||
@@ -104,10 +110,11 @@ export const NotesComponent = ({ notes }: { notes: Notes[] }) => {
             <button
               key={tag}
               onClick={() => toggleTag(tag)}
-              className={`rounded-full px-2 py-0.5 text-xs sm:px-3 sm:py-1 sm:text-sm ${selectedTags.includes(tag)
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-secondary-foreground"
-                }`}
+              className={`rounded-full px-2 py-0.5 text-xs sm:px-3 sm:py-1 sm:text-sm ${
+                selectedTags.includes(tag)
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-secondary-foreground"
+              }`}
             >
               {tag}
             </button>

@@ -277,7 +277,6 @@ export function isNodeTypeSelected(
   return false;
 }
 
-
 type ProtocolOptions = {
   /**
    * The protocol scheme to be registered.

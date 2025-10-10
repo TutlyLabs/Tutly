@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import React, { useRef } from 'react'
-import { NodeViewWrapper } from '@tiptap/react'
-import ImageResizer from './ImageResizer'
+import React, { useRef } from "react";
+import { NodeViewWrapper } from "@tiptap/react";
+import ImageResizer from "./ImageResizer";
 
 export default (props: any) => {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -10,20 +10,22 @@ export default (props: any) => {
   const handleResizeEnd = (width: number, height: number) => {
     props.updateAttributes({
       width: width,
-      height: height
+      height: height,
     });
   };
 
   const isReadonly = props.editor?.isEditable === false;
 
   return (
-    <NodeViewWrapper className={`image-resizer-wrapper ${isReadonly ? 'readonly' : ''}`}>
+    <NodeViewWrapper
+      className={`image-resizer-wrapper ${isReadonly ? "readonly" : ""}`}
+    >
       {props.extension.options.useFigure ? (
         <figure>
-          <img {...props.node.attrs} className='postimage' ref={imageRef} />
+          <img {...props.node.attrs} className="postimage" ref={imageRef} />
         </figure>
       ) : (
-        <img {...props.node.attrs} className='postimage' ref={imageRef} />
+        <img {...props.node.attrs} className="postimage" ref={imageRef} />
       )}
       {!isReadonly && (
         <ImageResizer
@@ -38,5 +40,5 @@ export default (props: any) => {
         />
       )}
     </NodeViewWrapper>
-  )
-}
+  );
+};

@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const CodeBlockIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -31,8 +31,8 @@ export const CodeBlockIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-CodeBlockIcon.displayName = "CodeBlockIcon"
+CodeBlockIcon.displayName = "CodeBlockIcon";

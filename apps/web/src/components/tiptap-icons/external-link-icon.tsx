@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const ExternalLinkIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -21,8 +21,8 @@ export const ExternalLinkIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-ExternalLinkIcon.displayName = "ExternalLinkIcon"
+ExternalLinkIcon.displayName = "ExternalLinkIcon";

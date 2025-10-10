@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const CloseIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -17,8 +17,8 @@ export const CloseIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-CloseIcon.displayName = "CloseIcon"
+CloseIcon.displayName = "CloseIcon";

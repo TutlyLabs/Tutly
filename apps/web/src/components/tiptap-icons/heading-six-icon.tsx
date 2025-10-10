@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 export const HeadingSixIcon = React.memo(
   ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
@@ -23,8 +23,8 @@ export const HeadingSixIcon = React.memo(
           fill="currentColor"
         />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-HeadingSixIcon.displayName = "HeadingSixIcon"
+HeadingSixIcon.displayName = "HeadingSixIcon";
