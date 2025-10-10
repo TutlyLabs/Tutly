@@ -70,6 +70,7 @@
     "@tiptap/pm": "^3.6.6",
     "@tiptap/react": "^3.6.6",
     "@tiptap/starter-kit": "^3.6.6",
+    "@tiptap/static-renderer": "^3.6.6",
     "@trpc/client": "11.4.1",
     "@trpc/react-query": "11.4.1",
     "@trpc/server": "11.4.1",

@@ -10,7 +10,7 @@ import { MdOutlineDelete } from "react-icons/md";
 import { RiWhatsappLine } from "react-icons/ri";
 import Link from "next/link";
 
-import MarkdownPreview from "@/components/MarkdownPreview";
+import ContentPreview from "@/components/ContentPreview";
 import { Pagination } from "@/components/table/Pagination";
 import { Button } from "@/components/ui/button";
 import {
@@ -317,9 +317,10 @@ export default function AssignmentPage({
         </div>
       </div>
       <div className="my-5">
-        <MarkdownPreview
+        <ContentPreview
           className="text-xs"
           content={assignment?.details || "No details given to show"}
+          jsonContent={assignment?.detailsJson}
         />
       </div>
 

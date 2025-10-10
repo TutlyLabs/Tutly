@@ -7,21 +7,22 @@
 .simple-editor-content {
   width: 100%;
   margin: 0 auto;
-  height: 100%;
+  height: auto;
+  min-height: 200px;
   display: flex;
   flex-direction: column;
   flex: 1;
   background-color: var(--background);
   overflow-y: auto;
-  min-height: 0;
 }
 
 .simple-editor-content .tiptap.ProseMirror.simple-editor {
   flex: 1;
-  padding: 3rem 3rem 30vh;
+  padding: 0.5rem;
   color: var(--foreground);
   background-color: var(--background);
-
+  min-height: 150px;
+  height: auto;
 
   h1,
   h2,
@@ -102,6 +103,7 @@
 
 @media screen and (max-width: 480px) {
   .simple-editor-content .tiptap.ProseMirror.simple-editor {
-    padding: 1rem 1.5rem 30vh;
+    padding: 0.25rem;
+    min-height: 120px;
   }
 }

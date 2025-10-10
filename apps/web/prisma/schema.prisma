@@ -318,8 +318,9 @@ model Notes {
   objectId      String
   causedObjects Json?        @default("{}")
 
-  description String?
-  tags        String[]
+  description     String?
+  descriptionJson Json?
+  tags            String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -417,6 +418,7 @@ model Attachment {
   id              String         @id @default(uuid())
   title           String         @default("Attachment")
   details         String?
+  detailsJson     Json?
   attachmentType  attachmentType
   link            String?
   submissions     submission[]

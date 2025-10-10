@@ -14,8 +14,10 @@ export default (props: any) => {
     });
   };
 
+  const isReadonly = props.editor?.isEditable === false;
+
   return (
-    <NodeViewWrapper className="image-resizer-wrapper">
+    <NodeViewWrapper className={`image-resizer-wrapper ${isReadonly ? 'readonly' : ''}`}>
       {props.extension.options.useFigure ? (
         <figure>
           <img {...props.node.attrs} className='postimage' ref={imageRef} />
@@ -23,16 +25,18 @@ export default (props: any) => {
       ) : (
         <img {...props.node.attrs} className='postimage' ref={imageRef} />
       )}
-      <ImageResizer
-        editor={props.editor}
-        imageRef={imageRef}
-        minWidth={50}
-        maxWidth={800}
-        minHeight={50}
-        maxHeight={600}
-        keepRatio={true}
-        onResizeEnd={handleResizeEnd}
-      />
+      {!isReadonly && (
+        <ImageResizer
+          editor={props.editor}
+          imageRef={imageRef}
+          minWidth={50}
+          maxWidth={800}
+          minHeight={50}
+          maxHeight={600}
+          keepRatio={true}
+          onResizeEnd={handleResizeEnd}
+        />
+      )}
     </NodeViewWrapper>
   )
 }

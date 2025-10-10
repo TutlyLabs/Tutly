@@ -160,3 +160,24 @@
 .dark .image-resizer:hover {
   background: #3b82f6;
 }
+
+/* Readonly mode styles */
+.image-resizer-wrapper.readonly {
+  pointer-events: none;
+}
+
+.image-resizer-wrapper.readonly:hover {
+  box-shadow: none;
+}
+
+.image-resizer-wrapper.readonly .postimage {
+  cursor: default;
+}
+
+.image-resizer-wrapper.readonly.ProseMirror-selectednode {
+  outline: none;
+}
+
+.image-resizer-wrapper.readonly.ProseMirror-selectednode .postimage {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

@@ -9,6 +9,7 @@ export const attachmentsRouter = createTRPCRouter({
       z.object({
         title: z.string(),
         details: z.string().optional(),
+        detailsJson: z.any().optional(),
         link: z.string().optional(),
         dueDate: z.date().optional(),
         attachmentType: z.enum([
@@ -41,6 +42,7 @@ export const attachmentsRouter = createTRPCRouter({
             classId: input.classId,
             link: input.link ?? null,
             details: input.details ?? null,
+            detailsJson: input.detailsJson ?? null,
             attachmentType: input.attachmentType as attachmentType,
             submissionMode: input.submissionMode as submissionMode,
             dueDate: input.dueDate ?? null,
@@ -106,6 +108,7 @@ export const attachmentsRouter = createTRPCRouter({
         id: z.string(),
         title: z.string(),
         details: z.string().optional(),
+        detailsJson: z.any().optional(),
         link: z.string().optional(),
         dueDate: z.date().optional(),
         attachmentType: z.enum([
@@ -141,6 +144,7 @@ export const attachmentsRouter = createTRPCRouter({
             classId: input.classId,
             link: input.link ?? null,
             details: input.details ?? null,
+            detailsJson: input.detailsJson ?? null,
             attachmentType: input.attachmentType as attachmentType,
             submissionMode: input.submissionMode as submissionMode,
             dueDate: input.dueDate ?? null,

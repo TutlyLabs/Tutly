@@ -3,7 +3,7 @@
 import type { Attachment } from "@prisma/client";
 import { FileType } from "@prisma/client";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import Link from "next/link";
@@ -66,9 +66,10 @@ interface ClassProps {
     role: string;
     adminForCourses?: { id: string }[];
   };
+  initialNotesData?: any;
 }
 
-export default function Class({ courseId, classId, currentUser }: ClassProps) {
+export default function Class({ courseId, classId, currentUser, initialNotesData }: ClassProps) {
   const [selectedAttachment, setSelectedAttachment] =
     useState<Attachment | null>(null);
   const [isAddAssignmentDialogOpen, setIsAddAssignmentDialogOpen] =
@@ -79,7 +80,9 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
     useState(false);
   const [isEditClassDialogOpen, setIsEditClassDialogOpen] = useState(false);
   const [notes, setNotes] = useState("");
+  const [notesJson, setNotesJson] = useState<any>(null);
   const [debouncedNotes] = useDebounce(notes, 1000);
+  const [debouncedNotesJson] = useDebounce(notesJson, 1000);
   const [notesStatus, setNotesStatus] = useState("");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const router = useRouter();
@@ -87,6 +90,12 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
   const [newTag, setNewTag] = useState("");
   const [isClearNotesDialogOpen, setIsClearNotesDialogOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  const prevValuesRef = useRef<{
+    description: string;
+    descriptionJson: any;
+    tags: string[];
+  } | null>(null);
 
   const { data: classes } = api.classes.getClassesByCourseId.useQuery({
     courseId,
@@ -104,11 +113,24 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
   });
 
   useEffect(() => {
-    if (notesData?.data) {
-      setNotes(notesData.data.description ?? "");
-      setTags(notesData.data.tags ?? []);
+    // Use initialNotesData if available, otherwise fall back to notesData query
+    const dataToUse = initialNotesData || notesData;
+    if (dataToUse?.data) {
+      const description = dataToUse.data.description ?? "";
+      const descriptionJson = dataToUse.data.descriptionJson ?? null;
+      const tagsData = dataToUse.data.tags ?? [];
+
+      setNotes(description);
+      setNotesJson(descriptionJson);
+      setTags(tagsData);
+
+      prevValuesRef.current = {
+        description,
+        descriptionJson,
+        tags: tagsData,
+      };
     }
-  }, [notesData]);
+  }, [initialNotesData, notesData]);
 
   const updateNote = api.notes.updateNote.useMutation();
   const toggleBookmark = api.bookmarks.toggleBookmark.useMutation();
@@ -122,8 +144,17 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
 
     const timer = setTimeout(() => {
       const saveNotes = async () => {
-        if (!debouncedNotes && debouncedNotes === "") {
+        if (!debouncedNotesJson) {
           return;
+        }
+
+        if (prevValuesRef.current) {
+          const hasJsonChanged = JSON.stringify(debouncedNotesJson) !== JSON.stringify(prevValuesRef.current.descriptionJson);
+          const hasTagsChanged = JSON.stringify(tags) !== JSON.stringify(prevValuesRef.current.tags);
+
+          if (!hasJsonChanged && !hasTagsChanged) {
+            return;
+          }
         }
 
         try {
@@ -131,10 +162,18 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
           updateNote.mutate({
             objectId: classId,
             category: "CLASS",
-            description: debouncedNotes,
+            description: null,
+            descriptionJson: debouncedNotesJson,
             tags: tags,
             causedObjects: { classId: classId, courseId: courseId },
           });
+
+          prevValuesRef.current = {
+            description: "",
+            descriptionJson: debouncedNotesJson,
+            tags: tags,
+          };
+
           setLastSaved(new Date());
           setNotesStatus("Saved");
         } catch (error) {
@@ -146,11 +185,11 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [debouncedNotes, classId, tags, isInitialLoad, updateNote, courseId]);
+  }, [debouncedNotes, debouncedNotesJson, classId, tags, isInitialLoad, updateNote, courseId, notesData]);
 
   if (!classDetails?.data) {
     return (
-      <div className="flex flex-col gap-2 md:m-5">
+      <div className="flex flex-col gap-2 md:mx-5">
         {/* Class Header */}
         <div className="flex flex-wrap gap-6">
           <div className="flex-1">
@@ -306,11 +345,13 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
     try {
       setNotesStatus("Clearing...");
       setNotes("");
+      setNotesJson(null);
 
       updateNote.mutate({
         objectId: classId,
         category: "CLASS",
         description: null,
+        descriptionJson: null,
         tags: [],
         causedObjects: { classId: classId, courseId: courseId },
       });
@@ -328,7 +369,7 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2 md:m-5">
+    <div className="flex flex-col gap-2 md:mx-5">
       <div className="flex flex-wrap gap-6">
         <div className="flex-1">
           <div className="h-full w-full rounded-xl p-2">
@@ -445,7 +486,7 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
                       </td>
                       <td className="px-4 py-2">
                         {attachment.attachmentType === "ASSIGNMENT" &&
-                        attachment.dueDate
+                          attachment.dueDate
                           ? dayjs(attachment.dueDate).format("MMM D, YYYY")
                           : "-"}
                       </td>
@@ -551,16 +592,25 @@ export default function Class({ courseId, classId, currentUser }: ClassProps) {
           )}
         </div>
 
-        <RichTextEditor
-          initialValue={notes ?? ""}
-          onChange={(value: string) => setNotes(value ?? "")}
-          allowUpload={true}
-          fileUploadOptions={{
-            fileType: FileType.NOTES,
-            associatingId: classId,
-            allowedExtensions: ["jpeg", "jpg", "png", "gif", "svg", "webp"],
-          }}
-        />
+        {(initialNotesData || notesData) ? (
+          <RichTextEditor
+            initialValue={notesJson ?? notes ?? ""}
+            onChange={(jsonValue: string) => {
+              setNotesJson(jsonValue ? JSON.parse(jsonValue) : null)
+            }}
+            height="min-h-[200px]"
+            allowUpload={true}
+            fileUploadOptions={{
+              fileType: FileType.NOTES,
+              associatingId: classId,
+              allowedExtensions: ["jpeg", "jpg", "png", "gif", "svg", "webp"],
+            }}
+          />
+        ) : (
+          <div className="min-h-[200px] flex items-center justify-center rounded-md border bg-muted/50">
+            <div className="text-muted-foreground">Loading notes...</div>
+          </div>
+        )}
       </div>
 
       {/* Edit class Dialog */}

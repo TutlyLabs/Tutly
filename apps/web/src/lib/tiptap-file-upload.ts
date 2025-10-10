@@ -21,11 +21,18 @@ const ExtImage: string[] = [
 export const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+export interface FileUploadOptions {
+  fileType?: FileType;
+  onUpload?: (file: any) => Promise<void>;
+  associatingId?: string;
+  allowedExtensions?: string[];
+}
+
 /**
  * Hook for handling file uploads in Tiptap editor
  * This hook provides the upload function that can be used in Tiptap extensions
  */
-export const useTiptapFileUpload = () => {
+export const useTiptapFileUpload = (fileUploadOptions?: FileUploadOptions) => {
   const createFileMutation =
     api.fileupload.createFileAndGetUploadUrl.useMutation();
   const markFileUploadedMutation =
@@ -71,8 +78,8 @@ export const useTiptapFileUpload = () => {
         // Create file record and get upload URL
         const result = await createFileMutation.mutateAsync({
           name: fileToUpload.name,
-          fileType: FileType.OTHER,
-          associatingId: undefined,
+          fileType: fileUploadOptions?.fileType || FileType.OTHER,
+          associatingId: fileUploadOptions?.associatingId,
           isPublic: true,
           mimeType: fileToUpload.type,
         });
@@ -123,14 +130,16 @@ export const useTiptapFileUpload = () => {
         throw error;
       }
     },
-    [createFileMutation, markFileUploadedMutation],
+    [createFileMutation, markFileUploadedMutation, fileUploadOptions],
   );
 
   return { uploadFile };
 };
 
-export const useImageUploadNodeManager = () => {
-  const { uploadFile } = useTiptapFileUpload();
+export const useImageUploadNodeManager = (
+  fileUploadOptions?: FileUploadOptions,
+) => {
+  const { uploadFile } = useTiptapFileUpload(fileUploadOptions);
 
   const triggerImageUpload = useCallback(
     (editor: any, files: File[]) => {

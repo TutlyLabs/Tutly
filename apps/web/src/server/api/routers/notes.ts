@@ -2,6 +2,7 @@ import { NoteCategory } from "@prisma/client";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { db } from "@/lib/db";
 
 export const notesRouter = createTRPCRouter({
   updateNote: protectedProcedure
@@ -9,6 +10,7 @@ export const notesRouter = createTRPCRouter({
       z.object({
         category: z.nativeEnum(NoteCategory),
         description: z.string().nullable(),
+        descriptionJson: z.any().nullable().optional(),
         tags: z.array(z.string()),
         objectId: z.string(),
         causedObjects: z.record(z.string()).optional(),
@@ -20,44 +22,55 @@ export const notesRouter = createTRPCRouter({
       const {
         category,
         description,
+        descriptionJson,
         tags,
         objectId,
         causedObjects = {},
       } = input;
 
-      if (!description) {
-        await ctx.db.notes.delete({
+      if (!description && !descriptionJson) {
+        try {
+          await ctx.db.notes.delete({
+            where: {
+              userId_objectId: {
+                userId: currentUserId,
+                objectId,
+              },
+            },
+          });
+        } catch (error) {
+          console.log("Note doesn't exist to delete:", error);
+        }
+        return { success: true };
+      }
+
+      try {
+        await ctx.db.notes.upsert({
           where: {
             userId_objectId: {
               userId: currentUserId,
               objectId,
             },
           },
-        });
-        return { success: true };
-      }
-
-      await ctx.db.notes.upsert({
-        where: {
-          userId_objectId: {
+          create: {
+            category,
+            description,
+            descriptionJson,
+            tags,
             userId: currentUserId,
             objectId,
+            causedObjects,
           },
-        },
-        create: {
-          category,
-          description,
-          tags,
-          userId: currentUserId,
-          objectId,
-          causedObjects,
-        },
-        update: {
-          description,
-          tags,
-          causedObjects,
-        },
-      });
+          update: {
+            description,
+            descriptionJson,
+            tags,
+            causedObjects,
+          },
+        });
+      } catch (error) {
+        return { error: "Failed to update note" };
+      }
       return { success: true };
     }),
 
@@ -81,7 +94,6 @@ export const notesRouter = createTRPCRouter({
 
         return { success: true, data: note };
       } catch (error) {
-        console.error("Error getting note:", error);
         return { error: "Failed to get note" };
       }
     }),

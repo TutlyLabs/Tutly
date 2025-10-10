@@ -45,6 +45,7 @@ const formSchema = z.object({
   }),
   courseId: z.string().optional(),
   details: z.string().optional(),
+  detailsJson: z.any().optional(),
   dueDate: z.string().optional(),
   maxSubmissions: z.string().optional(),
 });
@@ -85,6 +86,7 @@ const NewAttachmentPage = ({
       class: classId ?? attachment?.classId ?? "",
       courseId: courseId ?? "",
       details: attachment?.details ?? "",
+      detailsJson: attachment?.detailsJson ?? null,
       dueDate: attachment?.dueDate
         ? new Date(attachment.dueDate).toISOString().split("T")[0]
         : "",
@@ -111,7 +113,8 @@ const NewAttachmentPage = ({
           link: values.link,
           attachmentType: values.attachmentType as attachmentType,
           submissionMode: values.submissionMode as submissionMode,
-          details: values.details,
+          details: undefined,
+          detailsJson: values.detailsJson,
           dueDate: dueDate,
           maxSubmissions: values?.maxSubmissions
             ? parseInt(values.maxSubmissions)
@@ -126,7 +129,8 @@ const NewAttachmentPage = ({
           link: values.link,
           attachmentType: values.attachmentType as attachmentType,
           submissionMode: values.submissionMode as submissionMode,
-          details: values.details,
+          details: undefined,
+          detailsJson: values.detailsJson,
           dueDate: dueDate,
           maxSubmissions: values?.maxSubmissions
             ? parseInt(values.maxSubmissions)
@@ -368,8 +372,10 @@ const NewAttachmentPage = ({
               <FormLabel className="text-base">Details</FormLabel>
               <FormControl>
                 <RichTextEditor
-                  initialValue={field.value ?? ""}
-                  onChange={(value) => field.onChange(value ?? "")}
+                  initialValue={attachment?.detailsJson ?? attachment?.details ?? ""}
+                  onChange={(jsonValue) => {
+                    form.setValue("detailsJson", jsonValue ? JSON.parse(jsonValue) : null)
+                  }}
                   allowUpload={true}
                   fileUploadOptions={{
                     fileType: FileType.ATTACHMENT,
@@ -382,12 +388,6 @@ const NewAttachmentPage = ({
                       "svg",
                       "webp",
                     ],
-                    onUpload: async (file) => {
-                      await updateFileAssociatingId.mutateAsync({
-                        fileId: file.id,
-                        associatingId: attachment?.id ?? "",
-                      });
-                    },
                   }}
                 />
               </FormControl>
@@ -401,7 +401,7 @@ const NewAttachmentPage = ({
             type="button"
             disabled={isSubmitting}
             onClick={onCancel ?? (() => router.back())}
-            // variant="destructive"
+          // variant="destructive"
           >
             Cancel
           </Button>
