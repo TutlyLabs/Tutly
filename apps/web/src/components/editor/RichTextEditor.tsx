@@ -67,10 +67,9 @@ import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 
 // --- Lib ---
 import { useImageUploadNodeManager, useTiptapFileUpload, MAX_FILE_SIZE, type FileUploadOptions } from "@/lib/tiptap-file-upload"
-import { renderToMarkdown } from "@tiptap/static-renderer"
 
 // --- Styles ---
-import "@/components/tiptap-templates/simple/simple-editor.scss"
+import "./styles.scss"
 
 // --- Utils ---
 import { cn } from "@/lib/utils"
