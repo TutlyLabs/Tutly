@@ -10,7 +10,7 @@ import { MdOutlineDelete } from "react-icons/md";
 import { RiWhatsappLine } from "react-icons/ri";
 import Link from "next/link";
 
-import MarkdownPreview from "@/components/MarkdownPreview";
+import ContentPreview from "@/components/ContentPreview";
 import { Pagination } from "@/components/table/Pagination";
 import { Button } from "@/components/ui/button";
 import {
@@ -250,10 +250,11 @@ export default function AssignmentPage({
         <div className="flex items-center justify-center gap-4">
           {assignment?.dueDate != null && (
             <div
-              className={`rounded p-1 px-2 text-white ${new Date(assignment?.dueDate) > new Date()
-                ? "bg-primary-600"
-                : "bg-secondary-500"
-                }`}
+              className={`rounded p-1 px-2 text-white ${
+                new Date(assignment?.dueDate) > new Date()
+                  ? "bg-primary-600"
+                  : "bg-secondary-500"
+              }`}
             >
               Last Date : {assignment?.dueDate.toISOString().split("T")[0]}
             </div>
@@ -317,9 +318,10 @@ export default function AssignmentPage({
         </div>
       </div>
       <div className="my-5">
-        <MarkdownPreview
+        <ContentPreview
           className="text-xs"
           content={assignment?.details || "No details given to show"}
+          jsonContent={assignment?.detailsJson}
         />
       </div>
 
@@ -431,7 +433,9 @@ const StudentAssignmentSubmission = ({
 
   const validateCodeSandboxLink = async (url: string): Promise<boolean> => {
     try {
-      const sandboxIdMatch = url.match(/codesandbox\.io\/(?:p\/sandbox\/|s\/)([a-zA-Z0-9-_]+)/);
+      const sandboxIdMatch = url.match(
+        /codesandbox\.io\/(?:p\/sandbox\/|s\/)([a-zA-Z0-9-_]+)/,
+      );
       if (!sandboxIdMatch) {
         toast.error("Invalid CodeSandbox URL format");
         return false;
@@ -440,10 +444,14 @@ const StudentAssignmentSubmission = ({
       const sandboxId = sandboxIdMatch[1];
 
       // Check if sandbox is accessible (not private)
-      const response = await fetch(`https://codesandbox.io/api/v1/sandboxes/${sandboxId}`);
+      const response = await fetch(
+        `https://codesandbox.io/api/v1/sandboxes/${sandboxId}`,
+      );
 
       if (response.status === 404) {
-        toast.error("CodeSandbox not found or is private. Please make it public or unlisted.");
+        toast.error(
+          "CodeSandbox not found or is private. Please make it public or unlisted.",
+        );
         return false;
       }
 
@@ -455,8 +463,11 @@ const StudentAssignmentSubmission = ({
       const data = await response.json();
 
       // Check if sandbox is private
-      if (data.privacy === 1) { // 1 = private, 0 = public, 2 = unlisted
-        toast.error("CodeSandbox is private. Please make it public or unlisted before submitting.");
+      if (data.privacy === 1) {
+        // 1 = private, 0 = public, 2 = unlisted
+        toast.error(
+          "CodeSandbox is private. Please make it public or unlisted before submitting.",
+        );
         return false;
       }
 
@@ -498,8 +509,7 @@ const StudentAssignmentSubmission = ({
 
   const isMaxSubmissionsReached =
     assignment?.maxSubmissions <= assignment.submissions.length;
-  const isPlaygroundSubmission =
-    assignment.submissionMode === "HTML_CSS_JS";
+  const isPlaygroundSubmission = assignment.submissionMode === "HTML_CSS_JS";
 
   const isExternalLinkSubmission =
     assignment.submissionMode === "EXTERNAL_LINK";
@@ -535,9 +545,10 @@ const StudentAssignmentSubmission = ({
               <DialogHeader>
                 <DialogTitle>Add External Link</DialogTitle>
                 <DialogDescription>
-                  Submit your assignment using a CodeSandbox link. <Button
+                  Submit your assignment using a CodeSandbox link.{" "}
+                  <Button
                     variant="link"
-                    className="ml-2 p-0 h-auto text-blue-400 hover:text-blue-500 font-light"
+                    className="ml-2 h-auto p-0 font-light text-blue-400 hover:text-blue-500"
                     onClick={() => setIsVideoModalOpen(true)}
                   >
                     View Demo
@@ -560,7 +571,10 @@ const StudentAssignmentSubmission = ({
                 <DialogFooter>
                   <Button
                     type="submit"
-                    disabled={submitExternalLinkMutation.isPending || !externalLink.trim()}
+                    disabled={
+                      submitExternalLinkMutation.isPending ||
+                      !externalLink.trim()
+                    }
                     className="min-w-[120px]"
                   >
                     {submitExternalLinkMutation.isPending ? (

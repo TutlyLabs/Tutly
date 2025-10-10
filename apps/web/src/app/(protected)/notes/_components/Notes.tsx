@@ -6,7 +6,7 @@ import { BookOpen, FileQuestion, ScrollText } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 
-import MarkdownPreview from "@/components/MarkdownPreview";
+import ContentPreview from "@/components/ContentPreview";
 import {
   Card,
   CardContent,
@@ -62,17 +62,31 @@ export const NotesComponent = ({ notes }: { notes: Notes[] }) => {
   const allTags = Array.from(new Set(notes.flatMap((note) => note.tags)));
 
   const filteredNotes = notes.filter((note) => {
-    const matchesSearch =
-      note.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      note.tags.some((tag) =>
-        tag.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
+    const searchLower = searchTerm.toLowerCase();
 
-    const matchesTags =
+    const matchesDescription = note.description
+      ?.toLowerCase()
+      .includes(searchLower);
+
+    const matchesJsonContent =
+      note.descriptionJson && typeof note.descriptionJson === "object"
+        ? JSON.stringify(note.descriptionJson)
+            .toLowerCase()
+            .includes(searchLower)
+        : false;
+
+    const matchesTags = note.tags.some((tag) =>
+      tag.toLowerCase().includes(searchLower),
+    );
+
+    const matchesSearch =
+      matchesDescription || matchesJsonContent || matchesTags;
+
+    const matchesSelectedTags =
       selectedTags.length === 0 ||
       selectedTags.every((tag) => note.tags.includes(tag));
 
-    return matchesSearch && matchesTags;
+    return matchesSearch && matchesSelectedTags;
   });
 
   const toggleTag = (tag: string) => {
@@ -165,8 +179,9 @@ export const NotesComponent = ({ notes }: { notes: Notes[] }) => {
                       </CardHeader>
                       <CardContent className="space-y-2 py-2">
                         <div className="prose dark:prose-invert max-w-none">
-                          <MarkdownPreview
+                          <ContentPreview
                             content={note.description || ""}
+                            jsonContent={note.descriptionJson}
                             className="text-xs sm:text-sm"
                           />
                         </div>

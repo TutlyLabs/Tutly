@@ -1,0 +1,109 @@
+.tiptap.ProseMirror {
+  font-family: var(--font-sans);
+  color: var(--foreground);
+  background-color: var(--background);
+}
+
+.simple-editor-content {
+  width: 100%;
+  margin: 0 auto;
+  height: auto;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background-color: var(--background);
+  overflow-y: auto;
+}
+
+.simple-editor-content .tiptap.ProseMirror.simple-editor {
+  flex: 1;
+  padding: 0.5rem;
+  color: var(--foreground);
+  background-color: var(--background);
+  min-height: 150px;
+  height: auto;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+
+  p {
+    color: var(--foreground);
+    line-height: 1.6;
+  }
+
+  blockquote {
+    background-color: var(--muted);
+    color: var(--muted-foreground);
+  }
+
+  code {
+    background-color: var(--muted);
+    color: var(--muted-foreground);
+    padding: 0.125rem 0.25rem;
+    border-radius: var(--radius-sm);
+  }
+
+  pre {
+    background-color: var(--muted);
+    color: var(--muted-foreground);
+    border-radius: var(--radius-md);
+}
+
+  a {
+    color: var(--primary);
+    text-decoration: underline;
+
+    &:hover {
+      color: var(--primary);
+      opacity: 0.8;
+    }
+  }
+
+  ul,
+  ol {
+    color: var(--foreground);
+  }
+
+  li {
+    color: var(--foreground);
+  }
+
+  table {
+    border-color: var(--border);
+
+    th,
+    td {
+      border-color: var(--border);
+      color: var(--foreground);
+    }
+
+    th {
+      background-color: var(--muted);
+      color: var(--muted-foreground);
+    }
+  }
+
+  hr {
+    border-color: var(--border);
+  }
+
+  mark {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .simple-editor-content .tiptap.ProseMirror.simple-editor {
+    padding: 0.25rem;
+    min-height: 120px;
+  }
+}
