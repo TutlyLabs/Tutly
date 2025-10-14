@@ -434,7 +434,7 @@ const StudentAssignmentSubmission = ({
   const validateCodeSandboxLink = async (url: string): Promise<boolean> => {
     try {
       const sandboxIdMatch = url.match(
-        /codesandbox\.io\/(?:p\/sandbox\/|s\/)([a-zA-Z0-9-_]+)/,
+        /codesandbox\.io\/(?:p\/(?:sandbox|devbox)\/|s\/)([a-zA-Z0-9-_]+)/,
       );
       if (!sandboxIdMatch) {
         toast.error("Invalid CodeSandbox URL format");
