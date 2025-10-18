@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 import ManageFolders from "./ManageFolders";
 import NewClassDialog from "./newClass";
+import NewAssignmentDialog from "./NewAssignmentDialog";
 import { api } from "@/trpc/react";
 import { usePathname } from "next/navigation";
 
@@ -33,7 +34,6 @@ function ClassSidebar({
   const pathname = usePathname();
 
   const { data } = api.classes.getClassesByCourseId.useQuery({ courseId });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const classes = data?.data ?? [];
 
   // Open folder of current class on mount
@@ -145,18 +145,18 @@ function ClassSidebar({
             )}
           </div>
         </ScrollArea>
-        {pathname !== `/courses/${courseId}/classes/new` &&
-          (currentUser?.role === "INSTRUCTOR" || isCourseAdmin) && (
-            <div
-              className={cn(
-                "bg-background sticky bottom-0 space-y-2 p-4",
-                isCollapsed && "hidden",
-              )}
-            >
-              <ManageFolders courseId={courseId} />
-              <NewClassDialog courseId={courseId} />
-            </div>
-          )}
+        {(currentUser?.role === "INSTRUCTOR" || isCourseAdmin) && (
+          <div
+            className={cn(
+              "bg-background sticky bottom-0 space-y-2 p-4",
+              isCollapsed && "hidden",
+            )}
+          >
+            <ManageFolders courseId={courseId} />
+            <NewClassDialog courseId={courseId} />
+            <NewAssignmentDialog courseId={courseId} />
+          </div>
+        )}
 
         <Button
           variant="outline"

@@ -23,6 +23,7 @@ import { pointsRouter } from "./routers/points";
 import { reportRouter } from "./routers/report";
 import { sandboxRouter } from "./routers/sandbox";
 import { scheduleRouter } from "./routers/schedule";
+import { searchRouter } from "./routers/search";
 import { statisticsRouter } from "./routers/statistics";
 import { submissionRouter } from "./routers/submission";
 import { usersRouter } from "./routers/users";
@@ -55,6 +56,7 @@ export const appRouter = createTRPCRouter({
   report: reportRouter,
   sandbox: sandboxRouter,
   schedule: scheduleRouter,
+  search: searchRouter,
   statistics: statisticsRouter,
   submissions: submissionRouter,
   users: usersRouter,

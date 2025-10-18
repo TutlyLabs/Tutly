@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FaPlus } from "react-icons/fa";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +47,7 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
   );
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const createClass = api.classes.createClass.useMutation();
   const getFolders = api.courses.foldersByCourseId.useQuery({ id: courseId });
@@ -56,6 +57,19 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
       setFolders(getFolders.data);
     }
   }, [getFolders.data]);
+
+  useEffect(() => {
+    const modal = searchParams.get("modal");
+    if (modal === "newClass") {
+      setIsOpen(true);
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("modal");
+      const cleanUrl = newSearchParams.toString()
+        ? `${window.location.pathname}?${newSearchParams.toString()}`
+        : window.location.pathname;
+      router.replace(cleanUrl, { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const handleCreateClass = async () => {
     if (!classTitle.trim()) {

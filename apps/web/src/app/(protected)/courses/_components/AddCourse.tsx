@@ -1,14 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 
 import { Card } from "@/components/ui/card";
 
 import CourseFormModal from "./CourseFormModal";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 function AddCourse() {
+  const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const modal = searchParams.get("modal");
+    if (modal === "create") {
+      setOpenModal(true);
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("modal");
+      router.replace(`/courses?${newSearchParams.toString()}`, {
+        scroll: false,
+      });
+    }
+  }, [searchParams, router]);
 
   return (
     <>

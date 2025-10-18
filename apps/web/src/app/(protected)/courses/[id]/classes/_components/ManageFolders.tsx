@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FaEdit } from "react-icons/fa";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,8 @@ const ManageFolders = ({ courseId }: { courseId: string }) => {
   const [editingFolder, setEditingFolder] = useState<string | null>(null);
   const [editedName, setEditedName] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const getFolders = api.courses.foldersByCourseId.useQuery({ id: courseId });
   const updateFolder = api.folders.updateFolder.useMutation();
@@ -39,6 +42,19 @@ const ManageFolders = ({ courseId }: { courseId: string }) => {
       setFolders(getFolders.data);
     }
   }, [isOpen, getFolders.data]);
+
+  useEffect(() => {
+    const modal = searchParams.get("modal");
+    if (modal === "manageFolders") {
+      setIsOpen(true);
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("modal");
+      const cleanUrl = newSearchParams.toString()
+        ? `${window.location.pathname}?${newSearchParams.toString()}`
+        : window.location.pathname;
+      router.replace(cleanUrl, { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const handleEditFolder = async (folderId: string) => {
     if (!editedName.trim()) {
