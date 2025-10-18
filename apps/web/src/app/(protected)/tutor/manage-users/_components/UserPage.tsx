@@ -8,6 +8,7 @@ import {
   Loader2,
   UserX,
   X,
+  UserCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/trpc/react";
+import { authClient } from "@/server/auth/client";
 
 interface UserPageProps {
   data: Record<string, any>[];
@@ -220,6 +222,20 @@ const UserPage = ({
     },
   });
 
+  const handleImpersonateUser = async (userId: string) => {
+    try {
+      const result = await authClient.admin.impersonateUser({
+        userId: userId,
+      });
+      if (result.data) {
+        toast.success(`Successfully impersonating user`);
+        window.location.href = "/dashboard";
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to impersonate user");
+    }
+  };
+
   const checkStrength = (pass: string) => {
     const requirements = [
       { regex: /.{8,}/, text: "At least 8 characters" },
@@ -311,6 +327,13 @@ const UserPage = ({
                   onClick: (user: any) => {
                     setSelectedUser(user);
                     setOpen(true);
+                  },
+                },
+                {
+                  label: "Impersonate User",
+                  icon: <UserCheck className="mr-2 h-5 w-5 text-blue-500" />,
+                  onClick: (user: any) => {
+                    handleImpersonateUser(user.id);
                   },
                 },
                 {

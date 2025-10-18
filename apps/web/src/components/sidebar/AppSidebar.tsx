@@ -130,7 +130,7 @@ export function AppSidebar({
       className={cn(
         "flex-shrink-0 overflow-hidden transition-all duration-100 ease-in-out",
         {
-          "sm:w-[220px]": isOpen && !forceClose,
+          "sm:w-[212px]": isOpen && !forceClose,
           "sm:w-[50px]": !isOpen || forceClose,
         },
       )}

@@ -1,9 +1,8 @@
 import { compare, hash } from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { customSession, bearer, username } from "better-auth/plugins";
+import { customSession, bearer, username, admin } from "better-auth/plugins";
 import {
-  FRONTEND_URL,
   RESEND_API_KEY,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
@@ -17,6 +16,13 @@ import { db } from "../../lib/db";
 import { randomUUID } from "crypto";
 import ResetPasswordEmailTemplate from "@/components/email/ResetPasswordEmailTemplate";
 import { Resend } from "resend";
+import {
+  ac,
+  adminRole,
+  instructorRole,
+  mentorRole,
+  studentRole,
+} from "./permissions";
 
 const resend = new Resend(RESEND_API_KEY);
 
@@ -100,7 +106,7 @@ export const auth = betterAuth({
       });
     },
   },
-  roles: ["STUDENT", "INSTRUCTOR", "ADMIN"],
+  roles: ["STUDENT", "INSTRUCTOR", "ADMIN", "MENTOR"],
   socialProviders: {
     ...(GOOGLE_CLIENT_ID &&
       GOOGLE_CLIENT_SECRET && {
@@ -148,6 +154,17 @@ export const auth = betterAuth({
       },
     }),
     bearer(),
+    admin({
+      ac,
+      adminRoles: ["ADMIN", "INSTRUCTOR"],
+      impersonationSessionDuration: 60 * 60, // 1 hour
+      roles: {
+        ADMIN: adminRole,
+        INSTRUCTOR: instructorRole,
+        MENTOR: mentorRole,
+        STUDENT: studentRole,
+      },
+    }),
     customSession(async ({ user, session }) => {
       const prismaUser = await db.user.findUnique({
         where: { id: user.id },

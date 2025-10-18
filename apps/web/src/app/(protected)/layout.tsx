@@ -1,12 +1,14 @@
 import "@/styles/globals.css";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
 import { AppHeader } from "@/components/sidebar/AppHeader";
+import { ImpersonationBanner } from "@/components/ImpersonationBanner";
 import posthog from "posthog-js";
 import { getServerSessionOrRedirect } from "@/lib/auth";
 import { isFeatureEnabled } from "@/lib/featureFlags";
 import { LayoutProvider } from "@/providers/layout-provider";
 import { LayoutContent } from "@/components/LayoutContent";
 import Crisp from "@/components/Crisp";
+import { cn } from "@/lib/utils";
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -35,6 +37,8 @@ export default async function ProtectedLayout({
     session.user,
   );
 
+  const isImpersonating = (session.session as any)?.impersonatedBy;
+
   return (
     <LayoutProvider>
       <div className="flex h-screen w-full overflow-hidden">
@@ -46,6 +50,7 @@ export default async function ProtectedLayout({
           />
         </div>
         <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 ease-in-out">
+          {isImpersonating && <ImpersonationBanner user={session.user} />}
           <AppHeader user={session.user} />
           <LayoutContent>{children}</LayoutContent>
         </div>

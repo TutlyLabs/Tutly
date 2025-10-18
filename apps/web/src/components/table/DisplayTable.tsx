@@ -8,16 +8,11 @@ import {
   Table as TableIcon,
   X,
 } from "lucide-react";
-import React, {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useMemo,
-} from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useQueryState } from "nuqs";
 import { useDebounce } from "use-debounce";
+import { useRouter } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,7 +39,6 @@ import { DeleteConfirmation } from "./DeleteConfirmationDialog";
 import ViewModal from "./ViewModal";
 import TableList from "./TableList";
 import GridView from "./GridView";
-import { ExportIcon } from "@codesandbox/sandpack-react";
 
 export interface IAction {
   label: string;
@@ -229,8 +223,12 @@ export default function DisplayTable({
       newDirection = "desc";
     }
 
-    void setSort(key);
-    void setDirection(newDirection);
+    if (clientSideProcessing) {
+      void setSort(key);
+      void setDirection(newDirection);
+    } else {
+      updateUrl({ sort: key, direction: newDirection });
+    }
   };
 
   const addFilter = (
@@ -239,13 +237,26 @@ export default function DisplayTable({
     operator: FilterCondition["operator"],
   ) => {
     const newFilter = `${column}:${operator}:${value}`;
-    void setFilters([...(filters || []), newFilter]);
+    const newFilters = [...(filters || []), newFilter];
+
+    if (clientSideProcessing) {
+      void setFilters(newFilters);
+    } else {
+      updateUrl({ filter: newFilters.join(",") });
+    }
   };
 
   const removeFilter = (index: number) => {
     const newFilters = [...(filters || [])];
     newFilters.splice(index, 1);
-    void setFilters(newFilters);
+
+    if (clientSideProcessing) {
+      void setFilters(newFilters);
+    } else {
+      updateUrl({
+        filter: newFilters.length > 0 ? newFilters.join(",") : null,
+      });
+    }
   };
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -417,10 +428,29 @@ export default function DisplayTable({
 
   const [localSearchTerm, setLocalSearchTerm] = useState(search || "");
   const [debouncedSearchTerm] = useDebounce(localSearchTerm, 500);
+  const router = useRouter();
+
+  const updateUrl = (newParams: Record<string, string | null>) => {
+    if (!clientSideProcessing) {
+      const currentUrl = new URL(window.location.href);
+      Object.entries(newParams).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === "") {
+          currentUrl.searchParams.delete(key);
+        } else {
+          currentUrl.searchParams.set(key, value);
+        }
+      });
+      router.push(currentUrl.pathname + currentUrl.search);
+    }
+  };
 
   useEffect(() => {
-    void setSearch(debouncedSearchTerm || null);
-  }, [debouncedSearchTerm, setSearch]);
+    if (clientSideProcessing) {
+      void setSearch(debouncedSearchTerm || null);
+    } else {
+      updateUrl({ search: debouncedSearchTerm || null });
+    }
+  }, [debouncedSearchTerm, setSearch, clientSideProcessing]);
 
   const handleSearch = useCallback((value: string) => {
     setLocalSearchTerm(value);
@@ -480,12 +510,20 @@ export default function DisplayTable({
   const totalPages = Math.ceil(totalItems / pageSize);
 
   const handlePageChange = (newPage: number) => {
-    void setPage(newPage.toString());
+    if (clientSideProcessing) {
+      void setPage(newPage.toString());
+    } else {
+      updateUrl({ page: newPage.toString() });
+    }
   };
 
   const handlePageSizeChange = (size: number) => {
-    void setLimit(size.toString());
-    void setPage("1");
+    if (clientSideProcessing) {
+      void setLimit(size.toString());
+      void setPage("1");
+    } else {
+      updateUrl({ limit: size.toString(), page: "1" });
+    }
   };
 
   const handleBulkImport = async (data: any[]) => {
@@ -606,7 +644,13 @@ export default function DisplayTable({
               variant="ghost"
               size="sm"
               className="h-6"
-              onClick={() => void setFilters([])}
+              onClick={() => {
+                if (clientSideProcessing) {
+                  void setFilters([]);
+                } else {
+                  updateUrl({ filter: null });
+                }
+              }}
             >
               Clear all
             </Button>

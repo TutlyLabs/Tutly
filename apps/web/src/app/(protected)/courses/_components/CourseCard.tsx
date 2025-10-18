@@ -54,14 +54,17 @@ export default function CourseCard({ course, currentUser }: any) {
       </div>
 
       <div className="flex items-center justify-between border-t p-3">
-        <div className="cursor-pointer">
-          <h2 className="font-medium">
+        <div className="min-w-0 flex-1 cursor-pointer">
+          <h2
+            className="truncate font-medium"
+            title={expired() ? `${course.title} [Expired]` : course.title}
+          >
             {expired() ? `${course.title} [Expired]` : course.title}
           </h2>
         </div>
 
         {currentUser.role === "INSTRUCTOR" && !currentUser.isAdmin && (
-          <div className="flex gap-3">
+          <div className="flex">
             <Button
               variant="ghost"
               size="icon"
