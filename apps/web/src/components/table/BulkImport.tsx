@@ -367,7 +367,7 @@ export default function BulkImport({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="flex max-h-[90vh] max-w-[90vw] flex-col p-0">
+      <DialogContent className="flex !max-h-[90vh] !max-w-[90vw] flex-col p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>Bulk Import Data</DialogTitle>
           <DialogDescription>

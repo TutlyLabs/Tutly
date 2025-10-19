@@ -57,6 +57,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import EditClassDialog from "./EditClassDialog";
 import NewAttachmentPage from "./NewAssignments";
+import AttendanceIndicator from "./AttendanceIndicator";
+import StudentAttendanceIndicator from "./StudentAttendanceIndicator";
 
 interface ClassProps {
   courseId: string;
@@ -64,6 +66,7 @@ interface ClassProps {
   currentUser: {
     id: string;
     role: string;
+    username: string;
     adminForCourses?: { id: string }[];
   };
   initialNotesData?: any;
@@ -116,6 +119,18 @@ export default function Class({
     userId: currentUser.id,
     objectId: classId,
   });
+
+  const { data: attendanceData } =
+    api.attendances.viewAttendanceByClassId.useQuery(
+      { classId },
+      { enabled: currentUser.role !== "STUDENT" },
+    );
+
+  const { data: studentAttendanceData } =
+    api.attendances.getStudentAttendanceByClassId.useQuery(
+      { classId },
+      { enabled: currentUser.role === "STUDENT" },
+    );
 
   useEffect(() => {
     // Use initialNotesData if available, otherwise fall back to notesData query
@@ -394,6 +409,26 @@ export default function Class({
               <div className="mb-2 flex w-full items-center justify-between">
                 <div className="flex items-center justify-start space-x-5">
                   <p className="text-xl font-semibold">{title}</p>
+
+                  {/* Attendance Indicator */}
+                  {currentUser.role === "STUDENT" ? (
+                    <StudentAttendanceIndicator
+                      courseId={courseId}
+                      attendance={studentAttendanceData?.data || undefined}
+                      attendanceUploaded={
+                        studentAttendanceData?.attendanceUploaded || false
+                      }
+                    />
+                  ) : (
+                    <AttendanceIndicator
+                      classId={classId}
+                      attendance={attendanceData?.data?.attendance || []}
+                      present={attendanceData?.data?.present || 0}
+                      role={currentUser.role}
+                      courseId={courseId}
+                    />
+                  )}
+
                   {haveAdminAccess && (
                     <div className="flex items-center gap-3">
                       <Button

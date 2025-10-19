@@ -193,6 +193,51 @@ export const attendanceRouter = createTRPCRouter({
       return { success: true, data: attendance };
     }),
 
+  getStudentAttendanceByClassId: protectedProcedure
+    .input(
+      z.object({
+        classId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const currentUser = ctx.session.user;
+
+      // Check if any attendance has been uploaded for this class
+      const attendanceCount = await ctx.db.attendance.count({
+        where: {
+          classId: input.classId,
+        },
+      });
+
+      const attendanceUploaded = attendanceCount > 0;
+
+      const attendance = await ctx.db.attendance.findFirst({
+        where: {
+          classId: input.classId,
+          username: currentUser.username,
+        },
+        select: {
+          username: true,
+          attended: true,
+          attendedDuration: true,
+          data: true,
+          user: {
+            select: {
+              name: true,
+              image: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      return {
+        success: true,
+        data: attendance,
+        attendanceUploaded,
+      };
+    }),
+
   getAttendanceOfStudent: protectedProcedure
     .input(
       z.object({
@@ -445,6 +490,13 @@ export const attendanceRouter = createTRPCRouter({
                 user: {
                   select: {
                     name: true,
+                    image: true,
+                    email: true,
+                    enrolledUsers: {
+                      select: {
+                        mentorUsername: true,
+                      },
+                    },
                   },
                 },
               },
@@ -457,6 +509,13 @@ export const attendanceRouter = createTRPCRouter({
                 user: {
                   select: {
                     name: true,
+                    image: true,
+                    email: true,
+                    enrolledUsers: {
+                      select: {
+                        mentorUsername: true,
+                      },
+                    },
                   },
                 },
               },

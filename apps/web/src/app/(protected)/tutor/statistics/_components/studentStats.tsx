@@ -10,6 +10,12 @@ import { StudentBarchart } from "./studentBarchart";
 interface AttendanceData {
   attendanceDates: string[];
   classes: string[];
+  classesNoAttendance?: string[];
+  attendanceDetails?: Record<
+    string,
+    { duration: number | null; classId: string; title: string }
+  >;
+  classDetails?: Record<string, { classId: string; title: string }>;
 }
 
 function StudentStats({
@@ -123,6 +129,10 @@ function StudentStats({
         <CalendarHeatmap
           classes={typedAttendanceData.classes}
           data={typedAttendanceData.attendanceDates}
+          classesNoAttendance={typedAttendanceData.classesNoAttendance}
+          attendanceDetails={typedAttendanceData.attendanceDetails}
+          classDetails={typedAttendanceData.classDetails}
+          courseId={courseId}
         />
       </div>
     </div>

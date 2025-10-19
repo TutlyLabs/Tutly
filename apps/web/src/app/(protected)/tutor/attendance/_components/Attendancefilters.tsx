@@ -4,6 +4,7 @@ import { LayoutGrid, List, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { useSearchParams } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,10 @@ export default function AttendanceClient({
   courses,
   role,
 }: AttendanceClientProps) {
+  const searchParams = useSearchParams();
+  const courseIdFromUrl = searchParams.get("courseId");
+  const classIdFromUrl = searchParams.get("classId");
+
   const { data: attendanceData } =
     api.attendances.getAttendanceOfAllStudents.useQuery();
   const attendance: any = attendanceData?.data ?? [];
@@ -69,6 +74,31 @@ export default function AttendanceClient({
   const [users, setUsers] = useState<any>([]);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [showOverallAttendance, setShowOverallAttendance] = useState(false);
+
+  useEffect(() => {
+    if (courseIdFromUrl && courses.length > 0) {
+      const course = courses.find((c: any) => c.id === courseIdFromUrl);
+      if (course) {
+        setCurrentCourse(course);
+      }
+    }
+  }, [courseIdFromUrl, courses]);
+
+  const { data: classesData } = api.classes.getClassesByCourseId.useQuery(
+    { courseId: currentCourse?.id },
+    { enabled: !!currentCourse },
+  );
+
+  useEffect(() => {
+    if (classIdFromUrl && classesData?.data) {
+      const classItem = classesData.data.find(
+        (c: any) => c.id === classIdFromUrl,
+      );
+      if (classItem) {
+        setCurrentClass(classItem);
+      }
+    }
+  }, [classIdFromUrl, classesData]);
 
   const getMentorStudents = api.courses.getMentorStudents.useQuery(
     { courseId: currentCourse?.id },
@@ -372,7 +402,7 @@ export default function AttendanceClient({
   return (
     <div className="p-2 text-center sm:p-4">
       <div>
-        <h1 className="text-primary mx-auto mt-4 mb-2 w-60 bg-gradient-to-r text-3xl font-black uppercase sm:text-4xl">
+        <h1 className="text-primary mx-auto mt-4 mb-2 bg-gradient-to-r text-3xl font-black uppercase sm:text-4xl">
           Attendance
         </h1>
       </div>

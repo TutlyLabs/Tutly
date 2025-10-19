@@ -416,18 +416,30 @@ export const statisticsRouter = createTRPCRouter({
             },
           },
           select: {
+            attendedDuration: true,
             class: {
               select: {
+                id: true,
+                title: true,
                 createdAt: true,
               },
             },
           },
         });
         const attendanceDates: Array<string> = [];
+        const attendanceDetails: Record<
+          string,
+          { duration: number | null; classId: string; title: string }
+        > = {};
         attendance.forEach((attendanceData) => {
-          attendanceDates.push(
-            attendanceData.class.createdAt.toISOString().split("T")[0] ?? "",
-          );
+          const dateStr =
+            attendanceData.class.createdAt.toISOString().split("T")[0] ?? "";
+          attendanceDates.push(dateStr);
+          attendanceDetails[dateStr] = {
+            duration: attendanceData.attendedDuration,
+            classId: attendanceData.class.id,
+            title: attendanceData.class.title,
+          };
         });
 
         const getAllClasses = await ctx.db.class.findMany({
@@ -439,6 +451,7 @@ export const statisticsRouter = createTRPCRouter({
           },
           select: {
             id: true,
+            title: true,
             createdAt: true,
           },
           orderBy: {
@@ -446,10 +459,51 @@ export const statisticsRouter = createTRPCRouter({
           },
         });
         const classes: Array<string> = [];
+        const classDetails: Record<string, { classId: string; title: string }> =
+          {};
         getAllClasses.forEach((classData) => {
-          classes.push(classData.createdAt.toISOString().split("T")[0] ?? "");
+          const dateStr = classData.createdAt.toISOString().split("T")[0] ?? "";
+          classes.push(dateStr);
+          classDetails[dateStr] = {
+            classId: classData.id,
+            title: classData.title,
+          };
         });
-        return { classes, attendanceDates };
+
+        // Get all classes without attendance uploaded
+        const classesWithoutAttendance = await ctx.db.class.findMany({
+          where: {
+            courseId: input.courseId,
+            Attendence: {
+              none: {},
+            },
+          },
+          select: {
+            id: true,
+            title: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        });
+        const classesNoAttendance: Array<string> = [];
+        classesWithoutAttendance.forEach((classData) => {
+          const dateStr = classData.createdAt.toISOString().split("T")[0] ?? "";
+          classesNoAttendance.push(dateStr);
+          classDetails[dateStr] = {
+            classId: classData.id,
+            title: classData.title,
+          };
+        });
+
+        return {
+          classes,
+          attendanceDates,
+          classesNoAttendance,
+          attendanceDetails,
+          classDetails,
+        };
       } catch (e) {
         return { error: "Failed to fetch barchart data", details: String(e) };
       }
