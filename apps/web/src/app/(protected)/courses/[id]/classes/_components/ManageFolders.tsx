@@ -111,7 +111,11 @@ const ManageFolders = ({ courseId }: { courseId: string }) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="icon" variant="outline" className="h-8 w-8">
+        <Button
+          size="icon"
+          variant="outline"
+          className="h-8 w-8 cursor-pointer"
+        >
           <FaFolderTree className="h-4 w-4" />
         </Button>
       </DialogTrigger>

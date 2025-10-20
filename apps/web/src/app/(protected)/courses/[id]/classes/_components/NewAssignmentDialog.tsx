@@ -54,7 +54,11 @@ const NewAssignmentDialog = ({ courseId }: NewAssignmentDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="icon" variant="outline" className="h-8 w-8">
+        <Button
+          size="icon"
+          variant="outline"
+          className="h-8 w-8 cursor-pointer"
+        >
           <MdAssignment className="h-4 w-4" />
         </Button>
       </DialogTrigger>

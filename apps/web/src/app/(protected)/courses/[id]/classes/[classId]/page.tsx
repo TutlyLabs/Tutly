@@ -23,20 +23,22 @@ export default async function ClassPage({
 
   return (
     <PageLayout forceClose={true}>
-      <div className="flex w-full items-start">
+      <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden">
         <ClassSidebar
           courseId={id}
           title="Assignments"
           currentUser={session.user}
           isCourseAdmin={session.user.role === "INSTRUCTOR"}
         />
-        <div className="m-3 w-full">
-          <Class
-            courseId={id}
-            classId={classId}
-            currentUser={session.user}
-            initialNotesData={notesData}
-          />
+        <div className="flex-1 overflow-y-auto">
+          <div className="m-3">
+            <Class
+              courseId={id}
+              classId={classId}
+              currentUser={session.user}
+              initialNotesData={notesData}
+            />
+          </div>
         </div>
       </div>
     </PageLayout>

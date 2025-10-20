@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { FaFolder, FaFolderOpen } from "react-icons/fa6";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { MdOndemandVideo } from "react-icons/md";
+import { IoStatsChart } from "react-icons/io5";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,7 @@ function ClassSidebar({
         className={cn(
           "transition-all duration-300 ease-in-out",
           isCollapsed ? "w-0" : "w-[200px]",
-          "bg-background sticky flex h-dvh flex-col border-r shadow-sm max-sm:absolute sm:top-10",
+          "bg-background flex h-full flex-col border-r shadow-sm",
         )}
       >
         <div className={cn("border-b px-3 py-2", isCollapsed && "hidden")}>
@@ -137,6 +138,29 @@ function ClassSidebar({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>New Assignment</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Link
+                      href={`/tutor/statistics/${courseId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 cursor-pointer"
+                      >
+                        <IoStatsChart className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Statistics</p>
                 </TooltipContent>
               </Tooltip>
             </div>
