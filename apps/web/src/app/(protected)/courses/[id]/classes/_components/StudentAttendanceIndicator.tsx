@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { FaCheckCircle, FaTimesCircle, FaClock } from "react-icons/fa";
 
 interface StudentAttendanceIndicatorProps {
@@ -52,23 +58,36 @@ export default function StudentAttendanceIndicator({
       }
       // Student is absent (record exists but attended is false)
       return (
-        <Link
-          href={`/statistics/${courseId}`}
-          target="_blank"
-          className="flex items-center gap-2"
-        >
-          <Badge
-            variant="outline"
-            className="flex cursor-pointer items-center gap-1.5 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-400"
-          >
-            <FaTimesCircle className="h-3 w-3" />
-            <span className="text-xs font-medium">
-              {attendance.attendedDuration
-                ? `Absent (${attendance.attendedDuration}m)`
-                : "Absent"}
-            </span>
-          </Badge>
-        </Link>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href={`/statistics/${courseId}`}
+                target="_blank"
+                className="flex items-center gap-2"
+              >
+                <Badge
+                  variant="outline"
+                  className="flex cursor-pointer items-center gap-1.5 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-400"
+                >
+                  <FaTimesCircle className="h-3 w-3" />
+                  <span className="text-xs font-medium">
+                    {attendance.attendedDuration
+                      ? `Absent (${attendance.attendedDuration}m)`
+                      : "Absent"}
+                  </span>
+                </Badge>
+              </Link>
+            </TooltipTrigger>
+            {attendance.attendedDuration && (
+              <TooltipContent>
+                <p className="text-xs">
+                  Below minimum attendance criteria set by instructor
+                </p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       );
     }
     // Attendance uploaded but no record for this student - means absent

@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { MdAssignment } from "react-icons/md";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { api } from "@/trpc/react";
 import NewAttachmentPage from "./NewAssignments";
@@ -50,6 +53,11 @@ const NewAssignmentDialog = ({ courseId }: NewAssignmentDialogProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button size="icon" variant="outline" className="h-8 w-8">
+          <MdAssignment className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
       <DialogContent className="!max-h-[90vh] !max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Assignment</DialogTitle>

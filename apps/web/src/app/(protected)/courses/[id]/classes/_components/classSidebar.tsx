@@ -9,6 +9,12 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { SessionUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -98,8 +104,48 @@ function ClassSidebar({
             <h1 className="text-sm font-semibold">{title}</h1>
           </Link>
         </div>
+        {(currentUser?.role === "INSTRUCTOR" || isCourseAdmin) && (
+          <TooltipProvider>
+            <div className="flex justify-around border-b py-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <ManageFolders courseId={courseId} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Manage Folders</p>
+                </TooltipContent>
+              </Tooltip>
 
-        <ScrollArea className={cn("flex-1 px-1", isCollapsed && "hidden")}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <NewClassDialog courseId={courseId} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>New Class</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <NewAssignmentDialog courseId={courseId} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>New Assignment</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+        )}
+
+        <ScrollArea
+          className={cn("max-h-[80vh] flex-1 px-1", isCollapsed && "hidden")}
+        >
           <div className="space-y-1 p-2">
             {Object.entries(folderClasses).map(([folderId, classItems]) => {
               const folder = classes.find(
@@ -145,18 +191,6 @@ function ClassSidebar({
             )}
           </div>
         </ScrollArea>
-        {(currentUser?.role === "INSTRUCTOR" || isCourseAdmin) && (
-          <div
-            className={cn(
-              "bg-background sticky bottom-0 space-y-2 p-4",
-              isCollapsed && "hidden",
-            )}
-          >
-            <ManageFolders courseId={courseId} />
-            <NewClassDialog courseId={courseId} />
-            <NewAssignmentDialog courseId={courseId} />
-          </div>
-        )}
 
         <Button
           variant="outline"

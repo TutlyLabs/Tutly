@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FaPlus } from "react-icons/fa";
+import { MdOndemandVideo } from "react-icons/md";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -109,7 +110,9 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>Add New Class</Button>
+        <Button size="icon" variant="outline" className="h-8 w-8">
+          <MdOndemandVideo className="h-4 w-4" />
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

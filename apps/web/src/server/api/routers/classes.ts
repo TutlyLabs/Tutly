@@ -152,6 +152,68 @@ export const classesRouter = createTRPCRouter({
       }
     }),
 
+  getClassDeletionInfo: protectedProcedure
+    .input(
+      z.object({
+        classId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const classInfo = await ctx.db.class.findUnique({
+          where: { id: input.classId },
+          include: {
+            _count: {
+              select: {
+                attachments: true,
+                Attendence: true,
+              },
+            },
+            attachments: {
+              include: {
+                _count: {
+                  select: {
+                    submissions: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!classInfo) {
+          throw new Error("Class not found");
+        }
+
+        // Count notes for this class
+        const notesCount = await ctx.db.notes.count({
+          where: {
+            objectId: input.classId,
+            category: "CLASS",
+          },
+        });
+
+        // Calculate total submissions across all attachments
+        const totalSubmissions = classInfo.attachments.reduce(
+          (sum: number, attachment: any) => sum + attachment._count.submissions,
+          0,
+        );
+
+        return {
+          success: true,
+          data: {
+            attachmentsCount: classInfo._count.attachments,
+            attendanceCount: classInfo._count.Attendence,
+            notesCount,
+            totalSubmissions,
+          },
+        };
+      } catch (error) {
+        console.error("Error getting class deletion info:", error);
+        throw new Error("Failed to get class deletion info");
+      }
+    }),
+
   deleteClass: protectedProcedure
     .input(
       z.object({

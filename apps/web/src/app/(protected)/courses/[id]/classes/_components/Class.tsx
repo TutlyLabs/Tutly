@@ -9,6 +9,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import Link from "next/link";
 import {
   FaBookmark,
+  FaClock,
   FaExternalLinkAlt,
   FaPencilAlt,
   FaPlus,
@@ -17,6 +18,7 @@ import {
   FaTags,
   FaTrash,
   FaTrashAlt,
+  FaUpload,
 } from "react-icons/fa";
 import { RiEdit2Fill } from "react-icons/ri";
 import { useDebounce } from "use-debounce";
@@ -87,6 +89,13 @@ export default function Class({
   const [isDeleteAssignmentDialogOpen, setIsDeleteAssignmentDialogOpen] =
     useState(false);
   const [isEditClassDialogOpen, setIsEditClassDialogOpen] = useState(false);
+  const [isDeleteClassDialogOpen, setIsDeleteClassDialogOpen] = useState(false);
+  const [classDeletionInfo, setClassDeletionInfo] = useState<{
+    attachmentsCount: number;
+    attendanceCount: number;
+    notesCount: number;
+    totalSubmissions: number;
+  } | null>(null);
   const [notes, setNotes] = useState("");
   const [notesJson, setNotesJson] = useState<any>(null);
   const [debouncedNotes] = useDebounce(notes, 1000);
@@ -155,6 +164,9 @@ export default function Class({
   const updateNote = api.notes.updateNote.useMutation();
   const toggleBookmark = api.bookmarks.toggleBookmark.useMutation();
   const deleteAttachment = api.attachments.deleteAttachment.useMutation();
+  const deleteClass = api.classes.deleteClass.useMutation();
+  const { refetch: fetchClassDeletionInfo } =
+    api.classes.getClassDeletionInfo.useQuery({ classId }, { enabled: false });
 
   useEffect(() => {
     if (isInitialLoad) {
@@ -343,6 +355,21 @@ export default function Class({
     }
   };
 
+  const handleDeleteClass = async () => {
+    try {
+      await deleteClass.mutateAsync({
+        classId: classId,
+      });
+      toast.success("Class deleted successfully");
+      setIsDeleteClassDialogOpen(false);
+      router.push(`/courses/${courseId}`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete class",
+      );
+    }
+  };
+
   const toggleBookMark = async () => {
     try {
       const response = await toggleBookmark.mutateAsync({
@@ -407,41 +434,64 @@ export default function Class({
           <div className="h-full w-full rounded-xl p-2">
             <div>
               <div className="mb-2 flex w-full items-center justify-between">
-                <div className="flex items-center justify-start space-x-5">
-                  <p className="text-xl font-semibold">{title}</p>
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <p className="text-xl font-semibold">{title}</p>
 
-                  {/* Attendance Indicator */}
-                  {currentUser.role === "STUDENT" ? (
-                    <StudentAttendanceIndicator
-                      courseId={courseId}
-                      attendance={studentAttendanceData?.data || undefined}
-                      attendanceUploaded={
-                        studentAttendanceData?.attendanceUploaded || false
-                      }
-                    />
-                  ) : (
-                    <AttendanceIndicator
-                      classId={classId}
-                      attendance={attendanceData?.data?.attendance || []}
-                      present={attendanceData?.data?.present || 0}
-                      role={currentUser.role}
-                      courseId={courseId}
-                    />
-                  )}
+                    {haveAdminAccess &&
+                      attendanceData?.data?.attendance?.length === 0 && (
+                        <>
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1.5 bg-gray-500/10 text-gray-700 hover:bg-gray-500/20 dark:text-gray-400"
+                          >
+                            <FaClock className="h-3 w-3" />
+                            <span className="text-xs font-medium">
+                              Not Marked Yet
+                            </span>
+                          </Badge>
+                          <Link
+                            href={`/tutor/attendance?courseId=${courseId}&classId=${classId}`}
+                            target="_blank"
+                          >
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex cursor-pointer items-center gap-2 hover:bg-blue-500/10"
+                            >
+                              <FaUpload className="h-3.5 w-3.5" />
+                              <span className="text-xs">Upload Attendance</span>
+                            </Button>
+                          </Link>
+                        </>
+                      )}
 
-                  {haveAdminAccess && (
-                    <div className="flex items-center gap-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setIsEditClassDialogOpen(true)}
-                        className="hover:bg-secondary/80"
-                      >
-                        <RiEdit2Fill className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
+                    {haveAdminAccess && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setIsEditClassDialogOpen(true)}
+                          className="hover:bg-secondary/80"
+                        >
+                          <RiEdit2Fill className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={async () => {
+                            const result = await fetchClassDeletionInfo();
+                            if (result.data?.success) {
+                              setClassDeletionInfo(result.data.data);
+                            }
+                            setIsDeleteClassDialogOpen(true);
+                          }}
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <FaTrash className="h-5 w-5" />
+                        </Button>
+                      </>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -454,12 +504,39 @@ export default function Class({
                         <FaRegBookmark className="h-5 w-5" />
                       )}
                     </Button>
+
+                    {currentUser.role === "STUDENT" && (
+                      <StudentAttendanceIndicator
+                        courseId={courseId}
+                        attendance={studentAttendanceData?.data || undefined}
+                        attendanceUploaded={
+                          studentAttendanceData?.attendanceUploaded || false
+                        }
+                      />
+                    )}
                   </div>
                 </div>
-                <p className="text-sm font-medium">
+                <p className="text-sm font-medium whitespace-nowrap">
                   {dayjs(createdAt).format("MMM D, YYYY")}
                 </p>
               </div>
+              {currentUser.role !== "STUDENT" && (
+                <div className="mb-2 max-w-[710px] overflow-x-auto">
+                  <AttendanceIndicator
+                    classId={classId}
+                    attendance={attendanceData?.data?.attendance || []}
+                    present={attendanceData?.data?.present || 0}
+                    totalEnrolledStudents={
+                      attendanceData?.data?.totalEnrolledStudents || 0
+                    }
+                    notAttendedStudents={
+                      attendanceData?.data?.notAttendedStudents || []
+                    }
+                    role={currentUser.role}
+                    courseId={courseId}
+                  />
+                </div>
+              )}
               <div className="text-secondary-100 aspect-video w-full flex-1 rounded-xl bg-gray-500/10 object-cover">
                 {renderVideo()}
               </div>
@@ -749,6 +826,79 @@ export default function Class({
               className="bg-red-600 hover:bg-red-700"
             >
               Clear Notes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Class Alert Dialog */}
+      <AlertDialog
+        open={isDeleteClassDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteClassDialogOpen(open);
+          if (!open) {
+            setClassDeletionInfo(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Class</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  Are you sure you want to delete &quot;{title}&quot;? This
+                  action cannot be undone.
+                </p>
+                {classDeletionInfo ? (
+                  <div className="bg-destructive/10 space-y-2 rounded-md p-4">
+                    <p className="text-destructive font-semibold">
+                      This will permanently delete:
+                    </p>
+                    <ul className="text-foreground list-inside list-disc space-y-1 text-sm">
+                      <li>
+                        {classDeletionInfo.attachmentsCount}{" "}
+                        {classDeletionInfo.attachmentsCount === 1
+                          ? "attachment"
+                          : "attachments"}
+                      </li>
+                      {classDeletionInfo.totalSubmissions > 0 && (
+                        <li>
+                          {classDeletionInfo.totalSubmissions}{" "}
+                          {classDeletionInfo.totalSubmissions === 1
+                            ? "submission"
+                            : "submissions"}
+                        </li>
+                      )}
+                      <li>
+                        {classDeletionInfo.attendanceCount} attendance{" "}
+                        {classDeletionInfo.attendanceCount === 1
+                          ? "record"
+                          : "records"}
+                      </li>
+                      <li>
+                        {classDeletionInfo.notesCount}{" "}
+                        {classDeletionInfo.notesCount === 1 ? "note" : "notes"}
+                      </li>
+                      <li>Video and all class data</li>
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    Loading deletion information...
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteClass}
+              disabled={!classDeletionInfo}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Class
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

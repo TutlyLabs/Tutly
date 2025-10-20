@@ -529,7 +529,131 @@ export const attendanceRouter = createTRPCRouter({
         }
       });
 
-      return { success: true, data: { attendance, present } };
+      // Get the course ID from the class
+      const classData = await ctx.db.class.findUnique({
+        where: { id: input.classId },
+        select: { courseId: true },
+      });
+
+      // Get total enrolled students count for the course
+      let totalEnrolledStudents = 0;
+      let notAttendedStudents: Array<{
+        username: string;
+        user: {
+          name: string;
+          image: string | null;
+          email: string | null;
+          enrolledUsers: Array<{
+            mentorUsername: string | null;
+          }>;
+        };
+      }> = [];
+
+      if (classData?.courseId) {
+        if (currentUser.role === "MENTOR") {
+          totalEnrolledStudents = await ctx.db.enrolledUsers.count({
+            where: {
+              courseId: classData.courseId,
+              mentorUsername: currentUser.username,
+            },
+          });
+
+          // Get students who haven't attended
+          const enrolledStudents = await ctx.db.enrolledUsers.findMany({
+            where: {
+              courseId: classData.courseId,
+              mentorUsername: currentUser.username,
+            },
+            include: {
+              user: {
+                select: {
+                  username: true,
+                  name: true,
+                  image: true,
+                  email: true,
+                  enrolledUsers: {
+                    select: {
+                      mentorUsername: true,
+                    },
+                  },
+                },
+              },
+            },
+          });
+
+          const attendedUsernames = new Set(attendance.map((a) => a.username));
+
+          notAttendedStudents = enrolledStudents
+            .filter((enrolled) => !attendedUsernames.has(enrolled.username))
+            .map((enrolled) => ({
+              username: enrolled.username,
+              user: {
+                name: enrolled.user.name,
+                image: enrolled.user.image,
+                email: enrolled.user.email,
+                enrolledUsers: enrolled.user.enrolledUsers,
+              },
+            }));
+        } else {
+          totalEnrolledStudents = await ctx.db.enrolledUsers.count({
+            where: {
+              courseId: classData.courseId,
+              user: {
+                role: "STUDENT",
+              },
+            },
+          });
+
+          // Get students who haven't attended
+          const enrolledStudents = await ctx.db.enrolledUsers.findMany({
+            where: {
+              courseId: classData.courseId,
+              user: {
+                role: "STUDENT",
+              },
+            },
+            include: {
+              user: {
+                select: {
+                  username: true,
+                  name: true,
+                  image: true,
+                  email: true,
+                  enrolledUsers: {
+                    select: {
+                      mentorUsername: true,
+                    },
+                  },
+                },
+              },
+            },
+          });
+
+          const attendedUsernames = new Set(attendance.map((a) => a.username));
+
+          notAttendedStudents = enrolledStudents
+            .filter((enrolled) => !attendedUsernames.has(enrolled.username))
+            .map((enrolled) => ({
+              username: enrolled.username,
+              user: {
+                name: enrolled.user.name,
+                image: enrolled.user.image,
+                email: enrolled.user.email,
+                enrolledUsers: enrolled.user.enrolledUsers,
+              },
+            }));
+        }
+      }
+
+      return {
+        success: true,
+        data: {
+          attendance,
+          present,
+          totalEnrolledStudents,
+          notAttendedStudents,
+        },
+      };
     }),
 
   getAttendancePageData: protectedProcedure.query(async ({ ctx }) => {
