@@ -3,20 +3,45 @@ import { z } from "zod";
 import { getAuthTokens, getGlobalConfig } from "../config/global";
 import { CLI_USER_AGENT } from "../constants";
 
-const SubmissionTemplate = z.object({
+const AssignmentTemplate = z.object({
   id: z.string(),
-  assignmentId: z.string(),
   title: z.string(),
-  description: z.string().optional(),
-  files: z.array(
-    z.object({
-      path: z.string(),
-      content: z.string(),
-    }),
-  ),
+  details: z.string().nullable().optional(),
+  sandboxTemplate: z.any().nullable().optional(),
+  maxSubmissions: z.number(),
+  class: z
+    .object({
+      id: z.string(),
+      title: z.string(),
+      courseId: z.string(),
+      course: z
+        .object({
+          id: z.string(),
+          title: z.string(),
+        })
+        .nullable()
+        .optional(),
+    })
+    .nullable()
+    .optional(),
 });
 
-export type SubmissionTemplate = z.infer<typeof SubmissionTemplate>;
+const MentorDetails = z.object({
+  mentor: z
+    .object({
+      username: z.string(),
+    })
+    .nullable()
+    .optional(),
+});
+
+export type AssignmentTemplate = z.infer<typeof AssignmentTemplate>;
+export type MentorDetails = z.infer<typeof MentorDetails>;
+
+export interface AssignmentFile {
+  path: string;
+  content: string;
+}
 
 export class TutlyAPI {
   private baseUrl: string;
@@ -27,51 +52,75 @@ export class TutlyAPI {
     this.accessToken = accessToken;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {},
+  private async trpcRequest<T>(
+    procedure: string,
+    input?: any,
+    method: "GET" | "POST" = "GET",
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+    const isMutation = method === "POST";
+    const url = isMutation
+      ? `${this.baseUrl}/trpc/${procedure}`
+      : `${this.baseUrl}/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify({ json: input ?? null }))}`;
+
     const headers = {
       "Content-Type": "application/json",
       "User-Agent": CLI_USER_AGENT,
       ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
-      ...options.headers,
     };
 
     const response = await fetch(url, {
-      ...options,
+      method,
       headers,
+      ...(isMutation && {
+        body: JSON.stringify({ json: input ?? null }),
+      }),
     });
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "Unknown error");
       throw new Error(
-        `API request failed: ${response.status} ${response.statusText} - ${errorText}`,
+        `tRPC request failed: ${response.status} ${response.statusText} - ${errorText}`,
       );
     }
 
-    return response.json();
+    const data = await response.json();
+    return data.result?.data?.json ?? data.result?.data ?? data;
   }
 
-  async getSubmissionTemplate(
-    submissionId: string,
-  ): Promise<SubmissionTemplate> {
-    return this.request<SubmissionTemplate>(
-      `/submissions/${submissionId}/template`,
-    );
+  async getAssignmentDetailsForSubmission(
+    assignmentId: string,
+  ): Promise<{
+    assignment: AssignmentTemplate | null;
+    mentorDetails: MentorDetails | null;
+    error?: string;
+  }> {
+    return this.trpcRequest<{
+      assignment: AssignmentTemplate | null;
+      mentorDetails: MentorDetails | null;
+      error?: string;
+    }>("assignments.getAssignmentDetailsForSubmission", { id: assignmentId });
   }
 
-  async submitWork(
-    submissionId: string,
-    files: Array<{ path: string; content: string }>,
-  ): Promise<{ success: boolean; message: string }> {
-    return this.request<{ success: boolean; message: string }>(
-      `/submissions/${submissionId}/submit`,
+  async createSubmission(
+    assignmentId: string,
+    files: Array<AssignmentFile>,
+    assignmentDetails: AssignmentTemplate,
+    mentorDetails: MentorDetails,
+  ): Promise<{ success?: boolean; error?: string; data?: any }> {
+    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+      "submissions.createSubmission",
       {
-        method: "POST",
-        body: JSON.stringify({ files }),
+        assignmentDetails: {
+          id: assignmentDetails.id,
+          maxSubmissions: assignmentDetails.maxSubmissions,
+          class: {
+            courseId: assignmentDetails.class?.courseId,
+          },
+        },
+        files,
+        mentorDetails,
       },
+      "POST",
     );
   }
 }

@@ -20,21 +20,27 @@ tutly login
 
 You'll be prompted for your username and password.
 
-### 2. Clone Template for a Submission
+### 2. Clone Template for an Assignment
 
-When you get a submission URL from the Tutly website, use it like this:
+When you get an assignment URL from the Tutly website like:
+`https://learn.tutly.in/playgrounds/sandbox?assignmentId=assignment_id`
+
+Use the assignment ID to clone the template:
 
 ```bash
-npx tutly submission <submission_id>
+npx tutly assignment assignment_id
 ```
 
 This will:
 
-- Download the template files for your submission
-- Create them in your current directory
+- Download the template files for your assignment
+- Create them in a new directory (named after the assignment)
 - Add a `.tutly.json` metadata file
+- Create a `package.json` if dependencies are required
 
-### 3. Work on Your Submission
+**Note:** By default, a new directory is created. Use `--output .` to clone into the current directory.
+
+### 3. Work on Your Assignment
 
 Edit the files as needed to complete your assignment.
 
@@ -44,7 +50,7 @@ Edit the files as needed to complete your assignment.
 tutly submit
 ```
 
-This will upload all your files to Tutly.
+This will upload all your files to Tutly for review.
 
 ## Commands
 
@@ -72,26 +78,30 @@ Show your current user information.
 tutly whoami
 ```
 
-### `tutly submission <submission_id>`
+### `tutly assignment <assignment_id>`
 
-Clone template files for a submission.
+Clone template files for an assignment. By default, creates a new directory named after the assignment.
 
 ```bash
-tutly submission submission_123
+# Creates a new directory automatically
+tutly assignment assignment_id
 
-# Clone to a specific directory
-tutly submission submission_123 --output ./my-submission
+# Clone into current directory
+tutly assignment assignment_id --output .
+
+# Clone to a custom directory name
+tutly assignment assignment_id --output ./my-assignment
 ```
 
 ### `tutly submit`
 
-Submit your work.
+Submit your work for review.
 
 ```bash
 tutly submit
 
 # Submit from a specific directory
-tutly submit --dir ./my-submission
+tutly submit --dir ./my-assignment
 ```
 
 ## Configuration
@@ -139,6 +149,8 @@ npm run build
 ./bin/run --help
 ./bin/run login
 ./bin/run whoami
+./bin/run assignment <assignment_id>
+./bin/run submit
 
 # Or use the test script
 ./test-cli.sh

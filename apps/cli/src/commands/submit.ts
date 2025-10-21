@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { Command, flags } from "@oclif/command";
 
@@ -11,7 +11,7 @@ export default class Submit extends Command {
 
   static examples = [
     "<%= config.bin %> <%= command.id %>",
-    "<%= config.bin %> <%= command.id %> --dir ./my-submission",
+    "<%= config.bin %> <%= command.id %> --dir ./my-assignment",
   ];
 
   static flags = {
@@ -37,13 +37,20 @@ export default class Submit extends Command {
     const metadataPath = join(submissionDir, ".tutly.json");
     if (!existsSync(metadataPath)) {
       this.log("❌ No .tutly.json file found.");
-      this.log("Make sure you're in a directory created by 'tutly submission'");
+      this.log(
+        "Make sure you're in a directory created by 'tutly assignment <id>'",
+      );
       this.exit(1);
     }
 
     try {
       const metadata = JSON.parse(await readFile(metadataPath, "utf-8"));
-      const submissionId = metadata.submissionId;
+      const assignmentId = metadata.assignmentId;
+
+      if (!assignmentId) {
+        this.log("❌ Invalid .tutly.json file: missing assignmentId");
+        this.exit(1);
+      }
 
       this.log(`\n📤 Preparing submission for: ${metadata.title}...`);
 
@@ -58,23 +65,61 @@ export default class Submit extends Command {
 
       this.log(`📁 Found ${files.length} file(s) to submit`);
 
-      // Submit to API
+      // Get assignment details first
       const api = await createAPIClient();
-      this.log(`\n⬆️  Uploading...`);
+      this.log(`\n📋 Fetching assignment details...`);
 
-      const result = await api.submitWork(submissionId, files);
+      const assignmentResponse =
+        await api.getAssignmentDetailsForSubmission(assignmentId);
 
-      if (result.success) {
+      if (assignmentResponse.error || !assignmentResponse.assignment) {
+        this.log(`\n❌ ${assignmentResponse.error || "Assignment not found"}`);
+        this.exit(1);
+      }
+
+      const assignment = assignmentResponse.assignment;
+      const mentorDetails = assignmentResponse.mentorDetails;
+
+      if (!mentorDetails?.mentor?.username) {
+        this.log("\n❌ No mentor assigned. Please contact your instructor.");
+        this.exit(1);
+      }
+
+      this.log(`✓ Assignment: ${assignment.title}`);
+      this.log(`✓ Mentor: ${mentorDetails.mentor.username}`);
+
+      // Submit to API
+      this.log(`\n⬆️  Uploading submission...`);
+
+      const result = await api.createSubmission(
+        assignmentId,
+        files,
+        assignment,
+        mentorDetails,
+      );
+
+      if (result.error) {
+        this.log(`\n❌ Submission failed: ${result.error}\n`);
+        this.exit(1);
+      }
+
+      if (result.success || result.data) {
         this.log("\n✨ Submission successful!");
-        this.log(`✓ ${result.message}\n`);
+        this.log(`✓ Your work has been submitted for review\n`);
+        if (result.data?.id) {
+          this.log(`📝 Submission ID: ${result.data.id}\n`);
+        }
       } else {
-        this.log(`\n❌ Submission failed: ${result.message}\n`);
+        this.log(`\n⚠️  Unexpected response from server\n`);
         this.exit(1);
       }
     } catch (error) {
       this.log(
         `\n❌ Failed to submit: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
+      if (error instanceof Error && error.stack) {
+        this.log(`\n${error.stack}`);
+      }
       this.exit(1);
     }
   }
