@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { getAuthTokens, getGlobalConfig } from "../config/global";
+import { CLI_USER_AGENT } from "../constants";
 
 const SubmissionTemplate = z.object({
   id: z.string(),
@@ -33,6 +34,7 @@ export class TutlyAPI {
     const url = `${this.baseUrl}${endpoint}`;
     const headers = {
       "Content-Type": "application/json",
+      "User-Agent": CLI_USER_AGENT,
       ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
       ...options.headers,
     };
@@ -52,8 +54,12 @@ export class TutlyAPI {
     return response.json();
   }
 
-  async getSubmissionTemplate(submissionId: string): Promise<SubmissionTemplate> {
-    return this.request<SubmissionTemplate>(`/submissions/${submissionId}/template`);
+  async getSubmissionTemplate(
+    submissionId: string,
+  ): Promise<SubmissionTemplate> {
+    return this.request<SubmissionTemplate>(
+      `/submissions/${submissionId}/template`,
+    );
   }
 
   async submitWork(

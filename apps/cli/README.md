@@ -29,6 +29,7 @@ npx tutly submission <submission_id>
 ```
 
 This will:
+
 - Download the template files for your submission
 - Create them in your current directory
 - Add a `.tutly.json` metadata file
@@ -96,10 +97,12 @@ tutly submit --dir ./my-submission
 ## Configuration
 
 The CLI stores configuration in:
+
 - **macOS/Linux**: `~/.config/tutly/`
 - **Windows**: `%APPDATA%\tutly\`
 
 Files:
+
 - `config.json` - API URL and settings
 - `auth.json` - Authentication tokens
 

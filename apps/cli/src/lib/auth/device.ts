@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { input } from "@inquirer/prompts";
+import { z } from "zod";
 
 import {
   clearAuthTokens,
@@ -7,17 +7,44 @@ import {
   getGlobalConfig,
   setAuthTokens,
 } from "../config/global";
+import { CLI_USER_AGENT } from "../constants";
 
 const SignInResponse = z.object({
+  token: z.string(),
   user: z.object({
     id: z.string(),
     email: z.string(),
     name: z.string(),
+    username: z.string(),
+    image: z.string().nullable().optional(),
+    emailVerified: z.boolean(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  }),
+});
+
+const SessionResponse = z.object({
+  user: z.object({
+    id: z.string(),
+    email: z.string(),
+    name: z.string(),
+    username: z.string(),
+    role: z.string().optional(),
+    organizationId: z.string().optional(),
+    organization: z
+      .object({
+        id: z.string(),
+        orgCode: z.string(),
+        name: z.string(),
+      })
+      .nullable()
+      .optional(),
   }),
   session: z.object({
     id: z.string(),
     token: z.string(),
     expiresAt: z.string(),
+    userId: z.string(),
   }),
 });
 
@@ -40,39 +67,74 @@ export async function login(): Promise<AuthTokens> {
     required: true,
   });
 
-  // Sign in with Better Auth
-  const response = await fetch(`${config.apiBaseUrl}/auth/sign-in/username`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      username,
-      password,
-    }),
-  });
+  try {
+    const response = await fetch(`${config.apiBaseUrl}/auth/sign-in/username`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": CLI_USER_AGENT,
+      },
+      body: JSON.stringify({
+        username,
+        password,
+      }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: "Authentication failed" }));
-    throw new Error(error.message || "Authentication failed");
+    if (!response.ok) {
+      const error = await response
+        .json()
+        .catch(() => ({ message: "Authentication failed" }));
+      throw new Error(error.message || "Authentication failed");
+    }
+
+    const data = SignInResponse.parse(await response.json());
+
+    const bearerToken = response.headers.get("set-auth-token") || data.token;
+
+    if (!bearerToken) {
+      throw new Error("No authentication token received from server");
+    }
+
+    let expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // Default 7 days fallback
+
+    try {
+      const sessionResponse = await fetch(
+        `${config.apiBaseUrl}/auth/get-session`,
+        {
+          headers: {
+            Authorization: `Bearer ${bearerToken}`,
+            "User-Agent": CLI_USER_AGENT,
+          },
+        },
+      );
+
+      if (sessionResponse.ok) {
+        const sessionData = SessionResponse.parse(await sessionResponse.json());
+        if (sessionData.session.expiresAt) {
+          expiresAt = new Date(sessionData.session.expiresAt).getTime();
+        }
+      }
+    } catch {}
+
+    // Store tokens
+    const authTokens: AuthTokens = {
+      accessToken: bearerToken,
+      expiresAt,
+    };
+
+    await setAuthTokens(authTokens);
+    return authTokens;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes("fetch failed")) {
+        throw new Error(
+          `Cannot connect to ${config.apiBaseUrl}. Is the server running?`,
+        );
+      }
+      throw new Error(error.message);
+    }
+    throw error;
   }
-
-  const data = SignInResponse.parse(await response.json());
-  
-  const bearerToken = response.headers.get("set-auth-token");
-  
-  if (!bearerToken) {
-    throw new Error("No authentication token received");
-  }
-
-  // Store tokens
-  const authTokens: AuthTokens = {
-    accessToken: bearerToken,
-    expiresAt: new Date(data.session.expiresAt).getTime(),
-  };
-
-  await setAuthTokens(authTokens);
-  return authTokens;
 }
 
 export async function logout(): Promise<void> {
@@ -85,10 +147,10 @@ export async function logout(): Promise<void> {
         method: "POST",
         headers: {
           Authorization: `Bearer ${tokens.accessToken}`,
+          "User-Agent": CLI_USER_AGENT,
         },
       });
-    } catch {
-    }
+    } catch {}
   }
 
   await clearAuthTokens();
@@ -99,6 +161,10 @@ export async function getCurrentUser(): Promise<{
   email: string;
   name: string;
   username: string;
+  role?: string;
+  organizationId?: string;
+  orgCode?: string;
+  sessionId?: string;
 } | null> {
   const tokens = await getAuthTokens();
   if (!tokens || Date.now() >= tokens.expiresAt) {
@@ -111,6 +177,7 @@ export async function getCurrentUser(): Promise<{
     const response = await fetch(`${config.apiBaseUrl}/auth/get-session`, {
       headers: {
         Authorization: `Bearer ${tokens.accessToken}`,
+        "User-Agent": CLI_USER_AGENT,
       },
     });
 
@@ -118,8 +185,28 @@ export async function getCurrentUser(): Promise<{
       return null;
     }
 
-    const data = await response.json();
-    return data.user;
+    const data = SessionResponse.parse(await response.json());
+
+    if (data.session.expiresAt) {
+      const newExpiresAt = new Date(data.session.expiresAt).getTime();
+      if (newExpiresAt !== tokens.expiresAt) {
+        await setAuthTokens({
+          ...tokens,
+          expiresAt: newExpiresAt,
+        });
+      }
+    }
+
+    return {
+      id: data.user.id,
+      email: data.user.email,
+      name: data.user.name,
+      username: data.user.username,
+      role: data.user.role,
+      organizationId: data.user.organizationId,
+      orgCode: data.user.organization?.orgCode,
+      sessionId: data.session.id,
+    };
   } catch {
     return null;
   }

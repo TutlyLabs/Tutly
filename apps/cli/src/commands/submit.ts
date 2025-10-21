@@ -1,10 +1,10 @@
 import { existsSync } from "node:fs";
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { Command, flags } from "@oclif/command";
 
-import { isAuthenticated } from "../lib/auth/device";
 import { createAPIClient } from "../lib/api/client";
+import { isAuthenticated } from "../lib/auth/device";
 
 export default class Submit extends Command {
   static description = "Submit your work";
@@ -26,22 +26,22 @@ export default class Submit extends Command {
   async run() {
     const { flags } = await this.parse(Submit);
 
+    if (!(await isAuthenticated())) {
+      this.log("❌ Not authenticated. Run 'tutly login' first.");
+      this.exit(1);
+    }
+
+    const submissionDir = flags.dir;
+
+    // Check for .tutly.json metadata file
+    const metadataPath = join(submissionDir, ".tutly.json");
+    if (!existsSync(metadataPath)) {
+      this.log("❌ No .tutly.json file found.");
+      this.log("Make sure you're in a directory created by 'tutly submission'");
+      this.exit(1);
+    }
+
     try {
-      if (!(await isAuthenticated())) {
-        this.log("❌ Not authenticated. Run 'tutly login' first.");
-        this.exit(1);
-      }
-
-      const submissionDir = flags.dir;
-
-      // Check for .tutly.json metadata file
-      const metadataPath = join(submissionDir, ".tutly.json");
-      if (!existsSync(metadataPath)) {
-        this.log("❌ No .tutly.json file found.");
-        this.log("Make sure you're in a directory created by 'tutly submission'");
-        this.exit(1);
-      }
-
       const metadata = JSON.parse(await readFile(metadataPath, "utf-8"));
       const submissionId = metadata.submissionId;
 
@@ -72,16 +72,17 @@ export default class Submit extends Command {
         this.exit(1);
       }
     } catch (error) {
-      this.error(
-        `❌ Failed to submit: ${error instanceof Error ? error.message : "Unknown error"}`
+      this.log(
+        `\n❌ Failed to submit: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
+      this.exit(1);
     }
   }
 
   private async collectFiles(
     baseDir: string,
     currentDir: string,
-    files: Array<{ path: string; content: string }>
+    files: Array<{ path: string; content: string }>,
   ): Promise<void> {
     const entries = await readdir(currentDir, { withFileTypes: true });
 

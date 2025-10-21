@@ -3,7 +3,8 @@ import { Command, flags } from "@oclif/command";
 import { isAuthenticated, login } from "../lib/auth/device";
 
 export default class Login extends Command {
-  static description = "Authenticate with Tutly using your username and password";
+  static description =
+    "Authenticate with Tutly using your username and password";
 
   static examples = ["<%= config.bin %> <%= command.id %>"];
 
@@ -14,22 +15,24 @@ export default class Login extends Command {
   async run() {
     await this.parse(Login);
 
-    try {
-      // Check if already authenticated
-      if (await isAuthenticated()) {
-        this.log("✓ Already authenticated!");
-        this.log("Use 'tutly whoami' to see your user information.");
-        return;
-      }
+    // Check if already authenticated
+    if (await isAuthenticated()) {
+      this.log("✓ Already authenticated!");
+      this.log("Use 'tutly whoami' to see your user information.");
+      return;
+    }
 
-      this.log("🔐 Authenticating with Tutly...\n");
+    this.log("🔐 Authenticating with Tutly...\n");
+
+    try {
       await login();
       this.log("\n✓ Successfully authenticated!");
       this.log("Use 'tutly whoami' to see your user information.");
     } catch (error) {
-      this.error(
-        `❌ Authentication failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      this.log(
+        `\n❌ Authentication failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
+      this.exit(1);
     }
   }
 }

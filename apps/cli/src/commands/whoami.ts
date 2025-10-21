@@ -15,30 +15,34 @@ export default class Whoami extends Command {
   async run() {
     const { flags } = await this.parse(Whoami);
 
-    try {
-      if (!(await isAuthenticated())) {
-        this.log("❌ Not authenticated. Run 'tutly login' first.");
-        this.exit(1);
-      }
+    if (!(await isAuthenticated())) {
+      this.log("❌ Not authenticated. Run 'tutly login' first.");
+      this.exit(1);
+    }
 
-      const user = await getCurrentUser();
-      if (!user) {
-        this.log("❌ Unable to fetch user information");
-        this.exit(1);
-      }
+    const user = await getCurrentUser();
+    if (!user) {
+      this.log("❌ Unable to fetch user information");
+      this.exit(1);
+    }
 
-      if (flags.json) {
-        this.log(JSON.stringify(user, null, 2));
-      } else {
-        this.log(`\n👤 Logged in as: ${user.name}`);
-        this.log(`📧 Email: ${user.email}`);
-        this.log(`🆔 Username: ${user.username}`);
-        this.log(`🔑 User ID: ${user.id}\n`);
+    if (flags.json) {
+      this.log(JSON.stringify(user, null, 2));
+    } else {
+      this.log(`\n👤 Logged in as: ${user.name}`);
+      this.log(`📧 Email: ${user.email}`);
+      this.log(`🆔 Username: ${user.username}`);
+      if (user.role) {
+        this.log(`👔 Role: ${user.role}`);
       }
-    } catch (error) {
-      this.error(
-        `❌ Failed to get user information: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      if (user.orgCode) {
+        this.log(`🏢 Organization: ${user.orgCode}`);
+      }
+      this.log(`🔑 User ID: ${user.id}`);
+      if (user.sessionId) {
+        this.log(`🔐 Session ID: ${user.sessionId}`);
+      }
+      this.log("");
     }
   }
 }

@@ -2,8 +2,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Command, flags } from "@oclif/command";
 
-import { isAuthenticated } from "../lib/auth/device";
 import { createAPIClient } from "../lib/api/client";
+import { isAuthenticated } from "../lib/auth/device";
 
 export default class Submission extends Command {
   static description = "Clone template files for a submission";
@@ -33,17 +33,17 @@ export default class Submission extends Command {
   async run() {
     const { flags, args } = await this.parse(Submission);
 
+    if (!(await isAuthenticated())) {
+      this.log("❌ Not authenticated. Run 'tutly login' first.");
+      this.exit(1);
+    }
+
+    const submissionId = args.submissionId;
+    const outputDir = flags.output;
+
+    this.log(`\n📦 Fetching submission template for: ${submissionId}...`);
+
     try {
-      if (!(await isAuthenticated())) {
-        this.log("❌ Not authenticated. Run 'tutly login' first.");
-        this.exit(1);
-      }
-
-      const submissionId = args.submissionId;
-      const outputDir = flags.output;
-
-      this.log(`\n📦 Fetching submission template for: ${submissionId}...`);
-
       const api = await createAPIClient();
       const template = await api.getSubmissionTemplate(submissionId);
 
@@ -77,7 +77,7 @@ export default class Submission extends Command {
 
       await writeFile(
         join(outputDir, ".tutly.json"),
-        JSON.stringify(metadata, null, 2)
+        JSON.stringify(metadata, null, 2),
       );
 
       this.log("\n✨ Template files cloned successfully!");
@@ -86,9 +86,10 @@ export default class Submission extends Command {
       this.log(`   2. Start working on your submission`);
       this.log(`   3. Use 'tutly submit' when ready to submit\n`);
     } catch (error) {
-      this.error(
-        `❌ Failed to clone template: ${error instanceof Error ? error.message : "Unknown error"}`
+      this.log(
+        `\n❌ Failed to clone template: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
+      this.exit(1);
     }
   }
 }
