@@ -123,15 +123,40 @@ Or edit `~/.config/tutly/config.json`:
 
 ## Development
 
+### Local Testing
+
 ```bash
 # Install dependencies
 npm install
 
-# Build
+# Build the CLI
 npm run build
 
-# Run locally
+# Test locally using ./bin/run
+./bin/run --help
 ./bin/run login
+./bin/run whoami
+
+# Or use the test script
+./test-cli.sh
+```
+
+### Link Globally (Optional)
+
+To use `tutly` command instead of `./bin/run`:
+
+```bash
+npm link
+
+# Now you can use it globally
+tutly login
+tutly whoami
+```
+
+### Unlink
+
+```bash
+npm unlink -g @tutly/cli
 ```
 
 ## License
