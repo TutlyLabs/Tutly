@@ -17,25 +17,27 @@ export default class Whoami extends Command {
 
     try {
       if (!(await isAuthenticated())) {
-        this.log("Error: Not authenticated. Run 'tutly login' first.");
+        this.log("❌ Not authenticated. Run 'tutly login' first.");
         this.exit(1);
       }
 
       const user = await getCurrentUser();
       if (!user) {
-        this.log("Error: Unable to fetch user information");
+        this.log("❌ Unable to fetch user information");
         this.exit(1);
       }
 
       if (flags.json) {
         this.log(JSON.stringify(user, null, 2));
       } else {
-        this.log(`Logged in as: ${user.name} (${user.email})`);
-        this.log(`User ID: ${user.id}`);
+        this.log(`\n👤 Logged in as: ${user.name}`);
+        this.log(`📧 Email: ${user.email}`);
+        this.log(`🆔 Username: ${user.username}`);
+        this.log(`🔑 User ID: ${user.id}\n`);
       }
     } catch (error) {
       this.error(
-        `Failed to get user information: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `❌ Failed to get user information: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }

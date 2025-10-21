@@ -12,19 +12,19 @@ export default class Logout extends Command {
   };
 
   async run() {
-    const { flags } = await this.parse(Logout);
+    await this.parse(Logout);
 
     try {
       if (!(await isAuthenticated())) {
-        this.log("Not currently authenticated");
+        this.log("ℹ Not currently authenticated");
         return;
       }
 
       await logout();
-      this.log("Successfully logged out!");
+      this.log("✓ Successfully logged out!");
     } catch (error) {
       this.error(
-        `Logout failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `❌ Logout failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }

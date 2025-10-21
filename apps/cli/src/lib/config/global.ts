@@ -32,7 +32,7 @@ export async function getGlobalConfig(): Promise<GlobalConfig> {
 
   if (!existsSync(CONFIG_FILE)) {
     const defaultConfig: GlobalConfig = {
-      apiBaseUrl: "https://www.tutly.in/api",
+      apiBaseUrl: "https://learn.tutly.in/api",
       telemetry: true,
       updateNotifications: true,
     };
