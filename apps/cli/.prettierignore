@@ -1,0 +1,17 @@
+# Build output
+lib/
+*.js.map
+
+# Dependencies
+node_modules/
+
+# Cache
+.cache/
+.turbo/
+
+# Package manager
+pnpm-lock.yaml
+package-lock.json
+
+# Generated files
+oclif.manifest.json

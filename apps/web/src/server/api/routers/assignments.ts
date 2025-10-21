@@ -1136,6 +1136,8 @@ export const assignmentsRouter = createTRPCRouter({
             id: assignment.id,
             title: assignment.title,
             link: assignment.link,
+            details: assignment.details,
+            sandboxTemplate: assignment.sandboxTemplate,
             class: {
               id: assignment.class.id,
               title: assignment.class.title,
