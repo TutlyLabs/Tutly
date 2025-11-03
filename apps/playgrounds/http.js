@@ -13,6 +13,11 @@ app.use(
   express.static(path.join(__dirname, "../../packages/fsrelay"))
 );
 
+app.use(
+  "/themes",
+  express.static(path.join(__dirname, "../../packages/themes"))
+);
+
 app.use(serveStatic(staticBasePath))
 
 app.listen(8080)
