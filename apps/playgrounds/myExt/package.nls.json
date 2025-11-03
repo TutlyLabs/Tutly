@@ -1,0 +1,11 @@
+{
+  "displayName": "Tutly File System Provider",
+  "description": "VS Code web extension for reading local files via Tutly CLI server",
+  "command.tutly.connectToServer": "Connect to Tutly File Server",
+  "command.tutly.disconnectFromServer": "Disconnect from Tutly File Server", 
+  "command.tutly.openWorkspace": "Open Tutly Workspace",
+  "configuration.tutly.server.host": "Host address of the Tutly file server",
+  "configuration.tutly.server.port": "Port number of the Tutly file server",
+  "configuration.tutly.server.apiKey": "API key for Tutly file server authentication",
+  "configuration.tutly.server.autoConnect": "Automatically connect to server on extension activation"
+}
