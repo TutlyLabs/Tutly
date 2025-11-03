@@ -56,3 +56,5 @@ dist/
 
 # localstack
 /data
+
+.vscode-test-web

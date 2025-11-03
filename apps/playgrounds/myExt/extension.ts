@@ -25,19 +25,30 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
     this._connecting = true;
     try {
       console.log('🔌 Testing connection to file server...');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
       const response = await fetch('http://localhost:3001/api/health', {
-        headers: { 'x-api-key': 'tutly-dev-key' }
+        headers: { 'x-api-key': 'tutly-dev-key' },
+        signal: controller.signal
       });
       
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
+        const health = await response.json();
         this._connected = true;
-        console.log('✅ Connected to file server');
+        console.log('✅ Connected to file server', health);
       } else {
-        throw new Error(`Server responded with ${response.status}`);
+        throw new Error(`Server responded with ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error('❌ Failed to connect to file server:', error);
-      throw new Error('Unable to connect to Tutly file server. Make sure it\'s running on localhost:3001');
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Connection timeout - Make sure Tutly server is running on localhost:3001');
+      }
+      throw new Error(`Unable to connect to Tutly file server: ${error}`);
     } finally {
       this._connecting = false;
     }
@@ -464,10 +475,13 @@ class TutlyTreeDataProvider implements vscode.TreeDataProvider<string | vscode.U
       }
       
       try {
+        // Add a small delay to avoid immediate requests on activation
+        await new Promise(resolve => setTimeout(resolve, 500));
         await this.provider.ensureConnected();
         this._isLoading = false;
         return [vscode.Uri.parse('tutly:/')];
       } catch (error) {
+        console.error('TreeProvider connection failed:', error);
         this._isLoading = false;
         return ['error'];
       }
@@ -479,6 +493,9 @@ class TutlyTreeDataProvider implements vscode.TreeDataProvider<string | vscode.U
     }
 
     try {
+      // Add delay to reduce rapid requests
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       // This will show loading spinner automatically while promise is pending
       const entries = await this.provider.readDirectory(element);
       this._isLoading = false;
@@ -586,9 +603,9 @@ export async function activate(context: vscode.ExtensionContext) {
   });
   context.subscriptions.push(createTerminalCommand);
   
-  // Auto-connect and setup workspace
+  // Auto-connect and setup workspace with proper delays
   try {
-    console.log('🔌 Connecting to Tutly file server...');
+    console.log('🔌 Initializing Tutly file server connection...');
     
     // Add workspace folder first (this makes it appear in the native explorer)
     const success = vscode.workspace.updateWorkspaceFolders(0, null, {
@@ -599,19 +616,53 @@ export async function activate(context: vscode.ExtensionContext) {
     if (success) {
       console.log('✅ Workspace folder added successfully!');
       
-      // Test connection in background
-      provider.ensureConnected().then(() => {
-        console.log('✅ Connected to file server');
-        vscode.window.setStatusBarMessage('$(check) Tutly Files connected!', 3000);
-        treeProvider.refresh(); // Refresh tree view to show connected state
-        
-
-        
-      }).catch((error) => {
-        console.error('❌ Connection failed:', error);
-        vscode.window.setStatusBarMessage('$(error) Tutly server not available', 5000);
-        treeProvider.refresh(); // Refresh to show error state
-      });
+      // Wait a bit before trying to connect to give the server time to be ready
+      setTimeout(async () => {
+        try {
+          console.log('🔌 Testing connection to file server...');
+          await provider.ensureConnected();
+          
+          console.log('✅ Connected to file server');
+          vscode.window.setStatusBarMessage('$(check) Tutly Files connected!', 3000);
+          treeProvider.refresh(); // Refresh tree view to show connected state
+          
+          // Show success notification with option to create terminal
+          const result = await vscode.window.showInformationMessage(
+            '✅ Tutly Files connected successfully!', 
+            'Create Terminal', 'Dismiss'
+          );
+          
+          if (result === 'Create Terminal') {
+            try {
+              const terminal = createTutlyTerminal();
+              terminal.show();
+              console.log('🖥️ Created Tutly terminal on user request');
+            } catch (termError) {
+              console.error('❌ Failed to create terminal:', termError);
+              vscode.window.showErrorMessage(`Failed to create terminal: ${termError}`);
+            }
+          }
+          
+        } catch (error) {
+          console.error('❌ Connection failed:', error);
+          vscode.window.setStatusBarMessage('$(error) Tutly server not available', 5000);
+          treeProvider.refresh(); // Refresh to show error state
+          
+          vscode.window.showWarningMessage(
+            'Tutly server not available. Make sure to run: tutly serve-files', 
+            'Retry Connection'
+          ).then(result => {
+            if (result === 'Retry Connection') {
+              // Retry connection
+              provider.resetConnection();
+              provider.ensureConnected().then(() => {
+                vscode.window.setStatusBarMessage('$(check) Tutly Files connected!', 3000);
+                treeProvider.refresh();
+              });
+            }
+          });
+        }
+      }, 1500); // Wait 1.5 seconds for server to be ready
       
     } else {
       throw new Error('Failed to add workspace folder');

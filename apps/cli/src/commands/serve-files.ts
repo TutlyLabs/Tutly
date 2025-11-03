@@ -7,9 +7,8 @@ import * as WebSocket from 'ws';
 import { WebSocketServer } from 'ws';
 import chokidar from 'chokidar';
 import { IncomingMessage } from 'http';
-
-// Terminal functionality will be added later
 import { createServer } from 'http';
+import * as pty from 'node-pty';
 
 interface FileEntry {
   name: string;
@@ -21,7 +20,7 @@ interface FileEntry {
 
 interface TerminalSession {
   id: string;
-  pty: any; // pty.IPty when available
+  pty: pty.IPty;
   ws: WebSocket.WebSocket;
 }
 
@@ -286,12 +285,109 @@ export default class ServeFiles extends Command {
   }
 
   private handleTerminal(ws: WebSocket.WebSocket) {
-    // Terminal functionality will be implemented later when node-pty is properly set up
-    ws.send(JSON.stringify({
-      type: 'error',
-      message: 'Terminal functionality is not yet implemented. Coming soon!'
-    }));
-    ws.close();
+    const terminalId = `terminal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    try {
+      // Create a new pseudo-terminal
+      const shell = process.platform === 'win32' ? 'powershell.exe' : 'bash';
+      const terminal = pty.spawn(shell, [], {
+        name: 'xterm-color',
+        cols: 80,
+        rows: 24,
+        cwd: process.cwd(),
+        env: process.env as { [key: string]: string }
+      });
+
+      // Store the terminal session
+      const session: TerminalSession = {
+        id: terminalId,
+        pty: terminal,
+        ws: ws
+      };
+      this.terminals.set(terminalId, session);
+
+      // Send initial connection message
+      ws.send(JSON.stringify({
+        type: 'connected',
+        terminalId: terminalId,
+        message: 'Terminal connected successfully'
+      }));
+
+      // Forward terminal output to WebSocket
+      terminal.onData((data: string) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'data',
+            data: data
+          }));
+        }
+      });
+
+      // Handle terminal exit
+      terminal.onExit((e: { exitCode: number; signal?: number }) => {
+        ws.send(JSON.stringify({
+          type: 'exit',
+          exitCode: e.exitCode,
+          signal: e.signal,
+          message: `Terminal exited with code ${e.exitCode}`
+        }));
+        this.terminals.delete(terminalId);
+        ws.close();
+      });
+
+      // Handle WebSocket messages (input from client)
+      ws.on('message', (message: string) => {
+        try {
+          const msg = JSON.parse(message);
+          
+          switch (msg.type) {
+            case 'input':
+              // Send input to terminal
+              terminal.write(msg.data);
+              break;
+              
+            case 'resize':
+              // Resize terminal
+              if (msg.cols && msg.rows) {
+                terminal.resize(msg.cols, msg.rows);
+              }
+              break;
+              
+            default:
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: `Unknown message type: ${msg.type}`
+              }));
+          }
+        } catch (error) {
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: `Invalid message format: ${error}`
+          }));
+        }
+      });
+
+      // Handle WebSocket close
+      ws.on('close', () => {
+        terminal.kill();
+        this.terminals.delete(terminalId);
+      });
+
+      // Handle WebSocket errors
+      ws.on('error', (error) => {
+        console.error(`Terminal WebSocket error for ${terminalId}:`, error);
+        terminal.kill();
+        this.terminals.delete(terminalId);
+      });
+
+    } catch (error) {
+      console.error('Failed to create terminal:', error);
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: `Failed to create terminal: ${error}`
+      }));
+      ws.close();
+    }
   }
 
   private async setupFileWatcher(directory: string) {
@@ -388,7 +484,12 @@ export default class ServeFiles extends Command {
   private async shutdown() {
     this.log('\nShutting down Tutly file server...');
     
-    // Close all terminals (when implemented)
+    // Close all terminals
+    for (const [id, session] of this.terminals.entries()) {
+      this.log(`Closing terminal ${id}`);
+      session.pty.kill();
+      session.ws.close();
+    }
     this.terminals.clear();
 
     // Close file watcher

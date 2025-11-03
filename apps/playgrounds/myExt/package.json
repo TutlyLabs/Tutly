@@ -43,6 +43,12 @@
           "title": "Refresh",
           "icon": "$(refresh)",
           "category": "Tutly"
+        },
+        {
+          "command": "tutly.createTerminal",
+          "title": "Create Tutly Terminal",
+          "icon": "$(terminal)",
+          "category": "Tutly"
         }
       ],
       "menus": {
@@ -51,6 +57,22 @@
             "command": "tutly.refresh",
             "when": "view == tutlyExplorer",
             "group": "navigation"
+          },
+          {
+            "command": "tutly.createTerminal",
+            "when": "view == tutlyExplorer",
+            "group": "navigation"
+          }
+        ],
+        "terminal/title/context": [
+          {
+            "command": "tutly.createTerminal",
+            "group": "navigation"
+          }
+        ],
+        "commandPalette": [
+          {
+            "command": "tutly.createTerminal"
           }
         ]
       },
