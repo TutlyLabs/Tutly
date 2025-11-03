@@ -745,6 +745,8 @@ importers:
         specifier: 5.5.4
         version: 5.5.4
 
+  packages/preview-extension: {}
+
   packages/themes: {}
 
   packages/ui:

@@ -9,7 +9,7 @@
   "publisher": "tutly",
   "license": "MIT",
   "engines": {
-    "vscode": "*"
+    "vscode": "^1.75.0"
   },
   "extensionKind": [
     "ui"

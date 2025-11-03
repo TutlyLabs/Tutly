@@ -18,6 +18,11 @@ app.use(
   express.static(path.join(__dirname, "../../packages/themes"))
 );
 
+app.use(
+  "/preview-extension",
+  express.static(path.join(__dirname, "../../packages/preview-extension"))
+);
+
 app.use(serveStatic(staticBasePath))
 
 app.listen(8080)

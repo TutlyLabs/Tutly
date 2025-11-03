@@ -4,7 +4,7 @@
     "nameLong": "Tutly VSCode Web",
     "applicationName": "tutly-vscode-web",
     "dataFolderName": ".tutly-vscode-web",
-    "version": "1.0.0",
+    "version": "1.75.0",
     "quality": "stable",
     "licenseName": "MIT",
     "extensionsGallery": {
@@ -35,7 +35,8 @@
     },
     "extensionKind": {
       "tutly.fsrelay": ["ui", "workspace"],
-      "tutly.themes": ["ui"]
+      "tutly.themes": ["ui"],
+      "tutly.preview-extension": ["ui"]
     }
   },
   "configurationDefaults": {
@@ -74,6 +75,10 @@
     {
       "scheme": "http",
       "path": "/themes"
+    },
+    {
+      "scheme": "http", 
+      "path": "/preview-extension"
     }
   ]
 }
