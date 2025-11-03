@@ -58,3 +58,4 @@ dist/
 /data
 
 .vscode-test-web
+*.log

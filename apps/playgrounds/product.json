@@ -1,29 +1,26 @@
 {
-	"productConfiguration": {
-	  "nameShort": "VSCode Web Sample",
-	  "nameLong": "VSCode Web sample",
-	  "applicationName": "code-web-sample",
-	  "dataFolderName": ".vscode-web-sample",
-	  "version": "1.75.0",
-	  "extensionsGallery": {
-		"serviceUrl": "https://open-vsx.org/vscode/gallery",
-		"itemUrl": "https://open-vsx.org/vscode/item",
-		"resourceUrlTemplate":
-		  "https://openvsxorg.blob.core.windows.net/resources/{publisher}/{name}/{version}/{path}"
-	  },
-	  "extensionEnabledApiProposals": {
-		"tutly.tutly-file-system": [
-		  "fileSearchProvider",
-		  "textSearchProvider"
-		]
-	  }
-	},
-
-	"additionalBuiltinExtensions": [
-	  {
-		"scheme": "http",
-		"path": "/myExt"
-	  }
-	]
-  }
-  
+  "productConfiguration": {
+    "nameShort": "VSCode Web Sample",
+    "nameLong": "VSCode Web sample",
+    "applicationName": "code-web-sample",
+    "dataFolderName": ".vscode-web-sample",
+    "version": "1.75.0",
+    "extensionsGallery": {
+      "serviceUrl": "https://open-vsx.org/vscode/gallery",
+      "itemUrl": "https://open-vsx.org/vscode/item",
+      "resourceUrlTemplate": "https://openvsxorg.blob.core.windows.net/resources/{publisher}/{name}/{version}/{path}"
+    },
+    "extensionEnabledApiProposals": {
+      "tutly.fsrelay": [
+        "fileSearchProvider",
+        "textSearchProvider"
+      ]
+    }
+  },
+  "additionalBuiltinExtensions": [
+    {
+      "scheme": "http",
+      "path": "/fsrelay"
+    }
+  ]
+}

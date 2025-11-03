@@ -1,18 +1,17 @@
-import { Command, flags } from '@oclif/command';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import express from 'express';
-import cors from 'cors';
-import * as WebSocket from 'ws';
-import { WebSocketServer } from 'ws';
-import chokidar from 'chokidar';
-import { IncomingMessage } from 'http';
-import { createServer } from 'http';
-import * as pty from 'node-pty';
+import { promises as fs } from "fs";
+import { createServer, IncomingMessage } from "http";
+import * as path from "path";
+import { Command, flags } from "@oclif/command";
+import chokidar from "chokidar";
+import cors from "cors";
+import express from "express";
+import * as pty from "node-pty";
+import * as WebSocket from "ws";
+import { WebSocketServer } from "ws";
 
 interface FileEntry {
   name: string;
-  type: 'file' | 'directory';
+  type: "file" | "directory";
   size?: number;
   mtime?: Date;
   path: string;
@@ -25,26 +24,27 @@ interface TerminalSession {
 }
 
 export default class ServeFiles extends Command {
-  static description = 'Start a file server to expose local filesystem via HTTP API and WebSocket';
+  static description =
+    "Start a file server to expose local filesystem via HTTP API and WebSocket";
 
   static flags = {
-    help: flags.help({ char: 'h' }),
+    help: flags.help({ char: "h" }),
     port: flags.integer({
-      char: 'p',
-      description: 'Port to run the server on',
+      char: "p",
+      description: "Port to run the server on",
       default: 3001,
     }),
     host: flags.string({
-      description: 'Host to bind the server to',
-      default: 'localhost',
+      description: "Host to bind the server to",
+      default: "localhost",
     }),
-    'api-key': flags.string({
-      description: 'API key for authentication',
-      default: 'tutly-dev-key',
+    "api-key": flags.string({
+      description: "API key for authentication",
+      default: "tutly-dev-key",
     }),
     directory: flags.string({
-      char: 'd',
-      description: 'Directory to serve (defaults to current directory)',
+      char: "d",
+      description: "Directory to serve (defaults to current directory)",
       default: process.cwd(),
     }),
   };
@@ -58,7 +58,7 @@ export default class ServeFiles extends Command {
 
   async run() {
     const { flags } = this.parse(ServeFiles);
-    
+
     this.log(`Starting Tutly file server...`);
     this.log(`Directory: ${flags.directory}`);
     this.log(`Port: ${flags.port}`);
@@ -68,15 +68,19 @@ export default class ServeFiles extends Command {
     await this.setupRoutes(flags);
     await this.setupWebSocket();
     await this.setupFileWatcher(flags.directory);
-    
+
     this.server.listen(flags.port, flags.host, () => {
-      this.log(`🚀 Tutly file server running at http://${flags.host}:${flags.port}`);
+      this.log(
+        `🚀 Tutly file server running at http://${flags.host}:${flags.port}`,
+      );
       this.log(`📁 Serving directory: ${flags.directory}`);
-      this.log(`🔑 API Key: ${flags['api-key']}`);
+      this.log(`🔑 API Key: ${flags["api-key"]}`);
       this.log(`\nAPI Endpoints:`);
       this.log(`  GET    /api/health              - Health check`);
       this.log(`  GET    /api/files               - List directory contents`);
-      this.log(`  GET    /api/files/*             - Get file content or directory listing`);
+      this.log(
+        `  GET    /api/files/*             - Get file content or directory listing`,
+      );
       this.log(`  POST   /api/files/*             - Create file or directory`);
       this.log(`  PUT    /api/files/*             - Update file content`);
       this.log(`  DELETE /api/files/*             - Delete file or directory`);
@@ -87,23 +91,36 @@ export default class ServeFiles extends Command {
     });
 
     // Graceful shutdown
-    process.on('SIGINT', () => this.shutdown());
-    process.on('SIGTERM', () => this.shutdown());
+    process.on("SIGINT", () => this.shutdown());
+    process.on("SIGTERM", () => this.shutdown());
   }
 
   private async setupServer(flags: any) {
     this.app = express();
-    
+
     // Middleware
-    this.app.use(cors({
-      origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:8080', 'http://127.0.0.1:3000', 'http://127.0.0.1:8080'],
-      credentials: true,
-    }));
-    this.app.use(express.json({ limit: '50mb' }));
-    this.app.use(express.raw({ limit: '50mb', type: ['application/octet-stream', 'image/*'] }));
+    this.app.use(
+      cors({
+        origin: [
+          "http://localhost:3000",
+          "http://localhost:5173",
+          "http://localhost:8080",
+          "http://127.0.0.1:3000",
+          "http://127.0.0.1:8080",
+        ],
+        credentials: true,
+      }),
+    );
+    this.app.use(express.json({ limit: "50mb" }));
+    this.app.use(
+      express.raw({
+        limit: "50mb",
+        type: ["application/octet-stream", "image/*"],
+      }),
+    );
 
     // API key authentication middleware
-    this.app.use('/api', (req, res, next) => {
+    this.app.use("/api", (req, res, next) => {
       // const apiKey = req.headers['x-api-key'] || req.query.apiKey;
       // if (apiKey !== flags['api-key']) {
       //   return res.status(401).json({ error: 'Invalid API key' });
@@ -118,55 +135,55 @@ export default class ServeFiles extends Command {
     const baseDir = path.resolve(flags.directory);
 
     // Health check
-    this.app.get('/api/health', (req, res) => {
-      res.json({ 
-        status: 'ok', 
+    this.app.get("/api/health", (req, res) => {
+      res.json({
+        status: "ok",
         directory: baseDir,
         timestamp: new Date().toISOString(),
-        version: '1.0.0'
+        version: "1.0.0",
       });
     });
 
     // List root directory or get file/directory content
-    this.app.get('/api/files', async (req, res) => {
+    this.app.get("/api/files", async (req, res) => {
       try {
         const entries = await this.listDirectory(baseDir);
-        res.json({ entries, path: '/' });
+        res.json({ entries, path: "/" });
       } catch (error) {
         res.status(500).json({ error: (error as Error).message });
       }
     });
 
     // Get file content or directory listing
-    this.app.get('/api/files/*', async (req, res) => {
+    this.app.get("/api/files/*", async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
-        
+
         const stats = await fs.stat(fullPath);
-        
+
         if (stats.isDirectory()) {
           const entries = await this.listDirectory(fullPath);
           res.json({ entries, path: relativePath });
         } else {
           // Check if file is binary
           const isBinary = await this.isBinaryFile(fullPath);
-          
+
           if (isBinary) {
             // Send binary file as base64
             const buffer = await fs.readFile(fullPath);
             res.json({
-              type: 'file',
+              type: "file",
               binary: true,
-              content: buffer.toString('base64'),
+              content: buffer.toString("base64"),
               size: stats.size,
               mtime: stats.mtime,
             });
           } else {
             // Send text file
-            const content = await fs.readFile(fullPath, 'utf-8');
+            const content = await fs.readFile(fullPath, "utf-8");
             res.json({
-              type: 'file',
+              type: "file",
               binary: false,
               content,
               size: stats.size,
@@ -175,8 +192,8 @@ export default class ServeFiles extends Command {
           }
         }
       } catch (error) {
-        if ((error as any).code === 'ENOENT') {
-          res.status(404).json({ error: 'File not found' });
+        if ((error as any).code === "ENOENT") {
+          res.status(404).json({ error: "File not found" });
         } else {
           res.status(500).json({ error: (error as Error).message });
         }
@@ -184,26 +201,26 @@ export default class ServeFiles extends Command {
     });
 
     // Create file or directory
-    this.app.post('/api/files/*', async (req, res) => {
+    this.app.post("/api/files/*", async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
         const { type, content, binary } = req.body;
 
-        if (type === 'directory') {
+        if (type === "directory") {
           await fs.mkdir(fullPath, { recursive: true });
-          res.json({ success: true, message: 'Directory created' });
+          res.json({ success: true, message: "Directory created" });
         } else {
           // Ensure parent directory exists
           await fs.mkdir(path.dirname(fullPath), { recursive: true });
-          
+
           if (binary) {
-            const buffer = Buffer.from(content, 'base64');
+            const buffer = Buffer.from(content, "base64");
             await fs.writeFile(fullPath, buffer);
           } else {
-            await fs.writeFile(fullPath, content, 'utf-8');
+            await fs.writeFile(fullPath, content, "utf-8");
           }
-          res.json({ success: true, message: 'File created' });
+          res.json({ success: true, message: "File created" });
         }
       } catch (error) {
         res.status(500).json({ error: (error as Error).message });
@@ -211,43 +228,43 @@ export default class ServeFiles extends Command {
     });
 
     // Update file content
-    this.app.put('/api/files/*', async (req, res) => {
+    this.app.put("/api/files/*", async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
         const { content, binary } = req.body;
 
         if (binary) {
-          const buffer = Buffer.from(content, 'base64');
+          const buffer = Buffer.from(content, "base64");
           await fs.writeFile(fullPath, buffer);
         } else {
-          await fs.writeFile(fullPath, content, 'utf-8');
+          await fs.writeFile(fullPath, content, "utf-8");
         }
-        
-        res.json({ success: true, message: 'File updated' });
+
+        res.json({ success: true, message: "File updated" });
       } catch (error) {
         res.status(500).json({ error: (error as Error).message });
       }
     });
 
     // Delete file or directory
-    this.app.delete('/api/files/*', async (req, res) => {
+    this.app.delete("/api/files/*", async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
-        
+
         const stats = await fs.stat(fullPath);
-        
+
         if (stats.isDirectory()) {
           await fs.rmdir(fullPath, { recursive: true });
-          res.json({ success: true, message: 'Directory deleted' });
+          res.json({ success: true, message: "Directory deleted" });
         } else {
           await fs.unlink(fullPath);
-          res.json({ success: true, message: 'File deleted' });
+          res.json({ success: true, message: "File deleted" });
         }
       } catch (error) {
-        if ((error as any).code === 'ENOENT') {
-          res.status(404).json({ error: 'File not found' });
+        if ((error as any).code === "ENOENT") {
+          res.status(404).json({ error: "File not found" });
         } else {
           res.status(500).json({ error: (error as Error).message });
         }
@@ -258,134 +275,150 @@ export default class ServeFiles extends Command {
   private async setupWebSocket() {
     this.wss = new WebSocketServer({ server: this.server });
 
-    this.wss.on('connection', (ws: WebSocket.WebSocket, req: IncomingMessage) => {
-      const url = new URL(req.url!, `http://${req.headers.host}`);
-      
-      if (url.pathname === '/ws/files') {
-        this.handleFileWatcher(ws);
-      } else if (url.pathname === '/ws/terminal') {
-        this.handleTerminal(ws);
-      } else {
-        ws.close(1000, 'Unknown endpoint');
-      }
-    });
+    this.wss.on(
+      "connection",
+      (ws: WebSocket.WebSocket, req: IncomingMessage) => {
+        const url = new URL(req.url!, `http://${req.headers.host}`);
+
+        if (url.pathname === "/ws/files") {
+          this.handleFileWatcher(ws);
+        } else if (url.pathname === "/ws/terminal") {
+          this.handleTerminal(ws);
+        } else {
+          ws.close(1000, "Unknown endpoint");
+        }
+      },
+    );
   }
 
   private handleFileWatcher(ws: WebSocket.WebSocket) {
     this.watcherClients.add(ws);
-    
-    ws.on('close', () => {
+
+    ws.on("close", () => {
       this.watcherClients.delete(ws);
     });
 
-    ws.send(JSON.stringify({
-      type: 'connected',
-      message: 'File watcher connected'
-    }));
+    ws.send(
+      JSON.stringify({
+        type: "connected",
+        message: "File watcher connected",
+      }),
+    );
   }
 
   private handleTerminal(ws: WebSocket.WebSocket) {
     const terminalId = `terminal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     try {
       // Create a new pseudo-terminal
-      const shell = process.platform === 'win32' ? 'powershell.exe' : 'bash';
+      const shell = process.platform === "win32" ? "powershell.exe" : "bash";
       const terminal = pty.spawn(shell, [], {
-        name: 'xterm-color',
+        name: "xterm-color",
         cols: 80,
         rows: 24,
         cwd: process.cwd(),
-        env: process.env as { [key: string]: string }
+        env: process.env as { [key: string]: string },
       });
 
       // Store the terminal session
       const session: TerminalSession = {
         id: terminalId,
         pty: terminal,
-        ws: ws
+        ws: ws,
       };
       this.terminals.set(terminalId, session);
 
       // Send initial connection message
-      ws.send(JSON.stringify({
-        type: 'connected',
-        terminalId: terminalId,
-        message: 'Terminal connected successfully'
-      }));
+      ws.send(
+        JSON.stringify({
+          type: "connected",
+          terminalId: terminalId,
+          message: "Terminal connected successfully",
+        }),
+      );
 
       // Forward terminal output to WebSocket
       terminal.onData((data: string) => {
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'data',
-            data: data
-          }));
+          ws.send(
+            JSON.stringify({
+              type: "data",
+              data: data,
+            }),
+          );
         }
       });
 
       // Handle terminal exit
       terminal.onExit((e: { exitCode: number; signal?: number }) => {
-        ws.send(JSON.stringify({
-          type: 'exit',
-          exitCode: e.exitCode,
-          signal: e.signal,
-          message: `Terminal exited with code ${e.exitCode}`
-        }));
+        ws.send(
+          JSON.stringify({
+            type: "exit",
+            exitCode: e.exitCode,
+            signal: e.signal,
+            message: `Terminal exited with code ${e.exitCode}`,
+          }),
+        );
         this.terminals.delete(terminalId);
         ws.close();
       });
 
       // Handle WebSocket messages (input from client)
-      ws.on('message', (message: string) => {
+      ws.on("message", (message: string) => {
         try {
           const msg = JSON.parse(message);
-          
+
           switch (msg.type) {
-            case 'input':
+            case "input":
               // Send input to terminal
               terminal.write(msg.data);
               break;
-              
-            case 'resize':
+
+            case "resize":
               // Resize terminal
               if (msg.cols && msg.rows) {
                 terminal.resize(msg.cols, msg.rows);
               }
               break;
-              
+
             default:
-              ws.send(JSON.stringify({
-                type: 'error',
-                message: `Unknown message type: ${msg.type}`
-              }));
+              ws.send(
+                JSON.stringify({
+                  type: "error",
+                  message: `Unknown message type: ${msg.type}`,
+                }),
+              );
           }
         } catch (error) {
-          ws.send(JSON.stringify({
-            type: 'error',
-            message: `Invalid message format: ${error}`
-          }));
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: `Invalid message format: ${error}`,
+            }),
+          );
         }
       });
 
       // Handle WebSocket close
-      ws.on('close', () => {
+      ws.on("close", () => {
         terminal.kill();
         this.terminals.delete(terminalId);
       });
 
       // Handle WebSocket errors
-      ws.on('error', (error) => {
+      ws.on("error", (error) => {
         console.error(`Terminal WebSocket error for ${terminalId}:`, error);
         terminal.kill();
         this.terminals.delete(terminalId);
       });
-
     } catch (error) {
-      console.error('Failed to create terminal:', error);
-      ws.send(JSON.stringify({
-        type: 'error',
-        message: `Failed to create terminal: ${error}`
-      }));
+      console.error("Failed to create terminal:", error);
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          message: `Failed to create terminal: ${error}`,
+        }),
+      );
       ws.close();
     }
   }
@@ -398,17 +431,27 @@ export default class ServeFiles extends Command {
     });
 
     this.fileWatcher
-      .on('add', (filePath) => this.broadcastFileEvent('add', filePath, directory))
-      .on('change', (filePath) => this.broadcastFileEvent('change', filePath, directory))
-      .on('unlink', (filePath) => this.broadcastFileEvent('delete', filePath, directory))
-      .on('addDir', (dirPath) => this.broadcastFileEvent('addDir', dirPath, directory))
-      .on('unlinkDir', (dirPath) => this.broadcastFileEvent('deleteDir', dirPath, directory));
+      .on("add", (filePath) =>
+        this.broadcastFileEvent("add", filePath, directory),
+      )
+      .on("change", (filePath) =>
+        this.broadcastFileEvent("change", filePath, directory),
+      )
+      .on("unlink", (filePath) =>
+        this.broadcastFileEvent("delete", filePath, directory),
+      )
+      .on("addDir", (dirPath) =>
+        this.broadcastFileEvent("addDir", dirPath, directory),
+      )
+      .on("unlinkDir", (dirPath) =>
+        this.broadcastFileEvent("deleteDir", dirPath, directory),
+      );
   }
 
   private broadcastFileEvent(event: string, filePath: string, baseDir: string) {
     const relativePath = path.relative(baseDir, filePath);
     const message = JSON.stringify({
-      type: 'fileChange',
+      type: "fileChange",
       event,
       path: relativePath,
       timestamp: new Date().toISOString(),
@@ -429,10 +472,10 @@ export default class ServeFiles extends Command {
       try {
         const itemPath = path.join(dirPath, item);
         const stats = await fs.stat(itemPath);
-        
+
         entries.push({
           name: item,
-          type: stats.isDirectory() ? 'directory' : 'file',
+          type: stats.isDirectory() ? "directory" : "file",
           size: stats.isFile() ? stats.size : undefined,
           mtime: stats.mtime,
           path: itemPath,
@@ -446,7 +489,7 @@ export default class ServeFiles extends Command {
     return entries.sort((a, b) => {
       // Directories first, then files, alphabetically
       if (a.type !== b.type) {
-        return a.type === 'directory' ? -1 : 1;
+        return a.type === "directory" ? -1 : 1;
       }
       return a.name.localeCompare(b.name);
     });
@@ -454,12 +497,12 @@ export default class ServeFiles extends Command {
 
   private safePath(baseDir: string, relativePath: string): string {
     const fullPath = path.resolve(baseDir, relativePath);
-    
+
     // Ensure the path is within the base directory
     if (!fullPath.startsWith(path.resolve(baseDir))) {
-      throw new Error('Path traversal attempt detected');
+      throw new Error("Path traversal attempt detected");
     }
-    
+
     return fullPath;
   }
 
@@ -467,14 +510,14 @@ export default class ServeFiles extends Command {
     try {
       const buffer = await fs.readFile(filePath);
       const bytes = buffer.subarray(0, 1024);
-      
+
       // Check for null bytes which indicate binary content
       for (let i = 0; i < bytes.length; i++) {
         if (bytes[i] === 0) {
           return true;
         }
       }
-      
+
       return false;
     } catch {
       return true; // Assume binary if we can't read it
@@ -482,8 +525,8 @@ export default class ServeFiles extends Command {
   }
 
   private async shutdown() {
-    this.log('\nShutting down Tutly file server...');
-    
+    this.log("\nShutting down Tutly file server...");
+
     // Close all terminals
     for (const [id, session] of this.terminals.entries()) {
       this.log(`Closing terminal ${id}`);
@@ -505,7 +548,7 @@ export default class ServeFiles extends Command {
     // Close HTTP server
     if (this.server) {
       this.server.close(() => {
-        this.log('Server stopped.');
+        this.log("Server stopped.");
         process.exit(0);
       });
     }

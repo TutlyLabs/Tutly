@@ -1,8 +1,8 @@
 {
-  "name": "tutly-file-system",
+  "name": "fsrelay",
   "displayName": "Tutly File System Provider",
-  "description": "VS Code web extension for reading local files via Tutly CLI server",
-  "version": "0.1.0",
+  "description": "A VS Code extension that provides file system and terminal access",
+  "version": "0.0.1",
   "publisher": "tutly",
   "engines": {
     "vscode": "^1.75.0"
@@ -10,15 +10,21 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onFileSystem:tutly"
-  ],
+  "activationEvents": ["*"],
   "browser": "./dist/extension.js",
   "enabledApiProposals": [
     "fileSearchProvider",
     "textSearchProvider"
   ],
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "tutlyExplorer",
+          "name": "Tutly Connection"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "tutly.connectToServer",
@@ -34,8 +40,69 @@
         "command": "tutly.openWorkspace",
         "title": "Open Tutly Workspace",
         "category": "Tutly"
+      },
+      {
+        "command": "tutly.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)",
+        "category": "Tutly"
+      },
+      {
+        "command": "tutly.createTerminal",
+        "title": "Create Tutly Terminal",
+        "icon": "$(terminal)",
+        "category": "Tutly"
+      },
+      {
+        "command": "tutly.setDefaultTerminal",
+        "title": "Set Tutly as Default Terminal",
+        "category": "Tutly"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "tutly.refresh",
+          "when": "view == tutlyExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "tutly.createTerminal",
+          "when": "view == tutlyExplorer",
+          "group": "navigation"
+        }
+      ],
+      "terminal/title/context": [
+        {
+          "command": "tutly.createTerminal",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "tutly.createTerminal"
+        },
+        {
+          "command": "tutly.setDefaultTerminal"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "tutly.createTerminal",
+        "key": "ctrl+shift+`",
+        "mac": "cmd+shift+`",
+        "when": "!terminalFocus"
+      }
+    ],
+    "terminal": {
+      "profiles": [
+        {
+          "id": "tutly.terminal-profile",
+          "title": "Tutly Terminal"
+        }
+      ]
+    },
     "configuration": {
       "title": "Tutly File System",
       "properties": {

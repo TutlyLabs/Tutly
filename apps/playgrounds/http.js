@@ -8,6 +8,11 @@ var workspaceRoot = path.resolve('../../');
 var app = express()
 app.use('/tutly-vscode-web', serveStatic(path.join(workspaceRoot, 'node_modules/vscode-web')))
 
+app.use(
+  "/fsrelay",
+  express.static(path.join(__dirname, "../../packages/fsrelay"))
+);
+
 app.use(serveStatic(staticBasePath))
 
 app.listen(8080)
