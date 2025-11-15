@@ -1,0 +1,92 @@
+{
+  "name": "@tutly/cli",
+  "description": "Tutly CLI - Command line interface for Tutly platform",
+  "version": "0.1.0",
+  "author": "Tutly Team",
+  "bin": {
+    "tutly": "./bin/run"
+  },
+  "bugs": "https://github.com/tutly/cli/issues",
+  "dependencies": {
+    "@inquirer/prompts": "^7.8.4",
+    "@oclif/command": "^1.8.36",
+    "@oclif/config": "^1.18.17",
+    "@oclif/plugin-help": "^3.2.3",
+    "adm-zip": "^0.5.10",
+    "archiver": "^6.0.1",
+    "chokidar": "^3.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.3",
+    "fast-glob": "^3.3.2",
+    "ignore": "^5.3.0",
+    "keytar": "^7.9.0",
+    "listr2": "^7.0.0",
+    "node-pty": "^1.0.0",
+    "open": "^10.0.2",
+    "ora": "^7.0.1",
+    "p-limit": "^5.0.0",
+    "tslib": "^2.6.2",
+    "update-notifier": "^6.0.2",
+    "ws": "^8.18.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@oclif/dev-cli": "^1.26.10",
+    "@oclif/test": "^1.2.9",
+    "@types/archiver": "^6.0.2",
+    "@types/chai": "^4",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/mocha": "^5",
+    "@types/node": "^22.13.11",
+    "@types/ws": "^8.5.12",
+    "chai": "^4",
+    "eslint": "^8.57.0",
+    "eslint-config-oclif": "^3.1",
+    "eslint-config-oclif-typescript": "^0.1",
+    "globby": "^11.1.0",
+    "mocha": "^10.0.0",
+    "nyc": "^15.0.0",
+    "ts-node": "^10.0.0",
+    "tsup": "^7.0.0",
+    "typescript": "5.5.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "/bin",
+    "/lib",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
+  ],
+  "homepage": "https://github.com/tutly/cli",
+  "keywords": [
+    "tutly",
+    "cli",
+    "education",
+    "assignments",
+    "oclif"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "oclif": {
+    "commands": "./lib/commands",
+    "bin": "tutly",
+    "plugins": [
+      "@oclif/plugin-help"
+    ]
+  },
+  "repository": "tutly/cli",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "format": "prettier --write .",
+    "postpack": "rm -f oclif.manifest.json",
+    "posttest": "eslint . --ext .ts --config .eslintrc",
+    "prepack": "rm -rf lib && npm run build && oclif-dev manifest && oclif-dev readme",
+    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif-dev readme && git add README.md"
+  },
+  "types": "lib/index.d.ts"
+}

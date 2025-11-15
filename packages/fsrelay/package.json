@@ -1,0 +1,303 @@
+{
+  "name": "fsrelay",
+  "displayName": "Tutly File System Provider",
+  "description": "A VS Code extension that provides file system and terminal access",
+  "version": "0.0.1",
+  "publisher": "tutly",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": ["*"],
+  "browser": "./dist/extension.js",
+  "enabledApiProposals": [
+    "fileSearchProvider",
+    "textSearchProvider"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tutlyQuestionContainer",
+          "title": "Question",
+          "icon": "$(lightbulb)"
+        }
+      ],
+      "panel": [
+        {
+          "id": "tutly-preview-container",
+          "title": "Preview",
+          "icon": "media/preview-dark.svg"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "tutlyExplorer",
+          "name": "Tutly Connection"
+        }
+      ],
+      "tutlyQuestionContainer": [
+        {
+          "id": "tutlyQuestionPanel",
+          "name": "Question",
+          "when": "true",
+          "type": "webview"
+        }
+      ],
+      "tutly-preview-container": [
+        {
+          "type": "webview",
+          "id": "tutly.previewView",
+          "name": "Preview",
+          "contextualTitle": "Preview"
+        }
+      ]
+    },
+    "themes": [
+      {
+        "id": "Default Dark+",
+        "label": "Default Dark+",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dark_plus.json"
+      },
+      {
+        "id": "Default Dark Modern",
+        "label": "Default Dark Modern",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dark_modern.json"
+      },
+      {
+        "id": "Default Light+",
+        "label": "Default Light+",
+        "uiTheme": "vs",
+        "path": "./themes/light_plus.json"
+      },
+      {
+        "id": "Default Light Modern",
+        "label": "Default Light Modern",
+        "uiTheme": "vs",
+        "path": "./themes/light_modern.json"
+      },
+      {
+        "id": "Visual Studio Dark",
+        "label": "Visual Studio Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dark_vs.json"
+      },
+      {
+        "id": "Visual Studio Light",
+        "label": "Visual Studio Light",
+        "uiTheme": "vs",
+        "path": "./themes/light_vs.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "tutly.connectToServer",
+        "title": "Connect to Tutly File Server",
+        "category": "Tutly"
+      },
+      {
+        "command": "tutly.disconnectFromServer", 
+        "title": "Disconnect from Tutly File Server",
+        "category": "Tutly"
+      },
+      {
+        "command": "tutly.openWorkspace",
+        "title": "Open Tutly Workspace",
+        "category": "Tutly"
+      },
+      {
+        "command": "tutly.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)",
+        "category": "Tutly"
+      },
+      {
+        "command": "tutly.createTerminal",
+        "title": "Create Tutly Terminal",
+        "icon": "$(terminal)",
+        "category": "Tutly"
+      },
+      {
+        "command": "tutly.setDefaultTerminal",
+        "title": "Set Tutly as Default Terminal",
+        "category": "Tutly"
+      },
+      {
+        "command": "preview.toggle",
+        "title": "Toggle Preview",
+        "icon": {
+          "light": "media/preview-light.svg",
+          "dark": "media/preview-dark.svg"
+        }
+      },
+      {
+        "command": "preview.open",
+        "title": "Open Preview",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "preview.openInBrowser",
+        "title": "Open in Browser",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "preview.refresh",
+        "title": "Refresh Preview",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tutlyQuestion.refresh",
+        "title": "Refresh Question",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "tutly.refresh",
+          "when": "view == tutlyExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "tutly.createTerminal",
+          "when": "view == tutlyExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "tutlyQuestion.refresh",
+          "when": "view == tutlyQuestionPanel",
+          "group": "navigation"
+        },
+        {
+          "command": "preview.refresh",
+          "when": "view == tutly.previewView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "preview.openInBrowser",
+          "when": "view == tutly.previewView",
+          "group": "navigation@2"
+        }
+      ],
+      "terminal/title/context": [
+        {
+          "command": "tutly.createTerminal",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "tutly.createTerminal"
+        },
+        {
+          "command": "tutly.setDefaultTerminal"
+        },
+        {
+          "command": "preview.toggle"
+        },
+        {
+          "command": "preview.open"
+        },
+        {
+          "command": "preview.openInBrowser"
+        },
+        {
+          "command": "preview.refresh"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "preview.toggle",
+          "group": "navigation@1",
+          "when": "true"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "tutly.createTerminal",
+        "key": "ctrl+shift+`",
+        "mac": "cmd+shift+`",
+        "when": "!terminalFocus"
+      }
+    ],
+    "terminal": {
+      "profiles": [
+        {
+          "id": "tutly.terminal-profile",
+          "title": "Tutly Terminal"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Tutly File System",
+      "properties": {
+        "tutly.server.host": {
+          "type": "string",
+          "default": "localhost",
+          "description": "Host address of the Tutly file server"
+        },
+        "tutly.server.port": {
+          "type": "number", 
+          "default": 3001,
+          "description": "Port number of the Tutly file server"
+        },
+        "tutly.server.apiKey": {
+          "type": "string",
+          "default": "tutly-dev-key",
+          "description": "API key for Tutly file server authentication"
+        },
+        "tutly.server.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically connect to server on extension activation"
+        },
+        "preview.autoDetect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically detect and open preview for running applications"
+        },
+        "preview.defaultPort": {
+          "type": "number",
+          "default": 3000,
+          "description": "Default port to check for preview"
+        },
+        "preview.portRange": {
+          "type": "array",
+          "default": [3000, 3001, 4000, 5000, 8000, 8080, 8888, 9000],
+          "description": "Ports to monitor for auto-preview"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch", 
+    "package": "webpack --mode production && vsce package",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.11",
+    "@types/vscode": "^1.75.0",
+    "@types/ws": "^8.5.12",
+    "ts-loader": "^9.5.1",
+    "typescript": "5.5.4",
+    "webpack": "^5.96.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "path-browserify": "^1.0.1",
+    "querystring-es3": "^0.2.1",
+    "stream-browserify": "^3.0.0",
+    "url": "^0.11.4",
+    "util": "^0.12.5",
+    "ws": "^8.18.0"
+  }
+}

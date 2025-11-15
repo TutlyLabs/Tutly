@@ -1,0 +1,18 @@
+{
+  "name": "@tutly/web-editor",
+  "version": "1.0.0",
+  "description": "Tutly VSCode web playground with integrated file system provider",
+  "scripts": {
+    "postinstall": "ln -sf ../../node_modules/vscode-web tutly-vscode-web",
+    "start": "node ./http.js",
+    "dev": "node ./http.js",
+    "serve": "pnpm start"
+  },
+  "author": "Tutly",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.3",
+    "serve-static": "^1.15.0",
+    "vscode-web": "^1.75.0"
+  }
+}
