@@ -747,6 +747,8 @@ importers:
 
   packages/preview-extension: {}
 
+  packages/question-panel: {}
+
   packages/themes: {}
 
   packages/ui:

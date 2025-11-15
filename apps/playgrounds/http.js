@@ -23,6 +23,11 @@ app.use(
   express.static(path.join(__dirname, "../../packages/preview-extension"))
 );
 
+app.use(
+  "/question-panel",
+  express.static(path.join(__dirname, "../../packages/question-panel"))
+);
+
 app.use(serveStatic(staticBasePath))
 
 app.listen(8080)

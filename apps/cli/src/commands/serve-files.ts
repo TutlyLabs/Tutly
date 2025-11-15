@@ -38,10 +38,6 @@ export default class ServeFiles extends Command {
       description: "Host to bind the server to",
       default: "localhost",
     }),
-    "api-key": flags.string({
-      description: "API key for authentication",
-      default: "tutly-dev-key",
-    }),
     directory: flags.string({
       char: "d",
       description: "Directory to serve (defaults to current directory)",
@@ -74,7 +70,6 @@ export default class ServeFiles extends Command {
         `🚀 Tutly file server running at http://${flags.host}:${flags.port}`,
       );
       this.log(`📁 Serving directory: ${flags.directory}`);
-      this.log(`🔑 API Key: ${flags["api-key"]}`);
       this.log(`\nAPI Endpoints:`);
       this.log(`  GET    /api/health              - Health check`);
       this.log(`  GET    /api/files               - List directory contents`);
@@ -118,15 +113,6 @@ export default class ServeFiles extends Command {
         type: ["application/octet-stream", "image/*"],
       }),
     );
-
-    // API key authentication middleware
-    this.app.use("/api", (req, res, next) => {
-      // const apiKey = req.headers['x-api-key'] || req.query.apiKey;
-      // if (apiKey !== flags['api-key']) {
-      //   return res.status(401).json({ error: 'Invalid API key' });
-      // }
-      next();
-    });
 
     this.server = createServer(this.app);
   }
@@ -308,6 +294,7 @@ export default class ServeFiles extends Command {
 
   private handleTerminal(ws: WebSocket.WebSocket) {
     const terminalId = `terminal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const { flags } = this.parse(ServeFiles);
 
     try {
       // Create a new pseudo-terminal
@@ -316,7 +303,7 @@ export default class ServeFiles extends Command {
         name: "xterm-color",
         cols: 80,
         rows: 24,
-        cwd: process.cwd(),
+        cwd: flags.directory,
         env: process.env as { [key: string]: string },
       });
 

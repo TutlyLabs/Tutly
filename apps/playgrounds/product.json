@@ -36,10 +36,14 @@
     "extensionKind": {
       "tutly.fsrelay": ["ui", "workspace"],
       "tutly.themes": ["ui"],
-      "tutly.preview-extension": ["ui"]
+      "tutly.preview-extension": ["ui"],
+      "tutly.question-panel": ["ui"]
     }
   },
   "configurationDefaults": {
+    "explorer.sortOrder": "default",
+    "explorer.compactFolders": false,
+    "workbench.view.alwaysShowHeaderActions": true,
     "files.exclude": {
       "**/.vscode": true,
       "**/.tutly": true,
@@ -68,6 +72,10 @@
     "window.menuBarVisibility": "compact"
   },
   "additionalBuiltinExtensions": [
+    {
+      "scheme": "http",
+      "path": "/question-panel"
+    },
     {
       "scheme": "http",
       "path": "/fsrelay"
