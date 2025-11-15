@@ -60,3 +60,7 @@ dist/
 .vscode-test-web
 *.log
 temp
+
+# extensions
+apps/playgrounds/extensions/
+apps/playgrounds/tutly-vscode-web

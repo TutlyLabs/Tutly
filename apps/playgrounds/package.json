@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Tutly VSCode web playground with integrated file system provider",
   "scripts": {
+    "postinstall": "ln -sf ../../node_modules/vscode-web tutly-vscode-web",
     "start": "node ./http.js",
     "dev": "node ./http.js",
     "serve": "pnpm start"

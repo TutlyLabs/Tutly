@@ -688,6 +688,26 @@ export async function activate(context: vscode.ExtensionContext) {
   }
   
   console.log('✅ Extension activated successfully');
+
+  // Activate Preview Extension
+  try {
+    const { activate: activatePreview } = await import('./preview');
+    await activatePreview(context);
+    console.log('✅ Preview extension activated');
+  } catch (error) {
+    console.error('❌ Failed to activate preview extension:', error);
+  }
+
+  // Activate Question Panel
+  try {
+    const questionPanel = require('./question-panel');
+    if (questionPanel && questionPanel.activate) {
+      await questionPanel.activate(context);
+      console.log('✅ Question panel activated');
+    }
+  } catch (error) {
+    console.error('❌ Failed to activate question panel:', error);
+  }
 }
 
 export function deactivate() {

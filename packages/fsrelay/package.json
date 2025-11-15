@@ -17,14 +17,84 @@
     "textSearchProvider"
   ],
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tutlyQuestionContainer",
+          "title": "Question",
+          "icon": "$(lightbulb)"
+        }
+      ],
+      "panel": [
+        {
+          "id": "tutly-preview-container",
+          "title": "Preview",
+          "icon": "media/preview-dark.svg"
+        }
+      ]
+    },
     "views": {
       "explorer": [
         {
           "id": "tutlyExplorer",
           "name": "Tutly Connection"
         }
+      ],
+      "tutlyQuestionContainer": [
+        {
+          "id": "tutlyQuestionPanel",
+          "name": "Question",
+          "when": "true",
+          "type": "webview"
+        }
+      ],
+      "tutly-preview-container": [
+        {
+          "type": "webview",
+          "id": "tutly.previewView",
+          "name": "Preview",
+          "contextualTitle": "Preview"
+        }
       ]
     },
+    "themes": [
+      {
+        "id": "Default Dark+",
+        "label": "Default Dark+",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dark_plus.json"
+      },
+      {
+        "id": "Default Dark Modern",
+        "label": "Default Dark Modern",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dark_modern.json"
+      },
+      {
+        "id": "Default Light+",
+        "label": "Default Light+",
+        "uiTheme": "vs",
+        "path": "./themes/light_plus.json"
+      },
+      {
+        "id": "Default Light Modern",
+        "label": "Default Light Modern",
+        "uiTheme": "vs",
+        "path": "./themes/light_modern.json"
+      },
+      {
+        "id": "Visual Studio Dark",
+        "label": "Visual Studio Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dark_vs.json"
+      },
+      {
+        "id": "Visual Studio Light",
+        "label": "Visual Studio Light",
+        "uiTheme": "vs",
+        "path": "./themes/light_vs.json"
+      }
+    ],
     "commands": [
       {
         "command": "tutly.connectToServer",
@@ -57,6 +127,34 @@
         "command": "tutly.setDefaultTerminal",
         "title": "Set Tutly as Default Terminal",
         "category": "Tutly"
+      },
+      {
+        "command": "preview.toggle",
+        "title": "Toggle Preview",
+        "icon": {
+          "light": "media/preview-light.svg",
+          "dark": "media/preview-dark.svg"
+        }
+      },
+      {
+        "command": "preview.open",
+        "title": "Open Preview",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "preview.openInBrowser",
+        "title": "Open in Browser",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "preview.refresh",
+        "title": "Refresh Preview",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tutlyQuestion.refresh",
+        "title": "Refresh Question",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -70,6 +168,21 @@
           "command": "tutly.createTerminal",
           "when": "view == tutlyExplorer",
           "group": "navigation"
+        },
+        {
+          "command": "tutlyQuestion.refresh",
+          "when": "view == tutlyQuestionPanel",
+          "group": "navigation"
+        },
+        {
+          "command": "preview.refresh",
+          "when": "view == tutly.previewView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "preview.openInBrowser",
+          "when": "view == tutly.previewView",
+          "group": "navigation@2"
         }
       ],
       "terminal/title/context": [
@@ -84,6 +197,25 @@
         },
         {
           "command": "tutly.setDefaultTerminal"
+        },
+        {
+          "command": "preview.toggle"
+        },
+        {
+          "command": "preview.open"
+        },
+        {
+          "command": "preview.openInBrowser"
+        },
+        {
+          "command": "preview.refresh"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "preview.toggle",
+          "group": "navigation@1",
+          "when": "true"
         }
       ]
     },
@@ -125,6 +257,21 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically connect to server on extension activation"
+        },
+        "preview.autoDetect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically detect and open preview for running applications"
+        },
+        "preview.defaultPort": {
+          "type": "number",
+          "default": 3000,
+          "description": "Default port to check for preview"
+        },
+        "preview.portRange": {
+          "type": "array",
+          "default": [3000, 3001, 4000, 5000, 8000, 8080, 8888, 9000],
+          "description": "Ports to monitor for auto-preview"
         }
       }
     }

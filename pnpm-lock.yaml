@@ -745,12 +745,6 @@ importers:
         specifier: 5.5.4
         version: 5.5.4
 
-  packages/preview-extension: {}
-
-  packages/question-panel: {}
-
-  packages/themes: {}
-
   packages/ui:
     dependencies:
       react:

@@ -34,10 +34,7 @@
       ]
     },
     "extensionKind": {
-      "tutly.fsrelay": ["ui", "workspace"],
-      "tutly.themes": ["ui"],
-      "tutly.preview-extension": ["ui"],
-      "tutly.question-panel": ["ui"]
+      "tutly.fsrelay": ["ui", "workspace"]
     }
   },
   "configurationDefaults": {
@@ -74,19 +71,7 @@
   "additionalBuiltinExtensions": [
     {
       "scheme": "http",
-      "path": "/question-panel"
-    },
-    {
-      "scheme": "http",
-      "path": "/fsrelay"
-    },
-    {
-      "scheme": "http",
-      "path": "/themes"
-    },
-    {
-      "scheme": "http", 
-      "path": "/preview-extension"
+      "path": "/extensions/fsrelay"
     }
   ]
 }
