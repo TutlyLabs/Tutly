@@ -1,0 +1,89 @@
+{
+  "name": "preview-extension",
+  "displayName": "Preview Extension",
+  "description": "Custom preview functionality with title bar button and auto-detection",
+  "version": "1.0.0",
+  "publisher": "tutly",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "extensionKind": ["ui"],
+  "categories": ["Other"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "browser": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "preview.toggle",
+        "title": "Preview",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "preview.open",
+        "title": "Open Preview",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "preview.openInBrowser",
+        "title": "Open in Browser",
+        "icon": "$(link-external)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "preview.toggle"
+        },
+        {
+          "command": "preview.open"
+        },
+        {
+          "command": "preview.openInBrowser"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "preview.toggle",
+          "group": "navigation@1",
+          "when": "true"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Preview Extension",
+      "properties": {
+        "preview.autoDetect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically detect and open preview for running applications"
+        },
+        "preview.defaultPort": {
+          "type": "number",
+          "default": 3000,
+          "description": "Default port to check for preview"
+        },
+        "preview.portRange": {
+          "type": "array",
+          "default": [3000, 3001, 4000, 5000, 8000, 8080, 8888, 9000],
+          "description": "Ports to monitor for auto-preview"
+        },
+        "preview.statusBarPosition": {
+          "type": "string",
+          "default": "right",
+          "enum": ["left", "right"],
+          "description": "Position of preview button in status bar (title bar area)"
+        },
+        "preview.showTitle": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show 'Preview' text along with icon in status bar"
+        }
+      }
+    }
+  }
+}

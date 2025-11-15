@@ -1,0 +1,34 @@
+var express = require('express')
+var serveStatic = require('serve-static')
+var path = require('path')
+
+var staticBasePath = './';
+var workspaceRoot = path.resolve('../../');
+
+var app = express()
+app.use('/tutly-vscode-web', serveStatic(path.join(workspaceRoot, 'node_modules/vscode-web')))
+
+app.use(
+  "/fsrelay",
+  express.static(path.join(__dirname, "../../packages/fsrelay"))
+);
+
+app.use(
+  "/themes",
+  express.static(path.join(__dirname, "../../packages/themes"))
+);
+
+app.use(
+  "/preview-extension",
+  express.static(path.join(__dirname, "../../packages/preview-extension"))
+);
+
+app.use(
+  "/question-panel",
+  express.static(path.join(__dirname, "../../packages/question-panel"))
+);
+
+app.use(serveStatic(staticBasePath))
+
+app.listen(8080)
+console.log('Listening on port 8080');

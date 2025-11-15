@@ -1,0 +1,92 @@
+{
+  "productConfiguration": {
+    "nameShort": "Tutly VSCode",
+    "nameLong": "Tutly VSCode Web",
+    "applicationName": "tutly-vscode-web",
+    "dataFolderName": ".tutly-vscode-web",
+    "version": "1.75.0",
+    "quality": "stable",
+    "licenseName": "MIT",
+    "extensionsGallery": {
+      "serviceUrl": "https://open-vsx.org/vscode/gallery",
+      "itemUrl": "https://open-vsx.org/vscode/item",
+      "resourceUrlTemplate": "https://openvsxorg.blob.core.windows.net/resources/{publisher}/{name}/{version}/{path}"
+    },
+    "commonlyUsedSettings": [
+      "files.autoSave", 
+      "editor.fontSize", 
+      "editor.fontFamily", 
+      "editor.tabSize", 
+      "editor.renderWhitespace", 
+      "editor.cursorStyle", 
+      "editor.multiCursorModifier", 
+      "editor.insertSpaces", 
+      "editor.wordWrap", 
+      "files.exclude", 
+      "files.associations", 
+      "workbench.editor.enablePreview",
+      "workbench.layoutControl.type"
+    ],
+    "extensionEnabledApiProposals": {
+      "tutly.fsrelay": [
+        "fileSearchProvider",
+        "textSearchProvider"
+      ]
+    },
+    "extensionKind": {
+      "tutly.fsrelay": ["ui", "workspace"],
+      "tutly.themes": ["ui"],
+      "tutly.preview-extension": ["ui"],
+      "tutly.question-panel": ["ui"]
+    }
+  },
+  "configurationDefaults": {
+    "explorer.sortOrder": "default",
+    "explorer.compactFolders": false,
+    "workbench.view.alwaysShowHeaderActions": true,
+    "files.exclude": {
+      "**/.vscode": true,
+      "**/.tutly": true,
+      "**/.git": true,
+      "**/.DS_Store": true,
+      "**/.data": true,
+      "*.rar": true,
+      "*.tar": true,
+      "*.tar.gz": true,
+      "*.tgz": true
+    },
+    "editor.autoIndent": "full",
+    "editor.fontFamily": "'JetBrains Mono', 'Source Code Pro', Menlo, Monaco, 'Courier New', monospace",
+    "editor.minimap.enabled": false,
+    "editor.wordWrap": "on",
+    "editor.guides.indentation": false,
+    "breadcrumbs.enabled": false,
+    "workbench.editor.dragToOpenWindow": false,
+    "workbench.editor.revealIfOpen": true,
+    "workbench.tips.enabled": false,
+    "workbench.editor.enablePreview": false,
+    "workbench.layoutControl.type": "menu",
+    "workbench.tree.renderIndentGuides": "none",
+    "workbench.colorTheme": "Default Dark Modern",
+    "window.titleBarStyle": "custom",
+    "window.menuBarVisibility": "compact"
+  },
+  "additionalBuiltinExtensions": [
+    {
+      "scheme": "http",
+      "path": "/question-panel"
+    },
+    {
+      "scheme": "http",
+      "path": "/fsrelay"
+    },
+    {
+      "scheme": "http",
+      "path": "/themes"
+    },
+    {
+      "scheme": "http", 
+      "path": "/preview-extension"
+    }
+  ]
+}
