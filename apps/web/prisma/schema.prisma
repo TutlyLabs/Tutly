@@ -227,6 +227,7 @@ model Course {
   createdById   String
   createdBy     User            @relation(fields: [createdById], references: [id])
   title         String
+  slug          String?         @unique
   image         String?
   enrolledUsers EnrolledUsers[]
   classes       Class[]
@@ -418,6 +419,12 @@ enum submissionMode {
   SANDBOX
 }
 
+enum SubmissionStatus {
+  PENDING
+  CREATED
+  FAILED
+}
+
 model Attachment {
   id              String         @id @default(uuid())
   title           String         @default("Attachment")
@@ -433,6 +440,8 @@ model Attachment {
   course          Course?        @relation(fields: [courseId], references: [id])
   submissionMode  submissionMode @default(HTML_CSS_JS)
   sandboxTemplate String?        @db.Text
+
+  gitTemplateRepo String?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -457,6 +466,9 @@ model submission {
 
   submissionLink String?
   submissionDate DateTime @default(now())
+
+  gitRepoPath String?
+  status      SubmissionStatus @default(PENDING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
