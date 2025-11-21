@@ -420,9 +420,8 @@ enum submissionMode {
 }
 
 enum SubmissionStatus {
-  PENDING
-  CREATED
-  FAILED
+  IN_PROGRESS
+  SUBMITTED
 }
 
 model Attachment {
@@ -468,7 +467,7 @@ model submission {
   submissionDate DateTime @default(now())
 
   gitRepoPath String?
-  status      SubmissionStatus @default(PENDING)
+  status      SubmissionStatus @default(IN_PROGRESS)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

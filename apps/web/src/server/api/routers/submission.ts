@@ -62,6 +62,7 @@ export const submissionRouter = createTRPCRouter({
           enrolledUser: {
             username: user.username,
           },
+          status: "SUBMITTED",
         },
       });
 
@@ -85,6 +86,7 @@ export const submissionRouter = createTRPCRouter({
           attachmentId: input.assignmentDetails.id,
           enrolledUserId: enrolledUser.id,
           data: input.files as unknown as InputJsonValue,
+          status: "SUBMITTED",
         },
       });
 
@@ -110,6 +112,7 @@ export const submissionRouter = createTRPCRouter({
       const submission = await ctx.db.submission.findUnique({
         where: {
           id: input.submissionId,
+          status: "SUBMITTED",
         },
       });
 
@@ -120,6 +123,7 @@ export const submissionRouter = createTRPCRouter({
       const updatedSubmission = await ctx.db.submission.update({
         where: {
           id: input.submissionId,
+          status: "SUBMITTED",
         },
         data: {
           overallFeedback: input.feedback,
@@ -150,6 +154,7 @@ export const submissionRouter = createTRPCRouter({
       const submissions = await ctx.db.submission.findMany({
         where: {
           attachmentId: input.assignmentId,
+          status: "SUBMITTED",
         },
         include: {
           enrolledUser: {
@@ -185,6 +190,7 @@ export const submissionRouter = createTRPCRouter({
           by: ["enrolledUserId"],
           where: {
             attachmentId: input.assignmentId,
+            status: "SUBMITTED",
           },
           _count: {
             id: true,
@@ -222,6 +228,9 @@ export const submissionRouter = createTRPCRouter({
     }
 
     const submissions = await ctx.db.submission.findMany({
+      where: {
+        status: "SUBMITTED",
+      },
       include: {
         enrolledUser: {
           include: {
@@ -274,6 +283,7 @@ export const submissionRouter = createTRPCRouter({
           by: ["enrolledUserId"],
           where: {
             attachmentId: attachmentId,
+            status: "SUBMITTED",
           },
           _count: {
             id: true,
@@ -315,6 +325,7 @@ export const submissionRouter = createTRPCRouter({
       const submission = await ctx.db.submission.findUnique({
         where: {
           id: input.submissionId,
+          status: "SUBMITTED",
         },
         include: {
           enrolledUser: true,
@@ -345,6 +356,7 @@ export const submissionRouter = createTRPCRouter({
       await ctx.db.submission.delete({
         where: {
           id: input.submissionId,
+          status: "SUBMITTED",
         },
       });
 
@@ -369,6 +381,7 @@ export const submissionRouter = createTRPCRouter({
           enrolledUser: {
             username: user.username,
           },
+          status: "SUBMITTED",
         },
       });
 
@@ -415,6 +428,7 @@ export const submissionRouter = createTRPCRouter({
           enrolledUserId: enrolledUser.id,
           attachmentId: input.assignmentId,
           submissionLink: input.externalLink,
+          status: "SUBMITTED",
         },
       });
 
@@ -428,7 +442,7 @@ export const submissionRouter = createTRPCRouter({
         const currentUser = ctx.session.user;
 
         const submission = await ctx.db.submission.findUnique({
-          where: { id: input.submissionId },
+          where: { id: input.submissionId, status: "SUBMITTED" },
           include: {
             enrolledUser: true,
             points: true,

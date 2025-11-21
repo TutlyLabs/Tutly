@@ -51,7 +51,10 @@ export default async function EvaluatePage({
   };
 
   const submissions = await db.submission.findMany({
-    where: { attachmentId: assignmentId },
+    where: {
+      attachmentId: assignmentId,
+      status: "SUBMITTED",
+    },
     include: {
       enrolledUser: { include: { user: true } },
       points: true,
@@ -75,7 +78,10 @@ export default async function EvaluatePage({
   if (assignment?.maxSubmissions && assignment.maxSubmissions > 1) {
     const submissionCount = await db.submission.groupBy({
       by: ["enrolledUserId"],
-      where: { attachmentId: assignmentId },
+      where: {
+        attachmentId: assignmentId,
+        status: "SUBMITTED",
+      },
       _count: { id: true },
     });
 

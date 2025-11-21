@@ -215,7 +215,11 @@ export const searchRouter = createTRPCRouter({
                 submissionMode: true,
                 _count: {
                   select: {
-                    submissions: true,
+                    submissions: {
+                      where: {
+                        status: "SUBMITTED",
+                      },
+                    },
                   },
                 },
               },

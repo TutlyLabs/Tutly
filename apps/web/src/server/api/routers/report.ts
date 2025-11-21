@@ -84,7 +84,7 @@ export const reportRouter = createTRPCRouter({
       };
 
       const submissions = await ctx.db.submission.findMany({
-        where: submissionsWhereClause,
+        where: { ...submissionsWhereClause, status: "SUBMITTED" },
         include: {
           enrolledUser: {
             include: {
@@ -181,6 +181,7 @@ export const reportRouter = createTRPCRouter({
       const points = await ctx.db.point.findMany({
         where: {
           submissions: {
+            status: "SUBMITTED",
             enrolledUser: {
               courseId:
                 input.courseId === "all" ? { in: courseIds } : input.courseId,
@@ -192,6 +193,9 @@ export const reportRouter = createTRPCRouter({
         },
         include: {
           submissions: {
+            where: {
+              status: "SUBMITTED",
+            },
             include: {
               enrolledUser: true,
             },

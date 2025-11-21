@@ -41,6 +41,7 @@ async function getLeaderboardDataForUser(
         enrolledUser: {
           mentorUsername: mentor[0]?.mentorUsername ?? null,
         },
+        status: "SUBMITTED",
       },
       select: {
         id: true,
@@ -136,6 +137,7 @@ export const leaderboardRouter = createTRPCRouter({
           enrolledUser: {
             mentorUsername: mentor[0]?.mentorUsername ?? null,
           },
+          status: "SUBMITTED",
         },
         select: {
           id: true,
@@ -339,6 +341,7 @@ export const leaderboardRouter = createTRPCRouter({
               },
             },
           },
+          status: "SUBMITTED",
         },
       });
 
@@ -363,6 +366,7 @@ export const leaderboardRouter = createTRPCRouter({
         enrolledUser: {
           mentorUsername: currentUser.username,
         },
+        status: "SUBMITTED",
       },
       select: {
         id: true,
@@ -426,6 +430,7 @@ export const leaderboardRouter = createTRPCRouter({
           enrolledUser: {
             mentorUsername: currentUser.username,
           },
+          status: "SUBMITTED",
         },
         include: {
           points: true,
@@ -545,7 +550,7 @@ export const leaderboardRouter = createTRPCRouter({
 
         const submissions = course
           ? await ctx.db.submission.findMany({
-              where: submissionsWhere,
+              where: { ...submissionsWhere, status: "SUBMITTED" },
               include: {
                 points: true,
                 enrolledUser: {

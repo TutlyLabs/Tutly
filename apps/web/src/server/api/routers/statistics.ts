@@ -33,6 +33,7 @@ export const statisticsRouter = createTRPCRouter({
                 mentorUsername: input.mentorUsername ?? currentUser.username,
                 courseId: input.courseId,
               },
+              status: "SUBMITTED",
             },
             include: {
               points: true,
@@ -50,6 +51,7 @@ export const statisticsRouter = createTRPCRouter({
               assignment: {
                 courseId: input.courseId,
               },
+              status: "SUBMITTED",
             },
             include: {
               points: true,
@@ -204,6 +206,7 @@ export const statisticsRouter = createTRPCRouter({
                     mentorUsername:
                       input.mentorUsername ?? currentUser.username,
                   },
+                  status: "SUBMITTED",
                 },
               },
             },
@@ -218,7 +221,11 @@ export const statisticsRouter = createTRPCRouter({
               courseId: input.courseId,
             },
             include: {
-              submissions: true,
+              submissions: {
+                where: {
+                  status: "SUBMITTED",
+                },
+              },
             },
             orderBy: {
               createdAt: "asc",
@@ -357,6 +364,7 @@ export const statisticsRouter = createTRPCRouter({
             assignment: {
               courseId: input.courseId,
             },
+            status: "SUBMITTED",
           },
           include: {
             points: true,

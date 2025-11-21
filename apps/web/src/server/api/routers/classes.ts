@@ -173,7 +173,11 @@ export const classesRouter = createTRPCRouter({
               include: {
                 _count: {
                   select: {
-                    submissions: true,
+                    submissions: {
+                      where: {
+                        status: "SUBMITTED",
+                      },
+                    },
                   },
                 },
               },
@@ -291,7 +295,11 @@ export const classesRouter = createTRPCRouter({
             Folder: true,
             attachments: {
               include: {
-                submissions: true,
+                submissions: {
+                  where: {
+                    status: "SUBMITTED",
+                  },
+                },
               },
             },
           },

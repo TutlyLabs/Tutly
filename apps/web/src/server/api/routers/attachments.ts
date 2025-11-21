@@ -190,6 +190,7 @@ export const attachmentsRouter = createTRPCRouter({
             submissions: {
               where: {
                 enrolledUserId: enrolledUser.id,
+                status: "SUBMITTED",
               },
             },
           },

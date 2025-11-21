@@ -31,6 +31,7 @@ export const dashboardRouter = createTRPCRouter({
                       enrolledUser: {
                         username: currentUser.username,
                       },
+                      status: "SUBMITTED",
                     },
                     select: {
                       id: true,

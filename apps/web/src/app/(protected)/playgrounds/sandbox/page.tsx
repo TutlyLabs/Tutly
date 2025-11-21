@@ -35,7 +35,7 @@ export default async function SandboxPage({
 
   const submission = submissionId
     ? await db.submission.findUnique({
-        where: { id: submissionId },
+        where: { id: submissionId, status: "SUBMITTED" },
         include: {
           enrolledUser: {
             include: {

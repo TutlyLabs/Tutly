@@ -172,6 +172,7 @@ export default async function AssignmentDetailPage({
           db.submission.count({
             where: {
               attachmentId: params.id,
+              status: "SUBMITTED",
               AND: [
                 selectedMentor && selectedMentor !== "all"
                   ? {
@@ -285,6 +286,7 @@ export default async function AssignmentDetailPage({
           db.submission.count({
             where: {
               attachmentId: params.id,
+              status: "SUBMITTED",
               AND: [
                 {
                   enrolledUser: {

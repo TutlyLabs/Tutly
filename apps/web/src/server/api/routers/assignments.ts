@@ -50,6 +50,7 @@ export const assignmentsRouter = createTRPCRouter({
                       enrolledUser: {
                         username: currentUser.username,
                       },
+                      status: "SUBMITTED",
                     },
                     include: {
                       points: true,
@@ -109,6 +110,7 @@ export const assignmentsRouter = createTRPCRouter({
                             username: input.id,
                           },
                         },
+                        status: "SUBMITTED",
                       },
                       include: {
                         points: true,
@@ -162,6 +164,7 @@ export const assignmentsRouter = createTRPCRouter({
                       enrolledUser: {
                         mentorUsername: currentUser.username,
                       },
+                      status: "SUBMITTED",
                     },
                   },
                 },
@@ -172,6 +175,7 @@ export const assignmentsRouter = createTRPCRouter({
                       enrolledUser: {
                         mentorUsername: currentUser.username,
                       },
+                      status: "SUBMITTED",
                     },
                     include: {
                       points: true,
@@ -217,6 +221,9 @@ export const assignmentsRouter = createTRPCRouter({
                 include: {
                   class: true,
                   submissions: {
+                    where: {
+                      status: "SUBMITTED",
+                    },
                     include: {
                       points: true,
                     },
@@ -300,6 +307,7 @@ export const assignmentsRouter = createTRPCRouter({
                             id: currentUser.username,
                           },
                         },
+                        status: "SUBMITTED",
                       },
                       include: {
                         points: true,
@@ -349,6 +357,7 @@ export const assignmentsRouter = createTRPCRouter({
                       enrolledUser: {
                         mentorUsername: currentUser.username,
                       },
+                      status: "SUBMITTED",
                     },
                     select: {
                       points: true,
@@ -371,6 +380,7 @@ export const assignmentsRouter = createTRPCRouter({
           enrolledUser: {
             mentorUsername: currentUser.username,
           },
+          status: "SUBMITTED",
         },
         select: {
           points: true,
@@ -412,6 +422,7 @@ export const assignmentsRouter = createTRPCRouter({
                   submissions: {
                     where: {
                       enrolledUserId: currentUser.id,
+                      status: "SUBMITTED",
                     },
                   },
                 },
@@ -451,6 +462,7 @@ export const assignmentsRouter = createTRPCRouter({
                     id: currentUser.id,
                   },
                 },
+                status: "SUBMITTED",
               },
               include: {
                 enrolledUser: {
@@ -499,6 +511,7 @@ export const assignmentsRouter = createTRPCRouter({
                   enrolledUser: {
                     mentorUsername: currentUser.username,
                   },
+                  status: "SUBMITTED",
                 },
                 include: {
                   enrolledUser: {
@@ -589,6 +602,9 @@ export const assignmentsRouter = createTRPCRouter({
                 },
               },
               submissions: {
+                where: {
+                  status: "SUBMITTED",
+                },
                 include: {
                   enrolledUser: {
                     include: {
@@ -676,6 +692,7 @@ export const assignmentsRouter = createTRPCRouter({
                         enrolledUser: {
                           username: currentUser.username,
                         },
+                        status: "SUBMITTED",
                       },
                     },
                   },
@@ -710,6 +727,7 @@ export const assignmentsRouter = createTRPCRouter({
                 mentorUsername: currentUser.username,
                 courseId: input.courseId,
               },
+              status: "SUBMITTED",
             },
             include: {
               points: true,
@@ -727,6 +745,7 @@ export const assignmentsRouter = createTRPCRouter({
               assignment: {
                 courseId: input.courseId,
               },
+              status: "SUBMITTED",
             },
             include: {
               points: true,
@@ -782,6 +801,7 @@ export const assignmentsRouter = createTRPCRouter({
             assignment: {
               courseId: input.courseId,
             },
+            status: "SUBMITTED",
           },
           include: {
             points: true,
@@ -862,6 +882,7 @@ export const assignmentsRouter = createTRPCRouter({
                 enrolledUser: {
                   mentorUsername: input.id,
                 },
+                status: "SUBMITTED",
               },
             },
           },
@@ -940,6 +961,7 @@ export const assignmentsRouter = createTRPCRouter({
             assignment: {
               courseId: input.courseId,
             },
+            status: "SUBMITTED",
           },
           include: {
             points: true,
@@ -998,6 +1020,7 @@ export const assignmentsRouter = createTRPCRouter({
             assignment: {
               courseId: input.courseId,
             },
+            status: "SUBMITTED",
           },
           include: {
             points: true,
@@ -1096,6 +1119,7 @@ export const assignmentsRouter = createTRPCRouter({
                     id: currentUser.id,
                   },
                 },
+                status: "SUBMITTED",
               },
               include: {
                 enrolledUser: {
@@ -1185,6 +1209,7 @@ export const assignmentsRouter = createTRPCRouter({
                     id: currentUser.id,
                   },
                 },
+                status: "SUBMITTED",
               },
               include: {
                 enrolledUser: {
@@ -1336,6 +1361,7 @@ export const assignmentsRouter = createTRPCRouter({
                       enrolledUser: {
                         username: currentUser.username,
                       },
+                      status: "SUBMITTED",
                     },
                     include: {
                       points: true,
@@ -1425,6 +1451,7 @@ export const assignmentsRouter = createTRPCRouter({
                 ...baseInclude,
                 submissions: {
                   where: {
+                    status: "SUBMITTED",
                     AND: [
                       selectedMentor && selectedMentor !== "all"
                         ? {
@@ -1494,6 +1521,7 @@ export const assignmentsRouter = createTRPCRouter({
             ctx.db.submission.count({
               where: {
                 attachmentId: assignmentId,
+                status: "SUBMITTED",
                 AND: [
                   selectedMentor && selectedMentor !== "all"
                     ? {
@@ -1534,6 +1562,7 @@ export const assignmentsRouter = createTRPCRouter({
                 ...baseInclude,
                 submissions: {
                   where: {
+                    status: "SUBMITTED",
                     AND: [
                       {
                         enrolledUser: {
@@ -1598,6 +1627,7 @@ export const assignmentsRouter = createTRPCRouter({
             ctx.db.submission.count({
               where: {
                 attachmentId: assignmentId,
+                status: "SUBMITTED",
                 AND: [
                   {
                     enrolledUser: {
@@ -1636,6 +1666,7 @@ export const assignmentsRouter = createTRPCRouter({
               ...baseInclude,
               submissions: {
                 where: {
+                  status: "SUBMITTED",
                   enrolledUser: {
                     user: {
                       id: currentUser.id,
@@ -1771,6 +1802,7 @@ export const assignmentsRouter = createTRPCRouter({
         const submissions = await ctx.db.submission.findMany({
           where: {
             attachmentId: assignmentId,
+            status: "SUBMITTED",
           },
           include: {
             enrolledUser: {
@@ -1809,6 +1841,7 @@ export const assignmentsRouter = createTRPCRouter({
             by: ["enrolledUserId"],
             where: {
               attachmentId: assignmentId,
+              status: "SUBMITTED",
             },
             _count: {
               id: true,
@@ -1910,6 +1943,7 @@ export const assignmentsRouter = createTRPCRouter({
                     some: {
                       submissions: {
                         some: {
+                          status: "SUBMITTED",
                           enrolledUser: {
                             mentorUsername: currentUser.username,
                           },
@@ -1941,6 +1975,7 @@ export const assignmentsRouter = createTRPCRouter({
                     ...(currentUser.role === "MENTOR" && {
                       submissions: {
                         some: {
+                          status: "SUBMITTED",
                           enrolledUser: {
                             mentorUsername: currentUser.username,
                           },
@@ -1958,6 +1993,7 @@ export const assignmentsRouter = createTRPCRouter({
                     },
                     submissions: {
                       where: {
+                        status: "SUBMITTED",
                         enrolledUser: {
                           user: {
                             username: userId,
@@ -2070,6 +2106,7 @@ export const assignmentsRouter = createTRPCRouter({
                   some: {
                     submissions: {
                       some: {
+                        status: "SUBMITTED",
                         enrolledUser: {
                           mentorUsername: currentUser.username,
                         },
@@ -2101,6 +2138,7 @@ export const assignmentsRouter = createTRPCRouter({
                   ...(currentUser.role === "MENTOR" && {
                     submissions: {
                       some: {
+                        status: "SUBMITTED",
                         enrolledUser: {
                           mentorUsername: currentUser.username,
                         },
@@ -2118,6 +2156,7 @@ export const assignmentsRouter = createTRPCRouter({
                   },
                   submissions: {
                     where: {
+                      status: "SUBMITTED",
                       ...(currentUser.role === "MENTOR" && {
                         enrolledUser: {
                           mentorUsername: currentUser.username,

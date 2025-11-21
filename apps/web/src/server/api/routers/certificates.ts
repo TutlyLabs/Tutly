@@ -36,6 +36,7 @@ export const certificatesRouter = createTRPCRouter({
                       enrolledUser: {
                         username: currentUser.username,
                       },
+                      status: "SUBMITTED",
                     },
                     select: {
                       id: true,
