@@ -46,6 +46,7 @@ RUN pnpm prisma generate
 
 WORKDIR /app
 RUN pnpm turbo build
+RUN node apps/web/scripts/copy-vscode-assets.js
 
 FROM base AS runner
 WORKDIR /app
