@@ -56,3 +56,4 @@ Thumbs.db
 # VSCode assets
 /public/vscode/assets
 /public/vscode/extensions
+/public/vscode/extensions.json

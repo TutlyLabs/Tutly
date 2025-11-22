@@ -6,7 +6,7 @@
  * are available in the public directory for better caching
  */
 
-import { cpSync, existsSync, mkdirSync, rmSync } from "fs";
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -43,16 +43,17 @@ try {
     console.warn("⚠️  vscode-web not found, skipping...");
   }
 
-  // 2. Copy extensions
-  const extensionsDir = join(publicVscodeDir, "extensions");
-  if (existsSync(extensionsDir)) {
-    console.log("🧹 Cleaning existing extensions directory...");
-    rmSync(extensionsDir, { recursive: true, force: true });
-  }
+  // 2. Copy extensions to assets/extensions (where VSCode expects them)
+  const extensionsDir = join(publicVscodeDir, "assets/extensions");
   mkdirSync(extensionsDir, { recursive: true });
+
+  const copiedExtensions = [];
 
   for (const extension of EXTENSIONS) {
     const targetPath = join(extensionsDir, extension.name);
+    if (existsSync(targetPath)) {
+      rmSync(targetPath, { recursive: true, force: true });
+    }
 
     if (existsSync(extension.sourcePath)) {
       console.log(`📋 Copying ${extension.name} extension...`);
@@ -68,10 +69,16 @@ try {
           );
         },
       });
+      copiedExtensions.push(extension.name);
     } else {
       console.warn(`⚠️  ${extension.name} extension not found at ${extension.sourcePath}, skipping...`);
     }
   }
+
+  // Generate extensions.json
+  const extensionsJsonPath = join(publicVscodeDir, "extensions.json");
+  writeFileSync(extensionsJsonPath, JSON.stringify(copiedExtensions, null, 2));
+  console.log(`📄 Generated extensions.json with ${copiedExtensions.length} extensions`);
 
   console.log("✅ VSCode assets copied successfully!");
 } catch (error) {

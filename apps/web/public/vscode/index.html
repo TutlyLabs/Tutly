@@ -77,6 +77,26 @@
 </body>
 
 <!-- Startup (do not modify order of script tags!) -->
+<script>
+	(async function () {
+		try {
+			const response = await fetch('/vscode/product.json');
+			const product = await response.json();
+
+			const extensionsResponse = await fetch('/vscode/extensions.json');
+			const extensions = await extensionsResponse.json();
+
+			product.additionalBuiltinExtensions = extensions.map(ext => ({
+				scheme: window.location.protocol.slice(0, -1),
+				path: `/vscode/assets/extensions/${ext}`
+			}));
+
+			window.product = product;
+		} catch (err) {
+			console.error('Failed to load product.json', err);
+		}
+	})();
+</script>
 <script src="/vscode/assets/out/vs/loader.js"></script>
 <script src="/vscode/assets/out/vs/webPackagePaths.js"></script>
 <script>

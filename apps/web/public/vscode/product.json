@@ -67,11 +67,5 @@
     "workbench.colorTheme": "Default Dark Modern",
     "window.titleBarStyle": "custom",
     "window.menuBarVisibility": "compact"
-  },
-  "additionalBuiltinExtensions": [
-    {
-      "scheme": "http",
-      "path": "/vscode/extensions/git-fs"
-    }
-  ]
+  }
 }
