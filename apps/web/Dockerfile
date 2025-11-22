@@ -23,6 +23,7 @@ RUN npm install -g pnpm
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/full/apps/web/prisma ./apps/web/prisma
+COPY --from=builder /app/out/full/apps/web/scripts ./apps/web/scripts
 RUN pnpm install
 
 # Build the project
