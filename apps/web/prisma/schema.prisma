@@ -417,6 +417,7 @@ enum submissionMode {
   REACT
   EXTERNAL_LINK
   SANDBOX
+  GIT
 }
 
 enum SubmissionStatus {

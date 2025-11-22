@@ -1,0 +1,147 @@
+<!-- Copyright (C) Microsoft Corporation. All rights reserved. -->
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+
+	<!-- Mobile tweaks -->
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-title" content="Code">
+	<link rel="apple-touch-icon" href="/code-192.png" />
+
+	<!-- Disable pinch zooming -->
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+
+	<!-- Workbench Icon/Manifest/CSS -->
+	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
+	<link rel="manifest" href="/manifest.json">
+	<link data-name="vs/workbench/workbench.web.main" rel="stylesheet"
+		href="/vscode/assets/out/vs/workbench/workbench.web.main.css">
+
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+			background-color: #1e1e1e;
+		}
+
+		#vscode-loading-overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: #1e1e1e;
+			z-index: 9999;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			color: #cccccc;
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+			transition: opacity 0.5s ease-out;
+		}
+
+		.vscode-loading-spinner {
+			width: 50px;
+			height: 50px;
+			border: 3px solid rgba(255, 255, 255, 0.1);
+			border-radius: 50%;
+			border-top-color: #007acc;
+			animation: spin 1s ease-in-out infinite;
+			margin-bottom: 20px;
+		}
+
+		@keyframes spin {
+			to {
+				transform: rotate(360deg);
+			}
+		}
+
+		.vscode-loading-text {
+			font-size: 14px;
+			letter-spacing: 0.5px;
+		}
+	</style>
+</head>
+
+<body aria-label="">
+	<div id="vscode-loading-overlay">
+		<div class="vscode-loading-spinner"></div>
+		<div class="vscode-loading-text">Loading Editor...</div>
+	</div>
+</body>
+
+<!-- Startup (do not modify order of script tags!) -->
+<script src="/vscode/assets/out/vs/loader.js"></script>
+<script src="/vscode/assets/out/vs/webPackagePaths.js"></script>
+<script>
+	Object.keys(self.webPackagePaths).map(function (key, index) {
+		self.webPackagePaths[key] = `${window.location.origin}/vscode/assets/node_modules/${key}/${self.webPackagePaths[key]}`;
+	});
+	require.config({
+		baseUrl: `${window.location.origin}/vscode/assets/out`,
+		recordStats: true,
+		trustedTypesPolicy: window.trustedTypes?.createPolicy('amdLoader', {
+			createScriptURL(value) {
+				return value;
+			}
+		}),
+		paths: self.webPackagePaths
+	});
+
+	function removeLoadingOverlay() {
+		const overlay = document.getElementById('vscode-loading-overlay');
+		if (overlay) {
+			overlay.style.opacity = '0';
+			setTimeout(() => {
+				overlay.remove();
+			}, 500);
+		}
+	}
+
+	// Remove loading screen when workbench is ready
+	const checkInterval = setInterval(() => {
+		const overlay = document.getElementById('vscode-loading-overlay');
+		if (!overlay) {
+			clearInterval(checkInterval);
+			return;
+		}
+
+		// Check for Input Box (User needs to enter ID)
+		const inputBox = document.querySelector('.quick-input-widget');
+
+		// Check for Ready Notification (Extension loaded)
+		const notifications = document.querySelectorAll('.monaco-notification-content, .notification-toast');
+		let isReady = false;
+		notifications.forEach(n => {
+			if (n.textContent && n.textContent.includes('Tutly FS Ready')) {
+				isReady = true;
+			}
+		});
+
+		// Also check body text as a fallback
+		if (!isReady && document.body.innerText.includes('Tutly FS Ready')) {
+			isReady = true;
+		}
+
+		if (inputBox || isReady) {
+			removeLoadingOverlay();
+			clearInterval(checkInterval);
+		}
+	}, 200);
+
+	// Fallback: Remove after 15 seconds if something goes wrong
+	setTimeout(() => {
+		removeLoadingOverlay();
+	}, 15000);
+</script>
+<script src="/vscode/assets/out/vs/workbench/workbench.web.main.nls.js"></script>
+<script src="/vscode/assets/out/vs/workbench/workbench.web.main.js"></script>
+<script src="/vscode/assets/out/vs/code/browser/workbench/workbench.js"></script>
+
+</html>

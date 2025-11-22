@@ -1,0 +1,55 @@
+{
+  "name": "git-fs",
+  "displayName": "Tutly Git File System Provider",
+  "description": "A VS Code extension that provides file system access to Git repositories",
+  "version": "0.0.1",
+  "publisher": "tutly",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": ["*"],
+  "browser": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Tutly FS",
+      "properties": {
+        "tutlyfs.assignmentId": {
+          "type": "string",
+          "default": "",
+          "description": "Assignment ID for the repository"
+        },
+        "tutlyfs.submissionId": {
+          "type": "string",
+          "default": "",
+          "description": "Submission ID for the repository"
+        },
+        "tutlyfs.type": {
+          "type": "string",
+          "enum": ["TEMPLATE", "SUBMISSION"],
+          "default": "TEMPLATE",
+          "description": "Repository type"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
+    "package": "webpack --mode production",
+    "deploy": "pnpm build && cp -r dist/* ../../apps/web/public/vscode/extensions/git-fs/ && cp package.json ../../apps/web/public/vscode/extensions/git-fs/"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.11",
+    "@types/vscode": "^1.75.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "5.5.4",
+    "webpack": "^5.96.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "buffer": "^6.0.3"
+  }
+}

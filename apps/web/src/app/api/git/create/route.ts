@@ -9,6 +9,111 @@ export const dynamic = "force-dynamic";
 const APP_URL =
   env.NEXT_PUBLIC_APP_URL || env.APP_URL || "http://localhost:3000";
 
+export async function GET(req: NextRequest) {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const assignmentId = searchParams.get("assignmentId");
+    const type = searchParams.get("type");
+
+    if (!assignmentId || !type) {
+      return NextResponse.json(
+        { error: "Missing assignmentId or type" },
+        { status: 400 },
+      );
+    }
+
+    const attachment = await db.attachment.findUnique({
+      where: { id: assignmentId },
+      include: { course: true },
+    });
+
+    if (!attachment) {
+      return NextResponse.json(
+        { error: "Assignment not found" },
+        { status: 404 },
+      );
+    }
+
+    const token = session.session?.token;
+    const expiresAt = session.session?.expiresAt;
+
+    if (type === "TEMPLATE") {
+      // Check if template repo exists
+      if (!attachment.gitTemplateRepo) {
+        return NextResponse.json({ exists: false });
+      }
+
+      let repoUrl = `${APP_URL}/api/git/assignment/${assignmentId}.git`;
+      if (token) {
+        const urlObj = new URL(repoUrl);
+        urlObj.username = session.user.username;
+        urlObj.password = token;
+        repoUrl = urlObj.toString();
+      }
+
+      return NextResponse.json({
+        exists: true,
+        repoUrl,
+        expiresAt,
+      });
+    }
+
+    if (type === "SUBMISSION") {
+      // Find user's submission
+      const enrolledUser = await db.enrolledUsers.findFirst({
+        where: {
+          username: session.user.username,
+          courseId: attachment.courseId,
+        },
+      });
+
+      if (!enrolledUser) {
+        return NextResponse.json({ exists: false });
+      }
+
+      const submission = await db.submission.findFirst({
+        where: {
+          attachmentId: assignmentId,
+          enrolledUserId: enrolledUser.id,
+        },
+      });
+
+      if (!submission?.gitRepoPath) {
+        return NextResponse.json({ exists: false });
+      }
+
+      let repoUrl = `${APP_URL}/api/git/submission/${submission.id}.git`;
+      if (token) {
+        const urlObj = new URL(repoUrl);
+        urlObj.username = session.user.username;
+        urlObj.password = token;
+        repoUrl = urlObj.toString();
+      }
+
+      return NextResponse.json({
+        exists: true,
+        repoUrl,
+        expiresAt,
+        lastUpdated: submission.updatedAt,
+        submissionId: submission.id,
+      });
+    }
+
+    return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+  } catch (error) {
+    console.error("Error fetching repo info:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Authenticate the user session.
@@ -173,6 +278,7 @@ export async function POST(req: NextRequest) {
           message: "Repo already exists",
           repoUrl: repoUrl,
           expiresAt: expiresAt,
+          submissionId: submission.id,
         });
       }
 
@@ -236,6 +342,7 @@ export async function POST(req: NextRequest) {
         success: true,
         repoUrl: repoUrl,
         expiresAt: expiresAt,
+        submissionId: submission.id,
       });
     }
 

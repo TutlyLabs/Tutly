@@ -103,6 +103,7 @@ export default async function AssignmentDetailPage({
               ...baseInclude,
               submissions: {
                 where: {
+                  status: "SUBMITTED",
                   AND: [
                     selectedMentor && selectedMentor !== "all"
                       ? {
@@ -221,6 +222,7 @@ export default async function AssignmentDetailPage({
               ...baseInclude,
               submissions: {
                 where: {
+                  status: "SUBMITTED",
                   AND: [
                     {
                       enrolledUser: {
@@ -332,6 +334,7 @@ export default async function AssignmentDetailPage({
             ...baseInclude,
             submissions: {
               where: {
+                status: "SUBMITTED",
                 enrolledUser: {
                   user: {
                     id: user.id,

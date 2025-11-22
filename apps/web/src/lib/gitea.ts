@@ -247,4 +247,35 @@ export const giteaClient = {
       throw new Error(`Failed to create user`);
     }
   },
+
+  async getContents(
+    owner: string,
+    repo: string,
+    filepath: string = "",
+    ref?: string,
+  ) {
+    let url = `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${filepath.split("/").map(encodeURIComponent).join("/")}`;
+    if (ref) {
+      url += `?ref=${encodeURIComponent(ref)}`;
+    }
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `token ${GITEA_ADMIN_TOKEN}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      const error = await response.text();
+      console.error(
+        `Failed to get contents for ${owner}/${repo}/${filepath}: ${response.status} ${error}`,
+      );
+      throw new Error(`Failed to get contents`);
+    }
+
+    return response.json();
+  },
 };

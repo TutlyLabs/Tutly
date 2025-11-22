@@ -64,3 +64,11 @@ temp
 # extensions
 apps/playgrounds/extensions/
 apps/playgrounds/tutly-vscode-web
+
+# VSCode extension builds
+packages/git-fs/dist/
+apps/web/public/vscode/extensions/*
+
+# VSCode static files (served from node_modules)
+apps/web/public/vscode/vscode-web/
+apps/web/public/vscode/tutly-vscode-web/

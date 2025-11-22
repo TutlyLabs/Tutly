@@ -1,0 +1,4 @@
+{
+  "displayName": "Tutly Git File System Provider",
+  "description": "A VS Code extension that provides file system access to Git repositories"
+}

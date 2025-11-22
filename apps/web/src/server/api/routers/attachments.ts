@@ -26,6 +26,7 @@ export const attachmentsRouter = createTRPCRouter({
           "REACT",
           "EXTERNAL_LINK",
           "SANDBOX",
+          "GIT",
         ]),
       }),
     )
@@ -125,6 +126,7 @@ export const attachmentsRouter = createTRPCRouter({
           "REACT",
           "EXTERNAL_LINK",
           "SANDBOX",
+          "GIT",
         ]),
       }),
     )

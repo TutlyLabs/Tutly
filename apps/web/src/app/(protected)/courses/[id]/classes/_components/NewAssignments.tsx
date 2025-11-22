@@ -273,6 +273,12 @@ const NewAttachmentPage = ({
                     </SelectItem>
                     <SelectItem
                       className="hover:bg-secondary-800 text-base"
+                      value="GIT"
+                    >
+                      GIT
+                    </SelectItem>
+                    <SelectItem
+                      className="hover:bg-secondary-800 text-base"
                       value="SANDBOX"
                     >
                       SANDBOX
