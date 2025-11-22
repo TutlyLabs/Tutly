@@ -71,7 +71,7 @@
   "additionalBuiltinExtensions": [
     {
       "scheme": "http",
-      "path": "/vscode/assets/extensions/git-fs"
+      "path": "/vscode/extensions/git-fs"
     }
   ]
 }
