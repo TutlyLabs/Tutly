@@ -1,3 +1,5 @@
+import VSCodeEditor from "./vscode-editor";
+
 export default async function VSCodePage({
   searchParams
 }: {
@@ -21,25 +23,5 @@ export default async function VSCodePage({
     ? `/vscode/index.html?${queryString}`
     : "/vscode/index.html";
 
-  return (
-    <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        overflow: "hidden",
-        margin: 0,
-        padding: 0,
-      }}
-    >
-      <iframe
-        src={iframeSrc}
-        style={{
-          width: "100%",
-          height: "100%",
-          border: "none",
-        }}
-        allow="clipboard-read; clipboard-write"
-      />
-    </div>
-  );
+  return <VSCodeEditor iframeSrc={iframeSrc} />;
 }

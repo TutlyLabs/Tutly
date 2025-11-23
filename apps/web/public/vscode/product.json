@@ -28,13 +28,13 @@
       "workbench.layoutControl.type"
     ],
     "extensionEnabledApiProposals": {
-      "tutly.fsrelay": [
+      "tutly.git-fs": [
         "fileSearchProvider",
         "textSearchProvider"
       ]
     },
     "extensionKind": {
-      "tutly.fsrelay": ["ui", "workspace"]
+      "tutly.git-fs": ["ui", "workspace"]
     }
   },
   "configurationDefaults": {

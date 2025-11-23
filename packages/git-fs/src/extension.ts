@@ -6,9 +6,17 @@ import { GitContext } from './types';
 let fileSystemProvider: GitFileSystemProvider | null = null;
 let apiClient: GitApiClient | null = null;
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('tutlyfs');
   let assignmentId = config.get<string>('assignmentId');
+
+  // Try to get from custom command if not in config
+  if (!assignmentId) {
+    try {
+      assignmentId = await vscode.commands.executeCommand<string>('tutlyfs.getAssignmentId');
+    } catch (e) {
+    }
+  }
 
   // Prompt for assignmentId if not configured
   if (!assignmentId) {
@@ -25,7 +33,8 @@ export function activate(context: vscode.ExtensionContext) {
         }, async () => {
           initializeFileSystem({ assignmentId: input, submissionId: '', type: 'TEMPLATE' }, context);
           await new Promise(resolve => setTimeout(resolve, 1500));
-          vscode.window.showInformationMessage('Tutly FS Ready');
+          vscode.window.setStatusBarMessage('$(check) Tutly Environment Ready', 5000);
+          vscode.commands.executeCommand('tutlyfs.onReady');
         });
       } else {
         vscode.window.showErrorMessage('Tutly FS: Assignment ID required');
@@ -39,9 +48,24 @@ export function activate(context: vscode.ExtensionContext) {
     }, async () => {
       initializeFileSystem({ assignmentId: assignmentId!, submissionId: '', type: 'TEMPLATE' }, context);
       await new Promise(resolve => setTimeout(resolve, 1500));
-      vscode.window.showInformationMessage('Tutly FS Ready');
+      vscode.window.setStatusBarMessage('$(check) Tutly Environment Ready', 5000);
+      vscode.commands.executeCommand('tutlyfs.onReady');
     });
   }
+
+  // Register Run Command
+  context.subscriptions.push(
+    vscode.commands.registerCommand('git-fs.run', () => {
+      vscode.window.showInformationMessage('Run functionality is not implemented yet.');
+    })
+  );
+
+  // Register Submit Command
+  context.subscriptions.push(
+    vscode.commands.registerCommand('git-fs.submit', () => {
+      vscode.window.showInformationMessage('Submit functionality is not implemented yet.');
+    })
+  );
 }
 
 const initializeFileSystem = (ctx: GitContext, context: vscode.ExtensionContext) => {
@@ -74,6 +98,12 @@ const initializeFileSystem = (ctx: GitContext, context: vscode.ExtensionContext)
     });
   }
 
+  // Create Status Bar Item
+  const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+  statusBarItem.text = `$(repo) Assignment: ${ctx.assignmentId}`;
+  statusBarItem.tooltip = "Tutly Assignment Active";
+  statusBarItem.show();
+  context.subscriptions.push(statusBarItem);
 
 };
 

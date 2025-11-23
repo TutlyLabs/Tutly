@@ -13,6 +13,16 @@
   "activationEvents": ["*"],
   "browser": "./dist/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "command": "git-fs.run",
+        "title": "Run Code"
+      },
+      {
+        "command": "git-fs.submit",
+        "title": "Submit Code"
+      }
+    ],
     "configuration": {
       "title": "Tutly FS",
       "properties": {
