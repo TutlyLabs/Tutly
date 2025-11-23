@@ -2,21 +2,22 @@ import * as vscode from 'vscode';
 import { GitFileSystemProvider } from './gitFileSystemProvider';
 import { GitApiClient } from './apiClient';
 import { GitContext } from './types';
+import { TutlyViewProvider } from './tutlyViewProvider';
 
 let fileSystemProvider: GitFileSystemProvider | null = null;
 let apiClient: GitApiClient | null = null;
 
 export async function activate(context: vscode.ExtensionContext) {
-  const config = vscode.workspace.getConfiguration('tutlyfs');
-  let assignmentId = config.get<string>('assignmentId');
+  const provider = new TutlyViewProvider(context.extensionUri);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(TutlyViewProvider.viewType, provider)
+  );
 
-  // Try to get from custom command if not in config
-  if (!assignmentId) {
-    try {
-      assignmentId = await vscode.commands.executeCommand<string>('tutlyfs.getAssignmentId');
-    } catch (e) {
-    }
-  }
+  setTimeout(() => {
+    vscode.commands.executeCommand('tutly.webview.focus');
+  }, 1000);
+
+  let assignmentId = await vscode.commands.executeCommand<string>('tutlyfs.getAssignmentId');
 
   // Prompt for assignmentId if not configured
   if (!assignmentId) {

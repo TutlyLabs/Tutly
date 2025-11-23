@@ -65,6 +65,7 @@ try {
           return (
             !relativePath.includes("node_modules") &&
             !relativePath.includes("src") &&
+            !relativePath.includes("ui") &&
             !relativePath.includes(".gitignore")
           );
         },

@@ -6,12 +6,6 @@
     "dataFolderName": ".tutly-vscode-web",
     "version": "1.75.0",
     "quality": "stable",
-    "licenseName": "MIT",
-    "extensionsGallery": {
-      "serviceUrl": "https://open-vsx.org/vscode/gallery",
-      "itemUrl": "https://open-vsx.org/vscode/item",
-      "resourceUrlTemplate": "https://openvsxorg.blob.core.windows.net/resources/{publisher}/{name}/{version}/{path}"
-    },
     "commonlyUsedSettings": [
       "files.autoSave", 
       "editor.fontSize", 
@@ -35,7 +29,12 @@
     },
     "extensionKind": {
       "tutly.git-fs": ["ui", "workspace"]
-    }
+    },
+    "hiddenViewDescriptors": [
+      "workbench.view.extensions",
+      "workbench.view.debug",
+      "workbench.view.extension.test"
+    ]
   },
   "configurationDefaults": {
     "explorer.sortOrder": "default",
@@ -62,10 +61,8 @@
     "workbench.editor.revealIfOpen": true,
     "workbench.tips.enabled": false,
     "workbench.editor.enablePreview": false,
-    "workbench.layoutControl.type": "menu",
     "workbench.tree.renderIndentGuides": "none",
     "workbench.colorTheme": "Default Dark Modern",
-    "window.titleBarStyle": "custom",
-    "window.menuBarVisibility": "compact"
+    "workbench.activityBar.visible": true
   }
 }
