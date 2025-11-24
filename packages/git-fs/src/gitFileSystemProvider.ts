@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { GitApiClient } from './apiClient';
+import { GitApiClient } from './api';
 import { GitContext, GitFileEntry } from './types';
 import { Buffer } from 'buffer';
 
@@ -9,7 +9,7 @@ export class GitFileSystemProvider implements vscode.FileSystemProvider {
 
   private apiClient: GitApiClient;
   private context: GitContext;
-  
+
   // Cache for performance
   private cache = new Map<string, { data: any; timestamp: number }>();
   private readonly CACHE_TTL = 30000; // 30 seconds
@@ -18,7 +18,7 @@ export class GitFileSystemProvider implements vscode.FileSystemProvider {
     this.apiClient = apiClient;
     this.context = context;
   }
-  
+
   /**
    * Clear the cache
    */
@@ -59,7 +59,7 @@ export class GitFileSystemProvider implements vscode.FileSystemProvider {
    * Watch for file changes (no-op for read-only FS)
    */
   watch(): vscode.Disposable {
-    return new vscode.Disposable(() => {});
+    return new vscode.Disposable(() => { });
   }
 
   /**
@@ -67,7 +67,7 @@ export class GitFileSystemProvider implements vscode.FileSystemProvider {
    */
   async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
     const path = this.getPath(uri);
-    
+
     try {
       const contents = await this.getCached(
         `contents:${path}`,
@@ -101,7 +101,7 @@ export class GitFileSystemProvider implements vscode.FileSystemProvider {
    */
   async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
     const path = this.getPath(uri);
-    
+
     try {
       const contents = await this.getCached(
         `contents:${path}`,
@@ -113,8 +113,8 @@ export class GitFileSystemProvider implements vscode.FileSystemProvider {
       }
 
       return contents.map((entry: GitFileEntry) => {
-        const type = entry.type === 'dir' 
-          ? vscode.FileType.Directory 
+        const type = entry.type === 'dir'
+          ? vscode.FileType.Directory
           : vscode.FileType.File;
         return [entry.name, type];
       });
@@ -128,7 +128,7 @@ export class GitFileSystemProvider implements vscode.FileSystemProvider {
    */
   async readFile(uri: vscode.Uri): Promise<Uint8Array> {
     const path = this.getPath(uri);
-    
+
     try {
       const contents = await this.getCached(
         `file:${path}`,

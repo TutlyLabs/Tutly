@@ -72,14 +72,18 @@ try {
       });
       copiedExtensions.push(extension.name);
     } else {
-      console.warn(`⚠️  ${extension.name} extension not found at ${extension.sourcePath}, skipping...`);
+      console.warn(
+        `⚠️  ${extension.name} extension not found at ${extension.sourcePath}, skipping...`,
+      );
     }
   }
 
   // Generate extensions.json
   const extensionsJsonPath = join(publicVscodeDir, "extensions.json");
   writeFileSync(extensionsJsonPath, JSON.stringify(copiedExtensions, null, 2));
-  console.log(`📄 Generated extensions.json with ${copiedExtensions.length} extensions`);
+  console.log(
+    `📄 Generated extensions.json with ${copiedExtensions.length} extensions`,
+  );
 
   console.log("✅ VSCode assets copied successfully!");
 } catch (error) {

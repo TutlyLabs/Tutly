@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { AssignmentApiClient, AssignmentDetails } from './api';
 
 export class TutlyViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'tutly.webview';
@@ -12,12 +13,12 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
   ) {
     webviewView.webview.options = {
       enableScripts: true,
-      localResourceRoots: [this._extensionUri],
+      localResourceRoots: [vscode.Uri.joinPath(this._extensionUri, 'dist')],
     };
 
     webviewView.webview.html = await this._getHtmlForWebview(webviewView.webview);
 
-    // Handle messages from the webview
+    // Handle messages from the webview (for notifications only)
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
         case 'info':
@@ -26,54 +27,33 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
         case 'error':
           vscode.window.showErrorMessage(data.message);
           break;
-        case 'fetchAssignment':
-          try {
-            const assignmentData = await this._fetchAssignment(data.assignmentId, data.authToken);
-            webviewView.webview.postMessage({
-              type: 'assignmentData',
-              data: assignmentData,
-            });
-          } catch (error) {
-            webviewView.webview.postMessage({
-              type: 'assignmentError',
-              error: error instanceof Error ? error.message : 'Failed to fetch assignment'
-            });
-          }
-          break;
       }
     });
   }
 
-  private async _fetchAssignment(assignmentId: string, authToken: string) {
-    const webOrigin = await vscode.commands.executeCommand<string>('tutlyfs.getWebOrigin');
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
-
-    const response = await fetch(
-      `${webOrigin}/api/trpc/assignments.getAssignmentDetailsForSubmission?input=${encodeURIComponent(JSON.stringify({ id: assignmentId }))}`,
-      {
-        headers,
-        credentials: 'include'
+  private async _fetchAssignmentData(
+    assignmentId: string,
+    authToken: string
+  ): Promise<AssignmentDetails | null> {
+    try {
+      let webOrigin: string | undefined;
+      try {
+        webOrigin = await vscode.commands.executeCommand<string>('tutlyfs.getWebOrigin');
+      } catch (err) {
+        webOrigin = undefined;
       }
-    );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (!webOrigin) {
+        console.error('Tutly web origin is not configured');
+        return null;
+      }
+
+      const client = new AssignmentApiClient(webOrigin, authToken);
+      return await client.getAssignmentDetails(assignmentId, webOrigin, authToken);
+    } catch (error) {
+      console.error('Failed to fetch assignment data:', error);
+      return null;
     }
-
-    const data = await response.json();
-
-    if (data.result?.data?.error) {
-      throw new Error(data.result.data.error);
-    }
-
-    return data.result?.data;
   }
 
   private async _getHtmlForWebview(webview: vscode.Webview) {
@@ -98,11 +78,33 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
       console.error('Failed to read webview assets:', error);
     }
 
-    const assignmentId = await vscode.commands.executeCommand<string>('tutlyfs.getAssignmentId');
-    const authToken = await vscode.commands.executeCommand<string>('tutlyfs.getAuthToken');
+    // Get assignment ID and auth token
+    let assignmentId = '';
+    let authToken = '';
+    try {
+      assignmentId = (await vscode.commands.executeCommand<string>('tutlyfs.getAssignmentId')) ?? '';
+    } catch (err) {
+      assignmentId = '';
+    }
+
+    try {
+      authToken = (await vscode.commands.executeCommand<string>('tutlyfs.getAuthToken')) ?? '';
+    } catch (err) {
+      authToken = '';
+    }
+
+    // Fetch assignment data upfront
+    let assignmentData: AssignmentDetails | null = null;
+    if (assignmentId) {
+      assignmentData = await this._fetchAssignmentData(assignmentId, authToken);
+    }
 
     // Use a nonce to only allow specific scripts to be run
     const nonce = getNonce();
+
+    const assignmentDataJson = assignmentData
+      ? JSON.stringify(assignmentData).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
+      : 'null';
 
     return `<!DOCTYPE html>
       <html lang="en">
@@ -117,7 +119,7 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
         <div id="root"></div>
         <script nonce="${nonce}">
           window.ASSIGNMENT_ID = "${assignmentId}";
-          window.AUTH_TOKEN = "${authToken}";
+          window.ASSIGNMENT_DATA = ${assignmentDataJson};
           window.vscode = acquireVsCodeApi();
           ${jsContent}
         </script>

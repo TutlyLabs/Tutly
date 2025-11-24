@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { GitFileSystemProvider } from './gitFileSystemProvider';
-import { GitApiClient } from './apiClient';
+import { GitApiClient } from './api';
 import { GitContext } from './types';
 import { TutlyViewProvider } from './tutlyViewProvider';
 
@@ -13,11 +13,19 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.registerWebviewViewProvider(TutlyViewProvider.viewType, provider)
   );
 
-  setTimeout(() => {
-    vscode.commands.executeCommand('tutly.webview.focus');
+  setTimeout(async () => {
+    try {
+      await vscode.commands.executeCommand('tutly.webview.focus');
+    } catch (err) {
+    }
   }, 1000);
 
-  let assignmentId = await vscode.commands.executeCommand<string>('tutlyfs.getAssignmentId');
+  let assignmentId: string | undefined;
+  try {
+    assignmentId = await vscode.commands.executeCommand<string>('tutlyfs.getAssignmentId');
+  } catch (err) {
+    assignmentId = undefined;
+  }
 
   // Prompt for assignmentId if not configured
   if (!assignmentId) {
@@ -35,7 +43,10 @@ export async function activate(context: vscode.ExtensionContext) {
           initializeFileSystem({ assignmentId: input, submissionId: '', type: 'TEMPLATE' }, context);
           await new Promise(resolve => setTimeout(resolve, 1500));
           vscode.window.setStatusBarMessage('$(check) Tutly Environment Ready', 5000);
-          vscode.commands.executeCommand('tutlyfs.onReady');
+          try {
+            await vscode.commands.executeCommand('tutlyfs.onReady');
+          } catch (err) {
+          }
         });
       } else {
         vscode.window.showErrorMessage('Tutly FS: Assignment ID required');
@@ -50,7 +61,11 @@ export async function activate(context: vscode.ExtensionContext) {
       initializeFileSystem({ assignmentId: assignmentId!, submissionId: '', type: 'TEMPLATE' }, context);
       await new Promise(resolve => setTimeout(resolve, 1500));
       vscode.window.setStatusBarMessage('$(check) Tutly Environment Ready', 5000);
-      vscode.commands.executeCommand('tutlyfs.onReady');
+      try {
+        await vscode.commands.executeCommand('tutlyfs.onReady');
+      } catch (err) {
+        // noop
+      }
     });
   }
 
@@ -69,7 +84,9 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 }
 
-const initializeFileSystem = (ctx: GitContext, context: vscode.ExtensionContext) => {
+const initializeFileSystem = async (ctx: GitContext, context: vscode.ExtensionContext) => {
+  await closeAllTutlyEditors();
+
   apiClient = new GitApiClient();
 
   // Initialize file system provider
@@ -109,7 +126,22 @@ const initializeFileSystem = (ctx: GitContext, context: vscode.ExtensionContext)
 };
 
 
-export function deactivate() {
+async function closeAllTutlyEditors() {
+  const tabGroups = vscode.window.tabGroups.all;
+  for (const group of tabGroups) {
+    for (const tab of group.tabs) {
+      if (tab.input instanceof vscode.TabInputText) {
+        if (tab.input.uri.scheme === 'tutlyfs') {
+          await vscode.window.tabGroups.close(tab);
+        }
+      }
+    }
+  }
+}
+
+export async function deactivate() {
+  await closeAllTutlyEditors();
+
   fileSystemProvider = null;
   apiClient = null;
 }

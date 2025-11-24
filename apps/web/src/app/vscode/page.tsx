@@ -1,9 +1,9 @@
 import VSCodeEditor from "./vscode-editor";
 
 export default async function VSCodePage({
-  searchParams
+  searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const resolvedParams = await searchParams;
   const params = new URLSearchParams();

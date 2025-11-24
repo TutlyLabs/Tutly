@@ -8,24 +8,18 @@ import { auth } from "@/server/auth";
 import { getServerSession } from "@/lib/auth";
 
 /**
- * Session validation for API requests using bearer token
+ * Session validation for API requests
+ * Supports multiple authentication methods: Bearer tokens, cookies, etc.
  */
 export const getSessionFromRequest = async (req: NextRequest) => {
-  const authHeader = req.headers.get("authorization");
-
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
-  }
-
   try {
-    // Verify the token using Better Auth
     const session = await auth.api.getSession({
       headers: req.headers,
     });
 
     return session?.user ? session : null;
   } catch (error) {
-    console.error("Token verification failed:", error);
+    console.error("Session verification failed:", error);
     return null;
   }
 };

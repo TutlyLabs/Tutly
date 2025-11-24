@@ -25,6 +25,18 @@
         "title": "Submit Code"
       }
     ],
+    "keybindings": [
+      {
+        "command": "git-fs.run",
+        "key": "ctrl+alt+shift+r",
+        "mac": "cmd+alt+shift+r"
+      },
+      {
+        "command": "git-fs.submit",
+        "key": "ctrl+alt+shift+s",
+        "mac": "cmd+alt+shift+s"
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -80,6 +92,7 @@
     "build-webview": "webpack --config webpack-react.config.js",
     "dev": "webpack --mode development --watch",
     "dev-webview": "webpack --config webpack-react.config.js --watch",
+    "watch": "npm-run-all --parallel dev dev-webview",
     "package": "pnpm run build"
   },
   "devDependencies": {
@@ -97,6 +110,7 @@
     "css-loader": "^6.8.1",
     "css-minimizer-webpack-plugin": "^5.0.1",
     "mini-css-extract-plugin": "^2.7.6",
+    "npm-run-all": "^4.1.5",
     "postcss": "^8.5.3",
     "postcss-loader": "^7.3.3",
     "style-loader": "^3.3.3",

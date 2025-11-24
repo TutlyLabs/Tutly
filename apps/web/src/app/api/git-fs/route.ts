@@ -42,12 +42,12 @@ export async function GET(req: NextRequest) {
           enrolledUsers: {
             where: {
               user: {
-                role: "INSTRUCTOR"
-              }
-            }
-          }
-        }
-      }
+                role: "INSTRUCTOR",
+              },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -78,9 +78,10 @@ export async function GET(req: NextRequest) {
   let repoPath: string | null = null;
 
   // Check if user is enrolled as instructor
-  const isInstructor = assignment.course?.enrolledUsers?.some(
-    enrolled => enrolled.username === session.user.username
-  ) || false;
+  const isInstructor =
+    assignment.course?.enrolledUsers?.some(
+      (enrolled) => enrolled.username === session.user.username,
+    ) || false;
 
   if (isInstructor) {
     // Instructor gets template repo
@@ -90,23 +91,27 @@ export async function GET(req: NextRequest) {
     const submission = await db.submission.findFirst({
       where: {
         assignment: {
-          id: assignmentId
+          id: assignmentId,
         },
         enrolledUser: {
           user: {
-            id: session.user.id
-          }
-        }
+            id: session.user.id,
+          },
+        },
       },
       select: { gitRepoPath: true },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
     repoPath = submission?.gitRepoPath || null;
   }
 
   if (!repoPath) {
     return NextResponse.json(
-      { error: isInstructor ? "Template repository not found" : "No submission found" },
+      {
+        error: isInstructor
+          ? "Template repository not found"
+          : "No submission found",
+      },
       { status: 404 },
     );
   }

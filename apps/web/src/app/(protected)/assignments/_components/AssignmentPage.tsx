@@ -291,10 +291,11 @@ export default function AssignmentPage({
         <div className="flex items-center justify-center gap-4">
           {assignment?.dueDate != null && (
             <div
-              className={`rounded p-1 px-2 text-white ${new Date(assignment?.dueDate) > new Date()
-                ? "bg-primary-600"
-                : "bg-secondary-500"
-                }`}
+              className={`rounded p-1 px-2 text-white ${
+                new Date(assignment?.dueDate) > new Date()
+                  ? "bg-primary-600"
+                  : "bg-secondary-500"
+              }`}
             >
               Last Date : {assignment?.dueDate.toISOString().split("T")[0]}
             </div>
@@ -1279,7 +1280,9 @@ const GitTemplateSection = ({ assignment }: { assignment: any }) => {
         ) : (
           <div className="space-y-4">
             <div>
-              <div className="mb-2 text-xs font-medium text-gray-400">Clone & Work Locally</div>
+              <div className="mb-2 text-xs font-medium text-gray-400">
+                Clone & Work Locally
+              </div>
               <div className="rounded-lg bg-slate-900/50 p-3">
                 <div className="flex items-center justify-between gap-2">
                   <code className="flex-1 overflow-x-auto text-xs text-green-400">
@@ -1305,14 +1308,16 @@ const GitTemplateSection = ({ assignment }: { assignment: any }) => {
             </div>
 
             <div>
-              <div className="mb-2 text-xs font-medium text-gray-400">View in VSCode</div>
+              <div className="mb-2 text-xs font-medium text-gray-400">
+                View in VSCode
+              </div>
               <div className="rounded-lg border border-slate-700 bg-slate-900/30 p-3">
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => {
                     const params = new URLSearchParams({
-                      assignmentId: assignment.id
+                      assignmentId: assignment.id,
                     });
                     const url = `/vscode/?${params.toString()}`;
                     window.open(url, "_blank");
@@ -1464,7 +1469,9 @@ const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
         ) : (
           <div className="space-y-4">
             <div>
-              <div className="mb-2 text-xs font-medium text-gray-400">Clone & Work Locally</div>
+              <div className="mb-2 text-xs font-medium text-gray-400">
+                Clone & Work Locally
+              </div>
               <div className="rounded-lg bg-slate-900/50 p-3">
                 <div className="flex items-center justify-between gap-2">
                   <code className="flex-1 overflow-x-auto text-xs text-green-400">
@@ -1523,7 +1530,7 @@ const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
                       variant="outline"
                       onClick={() => {
                         const params = new URLSearchParams({
-                          assignmentId: assignment.id
+                          assignmentId: assignment.id,
                         });
                         const url = `/vscode/?${params.toString()}`;
                         window.open(url, "_blank");

@@ -11,57 +11,35 @@ export function App() {
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [assignmentId, setAssignmentId] = useState<string | null>(null);
 
   useEffect(() => {
-    const id = (window as any).ASSIGNMENT_ID;
-    const authToken = (window as any).AUTH_TOKEN;
-    const vscode = (window as any).vscode;
+    const assignmentId = (window as any).ASSIGNMENT_ID;
+    const assignmentData = (window as any).ASSIGNMENT_DATA;
 
-    if (!id) {
+    if (!assignmentId) {
       setError("No assignment ID provided");
       setLoading(false);
       return;
     }
 
-    if (!vscode) {
-      setError("VSCode API not available");
+    if (!assignmentData) {
+      setError("Failed to load assignment data");
       setLoading(false);
       return;
     }
 
-    setAssignmentId(id);
+    const assignmentInfo = assignmentData?.assignment;
+    if (assignmentInfo) {
+      setAssignment({
+        id: assignmentInfo.id,
+        title: assignmentInfo.title,
+        details: assignmentInfo.details,
+      });
+    } else {
+      setError("Assignment not found");
+    }
 
-    window.addEventListener('message', (event) => {
-      const message = event.data;
-
-      switch (message.type) {
-        case 'assignmentData':
-          const assignmentData = message.data?.assignment;
-          if (assignmentData) {
-            setAssignment({
-              id: assignmentData.id,
-              title: assignmentData.title,
-              details: assignmentData.details,
-            });
-          } else {
-            setError("Assignment not found");
-          }
-          setLoading(false);
-          break;
-
-        case 'assignmentError':
-          setError(message.error || "Failed to fetch assignment");
-          setLoading(false);
-          break;
-      }
-    });
-
-    vscode.postMessage({
-      type: 'fetchAssignment',
-      assignmentId: id,
-      authToken: authToken
-    });
+    setLoading(false);
   }, []);
 
   if (loading) {
@@ -105,9 +83,15 @@ export function App() {
           <div className="h-1 w-20 bg-blue-500 rounded"></div>
         </div>
 
-        <div className="bg-[#252526] rounded-lg p-6 shadow-lg">
-          <MarkdownPreview content={assignment.details} />
-        </div>
+        {assignment.details ? (
+          <div className="bg-[#252526] rounded-lg p-6 shadow-lg">
+            <MarkdownPreview content={assignment.details} />
+          </div>
+        ) : (
+          <div className="bg-[#252526] rounded-lg p-6 shadow-lg text-center text-gray-400">
+            <p>No assignment details available.</p>
+          </div>
+        )}
       </div>
     </div>
   );

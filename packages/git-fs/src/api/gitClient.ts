@@ -1,7 +1,7 @@
-import { GitContext, GitContentsResponse } from './types';
+import { GitContext, GitContentsResponse } from '../types';
 
 export class GitApiClient {
-  constructor() {}
+  constructor() { }
 
   async getContents(
     context: GitContext,
