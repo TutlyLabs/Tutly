@@ -122,6 +122,17 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@tiptap/extension-highlight": "^3.6.6",
+    "@tiptap/extension-image": "^3.6.6",
+    "@tiptap/extension-list": "^3.6.6",
+    "@tiptap/extension-subscript": "^3.6.6",
+    "@tiptap/extension-superscript": "^3.6.6",
+    "@tiptap/extension-task-item": "^3.11.0",
+    "@tiptap/extension-task-list": "^3.11.0",
+    "@tiptap/extension-text-align": "^3.6.6",
+    "@tiptap/extension-typography": "^3.6.6",
+    "@tiptap/html": "^3.11.0",
+    "@tiptap/starter-kit": "^3.6.6",
     "@uiw/react-md-editor": "^4.0.8",
     "buffer": "^6.0.3",
     "react": "^19.0.0",

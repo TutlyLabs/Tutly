@@ -5,6 +5,7 @@ export interface AssignmentDetails {
     id: string;
     title: string;
     details: string;
+    detailsJson?: any;
   } | null;
   mentorDetails?: {
     mentor: {

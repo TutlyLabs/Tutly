@@ -24,10 +24,7 @@ export default function VSCodeEditor({ iframeSrc }: { iframeSrc: string }) {
   const triggerCommand = (command: "run" | "submit") => {
     const iframe = iframeRef.current;
     if (!iframe?.contentWindow) return;
-    iframe.contentWindow.postMessage(
-      { type: "TRIGGER_COMMAND", command },
-      "*"
-    );
+    iframe.contentWindow.postMessage({ type: "TRIGGER_COMMAND", command }, "*");
   };
 
   return (

@@ -51,7 +51,7 @@ require(["vs/workbench/workbench.web.main"], function (workbench) {
   window.addEventListener("message", (event) => {
     if (event.data?.type === "TRIGGER_COMMAND") {
       const command = event.data.command;
-      const workbenchEl = document.querySelector('.monaco-workbench');
+      const workbenchEl = document.querySelector(".monaco-workbench");
       if (workbenchEl) {
         const isMac = navigator.platform.toUpperCase().includes("MAC");
         const char = command === "run" ? "r" : "s";

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { MarkdownPreview } from "./components/MarkdownPreview";
+import { generateAssignmentHtml } from "../src/utils/tiptap";
 
 interface Assignment {
   id: string;
   title: string;
   details: string;
+  detailsJson?: any;
 }
 
 export function App() {
@@ -34,6 +36,7 @@ export function App() {
         id: assignmentInfo.id,
         title: assignmentInfo.title,
         details: assignmentInfo.details,
+        detailsJson: assignmentInfo.detailsJson,
       });
     } else {
       setError("Assignment not found");
@@ -83,12 +86,17 @@ export function App() {
           <div className="h-1 w-20 bg-blue-500 rounded"></div>
         </div>
 
-        {assignment.details ? (
-          <div className="bg-[#252526] rounded-lg p-6 shadow-lg">
-            <MarkdownPreview content={assignment.details} />
-          </div>
+        {/* Assignment Details */}
+        {assignment.detailsJson ? (
+          <div
+            dangerouslySetInnerHTML={{ __html: generateAssignmentHtml(assignment.detailsJson) }}
+          />
+        ) : assignment.details ? (
+          <MarkdownPreview
+            content={assignment.details}
+          />
         ) : (
-          <div className="bg-[#252526] rounded-lg p-6 shadow-lg text-center text-gray-400">
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground bg-muted/10 rounded-lg border border-border/50">
             <p>No assignment details available.</p>
           </div>
         )}
