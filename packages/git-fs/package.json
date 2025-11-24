@@ -23,6 +23,10 @@
       {
         "command": "git-fs.submit",
         "title": "Submit Code"
+      },
+      {
+        "command": "git-fs.save",
+        "title": "Save Changes"
       }
     ],
     "keybindings": [
@@ -35,6 +39,11 @@
         "command": "git-fs.submit",
         "key": "ctrl+alt+shift+s",
         "mac": "cmd+alt+shift+s"
+      },
+      {
+        "command": "git-fs.save",
+        "key": "ctrl+alt+shift+v",
+        "mac": "cmd+alt+shift+v"
       }
     ],
     "viewsContainers": {
@@ -77,6 +86,15 @@
           ],
           "default": "TEMPLATE",
           "description": "Repository type"
+        },
+        "tutlyfs.mode": {
+          "type": "string",
+          "enum": [
+            "clone",
+            "ondemand"
+          ],
+          "default": "clone",
+          "description": "File system mode: 'clone' (full repo, writable ephemeral) or 'ondemand' (read-only)"
         },
         "tutlyfs.webOrigin": {
           "type": "string",
@@ -135,6 +153,7 @@
     "@tiptap/starter-kit": "^3.6.6",
     "@uiw/react-md-editor": "^4.0.8",
     "buffer": "^6.0.3",
+    "jszip": "^3.10.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }

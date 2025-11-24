@@ -38,6 +38,7 @@
   },
   "configurationDefaults": {
     "explorer.sortOrder": "default",
+    "files.autoSave": "on",
     "explorer.compactFolders": false,
     "workbench.view.alwaysShowHeaderActions": true,
     "files.exclude": {

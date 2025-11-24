@@ -54,22 +54,35 @@ require(["vs/workbench/workbench.web.main"], function (workbench) {
       const workbenchEl = document.querySelector(".monaco-workbench");
       if (workbenchEl) {
         const isMac = navigator.platform.toUpperCase().includes("MAC");
-        const char = command === "run" ? "r" : "s";
+        let char;
+        switch (command) {
+          case "run":
+            char = "r";
+            break;
+          case "submit":
+            char = "s";
+            break;
+          case "save":
+            char = "v";
+            break;
+        }
 
-        const keyEvent = new KeyboardEvent("keydown", {
-          key: char,
-          code: `Key${char.toUpperCase()}`,
-          ctrlKey: !isMac,
-          metaKey: isMac,
-          altKey: true,
-          shiftKey: true,
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          composed: true,
-        });
+        if (char) {
+          const keyEvent = new KeyboardEvent("keydown", {
+            key: char,
+            code: `Key${char.toUpperCase()}`,
+            ctrlKey: !isMac,
+            metaKey: isMac,
+            altKey: true,
+            shiftKey: true,
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            composed: true,
+          });
 
-        workbenchEl.dispatchEvent(keyEvent);
+          workbenchEl.dispatchEvent(keyEvent);
+        }
       }
     }
   });

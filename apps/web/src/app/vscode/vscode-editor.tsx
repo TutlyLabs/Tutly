@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Send } from "lucide-react";
+import { Play, Send, Save } from "lucide-react";
 import { VSCodeLoadingScreen } from "./loading-screen";
 
 export default function VSCodeEditor({ iframeSrc }: { iframeSrc: string }) {
@@ -21,7 +21,7 @@ export default function VSCodeEditor({ iframeSrc }: { iframeSrc: string }) {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  const triggerCommand = (command: "run" | "submit") => {
+  const triggerCommand = (command: "run" | "submit" | "save") => {
     const iframe = iframeRef.current;
     if (!iframe?.contentWindow) return;
     iframe.contentWindow.postMessage({ type: "TRIGGER_COMMAND", command }, "*");
@@ -62,6 +62,15 @@ export default function VSCodeEditor({ iframeSrc }: { iframeSrc: string }) {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => triggerCommand("save")}
+            className="h-7 gap-1.5 px-3 text-xs text-[#cccccc] hover:bg-[#2b2b2b] hover:text-white"
+          >
+            <Save className="h-3.5 w-3.5" />
+            Save
+          </Button>
           <Button
             variant="ghost"
             size="sm"

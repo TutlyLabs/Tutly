@@ -1,11 +1,14 @@
 import * as vscode from 'vscode';
-import { GitFileSystemProvider } from './gitFileSystemProvider';
+// import { GitFileSystemProvider } from './gitFileSystemProvider';
 import { GitApiClient } from './api';
 import { GitContext } from './types';
 import { TutlyViewProvider } from './tutlyViewProvider';
+import { MemFileSystemProvider } from './memFileSystemProvider';
+import { SourceControlProvider } from './sourceControlProvider';
 
-let fileSystemProvider: GitFileSystemProvider | null = null;
+let fileSystemProvider: MemFileSystemProvider | null = null;
 let apiClient: GitApiClient | null = null;
+let sourceControlProvider: SourceControlProvider | null = null;
 
 export async function activate(context: vscode.ExtensionContext) {
   const provider = new TutlyViewProvider(context.extensionUri);
@@ -82,6 +85,23 @@ export async function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage('Submit functionality is not implemented yet.');
     })
   );
+
+  // Register Save Command
+  context.subscriptions.push(
+    vscode.commands.registerCommand('git-fs.save', async () => {
+      if (!sourceControlProvider) {
+        vscode.window.showErrorMessage('Source control not initialized');
+        return;
+      }
+
+      const message = sourceControlProvider['sourceControl'].inputBox.value;
+      try {
+        await sourceControlProvider.commit(message);
+      } catch (error) {
+        // Error already shown in commit method
+      }
+    })
+  );
 }
 
 const initializeFileSystem = async (ctx: GitContext, context: vscode.ExtensionContext) => {
@@ -89,17 +109,38 @@ const initializeFileSystem = async (ctx: GitContext, context: vscode.ExtensionCo
 
   apiClient = new GitApiClient();
 
-  // Initialize file system provider
-  fileSystemProvider = new GitFileSystemProvider(apiClient, ctx);
+  vscode.window.withProgress({
+    location: vscode.ProgressLocation.Notification,
+    title: "Cloning repository...",
+    cancellable: false
+  }, async () => {
+    try {
+      const archive = await apiClient!.getArchive(ctx);
+      const memFs = new MemFileSystemProvider(apiClient!, ctx);
+      await memFs.initialize(archive);
 
-  // Register the file system provider
-  context.subscriptions.push(
-    vscode.workspace.registerFileSystemProvider('tutlyfs', fileSystemProvider, {
-      isCaseSensitive: true,
-      isReadonly: true,
-    })
-  );
+      // Create and set up source control provider
+      sourceControlProvider = new SourceControlProvider(apiClient!, ctx);
+      memFs.setSourceControlProvider(sourceControlProvider);
+      context.subscriptions.push(sourceControlProvider);
 
+      fileSystemProvider = memFs;
+
+      context.subscriptions.push(
+        vscode.workspace.registerFileSystemProvider('tutlyfs', fileSystemProvider, {
+          isCaseSensitive: true,
+          isReadonly: false, // Writable (in-memory)
+        })
+      );
+
+      setupWorkspace(ctx, context);
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to clone repository: ${error}`);
+    }
+  });
+};
+
+const setupWorkspace = (ctx: GitContext, context: vscode.ExtensionContext) => {
   // Auto-open the workspace
   const workspaceUri = vscode.Uri.parse('tutlyfs:/');
 
@@ -122,7 +163,6 @@ const initializeFileSystem = async (ctx: GitContext, context: vscode.ExtensionCo
   statusBarItem.tooltip = "Tutly Assignment Active";
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
-
 };
 
 
