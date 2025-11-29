@@ -298,6 +298,9 @@ importers:
       express:
         specifier: ^4.18.3
         version: 4.21.2
+      fsrelay:
+        specifier: workspace:*
+        version: link:../../packages/fsrelay
       serve-static:
         specifier: ^1.15.0
         version: 1.16.2

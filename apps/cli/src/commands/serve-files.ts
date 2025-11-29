@@ -32,7 +32,7 @@ export default class ServeFiles extends Command {
     port: flags.integer({
       char: "p",
       description: "Port to run the server on",
-      default: 3001,
+      default: 4242,
     }),
     host: flags.string({
       description: "Host to bind the server to",
@@ -96,14 +96,10 @@ export default class ServeFiles extends Command {
     // Middleware
     this.app.use(
       cors({
-        origin: [
-          "http://localhost:3000",
-          "http://localhost:5173",
-          "http://localhost:8080",
-          "http://127.0.0.1:3000",
-          "http://127.0.0.1:8080",
-        ],
+        origin: true,
         credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "x-api-key"],
       }),
     );
     this.app.use(express.json({ limit: "50mb" }));

@@ -24,29 +24,29 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
 
     this._connecting = true;
     try {
-      console.log('🔌 Testing connection to file server...');
-      
+      console.log('Testing connection to file server...');
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
-      const response = await fetch('http://localhost:3001/api/health', {
+
+      const response = await fetch('http://localhost:4242/api/health', {
         headers: { 'x-api-key': 'tutly-dev-key' },
         signal: controller.signal
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         const health = await response.json();
         this._connected = true;
-        console.log('✅ Connected to file server', health);
+        console.log('Connected to file server', health);
       } else {
         throw new Error(`Server responded with ${response.status} ${response.statusText}`);
       }
     } catch (error) {
-      console.error('❌ Failed to connect to file server:', error);
+      console.error('Failed to connect to file server:', error);
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Connection timeout - Make sure Tutly server is running on localhost:3001');
+        throw new Error('Connection timeout - Make sure Tutly server is running on localhost:4242');
       }
       throw new Error(`Unable to connect to Tutly file server: ${error}`);
     } finally {
@@ -56,12 +56,12 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
 
   async apiRequest(path: string = '', retryCount: number = 0): Promise<ApiResponse> {
     await this.ensureConnected();
-    
-    // Clean and encode the path properly
+
+    // Clean the path (remove leading/trailing slashes)
     const cleanPath = path.replace(/^\/+/, '').replace(/\/+$/, '');
-    const url = `http://localhost:3001/api/files${cleanPath ? `/${encodeURIComponent(cleanPath)}` : ''}`;
-    console.log(`📡 API Request (attempt ${retryCount + 1}): ${url}`);
-    
+    const url = `http://localhost:4242/api/files${cleanPath ? `/${cleanPath}` : ''}`;
+    console.log(`API Request (attempt ${retryCount + 1}): ${url}`);
+
     try {
       const response = await fetch(url, {
         headers: { 'x-api-key': 'tutly-dev-key' },
@@ -92,12 +92,12 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-    console.log(`📊 stat called for: ${uri.path}`);
+    console.log(`stat called for: ${uri.path}`);
     const path = uri.path.substring(1);
-    
+
     try {
       const result = await this.apiRequest(path);
-      
+
       if (result.entries) {
         // Directory
         return {
@@ -122,16 +122,16 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-    console.log(`📁 readDirectory called for: ${uri.path}`);
+    console.log(`readDirectory called for: ${uri.path}`);
     const path = uri.path.substring(1);
-    
+
     try {
       const result = await this.apiRequest(path);
-      
+
       if (!result.entries) {
         throw new Error('Not a directory');
       }
-      
+
       return result.entries.map((entry): [string, vscode.FileType] => [
         entry.name,
         entry.type === 'directory' ? vscode.FileType.Directory : vscode.FileType.File
@@ -143,16 +143,16 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-    console.log(`📄 readFile called for: ${uri.path}`);
+    console.log(`readFile called for: ${uri.path}`);
     const path = uri.path.substring(1);
-    
+
     try {
       const result = await this.apiRequest(path);
-      
+
       if (result.content === undefined) {
         throw new Error('No file content');
       }
-      
+
       return new TextEncoder().encode(result.content);
     } catch (error) {
       console.error('readFile error:', error);
@@ -166,26 +166,26 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
     options: { create: boolean; overwrite: boolean }
   ): Promise<void> {
     const path = uri.path.substring(1);
-    
+
     try {
       // Check if file exists first
       const exists = await this.fileExists(uri);
-      
+
       if (exists && !options.overwrite) {
         throw vscode.FileSystemError.FileExists(uri);
       }
-      
+
       if (!exists && !options.create) {
         throw vscode.FileSystemError.FileNotFound(uri);
       }
 
       // Convert content to string (assuming text files for now)
       const textContent = new TextDecoder().decode(content);
-      
-      const url = `http://localhost:3001/api/files/${path}`;
+
+      const url = `http://localhost:4242/api/files/${path}`;
       const response = await fetch(url, {
         method: exists ? 'PUT' : 'POST',
-        headers: { 
+        headers: {
           'x-api-key': 'tutly-dev-key',
           'Content-Type': 'application/json'
         },
@@ -202,7 +202,7 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
 
       // Fire change event
       this._emitter.fire([{ type: vscode.FileChangeType.Changed, uri }]);
-      
+
     } catch (error) {
       console.error('writeFile error:', error);
       throw vscode.FileSystemError.Unavailable(uri);
@@ -213,19 +213,19 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
     try {
       // Read content from old file
       const content = await this.readFile(oldUri);
-      
+
       // Write to new location
       await this.writeFile(newUri, content, { create: true, overwrite: options.overwrite });
-      
+
       // Delete old file
       await this.delete(oldUri, { recursive: false });
-      
+
       // Fire change events
       this._emitter.fire([
         { type: vscode.FileChangeType.Deleted, uri: oldUri },
         { type: vscode.FileChangeType.Created, uri: newUri }
       ]);
-      
+
     } catch (error) {
       console.error('rename error:', error);
       throw vscode.FileSystemError.Unavailable(oldUri);
@@ -234,9 +234,9 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
 
   async delete(uri: vscode.Uri, options: { recursive: boolean }): Promise<void> {
     const path = uri.path.substring(1);
-    
+
     try {
-      const url = `http://localhost:3001/api/files/${path}`;
+      const url = `http://localhost:4242/api/files/${path}`;
       const response = await fetch(url, {
         method: 'DELETE',
         headers: { 'x-api-key': 'tutly-dev-key' }
@@ -248,7 +248,7 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
 
       // Fire change event
       this._emitter.fire([{ type: vscode.FileChangeType.Deleted, uri }]);
-      
+
     } catch (error) {
       console.error('delete error:', error);
       throw vscode.FileSystemError.FileNotFound(uri);
@@ -257,12 +257,12 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
 
   async createDirectory(uri: vscode.Uri): Promise<void> {
     const path = uri.path.substring(1);
-    
+
     try {
-      const url = `http://localhost:3001/api/files/${path}`;
+      const url = `http://localhost:4242/api/files/${path}`;
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 
+        headers: {
           'x-api-key': 'tutly-dev-key',
           'Content-Type': 'application/json'
         },
@@ -277,7 +277,7 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
 
       // Fire change event
       this._emitter.fire([{ type: vscode.FileChangeType.Created, uri }]);
-      
+
     } catch (error) {
       console.error('createDirectory error:', error);
       throw vscode.FileSystemError.Unavailable(uri);
@@ -292,14 +292,14 @@ class SimpleFileSystemProvider implements vscode.FileSystemProvider {
       return false;
     }
   }
-  
+
   public resetConnection(): void {
     this._connected = false;
     this._connecting = false;
   }
-  
+
   watch(): vscode.Disposable {
-    return new vscode.Disposable(() => {});
+    return new vscode.Disposable(() => { });
   }
 }
 
@@ -308,7 +308,7 @@ function createTutlyPseudoterminal(): vscode.Pseudoterminal {
   const writeEmitter = new vscode.EventEmitter<string>();
   const closeEmitter = new vscode.EventEmitter<number | void>();
   const nameEmitter = new vscode.EventEmitter<string>();
-  
+
   let ws: WebSocket | null = null;
   let isConnected = false;
 
@@ -316,17 +316,17 @@ function createTutlyPseudoterminal(): vscode.Pseudoterminal {
     onDidWrite: writeEmitter.event,
     onDidClose: closeEmitter.event,
     onDidChangeName: nameEmitter.event,
-    
+
     open: (initialDimensions) => {
       // Connect to the CLI server's WebSocket terminal endpoint
       try {
-        ws = new WebSocket('ws://localhost:3001/ws/terminal');
-        
+        ws = new WebSocket('ws://localhost:4242/ws/terminal');
+
         ws.onopen = () => {
           isConnected = true;
           writeEmitter.fire('\x1b[32m🔗 Connected to Tutly Terminal Server\x1b[0m\r\n');
           writeEmitter.fire('\x1b[36mTutly Terminal - Ready for commands\x1b[0m\r\n');
-          
+
           // Send initial resize if dimensions are available
           if (initialDimensions) {
             ws?.send(JSON.stringify({
@@ -336,14 +336,14 @@ function createTutlyPseudoterminal(): vscode.Pseudoterminal {
             }));
           }
         };
-        
+
         ws.onmessage = (event) => {
           try {
             const message = JSON.parse(event.data);
-            
+
             switch (message.type) {
               case 'connected':
-                writeEmitter.fire(`\x1b[32m✅ ${message.message}\x1b[0m\r\n`);
+                writeEmitter.fire(`\x1b[32m${message.message}\x1b[0m\r\n`);
                 break;
               case 'data':
                 writeEmitter.fire(message.data);
@@ -353,40 +353,40 @@ function createTutlyPseudoterminal(): vscode.Pseudoterminal {
                 closeEmitter.fire(message.exitCode);
                 break;
               case 'error':
-                writeEmitter.fire(`\x1b[31m❌ Error: ${message.message}\x1b[0m\r\n`);
+                writeEmitter.fire(`\x1b[31mError: ${message.message}\x1b[0m\r\n`);
                 break;
             }
           } catch (error) {
-            writeEmitter.fire(`\x1b[31m❌ Failed to parse server message\x1b[0m\r\n`);
+            writeEmitter.fire(`\x1b[31mFailed to parse server message\x1b[0m\r\n`);
           }
         };
-        
+
         ws.onclose = () => {
           isConnected = false;
-          writeEmitter.fire('\x1b[33m🔌 Disconnected from Tutly Terminal Server\x1b[0m\r\n');
+          writeEmitter.fire('\x1b[33mDisconnected from Tutly Terminal Server\x1b[0m\r\n');
         };
-        
+
         ws.onerror = () => {
           isConnected = false;
-          writeEmitter.fire('\x1b[31m❌ Failed to connect to Tutly Terminal Server\x1b[0m\r\n');
+          writeEmitter.fire('\x1b[31mFailed to connect to Tutly Terminal Server\x1b[0m\r\n');
           writeEmitter.fire('\x1b[33mMake sure the CLI server is running: tutly serve-files\x1b[0m\r\n');
         };
-        
+
       } catch (error) {
-        writeEmitter.fire('\x1b[31m❌ WebSocket not supported or connection failed\x1b[0m\r\n');
+        writeEmitter.fire('\x1b[31mWebSocket not supported or connection failed\x1b[0m\r\n');
         writeEmitter.fire('\x1b[33mFallback: Local terminal simulation mode\x1b[0m\r\n');
         writeEmitter.fire('\x1b[36mTutly Terminal (Local Mode) - Limited functionality\x1b[0m\r\n');
         writeEmitter.fire('$ ');
       }
     },
-    
+
     close: () => {
       if (ws) {
         ws.close();
         ws = null;
       }
     },
-    
+
     handleInput: (data) => {
       if (ws && isConnected) {
         // Send input to the remote terminal
@@ -407,7 +407,7 @@ function createTutlyPseudoterminal(): vscode.Pseudoterminal {
         }
       }
     },
-    
+
     setDimensions: (dimensions) => {
       if (ws && isConnected) {
         ws.send(JSON.stringify({
@@ -436,8 +436,8 @@ class TutlyTreeDataProvider implements vscode.TreeDataProvider<string | vscode.U
   private _onDidChangeTreeData = new vscode.EventEmitter<string | vscode.Uri | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private _isLoading = false;
-  
-  constructor(private provider: SimpleFileSystemProvider) {}
+
+  constructor(private provider: SimpleFileSystemProvider) { }
 
   refresh(): void {
     this._isLoading = true;
@@ -447,17 +447,17 @@ class TutlyTreeDataProvider implements vscode.TreeDataProvider<string | vscode.U
   getTreeItem(element: string | vscode.Uri): vscode.TreeItem {
     if (typeof element === 'string') {
       if (element === 'loading') {
-        const item = new vscode.TreeItem('🔄 Connecting to Tutly server...', vscode.TreeItemCollapsibleState.None);
+        const item = new vscode.TreeItem('Connecting to Tutly server...', vscode.TreeItemCollapsibleState.None);
         item.description = 'Please wait';
         item.iconPath = new vscode.ThemeIcon('loading~spin');
         return item;
       } else if (element === 'error') {
-        const item = new vscode.TreeItem('❌ Connection failed', vscode.TreeItemCollapsibleState.None);
+        const item = new vscode.TreeItem('Connection failed', vscode.TreeItemCollapsibleState.None);
         item.description = 'Server not available';
         item.iconPath = new vscode.ThemeIcon('error');
         return item;
       } else if (element === 'refreshing') {
-        const item = new vscode.TreeItem('🔄 Refreshing files...', vscode.TreeItemCollapsibleState.None);
+        const item = new vscode.TreeItem('Refreshing files...', vscode.TreeItemCollapsibleState.None);
         item.description = 'Loading';
         item.iconPath = new vscode.ThemeIcon('loading~spin');
         return item;
@@ -476,7 +476,7 @@ class TutlyTreeDataProvider implements vscode.TreeDataProvider<string | vscode.U
       if (this._isLoading) {
         return ['refreshing'];
       }
-      
+
       try {
         // Add a small delay to avoid immediate requests on activation
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -498,7 +498,7 @@ class TutlyTreeDataProvider implements vscode.TreeDataProvider<string | vscode.U
     try {
       // Add delay to reduce rapid requests
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       // This will show loading spinner automatically while promise is pending
       const entries = await this.provider.readDirectory(element);
       this._isLoading = false;
@@ -520,36 +520,29 @@ let terminalCounter = 0;
 // Web-compatible terminal creation (no PTY required)
 
 export async function activate(context: vscode.ExtensionContext) {
-  console.log('🚀 Tutly File System extension starting...');
-  
+  console.log('Tutly File System extension starting...');
+
   // Create file system provider first
   const provider = new SimpleFileSystemProvider();
-  
+
   // Register file system provider immediately (this enables tutly:// scheme)
   const fsDisposable = vscode.workspace.registerFileSystemProvider('tutly', provider, {
     isCaseSensitive: true, // Default to case-sensitive for web environment
     isReadonly: false
   });
   context.subscriptions.push(fsDisposable);
-  
+
   // Create tree data provider for loading states in Explorer
   const treeProvider = new TutlyTreeDataProvider(provider);
-  
-  // Create a tree view for the Explorer (this shows loading indicators directly in Explorer)
-  const treeView = vscode.window.createTreeView('tutlyExplorer', {
-    treeDataProvider: treeProvider,
-    showCollapseAll: true
-  });
-  context.subscriptions.push(treeView);
-  
+
   // Add commands
   const refreshCommand = vscode.commands.registerCommand('tutly.refresh', async () => {
-    console.log('🔄 Refresh command triggered');
+    console.log('Refresh command triggered');
     treeProvider.refresh();
-    
+
     // Also refresh the file system provider
     provider._emitter.fire([]);
-    
+
     // Trigger a refresh of the workspace folders to update the native file explorer too
     const tutlyFolder = vscode.workspace.workspaceFolders?.find(f => f.uri.scheme === 'tutly');
     if (tutlyFolder) {
@@ -560,36 +553,36 @@ export async function activate(context: vscode.ExtensionContext) {
           { uri: tutlyFolder.uri, name: tutlyFolder.name }
         );
         if (success) {
-          console.log('✅ Workspace refreshed');
+          console.log('Workspace refreshed');
         }
       }, 100);
     }
   });
   context.subscriptions.push(refreshCommand);
-  
+
   // Connect command
   const connectCommand = vscode.commands.registerCommand('tutly.connectToServer', async () => {
     try {
       await provider.ensureConnected();
-      vscode.window.showInformationMessage('✅ Connected to Tutly file server');
+      vscode.window.showInformationMessage('Connected to Tutly file server');
       treeProvider.refresh();
     } catch (error) {
-      vscode.window.showErrorMessage(`❌ Connection failed: ${error}`);
+      vscode.window.showErrorMessage(`Connection failed: ${error}`);
     }
   });
   context.subscriptions.push(connectCommand);
-  
+
   // Open workspace command
   const openWorkspaceCommand = vscode.commands.registerCommand('tutly.openWorkspace', () => {
     const success = vscode.workspace.updateWorkspaceFolders(0, 0, {
       uri: vscode.Uri.parse('tutly:/'),
-      name: '📁 Tutly Files'
+      name: 'Tutly Files'
     });
-    
+
     if (success) {
-      vscode.window.showInformationMessage('✅ Tutly workspace added');
+      vscode.window.showInformationMessage('Tutly workspace added');
     } else {
-      vscode.window.showErrorMessage('❌ Failed to add workspace');
+      vscode.window.showErrorMessage('Failed to add workspace');
     }
   });
   context.subscriptions.push(openWorkspaceCommand);
@@ -622,48 +615,48 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   });
   context.subscriptions.push(terminalProfileProvider);
-  
+
   // Auto-connect and setup workspace with proper delays
   try {
-    console.log('🔌 Initializing Tutly file server connection...');
-    
+    console.log('Initializing Tutly file server connection...');
+
     // Add workspace folder first (this makes it appear in the native explorer)
     const success = vscode.workspace.updateWorkspaceFolders(0, null, {
       uri: vscode.Uri.parse('tutly:/'),
-      name: '📁 Tutly Files'
+      name: 'Tutly Files'
     });
-    
+
     if (success) {
-      console.log('✅ Workspace folder added successfully!');
-      
+      console.log('Workspace folder added successfully!');
+
       // Wait a bit before trying to connect to give the server time to be ready
       setTimeout(async () => {
         try {
-          console.log('🔌 Testing connection to file server...');
+          console.log('Testing connection to file server...');
           await provider.ensureConnected();
-          
-          console.log('✅ Connected to file server');
+
+          console.log('Connected to file server');
           vscode.window.setStatusBarMessage('$(check) Tutly Files connected!', 3000);
           treeProvider.refresh(); // Refresh tree view to show connected state
-          
+
           // Automatically create and show terminal
           try {
             const terminal = createTutlyTerminal();
             terminal.show();
-            console.log('🖥️ Auto-created Tutly terminal');
-            vscode.window.showInformationMessage('✅ Tutly Files connected! Terminal ready.');
+            console.log('Auto-created Tutly terminal');
+            vscode.window.showInformationMessage('Tutly Files connected! Terminal ready.');
           } catch (termError) {
-            console.error('❌ Failed to create terminal:', termError);
+            console.error('Failed to create terminal:', termError);
             vscode.window.showErrorMessage(`Connected to files but failed to create terminal: ${termError}`);
           }
-          
+
         } catch (error) {
-          console.error('❌ Connection failed:', error);
+          console.error('Connection failed:', error);
           vscode.window.setStatusBarMessage('$(error) Tutly server not available', 5000);
           treeProvider.refresh(); // Refresh to show error state
-          
+
           vscode.window.showWarningMessage(
-            'Tutly server not available. Make sure to run: tutly serve-files', 
+            'Tutly server not available. Make sure to run: tutly serve-files',
             'Retry Connection'
           ).then(result => {
             if (result === 'Retry Connection') {
@@ -677,25 +670,25 @@ export async function activate(context: vscode.ExtensionContext) {
           });
         }
       }, 1500); // Wait 1.5 seconds for server to be ready
-      
+
     } else {
       throw new Error('Failed to add workspace folder');
     }
-    
+
   } catch (error) {
-    console.error('❌ Activation failed:', error);
+    console.error('Activation failed:', error);
     vscode.window.showErrorMessage(`Tutly Files: ${error}`);
   }
-  
-  console.log('✅ Extension activated successfully');
+
+  console.log('Extension activated successfully');
 
   // Activate Preview Extension
   try {
     const { activate: activatePreview } = await import('./preview');
     await activatePreview(context);
-    console.log('✅ Preview extension activated');
+    console.log('Preview extension activated');
   } catch (error) {
-    console.error('❌ Failed to activate preview extension:', error);
+    console.error('Failed to activate preview extension:', error);
   }
 
   // Activate Question Panel
@@ -703,13 +696,13 @@ export async function activate(context: vscode.ExtensionContext) {
     const questionPanel = require('./question-panel');
     if (questionPanel && questionPanel.activate) {
       await questionPanel.activate(context);
-      console.log('✅ Question panel activated');
+      console.log('Question panel activated');
     }
   } catch (error) {
-    console.error('❌ Failed to activate question panel:', error);
+    console.error('Failed to activate question panel:', error);
   }
 }
 
 export function deactivate() {
-  console.log('👋 Tutly File System extension deactivated');
+  console.log('Tutly File System extension deactivated');
 }

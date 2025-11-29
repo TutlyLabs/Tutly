@@ -141,7 +141,7 @@ function getWebviewContent(url: string): string {
 <body>
     <div class="toolbar">
         <input type="text" class="url-input" id="urlInput" value="${url}" placeholder="Enter URL...">
-        <button class="refresh-btn" onclick="refreshPreview()">🔄 Refresh</button>
+        <button class="refresh-btn" onclick="refreshPreview()">Refresh</button>
     </div>
     <iframe id="previewFrame" src="${url}"></iframe>
     

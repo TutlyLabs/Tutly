@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutly Playgrounds</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="/scripts/preflight-check.js" defer></script>
+</head>
+
+<body class="bg-gray-950 text-gray-100">
+  <div id="drizzle-root">
+    <div class="mx-auto flex h-screen w-full flex-col items-center justify-center overflow-hidden p-8"><button
+        class="focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:text-white hover:bg-blue-700 h-10 px-4 absolute right-3 top-3"
+        part="button primary">Watch Demo</button>
+      <div>
+        <div>
+          <div class="text-2xl text-white">Hey 👋<br>Welcome to Tutly Playgrounds</div>
+          <div class="text-gray-400 text-xl">
+            <div class="my-3 flex items-center gap-3">
+              <div>Connecting to Tutly Playgrounds on localhost:4242</div>
+              <div class="flex gap-2">
+                <div class="w-6 h-6 border-3 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-md bg-gray-900 p-4 mt-14 flex items-center gap-4 border border-gray-800">
+          <div class="">
+            <img src="../assets/google.svg" alt="Google Chrome" class="size-12" />
+          </div>
+          <div>
+            <div>Recent Chrome/Chromium updates may block <a
+                href="https://developer.chrome.com/blog/local-network-access" target="_blank" rel="noopener noreferrer"
+                class="text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline cursor-pointer">local
+                network access</a> by default.</div>
+            <div>This prevents Tutly Playgrounds from accessing your local development server.</div>
+            <div class="font-semibold">Open "Site information" in the URL bar and make sure "Local network access" is
+              enabled.</div>
+          </div>
+        </div>
+        <div class="mt-14 flex">
+          <div class="w-[30.75rem] border-none">
+            <div class="mb-8 flex flex-col p-0">
+              <div class="mb-3">
+                <img src="../assets/code.png" alt="code" class="size-12" />
+              </div>
+              <div class="fon-semibold text-lg font-semibold leading-none tracking-tight">Tutly Playgrounds CLI</div>
+            </div>
+            <div>
+              <div>
+                <div class="mb-3">Make sure Tutly Playgrounds is up and running</div>
+                <div class="mb-1 flex gap-1 items-center">
+                  <div>1.</div>
+                  <div>Check out our <a href="https://docs.tutly.in/cli/installation" target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline cursor-pointer">installation
+                      guide</a></div>
+                </div>
+                <div class="mb-6 flex gap-1 items-center">
+                  <div>2.</div>
+                  <div>Run <code class="rounded-md bg-gray-800 p-1 text-sm text-gray-200">tutly playground</code>
+                  </div>
+                </div>
+                <div>Still experiencing issues?<br>Feel free to contact us on <a href="https://twitter.com/tutlydev"
+                    target="_blank" rel="noopener noreferrer"
+                    class="text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline cursor-pointer">X</a> or
+                  <a href="https://discord.gg/tutly" target="_blank" rel="noopener noreferrer"
+                    class="text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline cursor-pointer">Discord</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="w-[30.75rem] border-none">
+            <div class="mb-8 flex flex-col p-0">
+              <div class="mb-3 flex gap-2">
+                <img src="../assets/safari.svg" alt="Safari" class="size-12" />
+                <img src="../assets/brave.svg" alt="Brave" class="size-12" />
+              </div>
+              <div class="fon-semibold text-lg font-semibold leading-none tracking-tight">Using Safari or Brave?</div>
+            </div>
+            <div>
+              <div>
+                <div class="mb-3">Safari and Brave block access to localhost by default. You need to install <a
+                    href="https://github.com/FiloSottile/mkcert" target="_blank" rel="noopener noreferrer"
+                    class="text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline cursor-pointer">mkcert</a>
+                  and generate self-signed certificate:</div>
+                <div class="mb-1 flex gap-1 items-start">
+                  <div>1.</div>
+                  <div>Follow the mkcert <a href="https://github.com/FiloSottile/mkcert#installation" target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline cursor-pointer">installation
+                      steps</a></div>
+                </div>
+                <div class="mb-1 flex gap-1 items-start">
+                  <div>2.</div>
+                  <div>Run <code class="rounded-md bg-gray-800 p-1 text-sm text-gray-200">mkcert -install</code>
+                  </div>
+                </div>
+                <div class="mb-6 flex items-center gap-1">
+                  <div>3.</div>
+                  <div>Restart your playground</div>
+                </div>
+              </div>
+              <div>On Brave you can just disable Brave Shields.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

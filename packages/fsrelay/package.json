@@ -34,12 +34,6 @@
       ]
     },
     "views": {
-      "explorer": [
-        {
-          "id": "tutlyExplorer",
-          "name": "Tutly Connection"
-        }
-      ],
       "tutlyQuestionContainer": [
         {
           "id": "tutlyQuestionPanel",
@@ -159,16 +153,6 @@
     ],
     "menus": {
       "view/title": [
-        {
-          "command": "tutly.refresh",
-          "when": "view == tutlyExplorer",
-          "group": "navigation"
-        },
-        {
-          "command": "tutly.createTerminal",
-          "when": "view == tutlyExplorer",
-          "group": "navigation"
-        },
         {
           "command": "tutlyQuestion.refresh",
           "when": "view == tutlyQuestionPanel",
