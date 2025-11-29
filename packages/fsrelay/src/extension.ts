@@ -535,13 +535,6 @@ export async function activate(context: vscode.ExtensionContext) {
   // Create tree data provider for loading states in Explorer
   const treeProvider = new TutlyTreeDataProvider(provider);
 
-  // Create a tree view for the Explorer (this shows loading indicators directly in Explorer)
-  const treeView = vscode.window.createTreeView('tutlyExplorer', {
-    treeDataProvider: treeProvider,
-    showCollapseAll: true
-  });
-  context.subscriptions.push(treeView);
-
   // Add commands
   const refreshCommand = vscode.commands.registerCommand('tutly.refresh', async () => {
     console.log('Refresh command triggered');
