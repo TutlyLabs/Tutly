@@ -1,32 +1,11 @@
 {
   "productConfiguration": {
-    "nameShort": "Tutly VSCode",
-    "nameLong": "Tutly VSCode Web",
-    "applicationName": "tutly-vscode-web",
-    "dataFolderName": ".tutly-vscode-web",
+    "nameShort": "Tutly Playgrounds",
+    "nameLong": "Tutly Playgrounds - VSCode Web",
+    "applicationName": "tutly-playgrounds",
+    "dataFolderName": ".tutly-playgrounds",
     "version": "1.75.0",
     "quality": "stable",
-    "licenseName": "MIT",
-    "extensionsGallery": {
-      "serviceUrl": "https://open-vsx.org/vscode/gallery",
-      "itemUrl": "https://open-vsx.org/vscode/item",
-      "resourceUrlTemplate": "https://openvsxorg.blob.core.windows.net/resources/{publisher}/{name}/{version}/{path}"
-    },
-    "commonlyUsedSettings": [
-      "files.autoSave", 
-      "editor.fontSize", 
-      "editor.fontFamily", 
-      "editor.tabSize", 
-      "editor.renderWhitespace", 
-      "editor.cursorStyle", 
-      "editor.multiCursorModifier", 
-      "editor.insertSpaces", 
-      "editor.wordWrap", 
-      "files.exclude", 
-      "files.associations", 
-      "workbench.editor.enablePreview",
-      "workbench.layoutControl.type"
-    ],
     "extensionEnabledApiProposals": {
       "tutly.fsrelay": [
         "fileSearchProvider",
@@ -39,11 +18,11 @@
   },
   "configurationDefaults": {
     "explorer.sortOrder": "default",
+    "files.autoSave": "afterDelay",
     "explorer.compactFolders": false,
     "workbench.view.alwaysShowHeaderActions": true,
     "files.exclude": {
       "**/.vscode": true,
-      "**/.tutly": true,
       "**/.git": true,
       "**/.DS_Store": true,
       "**/.data": true,
@@ -57,21 +36,17 @@
     "editor.minimap.enabled": false,
     "editor.wordWrap": "on",
     "editor.guides.indentation": false,
-    "breadcrumbs.enabled": false,
+    "breadcrumbs.enabled": true,
     "workbench.editor.dragToOpenWindow": false,
     "workbench.editor.revealIfOpen": true,
     "workbench.tips.enabled": false,
     "workbench.editor.enablePreview": false,
-    "workbench.layoutControl.type": "menu",
     "workbench.tree.renderIndentGuides": "none",
     "workbench.colorTheme": "Default Dark Modern",
-    "window.titleBarStyle": "custom",
-    "window.menuBarVisibility": "compact"
-  },
-  "additionalBuiltinExtensions": [
-    {
-      "scheme": "http",
-      "path": "/extensions/fsrelay"
-    }
-  ]
+    "workbench.activityBar.visible": true,
+    "tutly.server.port": 4242,
+    "tutly.server.host": "localhost",
+    "tutly.server.apiKey": "tutly-dev-key",
+    "tutly.server.autoConnect": true
+  }
 }

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tutly Playgrounds - VSCode</title>
+
+  <!-- Workbench CSS -->
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link data-name="vs/workbench/workbench.web.main" rel="stylesheet"
+    href="/vscode/out/vs/workbench/workbench.web.main.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #1e1e1e;
+    }
+  </style>
+</head>
+
+<body aria-label=""></body>
+
+<!-- Startup -->
+<script>
+  (async function () {
+    try {
+      const response = await fetch('/vscode/product.json');
+      const product = await response.json();
+
+      const extensionsResponse = await fetch('/vscode/extensions.json');
+      const extensions = await extensionsResponse.json();
+
+      product.additionalBuiltinExtensions = extensions.map(ext => ({
+        scheme: window.location.protocol.slice(0, -1),
+        path: `/vscode/extensions/${ext}`
+      }));
+
+      window.product = product;
+    } catch (err) {
+      console.error('Failed to load product.json', err);
+    }
+  })();
+</script>
+<script src="/vscode/out/vs/loader.js"></script>
+<script src="/vscode/out/vs/webPackagePaths.js"></script>
+<script>
+  Object.keys(self.webPackagePaths).map(function (key, index) {
+    self.webPackagePaths[key] = `${window.location.origin}/vscode/node_modules/${key}/${self.webPackagePaths[key]}`;
+  });
+  require.config({
+    baseUrl: `${window.location.origin}/vscode/out`,
+    recordStats: true,
+    trustedTypesPolicy: window.trustedTypes?.createPolicy('amdLoader', {
+      createScriptURL(value) {
+        return value;
+      }
+    }),
+    paths: self.webPackagePaths
+  });
+</script>
+<script src="/vscode/out/vs/workbench/workbench.web.main.nls.js"></script>
+<script src="/scripts/workbench-init.js"></script>
+
+</html>

@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
           "main",
           message,
           files,
-          author
+          author,
         );
 
         return NextResponse.json({ results });

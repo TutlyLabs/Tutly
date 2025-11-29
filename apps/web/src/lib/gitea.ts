@@ -304,8 +304,12 @@ export const giteaClient = {
     repo: string,
     branch: string,
     message: string,
-    files: Array<{ path: string; content: string; status: 'modified' | 'added' | 'deleted' }>,
-    author?: { name: string; email: string }
+    files: Array<{
+      path: string;
+      content: string;
+      status: "modified" | "added" | "deleted";
+    }>,
+    author?: { name: string; email: string },
   ) {
     // Strategy: Create a temporary branch, push all changes there, then squash merge to main
     const tempBranchName = `temp-commit-${Date.now()}`;
@@ -320,7 +324,7 @@ export const giteaClient = {
       });
 
       if (!branchResponse.ok) {
-        throw new Error('Failed to get branch info');
+        throw new Error("Failed to get branch info");
       }
 
       const branchData = await branchResponse.json();
@@ -329,10 +333,10 @@ export const giteaClient = {
       // Step 2: Create a temporary branch from the current branch
       const createBranchUrl = `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches`;
       const createBranchResponse = await fetch(createBranchUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
           Authorization: `token ${GITEA_ADMIN_TOKEN}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           new_branch_name: tempBranchName,
@@ -341,7 +345,7 @@ export const giteaClient = {
       });
 
       if (!createBranchResponse.ok) {
-        throw new Error('Failed to create temporary branch');
+        throw new Error("Failed to create temporary branch");
       }
 
       // Step 3: Push all file changes to the temporary branch
@@ -350,7 +354,7 @@ export const giteaClient = {
         try {
           const url = `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(file.path)}`;
 
-          if (file.status === 'deleted') {
+          if (file.status === "deleted") {
             // Get file SHA first
             const getResponse = await fetch(`${url}?ref=${tempBranchName}`, {
               headers: {
@@ -363,10 +367,10 @@ export const giteaClient = {
 
               // Delete the file
               const deleteResponse = await fetch(url, {
-                method: 'DELETE',
+                method: "DELETE",
                 headers: {
                   Authorization: `token ${GITEA_ADMIN_TOKEN}`,
-                  'Content-Type': 'application/json',
+                  "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                   sha: fileData.sha,
@@ -394,22 +398,26 @@ export const giteaClient = {
             if (getResponse.ok) {
               const fileData = await getResponse.json();
               sha = fileData.sha;
-              console.log(`File ${file.path} exists on temp branch with SHA: ${sha}`);
+              console.log(
+                `File ${file.path} exists on temp branch with SHA: ${sha}`,
+              );
             } else {
-              console.log(`File ${file.path} does not exist on temp branch (status: ${getResponse.status}), will create it`);
+              console.log(
+                `File ${file.path} does not exist on temp branch (status: ${getResponse.status}), will create it`,
+              );
             }
             // If file doesn't exist on temp branch, sha will be undefined (which is correct for new files)
 
             // Create or update the file
             const response = await fetch(url, {
-              method: 'PUT',
+              method: "PUT",
               headers: {
                 Authorization: `token ${GITEA_ADMIN_TOKEN}`,
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                content: Buffer.from(file.content).toString('base64'),
-                message: `${sha ? 'Update' : 'Add'} ${file.path}`,
+                content: Buffer.from(file.content).toString("base64"),
+                message: `${sha ? "Update" : "Add"} ${file.path}`,
                 branch: tempBranchName,
                 ...(sha && { sha }),
                 ...(author && { author }),
@@ -418,8 +426,13 @@ export const giteaClient = {
 
             if (!response.ok) {
               const error = await response.text();
-              console.error(`Failed to ${sha ? 'update' : 'create'} ${file.path}:`, error);
-              throw new Error(`Failed to ${sha ? 'update' : 'create'} ${file.path}: ${error}`);
+              console.error(
+                `Failed to ${sha ? "update" : "create"} ${file.path}:`,
+                error,
+              );
+              throw new Error(
+                `Failed to ${sha ? "update" : "create"} ${file.path}: ${error}`,
+              );
             }
           }
 
@@ -433,10 +446,10 @@ export const giteaClient = {
       // Step 4: Create a pull request and merge it with squash
       const prUrl = `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`;
       const prResponse = await fetch(prUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
           Authorization: `token ${GITEA_ADMIN_TOKEN}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title: message,
@@ -447,7 +460,7 @@ export const giteaClient = {
       });
 
       if (!prResponse.ok) {
-        throw new Error('Failed to create pull request');
+        throw new Error("Failed to create pull request");
       }
 
       const prData = await prResponse.json();
@@ -456,13 +469,13 @@ export const giteaClient = {
       // Step 5: Merge the PR with squash
       const mergeUrl = `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${prNumber}/merge`;
       const mergeResponse = await fetch(mergeUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
           Authorization: `token ${GITEA_ADMIN_TOKEN}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          Do: 'squash',
+          Do: "squash",
           merge_message_field: message,
           delete_branch_after_merge: true,
         }),
@@ -484,7 +497,7 @@ export const giteaClient = {
       try {
         await this.deleteBranch(owner, repo, tempBranchName);
       } catch (cleanupError) {
-        console.error('Failed to cleanup temp branch:', cleanupError);
+        console.error("Failed to cleanup temp branch:", cleanupError);
       }
       throw error;
     }
@@ -493,7 +506,7 @@ export const giteaClient = {
   async deleteBranch(owner: string, repo: string, branch: string) {
     const url = `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${encodeURIComponent(branch)}`;
     await fetch(url, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
         Authorization: `token ${GITEA_ADMIN_TOKEN}`,
       },
