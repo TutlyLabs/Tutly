@@ -6,7 +6,7 @@
   "bin": {
     "tutly": "./bin/run"
   },
-  "bugs": "https://github.com/tutly/cli/issues",
+  "bugs": "https://github.com/TutlyLabs/Tutly/issues",
   "dependencies": {
     "@inquirer/prompts": "^7.8.4",
     "@oclif/command": "^1.8.36",
@@ -60,7 +60,7 @@
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json"
   ],
-  "homepage": "https://github.com/tutly/cli",
+  "homepage": "https://github.com/TutlyLabs/Tutly/tree/main/apps/cli",
   "keywords": [
     "tutly",
     "cli",
@@ -77,7 +77,11 @@
       "@oclif/plugin-help"
     ]
   },
-  "repository": "tutly/cli",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TutlyLabs/Tutly.git",
+    "directory": "apps/cli"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
