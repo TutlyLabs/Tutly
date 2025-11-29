@@ -104,6 +104,24 @@ tutly submit
 tutly submit --dir ./my-assignment
 ```
 
+### `tutly serve-files`
+
+Start a file server to expose local filesystem via HTTP API and WebSocket. This is used by the Tutly Playgrounds environment.
+
+```bash
+# Start server in current directory on default port 4242
+tutly serve-files
+
+# Start in a specific directory
+tutly serve-files --directory ./my-project
+
+# Start on a custom port
+tutly serve-files --port 8080
+
+# Bind to a specific host
+tutly serve-files --host 0.0.0.0
+```
+
 ## Configuration
 
 The CLI stores configuration in:
