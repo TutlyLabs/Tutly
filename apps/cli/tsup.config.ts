@@ -9,7 +9,7 @@ export default defineConfig({
   clean: true,
   outDir: "lib",
   target: "node18",
-  external: ["keytar"],
+  external: ["keytar", "node-pty"],
   banner: {
     js: "#!/usr/bin/env node",
   },
