@@ -72,3 +72,4 @@ apps/web/public/vscode/extensions/*
 # VSCode static files (served from node_modules)
 apps/web/public/vscode/vscode-web/
 apps/web/public/vscode/tutly-vscode-web/
+apps/cli/lib/

@@ -23,7 +23,7 @@ interface TerminalSession {
   ws: WebSocket.WebSocket;
 }
 
-export default class ServeFiles extends Command {
+export default class Playground extends Command {
   static description =
     "Start a file server to expose local filesystem via HTTP API and WebSocket";
 
@@ -53,9 +53,9 @@ export default class ServeFiles extends Command {
   private terminals: Map<string, TerminalSession> = new Map();
 
   async run() {
-    const { flags } = this.parse(ServeFiles);
+    const { flags } = this.parse(Playground);
 
-    this.log(`Starting Tutly file server...`);
+    this.log(`Starting Tutly playground server...`);
     this.log(`Directory: ${flags.directory}`);
     this.log(`Port: ${flags.port}`);
     this.log(`Host: ${flags.host}`);
@@ -67,7 +67,7 @@ export default class ServeFiles extends Command {
 
     this.server.listen(flags.port, flags.host, () => {
       this.log(
-        `🚀 Tutly file server running at http://${flags.host}:${flags.port}`,
+        `🚀 Tutly playground server running at http://${flags.host}:${flags.port}`,
       );
       this.log(`📁 Serving directory: ${flags.directory}`);
       this.log(`\nAPI Endpoints:`);
@@ -304,7 +304,7 @@ export default class ServeFiles extends Command {
 
   private handleTerminal(ws: WebSocket.WebSocket) {
     const terminalId = `terminal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const { flags } = this.parse(ServeFiles);
+    const { flags } = this.parse(Playground);
 
     try {
       // Create a new pseudo-terminal
@@ -527,7 +527,7 @@ export default class ServeFiles extends Command {
   }
 
   private async shutdown() {
-    this.log("\nShutting down Tutly file server...");
+    this.log("\nShutting down Tutly playground server...");
 
     // Close all terminals
     for (const [id, session] of this.terminals.entries()) {

@@ -369,7 +369,7 @@ function createTutlyPseudoterminal(): vscode.Pseudoterminal {
         ws.onerror = () => {
           isConnected = false;
           writeEmitter.fire('\x1b[31mFailed to connect to Tutly Terminal Server\x1b[0m\r\n');
-          writeEmitter.fire('\x1b[33mMake sure the CLI server is running: tutly serve-files\x1b[0m\r\n');
+          writeEmitter.fire('\x1b[33mMake sure the CLI server is running: tutly playground\x1b[0m\r\n');
         };
 
       } catch (error) {
@@ -656,7 +656,7 @@ export async function activate(context: vscode.ExtensionContext) {
           treeProvider.refresh(); // Refresh to show error state
 
           vscode.window.showWarningMessage(
-            'Tutly server not available. Make sure to run: tutly serve-files',
+            'Tutly server not available. Make sure to run: tutly playground',
             'Retry Connection'
           ).then(result => {
             if (result === 'Retry Connection') {

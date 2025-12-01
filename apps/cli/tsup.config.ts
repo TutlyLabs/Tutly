@@ -1,4 +1,5 @@
 import { defineConfig } from "tsup";
+import packageJson from "./package.json";
 
 export default defineConfig({
   entry: ["src/index.ts", "src/commands/**/*.ts"],
@@ -9,29 +10,7 @@ export default defineConfig({
   clean: true,
   outDir: "lib",
   target: "node18",
-  external: [
-    "@inquirer/prompts",
-    "@oclif/command",
-    "@oclif/config",
-    "@oclif/plugin-help",
-    "adm-zip",
-    "archiver",
-    "chokidar",
-    "cors",
-    "express",
-    "fast-glob",
-    "ignore",
-    "keytar",
-    "listr2",
-    "node-pty",
-    "open",
-    "ora",
-    "p-limit",
-    "tslib",
-    "update-notifier",
-    "ws",
-    "zod",
-  ],
+  external: Object.keys(packageJson.dependencies || {}),
   banner: {
     js: "#!/usr/bin/env node",
   },
