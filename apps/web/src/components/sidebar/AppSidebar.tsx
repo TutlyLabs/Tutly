@@ -52,8 +52,10 @@ export function AppSidebar({
   isIntegrationsEnabled,
   isAIAssistantEnabled,
 }: AppSidebarProps) {
-  const { forceClose } = useLayout();
+  const { forceClose, hideSidebar } = useLayout();
   const organizationName = "Tutly";
+
+  if (hideSidebar) return null;
 
   const pathname = usePathname();
   const sidebarItems = getDefaultSidebarItems({

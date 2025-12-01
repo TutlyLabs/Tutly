@@ -464,7 +464,6 @@ export default class Playground extends Command {
   private async listDirectory(dirPath: string): Promise<FileEntry[]> {
     const items = await fs.readdir(dirPath);
 
-
     const entryPromises = items.map(async (item): Promise<FileEntry | null> => {
       try {
         const itemPath = path.join(dirPath, item);

@@ -1,7 +1,7 @@
 {
-  "name": "@tutly/cli",
+  "name": "tutly",
   "description": "Tutly CLI - Command line interface for Tutly platform",
-  "version": "1.0.5",
+  "version": "1.0.0",
   "author": "Tutly",
   "bin": {
     "tutly": "./bin/run"
@@ -12,7 +12,7 @@
     "@oclif/command": "^1.8.36",
     "@oclif/config": "^1.18.17",
     "@oclif/plugin-help": "^3.2.3",
-    "adm-zip": "^0.5.10",
+    "adm-zip": "^0.5.16",
     "archiver": "^6.0.1",
     "chokidar": "^3.6.0",
     "cors": "^2.8.5",
@@ -33,6 +33,7 @@
   "devDependencies": {
     "@oclif/dev-cli": "^1.26.10",
     "@oclif/test": "^1.2.9",
+    "@types/adm-zip": "^0.5.7",
     "@types/archiver": "^6.0.2",
     "@types/chai": "^4",
     "@types/cors": "^2.8.17",

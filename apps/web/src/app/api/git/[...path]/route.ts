@@ -136,7 +136,14 @@ async function handleGitRequest(
   const queryString = upstreamSearchParams.toString()
     ? `?${upstreamSearchParams.toString()}`
     : "";
-  const giteaUrl = `${GITEA_API_URL}/${targetRepoPath}.git/${gitPathParts.join("/")}${queryString}`;
+
+  let giteaUrl = "";
+  if (gitPathParts[0] === "archive") {
+    // Remove .git from repo path for archive requests
+    giteaUrl = `${GITEA_API_URL}/${targetRepoPath}/${gitPathParts.join("/")}${queryString}`;
+  } else {
+    giteaUrl = `${GITEA_API_URL}/${targetRepoPath}.git/${gitPathParts.join("/")}${queryString}`;
+  }
 
   // Verify that the user is enrolled in the course and has the necessary permissions.
   if (courseId) {

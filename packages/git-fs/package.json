@@ -17,31 +17,31 @@
   "contributes": {
     "commands": [
       {
-        "command": "git-fs.run",
+        "command": "tutlyfs.run",
         "title": "Run Code"
       },
       {
-        "command": "git-fs.submit",
+        "command": "tutlyfs.submit",
         "title": "Submit Code"
       },
       {
-        "command": "git-fs.save",
+        "command": "tutlyfs.save",
         "title": "Save Changes"
       }
     ],
     "keybindings": [
       {
-        "command": "git-fs.run",
+        "command": "tutlyfs.run",
         "key": "ctrl+alt+shift+r",
         "mac": "cmd+alt+shift+r"
       },
       {
-        "command": "git-fs.submit",
+        "command": "tutlyfs.submit",
         "key": "ctrl+alt+shift+s",
         "mac": "cmd+alt+shift+s"
       },
       {
-        "command": "git-fs.save",
+        "command": "tutlyfs.save",
         "key": "ctrl+alt+shift+v",
         "mac": "cmd+alt+shift+v"
       }
@@ -102,6 +102,15 @@
           "description": "Web origin for loading webview resources"
         }
       }
+    },
+    "terminal": {
+      "profiles": [
+        {
+          "id": "tutly.terminal-profile",
+          "title": "Tutly Terminal",
+          "icon": "$(terminal)"
+        }
+      ]
     }
   },
   "scripts": {

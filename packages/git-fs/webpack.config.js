@@ -1,4 +1,5 @@
 const path = require('path');
+const { exec } = require('child_process');
 
 module.exports = {
   target: 'webworker',
@@ -31,5 +32,17 @@ module.exports = {
         ]
       }
     ]
-  }
+  },
+  plugins: [
+    {
+      apply: (compiler) => {
+        compiler.hooks.afterEmit.tap('CopyAssetsPlugin', (compilation) => {
+          exec('node ../../apps/web/scripts/copy-vscode-assets.js', (err, stdout, stderr) => {
+            if (stdout) process.stdout.write(stdout);
+            if (stderr) process.stderr.write(stderr);
+          });
+        });
+      }
+    }
+  ]
 };

@@ -48,7 +48,7 @@ jobs:
         run: pnpm install
 
       - name: Build CLI
-        run: pnpm build --filter @tutly/cli
+        run: pnpm build --filter tutly
 
       - name: Publish to npm
         run: |
