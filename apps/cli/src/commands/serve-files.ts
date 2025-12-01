@@ -36,7 +36,7 @@ export default class ServeFiles extends Command {
     }),
     host: flags.string({
       description: "Host to bind the server to",
-      default: "localhost",
+      default: "0.0.0.0",
     }),
     directory: flags.string({
       char: "d",
@@ -92,6 +92,16 @@ export default class ServeFiles extends Command {
 
   private async setupServer(flags: any) {
     this.app = express();
+    this.app.use((req, res, next) => {
+      const start = Date.now();
+      res.on("finish", () => {
+        const duration = Date.now() - start;
+        this.log(
+          `${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`,
+        );
+      });
+      next();
+    });
 
     // Middleware
     this.app.use(
@@ -111,6 +121,10 @@ export default class ServeFiles extends Command {
     );
 
     this.server = createServer(this.app);
+
+    this.server.keepAliveTimeout = 65000;
+    this.server.headersTimeout = 66000;
+    this.server.timeout = 120000; // 2 minutes
   }
 
   private async setupRoutes(flags: any) {
@@ -449,25 +463,28 @@ export default class ServeFiles extends Command {
 
   private async listDirectory(dirPath: string): Promise<FileEntry[]> {
     const items = await fs.readdir(dirPath);
-    const entries: FileEntry[] = [];
 
-    for (const item of items) {
+
+    const entryPromises = items.map(async (item): Promise<FileEntry | null> => {
       try {
         const itemPath = path.join(dirPath, item);
         const stats = await fs.stat(itemPath);
 
-        entries.push({
+        return {
           name: item,
           type: stats.isDirectory() ? "directory" : "file",
           size: stats.isFile() ? stats.size : undefined,
           mtime: stats.mtime,
           path: itemPath,
-        });
+        };
       } catch (error) {
-        // Skip files that can't be accessed
-        continue;
+        return null;
       }
-    }
+    });
+
+    const entries = (await Promise.all(entryPromises)).filter(
+      (entry): entry is FileEntry => entry !== null,
+    );
 
     return entries.sort((a, b) => {
       // Directories first, then files, alphabetically
@@ -491,12 +508,14 @@ export default class ServeFiles extends Command {
 
   private async isBinaryFile(filePath: string): Promise<boolean> {
     try {
-      const buffer = await fs.readFile(filePath);
-      const bytes = buffer.subarray(0, 1024);
+      const fd = await fs.open(filePath, "r");
+      const buffer = Buffer.alloc(1024);
+      const { bytesRead } = await fd.read(buffer, 0, 1024, 0);
+      await fd.close();
 
       // Check for null bytes which indicate binary content
-      for (let i = 0; i < bytes.length; i++) {
-        if (bytes[i] === 0) {
+      for (let i = 0; i < bytesRead; i++) {
+        if (buffer[i] === 0) {
           return true;
         }
       }
