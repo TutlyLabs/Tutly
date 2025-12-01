@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { AssignmentApiClient, AssignmentDetails } from './api';
+import { AssignmentApiClient, AssignmentDetails } from '../../api';
 
 export class TutlyViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'tutly.webview';

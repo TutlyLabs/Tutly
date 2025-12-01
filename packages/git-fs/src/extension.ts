@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
-// import { GitFileSystemProvider } from './gitFileSystemProvider';
 import { GitApiClient } from './api';
 import { GitContext } from './types';
-import { TutlyViewProvider } from './tutlyViewProvider';
-import { MemFileSystemProvider } from './memFileSystemProvider';
-import { SourceControlProvider } from './sourceControlProvider';
+import { TutlyViewProvider } from './providers/webview';
+import { MemFileSystemProvider } from './filesystems/memfs';
+import { SourceControlProvider } from './providers/source-control';
 
 let fileSystemProvider: MemFileSystemProvider | null = null;
 let apiClient: GitApiClient | null = null;

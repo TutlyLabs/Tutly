@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { GitApiClient, FileChange } from './api';
-import { GitContext } from './types';
+import { GitApiClient, FileChange } from '../../api';
+import { GitContext } from '../../types';
 
 export class SourceControlProvider {
   private sourceControl: vscode.SourceControl;
