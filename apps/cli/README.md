@@ -5,9 +5,9 @@ Command line interface for Tutly platform - simple submission workflow.
 ## Installation
 
 ```bash
-npm install -g @tutly/cli
+npm install -g tutly
 # or use with npx
-npx @tutly/cli
+npx tutly
 ```
 
 ## Quick Start
@@ -189,7 +189,7 @@ tutly whoami
 ### Unlink
 
 ```bash
-npm unlink -g @tutly/cli
+npm unlink -g tutly
 ```
 
 ## License
