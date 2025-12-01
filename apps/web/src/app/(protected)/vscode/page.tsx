@@ -29,7 +29,7 @@ export default async function VSCodePage({
   if (configParam && !assignmentId) {
     try {
       const decoded = JSON.parse(atob(configParam));
-      console.log(decoded)
+      console.log(decoded);
       if (decoded.assignmentId) {
         assignmentId = decoded.assignmentId;
       }

@@ -83,7 +83,7 @@ require(["vs/workbench/workbench.web.main"], function (workbench) {
     "tutlyfs.authToken": tutlyConfig.authToken,
     "tutlyfs.serverUrl": tutlyConfig.serverUrl,
     "tutlyfs.apiKey": tutlyConfig.apiKey,
-  }
+  };
 
   // Listen for commands from the parent window
   window.addEventListener("message", (event) => {

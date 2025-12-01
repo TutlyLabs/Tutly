@@ -8,11 +8,7 @@ import { FaEye } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { MdOutlineDelete } from "react-icons/md";
 import { RiWhatsappLine } from "react-icons/ri";
-import {
-  FiRefreshCw,
-  FiPlus,
-  FiTerminal,
-} from "react-icons/fi";
+import { FiRefreshCw, FiPlus, FiTerminal } from "react-icons/fi";
 import Link from "next/link";
 
 import ContentPreview from "@/components/ContentPreview";
@@ -289,10 +285,11 @@ export default function AssignmentPage({
         <div className="flex items-center justify-center gap-4">
           {assignment?.dueDate != null && (
             <div
-              className={`rounded p-1 px-2 text-white ${new Date(assignment?.dueDate) > new Date()
-                ? "bg-primary-600"
-                : "bg-secondary-500"
-                }`}
+              className={`rounded p-1 px-2 text-white ${
+                new Date(assignment?.dueDate) > new Date()
+                  ? "bg-primary-600"
+                  : "bg-secondary-500"
+              }`}
             >
               Last Date : {assignment?.dueDate.toISOString().split("T")[0]}
             </div>
@@ -1224,16 +1221,19 @@ const GitTemplateSection = ({ assignment }: { assignment: any }) => {
     }
   };
 
-  if (isLoading) return <div className="h-9 w-32 animate-pulse rounded-md bg-slate-800/50" />;
+  if (isLoading)
+    return (
+      <div className="h-9 w-32 animate-pulse rounded-md bg-slate-800/50" />
+    );
 
   return (
-    <div className="flex flex-col gap-2 items-start">
+    <div className="flex flex-col items-start gap-2">
       {!repoData ? (
         <Button
           onClick={createTemplateRepo}
           disabled={isCreating}
           size="sm"
-          className="h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white border-transparent cursor-pointer"
+          className="h-9 cursor-pointer border-transparent bg-blue-600 text-xs text-white hover:bg-blue-700"
         >
           {isCreating ? (
             <FiRefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
@@ -1254,7 +1254,7 @@ const GitTemplateSection = ({ assignment }: { assignment: any }) => {
               window.open(`/vscode?config=${encodedConfig}`, "_blank");
             }}
             size="sm"
-            className="h-8 px-4 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-transparent cursor-pointer"
+            className="h-8 cursor-pointer border-transparent bg-blue-600 px-4 text-xs font-medium text-white hover:bg-blue-700"
           >
             <FiTerminal className="mr-2 h-3.5 w-3.5" />
             Launch Playground
@@ -1324,9 +1324,7 @@ const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
           id: data.submissionId,
         });
         toast.success(
-          repoData
-            ? "Workspace refreshed!"
-            : "Workspace initialized!",
+          repoData ? "Workspace refreshed!" : "Workspace initialized!",
         );
       } else {
         toast.error(data.error || "Failed to initialize workspace");
@@ -1342,16 +1340,19 @@ const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
     await createSubmissionRepo();
   };
 
-  if (isLoading) return <div className="h-9 w-32 animate-pulse rounded-md bg-slate-800/50" />;
+  if (isLoading)
+    return (
+      <div className="h-9 w-32 animate-pulse rounded-md bg-slate-800/50" />
+    );
 
   return (
-    <div className="flex flex-col gap-2 items-start">
+    <div className="flex flex-col items-start gap-2">
       {!repoData ? (
         <Button
           onClick={createSubmissionRepo}
           disabled={isCreating}
           size="sm"
-          className="h-9 text-xs bg-emerald-600 hover:bg-emerald-700 text-white border-transparent"
+          className="h-9 border-transparent bg-emerald-600 text-xs text-white hover:bg-emerald-700"
         >
           {isCreating ? (
             <FiRefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
@@ -1372,7 +1373,7 @@ const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
               window.open(`/vscode?config=${encodedConfig}`, "_blank");
             }}
             size="sm"
-            className="h-8 px-4 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-transparent cursor-pointer"
+            className="h-8 cursor-pointer border-transparent bg-blue-600 px-4 text-xs font-medium text-white hover:bg-blue-700"
           >
             <FiTerminal className="mr-2 h-3.5 w-3.5" />
             Launch Playground
