@@ -1,4 +1,7 @@
 import { z } from "zod";
+import fs from "node:fs";
+import path from "node:path";
+import AdmZip from "adm-zip";
 
 import { getAuthTokens, getGlobalConfig } from "../config/global";
 import { CLI_USER_AGENT } from "../constants";
@@ -122,6 +125,103 @@ export class TutlyAPI {
       },
       "POST",
     );
+  }
+  async createSubmissionRepo(
+    assignmentId: string,
+  ): Promise<{ success: boolean; repoUrl?: string; error?: string }> {
+    const response = await fetch(
+      `${this.baseUrl}/api/git/create`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
+        },
+        body: JSON.stringify({
+          assignmentId,
+          type: "SUBMISSION",
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      throw new Error(
+        `Failed to create submission repo: ${response.status} ${response.statusText} - ${errorText}`,
+      );
+    }
+
+    return response.json();
+  }
+
+  async downloadAndExtractArchive(url: string, outputDir: string): Promise<void> {
+    const response = await fetch(url, {
+      headers: {
+        ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to download archive: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    const buffer = await response.arrayBuffer();
+    const zip = new AdmZip(Buffer.from(buffer));
+
+    // Extract to a temporary directory first to handle the root folder
+    const tempDir = path.join(outputDir, ".temp_extract");
+    zip.extractAllTo(tempDir, true);
+
+    // Move files from the root folder (e.g. repo-name/) to outputDir
+    const files = fs.readdirSync(tempDir);
+    if (files.length === 1 && fs.statSync(path.join(tempDir, files[0])).isDirectory()) {
+      const rootFolder = path.join(tempDir, files[0]);
+      const content = fs.readdirSync(rootFolder);
+
+      for (const file of content) {
+        fs.renameSync(path.join(rootFolder, file), path.join(outputDir, file));
+      }
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    } else {
+      // If no single root folder, just move everything
+      for (const file of files) {
+        fs.renameSync(path.join(tempDir, file), path.join(outputDir, file));
+      }
+      fs.rmdirSync(tempDir);
+    }
+  }
+
+  async uploadSubmission(
+    assignmentId: string,
+    zipBuffer: Buffer,
+    action: "SAVE" | "SUBMIT" = "SUBMIT",
+  ): Promise<{ success: boolean; submissionId?: string; error?: string }> {
+    const formData = new FormData();
+    formData.append("assignmentId", assignmentId);
+    formData.append("action", action);
+    formData.append("file", new Blob([new Uint8Array(zipBuffer)]), "submission.zip");
+
+    const response = await fetch(`${this.baseUrl}/api/git/upload`, {
+      method: "POST",
+      headers: {
+        ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      try {
+        const jsonError = JSON.parse(errorText);
+        if (jsonError.error) return { success: false, error: jsonError.error };
+      } catch (e) { }
+
+      return { success: false, error: `${response.status} ${response.statusText} - ${errorText}` };
+    }
+
+    return response.json();
   }
 }
 

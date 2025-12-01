@@ -123,10 +123,12 @@ export function createTutlyPseudoterminal(serverUrl: string = 'ws://localhost:42
 
 export function createTutlyTerminal(serverUrl?: string): vscode.Terminal {
   const pty = createTutlyPseudoterminal(serverUrl);
-  const terminal = vscode.window.createTerminal({
+  const options: vscode.ExtensionTerminalOptions = {
     name: `Tutly Terminal ${++terminalCounter}`,
-    pty: pty
-  });
+    pty: pty,
+    isTransient: true
+  };
+  const terminal = vscode.window.createTerminal(options);
   return terminal;
 }
 

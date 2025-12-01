@@ -1,197 +1,88 @@
 # Tutly CLI
 
-Command line interface for Tutly platform - simple submission workflow.
+The official command line interface for the Tutly platform. It helps you manage your assignments, save your progress, and submit your work directly from your terminal.
 
 ## Installation
 
 ```bash
 npm install -g tutly
-# or use with npx
-npx tutly
+# or run directly with npx
+npx tutly <command>
 ```
 
 ## Quick Start
 
 ### 1. Login
 
-```bash
-tutly login
-```
-
-You'll be prompted for your username and password.
-
-### 2. Clone Template for an Assignment
-
-When you get an assignment URL from the Tutly website like:
-`https://learn.tutly.in/playgrounds/sandbox?assignmentId=assignment_id`
-
-Use the assignment ID to clone the template:
-
-```bash
-npx tutly assignment assignment_id
-```
-
-This will:
-
-- Download the template files for your assignment
-- Create them in a new directory (named after the assignment)
-- Add a `.tutly.json` metadata file
-- Create a `package.json` if dependencies are required
-
-**Note:** By default, a new directory is created. Use `--output .` to clone into the current directory.
-
-### 3. Work on Your Assignment
-
-Edit the files as needed to complete your assignment.
-
-### 4. Submit Your Work
-
-```bash
-tutly submit
-```
-
-This will upload all your files to Tutly for review.
-
-## Commands
-
-### `tutly login`
-
-Authenticate with Tutly using your username and password.
+Authenticate with your Tutly account to access your courses and assignments.
 
 ```bash
 tutly login
 ```
 
-### `tutly logout`
+### 2. Start Assignment
 
-Log out from Tutly.
-
-```bash
-tutly logout
-```
-
-### `tutly whoami`
-
-Show your current user information.
+Download the starter code and workspace for a specific assignment. You can find the Assignment ID on the assignment page in Tutly.
 
 ```bash
-tutly whoami
+tutly assignment <assignment_id>
 ```
 
-### `tutly assignment <assignment_id>`
+This creates a new directory with all the necessary files to get started.
 
-Clone template files for an assignment. By default, creates a new directory named after the assignment.
+### 3. Work & Save
+
+Work on your assignment locally using your favorite editor. You can save your progress to the cloud at any time without submitting it for review.
 
 ```bash
-# Creates a new directory automatically
-tutly assignment assignment_id
-
-# Clone into current directory
-tutly assignment assignment_id --output .
-
-# Clone to a custom directory name
-tutly assignment assignment_id --output ./my-assignment
+tutly save
 ```
 
-### `tutly submit`
+This uploads your current progress to Tutly, so you can pick up where you left off later or from another device.
 
-Submit your work for review.
+### 4. Submit
+
+When you've completed the assignment and are ready for grading, submit your work.
 
 ```bash
 tutly submit
-
-# Submit from a specific directory
-tutly submit --dir ./my-assignment
 ```
+
+This uploads your final code and marks the assignment as **Submitted**.
+
+---
+
+## Playgrounds
+
+The CLI also powers **Tutly Playgrounds**, allowing you to connect your local environment to the Tutly web IDE.
 
 ### `tutly playground`
 
-Start a file server to expose local filesystem via HTTP API and WebSocket. This is used by the Tutly Playgrounds environment.
+Starts a local server that exposes your filesystem to the Tutly web interface via WebSocket. This enables features like live preview and remote editing from the browser.
 
 ```bash
-# Start server in current directory on default port 4242
+# Start in the current directory
 tutly playground
 
 # Start in a specific directory
 tutly playground --directory ./my-project
-
-# Start on a custom port
-tutly playground --port 8080
-
-# Bind to a specific host
-tutly playground --host 0.0.0.0
 ```
+
+---
+
+## Command Reference
+
+- **`tutly login`**: Log in to your Tutly account.
+- **`tutly logout`**: Log out and clear stored credentials.
+- **`tutly whoami`**: Display the currently logged-in user.
+- **`tutly assignment <id>`**: Initialize a new assignment workspace.
+- **`tutly save`**: Upload a snapshot of your work (does not submit).
+- **`tutly submit`**: Submit your work for grading.
+- **`tutly playground`**: Start the local development server for Playgrounds.
 
 ## Configuration
 
-The CLI stores configuration in:
+Configuration files are stored in:
 
 - **macOS/Linux**: `~/.config/tutly/`
 - **Windows**: `%APPDATA%\tutly\`
-
-Files:
-
-- `config.json` - API URL and settings
-- `auth.json` - Authentication tokens
-
-### Custom API URL
-
-Set a custom API URL using environment variable:
-
-```bash
-export TUTLY_API_URL="https://your-tutly-instance.com/api"
-```
-
-Or edit `~/.config/tutly/config.json`:
-
-```json
-{
-  "apiBaseUrl": "https://your-tutly-instance.com/api",
-  "telemetry": true,
-  "updateNotifications": true
-}
-```
-
-## Development
-
-### Local Testing
-
-```bash
-# Install dependencies
-npm install
-
-# Build the CLI
-npm run build
-
-# Test locally using ./bin/run
-./bin/run --help
-./bin/run login
-./bin/run whoami
-./bin/run assignment <assignment_id>
-./bin/run submit
-
-# Or use the test script
-./test-cli.sh
-```
-
-### Link Globally (Optional)
-
-To use `tutly` command instead of `./bin/run`:
-
-```bash
-npm link
-
-# Now you can use it globally
-tutly login
-tutly whoami
-```
-
-### Unlink
-
-```bash
-npm unlink -g tutly
-```
-
-## License
-
-MIT

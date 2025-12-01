@@ -13,6 +13,33 @@ let sourceControlProvider: SourceControlProvider | null = null;
 let currentMode: FileSystemMode = 'gitfs';
 
 export async function activate(context: vscode.ExtensionContext) {
+  const runCommandInTerminal = (command: string) => {
+    const serverUrl = config?.serverUrl || 'http://localhost:4242';
+    const wsUrl = serverUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+    const terminal = createTutlyTerminal(wsUrl);
+    terminal.show();
+    terminal.sendText(command);
+  };
+
+  // Register TutlyFS commands globally
+  context.subscriptions.push(
+    vscode.commands.registerCommand('tutlyfs.run', () => {
+      vscode.window.showInformationMessage('No run command available!');
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('tutlyfs.submit', () => {
+      runCommandInTerminal('tutly submit');
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('tutlyfs.save', async () => {
+      runCommandInTerminal('tutly save');
+    })
+  );
+
   const provider = new TutlyViewProvider(context.extensionUri);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(TutlyViewProvider.viewType, provider)
@@ -60,6 +87,41 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     })
   );
+
+
+  // Register terminal profile provider
+  const terminalProfileProvider = vscode.window.registerTerminalProfileProvider('tutly.terminal-profile', {
+    provideTerminalProfile(token: vscode.CancellationToken): vscode.ProviderResult<vscode.TerminalProfile> {
+      try {
+        const serverUrl = config?.serverUrl || 'http://localhost:4242';
+        const wsUrl = serverUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+        const pty = createTutlyPseudoterminal(wsUrl);
+        return new vscode.TerminalProfile({
+          name: `Tutly Terminal ${incrementTerminalCounter()}`,
+          pty: pty
+        });
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to create terminal profile: ${error}`);
+        return undefined;
+      }
+    }
+  });
+  context.subscriptions.push(terminalProfileProvider);
+
+  // Register Create Terminal Command
+  context.subscriptions.push(
+    vscode.commands.registerCommand('tutlyfs.createTerminal', () => {
+      runCommandInTerminal(''); // Just opens the terminal
+    })
+  );
+
+  // Create Status Bar Item for Terminal
+  const terminalStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+  terminalStatusBarItem.text = `$(terminal) Tutly Terminal`;
+  terminalStatusBarItem.tooltip = "Open Tutly Terminal";
+  terminalStatusBarItem.command = 'tutlyfs.createTerminal';
+  terminalStatusBarItem.show();
+  context.subscriptions.push(terminalStatusBarItem);
 }
 
 async function activateGitFsMode(context: vscode.ExtensionContext, config?: ExtensionConfig) {
@@ -105,35 +167,6 @@ async function activateGitFsMode(context: vscode.ExtensionContext, config?: Exte
     });
   }
 
-  // Register GitFS-specific commands
-  context.subscriptions.push(
-    vscode.commands.registerCommand('git-fs.run', () => {
-      vscode.window.showInformationMessage('Run functionality is not implemented yet.');
-    })
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand('git-fs.submit', () => {
-      vscode.window.showInformationMessage('Submit functionality is not implemented yet.');
-    })
-  );
-
-  // Register Save Command
-  context.subscriptions.push(
-    vscode.commands.registerCommand('git-fs.save', async () => {
-      if (!sourceControlProvider) {
-        vscode.window.showErrorMessage('Source control not initialized');
-        return;
-      }
-
-      const message = sourceControlProvider['sourceControl'].inputBox.value;
-      try {
-        await sourceControlProvider.commit(message);
-      } catch (error) {
-        // Error already shown in commit method
-      }
-    })
-  );
 }
 
 async function activateFsRelayMode(context: vscode.ExtensionContext, config?: ExtensionConfig) {
@@ -191,23 +224,6 @@ async function activateFsRelayMode(context: vscode.ExtensionContext, config?: Ex
     })
   );
 
-  // Register terminal profile provider
-  const terminalProfileProvider = vscode.window.registerTerminalProfileProvider('tutly.terminal-profile', {
-    provideTerminalProfile(token: vscode.CancellationToken): vscode.ProviderResult<vscode.TerminalProfile> {
-      try {
-        const wsUrl = serverUrl!.replace('http://', 'ws://').replace('https://', 'wss://');
-        const pty = createTutlyPseudoterminal(wsUrl);
-        return new vscode.TerminalProfile({
-          name: `Tutly Terminal ${incrementTerminalCounter()}`,
-          pty: pty
-        });
-      } catch (error) {
-        vscode.window.showErrorMessage(`Failed to create terminal profile: ${error}`);
-        return undefined;
-      }
-    }
-  });
-  context.subscriptions.push(terminalProfileProvider);
 }
 
 const initializeGitFileSystem = async (ctx: GitContext, context: vscode.ExtensionContext) => {

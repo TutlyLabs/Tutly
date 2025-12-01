@@ -27,7 +27,7 @@ export class SourceControlProvider {
     // Set up input box for commit messages
     this.sourceControl.inputBox.placeholder = 'Message (Ctrl+Enter to commit)';
     this.sourceControl.acceptInputCommand = {
-      command: 'git-fs.save',
+      command: 'tutlyfs.save',
       title: 'Commit',
     };
   }

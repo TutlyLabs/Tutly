@@ -40,14 +40,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useRouter, useSearchParams } from "next/navigation";
 import NewAttachmentPage from "@/app/(protected)/courses/[id]/classes/_components/NewAssignments";
 import { api } from "@/trpc/react";

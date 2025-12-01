@@ -8,8 +8,8 @@ import ignore, { Ignore } from "ignore";
 import { createAPIClient } from "../lib/api/client";
 import { isAuthenticated } from "../lib/auth/device";
 
-export default class Submit extends Command {
-  static description = "Submit your work";
+export default class Save extends Command {
+  static description = "Save your work to the cloud without submitting";
 
   static examples = [
     "<%= config.bin %> <%= command.id %>",
@@ -20,13 +20,13 @@ export default class Submit extends Command {
     help: flags.help({ char: "h" }),
     dir: flags.string({
       char: "d",
-      description: "Directory to submit (defaults to current directory)",
+      description: "Directory to save (defaults to current directory)",
       default: ".",
     }),
   };
 
   async run() {
-    const { flags } = await this.parse(Submit);
+    const { flags } = await this.parse(Save);
 
     if (!(await isAuthenticated())) {
       this.log("❌ Not authenticated. Run 'tutly login' first.");
@@ -54,7 +54,7 @@ export default class Submit extends Command {
         this.exit(1);
       }
 
-      this.log(`\n📤 Preparing submission for: ${metadata.title}...`);
+      this.log(`\n💾 Saving work for: ${metadata.title}...`);
 
       // 1. Create Zip Archive
       const zip = new AdmZip();
@@ -83,7 +83,7 @@ export default class Submit extends Command {
       const zipBuffer = zip.toBuffer();
 
       if (zipBuffer.length === 0) {
-        this.log("❌ No files found to submit.");
+        this.log("❌ No files found to save.");
         this.exit(1);
       }
 
@@ -91,34 +91,31 @@ export default class Submit extends Command {
         `📁 Compressed size: ${(zipBuffer.length / 1024).toFixed(2)} KB`,
       );
 
-      // 2. Upload Submission
+      // 2. Upload Save
       const api = await createAPIClient();
-      this.log(`\n⬆️  Uploading submission...`);
+      this.log(`\n⬆️  Uploading save...`);
 
       const result = await api.uploadSubmission(
         assignmentId,
         zipBuffer,
-        "SUBMIT",
+        "SAVE",
       );
 
       if (result.error) {
-        this.log(`\n❌ Submission failed: ${result.error}\n`);
+        this.log(`\n❌ Save failed: ${result.error}\n`);
         this.exit(1);
       }
 
       if (result.success) {
-        this.log("\n✨ Submission successful!");
-        this.log(`✓ Your work has been submitted for review\n`);
-        if (result.submissionId) {
-          this.log(`📝 Submission ID: ${result.submissionId}\n`);
-        }
+        this.log("\n✨ Save successful!");
+        this.log(`✓ Your work has been saved to the cloud\n`);
       } else {
         this.log(`\n⚠️  Unexpected response from server\n`);
         this.exit(1);
       }
     } catch (error) {
       this.log(
-        `\n❌ Failed to submit: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `\n❌ Failed to save: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
       if (error instanceof Error && error.stack) {
         this.log(`\n${error.stack}`);
@@ -140,7 +137,6 @@ export default class Submit extends Command {
       const relativePath = relative(baseDir, fullPath);
 
       // Check if ignored
-      // Note: ignore() expects relative paths
       if (ig.ignores(relativePath)) {
         continue;
       }
