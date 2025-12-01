@@ -142,12 +142,12 @@ async function activateFsRelayMode(context: vscode.ExtensionContext, config?: Ex
 
   vscode.window.withProgress({
     location: vscode.ProgressLocation.Notification,
-    title: "Setting up Tutly FS (FsRelay Mode)...",
+    title: "Setting up Tutly File system...",
     cancellable: false
   }, async () => {
     await initializeFsRelayFileSystem(serverUrl, apiKey, context);
     await new Promise(resolve => setTimeout(resolve, 1500));
-    vscode.window.setStatusBarMessage('$(check) Tutly FsRelay Ready', 5000);
+    vscode.window.setStatusBarMessage('$(check) Tutly File system Ready', 5000);
     try {
       await vscode.commands.executeCommand('tutlyfs.onReady');
     } catch (err) {
@@ -267,12 +267,11 @@ const initializeFsRelayFileSystem = async (serverUrl: string, apiKey: string, co
     const workspaceUri = vscode.Uri.parse('tutlyfs:/');
     const success = vscode.workspace.updateWorkspaceFolders(0, 0, {
       uri: workspaceUri,
-      name: 'Tutly Files (FsRelay)',
+      name: 'Tutly Files',
     });
 
     if (success) {
-      vscode.window.showInformationMessage('Tutly FsRelay workspace ready');
-
+      vscode.window.showInformationMessage('Tutly workspace is ready');
       // Auto-create terminal
       try {
         const wsUrl = serverUrl.replace('http://', 'ws://').replace('https://', 'wss://');

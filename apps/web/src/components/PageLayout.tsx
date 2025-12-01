@@ -7,6 +7,7 @@ interface PageLayoutProps {
   children: ReactNode;
   hideHeader?: boolean;
   hideCrisp?: boolean;
+  hideSidebar?: boolean;
   forceClose?: boolean;
   className?: string;
 }
@@ -15,12 +16,14 @@ export function PageLayout({
   children,
   hideHeader = false,
   hideCrisp = false,
+  hideSidebar = false,
   forceClose = false,
   className,
 }: PageLayoutProps) {
   useLayoutOptions({
     hideHeader,
     hideCrisp,
+    hideSidebar,
     forceClose,
     className,
   });

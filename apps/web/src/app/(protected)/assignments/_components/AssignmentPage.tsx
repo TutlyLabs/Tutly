@@ -9,11 +9,9 @@ import { FiEdit } from "react-icons/fi";
 import { MdOutlineDelete } from "react-icons/md";
 import { RiWhatsappLine } from "react-icons/ri";
 import {
-  FiCopy,
   FiRefreshCw,
-  FiGitBranch,
-  FiFolder,
-  FiExternalLink,
+  FiPlus,
+  FiTerminal,
 } from "react-icons/fi";
 import Link from "next/link";
 
@@ -291,11 +289,10 @@ export default function AssignmentPage({
         <div className="flex items-center justify-center gap-4">
           {assignment?.dueDate != null && (
             <div
-              className={`rounded p-1 px-2 text-white ${
-                new Date(assignment?.dueDate) > new Date()
-                  ? "bg-primary-600"
-                  : "bg-secondary-500"
-              }`}
+              className={`rounded p-1 px-2 text-white ${new Date(assignment?.dueDate) > new Date()
+                ? "bg-primary-600"
+                : "bg-secondary-500"
+                }`}
             >
               Last Date : {assignment?.dueDate.toISOString().split("T")[0]}
             </div>
@@ -1216,123 +1213,55 @@ const GitTemplateSection = ({ assignment }: { assignment: any }) => {
           repoUrl: data.repoUrl,
           expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
         });
-        toast.success("Template repository URL refreshed!");
+        toast.success("Workspace initialized!");
       } else {
-        toast.error(data.error || "Failed to create template repository");
+        toast.error(data.error || "Failed to initialize workspace");
       }
     } catch (error) {
-      toast.error("Error creating template repository");
+      toast.error("Error initializing workspace");
     } finally {
       setIsCreating(false);
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!");
-  };
+  if (isLoading) return <div className="h-9 w-32 animate-pulse rounded-md bg-slate-800/50" />;
 
   return (
-    <Card className="border-slate-700 bg-slate-800/50">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FiGitBranch className="h-4 w-4 text-green-400" />
-            Git Template Repository
-            <Badge className="bg-green-600 text-xs">Instructor</Badge>
-          </CardTitle>
-          {repoData && (
-            <Button
-              onClick={createTemplateRepo}
-              variant="ghost"
-              size="sm"
-              className="h-8"
-            >
-              <FiRefreshCw className="h-4 w-4" />
-            </Button>
+    <div className="flex flex-col gap-2 items-start">
+      {!repoData ? (
+        <Button
+          onClick={createTemplateRepo}
+          disabled={isCreating}
+          size="sm"
+          className="h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white border-transparent cursor-pointer"
+        >
+          {isCreating ? (
+            <FiRefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <FiPlus className="mr-2 h-3.5 w-3.5" />
           )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {isLoading ? (
-          <div className="space-y-3">
-            <div className="h-10 w-full animate-pulse rounded-lg bg-slate-700/50" />
-            <div className="h-4 w-3/4 animate-pulse rounded bg-slate-700/50" />
-          </div>
-        ) : !repoData ? (
+          Initialize Workspace
+        </Button>
+      ) : (
+        <div className="flex items-center gap-3">
           <Button
-            onClick={createTemplateRepo}
-            disabled={isCreating}
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            onClick={() => {
+              const config = {
+                mode: "fsrelay",
+                assignmentId: assignment.id,
+              };
+              const encodedConfig = btoa(JSON.stringify(config));
+              window.open(`/vscode?config=${encodedConfig}`, "_blank");
+            }}
+            size="sm"
+            className="h-8 px-4 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-transparent cursor-pointer"
           >
-            {isCreating ? (
-              <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Creating Template...
-              </>
-            ) : (
-              <>
-                <FiGitBranch className="mr-2 h-4 w-4" />
-                Create Template Repository
-              </>
-            )}
+            <FiTerminal className="mr-2 h-3.5 w-3.5" />
+            Launch Playground
           </Button>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <div className="mb-2 text-xs font-medium text-gray-400">
-                Clone & Work Locally
-              </div>
-              <div className="rounded-lg bg-slate-900/50 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <code className="flex-1 overflow-x-auto text-xs text-green-400">
-                    git clone {maskGitUrl(repoData.repoUrl)}
-                  </code>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      copyToClipboard(`git clone ${repoData.repoUrl}`)
-                    }
-                    className="h-7 px-2"
-                  >
-                    <FiCopy className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-              {repoData.expiresAt && (
-                <div className="mt-2 text-xs text-amber-400">
-                  ⚠️ Expires: {new Date(repoData.expiresAt).toLocaleString()}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="mb-2 text-xs font-medium text-gray-400">
-                View in VSCode
-              </div>
-              <div className="rounded-lg border border-slate-700 bg-slate-900/30 p-3">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    const params = new URLSearchParams({
-                      assignmentId: assignment.id,
-                    });
-                    const url = `/vscode/?${params.toString()}`;
-                    window.open(url, "_blank");
-                  }}
-                  className="w-full"
-                >
-                  <FiExternalLink className="mr-2 h-3 w-3" />
-                  Open in VSCode
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -1396,174 +1325,60 @@ const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
         });
         toast.success(
           repoData
-            ? "Repository URL refreshed!"
-            : "Submission repository created successfully!",
+            ? "Workspace refreshed!"
+            : "Workspace initialized!",
         );
       } else {
-        toast.error(data.error || "Failed to create submission repository");
+        toast.error(data.error || "Failed to initialize workspace");
       }
     } catch (error) {
-      toast.error("Error creating submission repository");
+      toast.error("Error initializing workspace");
     } finally {
       setIsCreating(false);
     }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!");
   };
 
   const refreshRepo = async () => {
     await createSubmissionRepo();
   };
 
+  if (isLoading) return <div className="h-9 w-32 animate-pulse rounded-md bg-slate-800/50" />;
+
   return (
-    <Card className="border-slate-700 bg-slate-800/50">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FiGitBranch className="h-4 w-4 text-blue-400" />
-            Git Submission Repository
-            <Badge className="bg-blue-600 text-xs">Student</Badge>
-          </CardTitle>
-          {repoData && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={refreshRepo}
-              disabled={isCreating}
-              className="h-8"
-            >
-              <FiRefreshCw
-                className={`h-4 w-4 ${isCreating ? "animate-spin" : ""}`}
-              />
-            </Button>
+    <div className="flex flex-col gap-2 items-start">
+      {!repoData ? (
+        <Button
+          onClick={createSubmissionRepo}
+          disabled={isCreating}
+          size="sm"
+          className="h-9 text-xs bg-emerald-600 hover:bg-emerald-700 text-white border-transparent"
+        >
+          {isCreating ? (
+            <FiRefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <FiPlus className="mr-2 h-3.5 w-3.5" />
           )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {isLoading ? (
-          <div className="space-y-3">
-            <div className="h-10 w-full animate-pulse rounded-lg bg-slate-700/50" />
-            <div className="h-4 w-3/4 animate-pulse rounded bg-slate-700/50" />
-          </div>
-        ) : !repoData ? (
+          Initialize Workspace
+        </Button>
+      ) : (
+        <div className="flex items-center gap-3">
           <Button
-            onClick={createSubmissionRepo}
-            disabled={isCreating}
-            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => {
+              const config = {
+                mode: "fsrelay",
+                assignmentId: assignment.id,
+              };
+              const encodedConfig = btoa(JSON.stringify(config));
+              window.open(`/vscode?config=${encodedConfig}`, "_blank");
+            }}
+            size="sm"
+            className="h-8 px-4 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-transparent cursor-pointer"
           >
-            {isCreating ? (
-              <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Creating Repository...
-              </>
-            ) : (
-              <>
-                <FiGitBranch className="mr-2 h-4 w-4" />
-                Create Submission Repository
-              </>
-            )}
+            <FiTerminal className="mr-2 h-3.5 w-3.5" />
+            Launch Playground
           </Button>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <div className="mb-2 text-xs font-medium text-gray-400">
-                Clone & Work Locally
-              </div>
-              <div className="rounded-lg bg-slate-900/50 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <code className="flex-1 overflow-x-auto text-xs text-green-400">
-                    git clone {maskGitUrl(repoData.repoUrl)}
-                  </code>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      copyToClipboard(`git clone ${repoData.repoUrl}`)
-                    }
-                    className="h-7 px-2"
-                  >
-                    <FiCopy className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-              {repoData.expiresAt && (
-                <div className="mt-2 text-xs text-amber-400">
-                  ⚠️ Expires: {new Date(repoData.expiresAt).toLocaleString()}
-                </div>
-              )}
-            </div>
-
-            {/* Step 2: View Submission */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Badge className="bg-blue-600">Step 2</Badge>
-                <span className="text-sm font-medium">
-                  View your latest submission from local
-                </span>
-              </div>
-              <div className="rounded-lg border border-slate-700 bg-slate-900/30 p-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs text-gray-400">
-                    {repoData.lastUpdated && (
-                      <>
-                        Last Updated:{" "}
-                        {new Date(repoData.lastUpdated).toLocaleString(
-                          "en-IN",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          },
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        const params = new URLSearchParams({
-                          assignmentId: assignment.id,
-                        });
-                        const url = `/vscode/?${params.toString()}`;
-                        window.open(url, "_blank");
-                      }}
-                      className="h-auto py-1 text-xs"
-                    >
-                      <FiExternalLink className="mr-1 h-3 w-3" />
-                      Open in VSCode
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={refreshRepo}
-                      disabled={isCreating}
-                      className="h-auto py-1 text-xs"
-                    >
-                      <FiRefreshCw
-                        className={`mr-1 h-3 w-3 ${isCreating ? "animate-spin" : ""}`}
-                      />
-                      Refresh View
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-blue-500/30 bg-blue-950/20 p-3 text-xs text-blue-300">
-              💡 <strong>Tip:</strong> After making changes locally, commit and
-              push to see them reflected in your submission.
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   );
 };

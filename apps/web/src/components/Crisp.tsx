@@ -61,6 +61,9 @@ export default function Crisp({ user, organization }: CrispProps) {
             organization.orgCode,
           ]);
         }
+        if (hideCrisp) {
+          window.$crisp.push(["do", "chat:hide"]);
+        }
       }
     };
 
@@ -69,9 +72,15 @@ export default function Crisp({ user, organization }: CrispProps) {
     };
   }, [user, organization]);
 
-  if (hideCrisp) {
-    return null;
-  }
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.$crisp) {
+      if (hideCrisp) {
+        window.$crisp.push(["do", "chat:hide"]);
+      } else {
+        window.$crisp.push(["do", "chat:show"]);
+      }
+    }
+  }, [hideCrisp]);
 
   return null;
 }

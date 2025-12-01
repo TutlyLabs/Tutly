@@ -52,8 +52,10 @@ export function AppSidebar({
   isIntegrationsEnabled,
   isAIAssistantEnabled,
 }: AppSidebarProps) {
-  const { forceClose } = useLayout();
+  const { forceClose, hideSidebar } = useLayout();
   const organizationName = "Tutly";
+
+  if (hideSidebar) return null;
 
   const pathname = usePathname();
   const sidebarItems = getDefaultSidebarItems({
@@ -99,9 +101,9 @@ export function AppSidebar({
         if (!targetUrl || targetUrl === "#") return null;
         const isSubActive = hasChildren
           ? children.some(
-              (s) =>
-                s.url && (pathname === s.url || pathname.startsWith(s.url)),
-            )
+            (s) =>
+              s.url && (pathname === s.url || pathname.startsWith(s.url)),
+          )
           : false;
         const isRootActive =
           item.url && item.url !== "#"
@@ -116,11 +118,11 @@ export function AppSidebar({
         };
       })
       .filter(Boolean) as Array<{
-      title: string;
-      url: string;
-      icon: React.ElementType;
-      active: boolean;
-    }>;
+        title: string;
+        url: string;
+        icon: React.ElementType;
+        active: boolean;
+      }>;
 
     return tabs.slice(0, 5);
   }, [sidebarItems, pathname]);
@@ -234,7 +236,7 @@ export function AppSidebar({
                                             "relative flex items-center px-2.5 py-1.5 text-sm outline-none select-none",
                                             "hover:bg-accent hover:text-accent-foreground transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
                                             pathname === subItem.url &&
-                                              "bg-accent text-accent-foreground",
+                                            "bg-accent text-accent-foreground",
                                           )}
                                         >
                                           <span className="truncate">
@@ -254,8 +256,8 @@ export function AppSidebar({
                                     ? "bg-primary text-primary-foreground"
                                     : "",
                                   isSubItemActive &&
-                                    !isOpen &&
-                                    "bg-accent text-accent-foreground",
+                                  !isOpen &&
+                                  "bg-accent text-accent-foreground",
                                   "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base",
                                 )}
                               >

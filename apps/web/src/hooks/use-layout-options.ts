@@ -4,6 +4,7 @@ import { useLayout } from "@/providers/layout-provider";
 interface UseLayoutOptionsProps {
   hideHeader?: boolean;
   hideCrisp?: boolean;
+  hideSidebar?: boolean;
   className?: string;
   forceClose?: boolean;
 }
@@ -11,12 +12,14 @@ interface UseLayoutOptionsProps {
 export function useLayoutOptions({
   hideHeader = false,
   hideCrisp = false,
+  hideSidebar = false,
   className,
   forceClose = false,
 }: UseLayoutOptionsProps = {}) {
   const {
     setHideHeader,
     setHideCrisp,
+    setHideSidebar,
     setClassName,
     setForceClose,
     resetLayout,
@@ -25,6 +28,7 @@ export function useLayoutOptions({
   useEffect(() => {
     setHideHeader(hideHeader);
     setHideCrisp(hideCrisp);
+    setHideSidebar(hideSidebar);
     setClassName(className);
     setForceClose(forceClose);
 
@@ -34,10 +38,12 @@ export function useLayoutOptions({
   }, [
     hideHeader,
     hideCrisp,
+    hideSidebar,
     className,
     forceClose,
     setHideHeader,
     setHideCrisp,
+    setHideSidebar,
     setClassName,
     setForceClose,
     resetLayout,

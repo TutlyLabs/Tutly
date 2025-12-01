@@ -5,10 +5,12 @@ import * as React from "react";
 interface LayoutContextType {
   hideHeader: boolean;
   hideCrisp: boolean;
+  hideSidebar: boolean;
   className?: string;
   forceClose: boolean;
   setHideHeader: (hide: boolean) => void;
   setHideCrisp: (hide: boolean) => void;
+  setHideSidebar: (hide: boolean) => void;
   setClassName: (className?: string) => void;
   setForceClose: (forceClose: boolean) => void;
   resetLayout: () => void;
@@ -21,6 +23,7 @@ const LayoutContext = React.createContext<LayoutContextType | undefined>(
 export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const [hideHeader, setHideHeader] = React.useState(false);
   const [hideCrisp, setHideCrisp] = React.useState(false);
+  const [hideSidebar, setHideSidebar] = React.useState(false);
   const [className, setClassName] = React.useState<string | undefined>(
     undefined,
   );
@@ -29,6 +32,7 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const resetLayout = React.useCallback(() => {
     setHideHeader(false);
     setHideCrisp(false);
+    setHideSidebar(false);
     setClassName(undefined);
     setForceClose(false);
   }, []);
@@ -37,15 +41,17 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
     () => ({
       hideHeader,
       hideCrisp,
+      hideSidebar,
       className,
       forceClose,
       setHideHeader,
       setHideCrisp,
+      setHideSidebar,
       setClassName,
       setForceClose,
       resetLayout,
     }),
-    [hideHeader, hideCrisp, className, forceClose, resetLayout],
+    [hideHeader, hideCrisp, hideSidebar, className, forceClose, resetLayout],
   );
 
   return (
