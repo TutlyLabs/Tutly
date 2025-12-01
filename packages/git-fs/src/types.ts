@@ -1,16 +1,25 @@
 export interface GitContext {
-  assignmentId?: string;
-  submissionId?: string;
+  assignmentId: string;
+  submissionId: string;
   type: 'TEMPLATE' | 'SUBMISSION';
 }
 
 export interface GitFileEntry {
   name: string;
-  type: 'file' | 'dir';
   path: string;
+  type: 'file' | 'dir';
   size?: number;
   content?: string; // base64 encoded
   sha?: string;
+}
+
+export type FileSystemMode = 'gitfs' | 'fsrelay';
+
+export interface ExtensionConfig {
+  mode: FileSystemMode;
+  assignmentId?: string;
+  serverUrl?: string;
+  apiKey?: string;
 }
 
 export type GitContentsResponse = GitFileEntry | GitFileEntry[];
