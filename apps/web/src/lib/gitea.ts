@@ -306,7 +306,7 @@ export const giteaClient = {
     message: string,
     files: Array<{
       path: string;
-      content: string;
+      content: string | Buffer;
       status: "modified" | "added" | "deleted";
     }>,
     author?: { name: string; email: string },
@@ -352,7 +352,8 @@ export const giteaClient = {
       const results = [];
       for (const file of files) {
         try {
-          const url = `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(file.path)}`;
+          const encodedPath = file.path.split("/").map(encodeURIComponent).join("/");
+          const url = `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}`;
 
           if (file.status === "deleted") {
             // Get file SHA first
@@ -398,17 +399,13 @@ export const giteaClient = {
             if (getResponse.ok) {
               const fileData = await getResponse.json();
               sha = fileData.sha;
-              console.log(
-                `File ${file.path} exists on temp branch with SHA: ${sha}`,
-              );
-            } else {
-              console.log(
-                `File ${file.path} does not exist on temp branch (status: ${getResponse.status}), will create it`,
-              );
             }
-            // If file doesn't exist on temp branch, sha will be undefined (which is correct for new files)
 
             // Create or update the file
+            const contentBase64 = Buffer.isBuffer(file.content)
+              ? file.content.toString("base64")
+              : Buffer.from(file.content).toString("base64");
+
             const response = await fetch(url, {
               method: "PUT",
               headers: {
@@ -416,7 +413,7 @@ export const giteaClient = {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                content: Buffer.from(file.content).toString("base64"),
+                content: contentBase64,
                 message: `${sha ? "Update" : "Add"} ${file.path}`,
                 branch: tempBranchName,
                 ...(sha && { sha }),

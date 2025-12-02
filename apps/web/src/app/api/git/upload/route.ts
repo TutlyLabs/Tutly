@@ -72,13 +72,13 @@ export async function POST(req: NextRequest) {
     const zip = new AdmZip(buffer);
     const zipEntries = zip.getEntries();
 
-    const files: { path: string; content: string }[] = [];
+    const files: { path: string; content: string | Buffer }[] = [];
 
     for (const entry of zipEntries) {
       if (!entry.isDirectory) {
         files.push({
           path: entry.entryName,
-          content: entry.getData().toString("utf-8"),
+          content: entry.getData(),
         });
       }
     }
