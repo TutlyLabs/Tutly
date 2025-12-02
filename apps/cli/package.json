@@ -1,7 +1,7 @@
 {
   "name": "tutly",
   "description": "Tutly CLI - Command line interface for Tutly platform",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Tutly",
   "bin": {
     "tutly": "./bin/run"
@@ -87,6 +87,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "format": "prettier --write .",
+    "postinstall": "npm rebuild node-pty",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "rm -rf lib && npm run build && oclif-dev manifest && oclif-dev readme",

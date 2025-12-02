@@ -1,5 +1,5 @@
 import { writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { Command, flags } from "@oclif/command";
 
 import { createAPIClient } from "../lib/api/client";
@@ -72,10 +72,12 @@ export default class Assignment extends Command {
       await api.downloadAndExtractArchive(archiveUrl, outputDir);
 
       // 4. Create .tutly.json metadata
+      const absoluteOutputDir = resolve(outputDir);
       const metadata = {
         assignmentId: assignmentId,
         title: assignmentTitle,
         courseId: details.assignment?.class?.courseId,
+        path: absoluteOutputDir,
         clonedAt: new Date().toISOString(),
       };
 

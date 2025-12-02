@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Command,
   RefreshCw,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -40,12 +41,14 @@ const CommandDisplay = ({ command }: { command: string }) => {
       {parts.map((part, i) => {
         let colorClass = "text-white/90";
 
-        if (["npx", "git", "cd"].includes(part)) {
+        if (["npx", "git", "cd", "npm", "install"].includes(part)) {
           colorClass = "text-purple-400 font-bold";
         } else if (part === "tutly") {
           colorClass = "text-blue-400 font-semibold";
         } else if (["assignment", "playground", "clone"].includes(part)) {
           colorClass = "text-cyan-400";
+        } else if (part.startsWith("-")) {
+          colorClass = "text-yellow-400";
         } else {
           // Arguments / IDs / Paths
           colorClass = "text-emerald-200/90";
@@ -78,6 +81,11 @@ export function LocalPlaygroundSetupScreen({
   const [browserSupported, setBrowserSupported] = useState(true);
   const [copiedSteps, setCopiedSteps] = useState<Set<number>>(new Set());
   const [repoUrl, setRepoUrl] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState<{
+    current: string;
+    latest: string;
+  } | null>(null);
 
   useEffect(() => {
     runPreflightChecks();
@@ -99,6 +107,22 @@ export function LocalPlaygroundSetupScreen({
     }
     return () => clearInterval(interval);
   }, [isConnected, assignmentId]);
+
+  const isVersionOutdated = (current: string, latest: string) => {
+    try {
+      const v1 = current.split(".").map(Number);
+      const v2 = latest.split(".").map(Number);
+      for (let i = 0; i < 3; i++) {
+        const num1 = v1[i] || 0;
+        const num2 = v2[i] || 0;
+        if (num1 < num2) return true;
+        if (num1 > num2) return false;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
 
   const runPreflightChecks = async () => {
     // Check browser only once
@@ -122,9 +146,86 @@ export function LocalPlaygroundSetupScreen({
 
       if (response.ok) {
         const data = await response.json();
+
+        // 1. Check Version
+        if (data.version) {
+          try {
+            const latestRes = await fetch("/api/cli/latest-version");
+            if (latestRes.ok) {
+              const latestData = await latestRes.json();
+              if (
+                latestData.version &&
+                isVersionOutdated(data.version, latestData.version)
+              ) {
+                setUpdateAvailable({
+                  current: data.version,
+                  latest: latestData.version,
+                });
+                setErrorMessage(
+                  `CLI update required. v${latestData.version} is available.`,
+                );
+                setIsConnected(false);
+                setPreflightStatus("error");
+                return;
+              }
+            }
+          } catch (e) {
+            // Ignore version check failure if offline or API error
+            console.error("Failed to check latest version:", e);
+          }
+        }
+
+        // 2. Verify .tutly.json if assignmentId is present
+        if (assignmentId) {
+          try {
+            const metadataRes = await fetch(
+              "http://localhost:4242/api/files/.tutly.json",
+              {
+                headers: { "x-api-key": "tutly-dev-key" },
+                signal: controller.signal,
+              },
+            );
+
+            if (!metadataRes.ok) {
+              setErrorMessage(
+                "Missing .tutly.json file. Are you in the correct directory?",
+              );
+              setIsConnected(false);
+              setPreflightStatus("error");
+              return;
+            }
+
+            const metadataFile = await metadataRes.json();
+            if (metadataFile.type !== "file" || !metadataFile.content) {
+              setErrorMessage("Invalid .tutly.json file format.");
+              setIsConnected(false);
+              setPreflightStatus("error");
+              return;
+            }
+
+            const metadata = JSON.parse(metadataFile.content);
+            if (metadata.assignmentId !== assignmentId) {
+              setErrorMessage(
+                `Incorrect assignment. Expected ${assignmentId}, found ${metadata.assignmentId}`,
+              );
+              setIsConnected(false);
+              setPreflightStatus("error");
+              return;
+            }
+          } catch (e) {
+            console.error("Failed to verify assignment metadata:", e);
+            setErrorMessage("Failed to verify assignment metadata.");
+            setIsConnected(false);
+            setPreflightStatus("error");
+            return;
+          }
+        }
+
         setConnectedDirectory(data.directory);
         setIsConnected(true);
         setPreflightStatus("success");
+        setErrorMessage(null);
+        setUpdateAvailable(null);
       } else {
         setIsConnected(false);
         setPreflightStatus("error");
@@ -155,17 +256,11 @@ export function LocalPlaygroundSetupScreen({
   const setupCommands = assignmentId
     ? [
         {
-          command: repoUrl
-            ? `git clone ${repoUrl}`
-            : `npx tutly assignment ${assignmentId}`,
-          label: repoUrl ? "Clone Repository" : "Clone Assignment",
+          command: `npx tutly assignment ${assignmentId}`,
+          label: "Download Assignment",
         },
         {
-          command: `cd ${repoUrl ? getRepoName(repoUrl) : assignmentId}`,
-          label: "Enter Directory",
-        },
-        {
-          command: "npx tutly playground",
+          command: `npx tutly playground --directory ${assignmentId}`,
           label: "Start Server",
         },
       ]
@@ -255,21 +350,34 @@ export function LocalPlaygroundSetupScreen({
                     "flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500",
                     isConnected
                       ? "bg-green-500/20 text-green-400"
-                      : "bg-white/5 text-white/40",
+                      : errorMessage
+                        ? "bg-red-500/20 text-red-400"
+                        : "bg-white/5 text-white/40",
                   )}
                 >
                   {isConnected ? (
                     <Wifi className="h-5 w-5" />
+                  ) : errorMessage ? (
+                    <AlertCircle className="h-5 w-5" />
                   ) : (
                     <WifiOff className="h-5 w-5" />
                   )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <div className="font-semibold text-white">
+                    <div
+                      className={cn(
+                        "font-semibold",
+                        errorMessage ? "text-red-400" : "text-white",
+                      )}
+                    >
                       {isConnected
                         ? "System Connected"
-                        : "Waiting for Connection"}
+                        : updateAvailable
+                          ? "Update Required"
+                          : errorMessage
+                            ? "Connection Error"
+                            : "Waiting for Connection"}
                     </div>
                     <PlaygroundHelpDialog />
                   </div>
@@ -279,15 +387,19 @@ export function LocalPlaygroundSetupScreen({
                         "h-1.5 w-1.5 rounded-full",
                         isConnected
                           ? "animate-pulse bg-green-500"
-                          : "bg-amber-500",
+                          : errorMessage
+                            ? "bg-red-500"
+                            : "bg-amber-500",
                       )}
                     />
-                    {isConnected ? "localhost:4242" : "Checking status..."}
+                    {isConnected
+                      ? "localhost:4242"
+                      : errorMessage || "Checking status..."}
                   </div>
                 </div>
               </div>
 
-              {!isConnected && (
+              {!isConnected && !errorMessage && (
                 <div className="h-8 w-8">
                   <Loader2 className="h-full w-full animate-spin text-white/20" />
                 </div>
@@ -321,6 +433,76 @@ export function LocalPlaygroundSetupScreen({
                   Start Coding
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
+              </div>
+            ) : updateAvailable ? (
+              // Update Required State
+              <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6 duration-500">
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-6">
+                  <div className="flex items-start gap-4">
+                    <Download className="mt-1 h-6 w-6 shrink-0 text-amber-400" />
+                    <div className="space-y-1 overflow-hidden">
+                      <div className="text-sm font-medium text-amber-400">
+                        Update Required
+                      </div>
+                      <div className="text-sm text-white/80">
+                        Your CLI version (v{updateAvailable.current}) is
+                        outdated. Please update to v{updateAvailable.latest} to
+                        continue.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="group relative flex items-center gap-3 rounded-xl border border-white/5 bg-black/40 p-3 pr-14 transition-all hover:border-white/10 hover:bg-black/60">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-medium text-white/60">
+                      1
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <CommandDisplay command="npm install -g tutly@latest" />
+                      <div className="mt-0.5 text-[10px] font-medium tracking-wider text-white/30 uppercase">
+                        Update CLI
+                      </div>
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        handleCopy("npm install -g tutly@latest", 0)
+                      }
+                      className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 text-white/40 opacity-0 transition-all group-hover:opacity-100 hover:bg-white/10 hover:text-white"
+                    >
+                      {copiedSteps.has(0) ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-400" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="group relative flex items-center gap-3 rounded-xl border border-white/5 bg-black/40 p-3 pr-14 transition-all hover:border-white/10 hover:bg-black/60">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-medium text-white/60">
+                      2
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <CommandDisplay command="npx tutly playground" />
+                      <div className="mt-0.5 text-[10px] font-medium tracking-wider text-white/30 uppercase">
+                        Restart Server
+                      </div>
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleCopy("npx tutly playground", 1)}
+                      className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 text-white/40 opacity-0 transition-all group-hover:opacity-100 hover:bg-white/10 hover:text-white"
+                    >
+                      {copiedSteps.has(1) ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-400" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
             ) : (
               // Disconnected State

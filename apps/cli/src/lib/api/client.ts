@@ -130,7 +130,7 @@ export class TutlyAPI {
     assignmentId: string,
   ): Promise<{ success: boolean; repoUrl?: string; error?: string }> {
     const response = await fetch(
-      `${this.baseUrl}/api/git/create`,
+      `${this.baseUrl}/git/create`,
       {
         method: "POST",
         headers: {
@@ -155,10 +155,22 @@ export class TutlyAPI {
   }
 
   async downloadAndExtractArchive(url: string, outputDir: string): Promise<void> {
-    const response = await fetch(url, {
-      headers: {
-        ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
-      },
+    const urlObj = new URL(url);
+    const headers: Record<string, string> = {
+      ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
+    };
+
+    if (urlObj.username || urlObj.password) {
+      const auth = Buffer.from(
+        `${urlObj.username}:${urlObj.password}`,
+      ).toString("base64");
+      headers["Authorization"] = `Basic ${auth}`;
+      urlObj.username = "";
+      urlObj.password = "";
+    }
+
+    const response = await fetch(urlObj.toString(), {
+      headers,
     });
 
     if (!response.ok) {
@@ -203,7 +215,7 @@ export class TutlyAPI {
     formData.append("action", action);
     formData.append("file", new Blob([new Uint8Array(zipBuffer)]), "submission.zip");
 
-    const response = await fetch(`${this.baseUrl}/api/git/upload`, {
+    const response = await fetch(`${this.baseUrl}/git/upload`, {
       method: "POST",
       headers: {
         ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),

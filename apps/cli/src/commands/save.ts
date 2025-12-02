@@ -7,6 +7,7 @@ import ignore, { Ignore } from "ignore";
 
 import { createAPIClient } from "../lib/api/client";
 import { isAuthenticated } from "../lib/auth/device";
+import { findAssignmentRoot } from "../lib/utils";
 
 export default class Save extends Command {
   static description = "Save your work to the cloud without submitting";
@@ -33,17 +34,20 @@ export default class Save extends Command {
       this.exit(1);
     }
 
-    const submissionDir = flags.dir;
+    const startDir = flags.dir;
+    const submissionDir = findAssignmentRoot(startDir);
 
-    // Check for .tutly.json metadata file
-    const metadataPath = join(submissionDir, ".tutly.json");
-    if (!existsSync(metadataPath)) {
-      this.log("❌ No .tutly.json file found.");
+    if (!submissionDir) {
+      this.log(
+        "❌ No .tutly.json file found in this directory or any parent directories.",
+      );
       this.log(
         "Make sure you're in a directory created by 'tutly assignment <id>'",
       );
       this.exit(1);
     }
+
+    const metadataPath = join(submissionDir, ".tutly.json");
 
     try {
       const metadata = JSON.parse(await readFile(metadataPath, "utf-8"));

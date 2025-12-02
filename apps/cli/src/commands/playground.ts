@@ -1,11 +1,11 @@
 import { promises as fs } from "fs";
 import { createServer, IncomingMessage } from "http";
 import * as path from "path";
+import type { IPty } from "node-pty";
 import { Command, flags } from "@oclif/command";
 import chokidar from "chokidar";
 import cors from "cors";
 import express from "express";
-import * as pty from "node-pty";
 import * as WebSocket from "ws";
 import { WebSocketServer } from "ws";
 
@@ -19,7 +19,7 @@ interface FileEntry {
 
 interface TerminalSession {
   id: string;
-  pty: pty.IPty;
+  pty: IPty;
   ws: WebSocket.WebSocket;
 }
 
@@ -136,7 +136,7 @@ export default class Playground extends Command {
         status: "ok",
         directory: baseDir,
         timestamp: new Date().toISOString(),
-        version: "1.0.0",
+        version: this.config.version,
       });
     });
 
@@ -306,10 +306,25 @@ export default class Playground extends Command {
     const terminalId = `terminal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const { flags } = this.parse(Playground);
 
+    let ptyModule: typeof import("node-pty");
+    try {
+      ptyModule = require("node-pty");
+    } catch (error: any) {
+      console.error("Failed to load node-pty:", error.message);
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          message: `Terminal support is not available. Please run 'npm rebuild node-pty' in the CLI directory. Error: ${error.message}`,
+        }),
+      );
+      ws.close();
+      return;
+    }
+
     try {
       // Create a new pseudo-terminal
       const shell = process.platform === "win32" ? "powershell.exe" : "bash";
-      const terminal = pty.spawn(shell, [], {
+      const terminal = ptyModule.spawn(shell, [], {
         name: "xterm-color",
         cols: 80,
         rows: 24,
