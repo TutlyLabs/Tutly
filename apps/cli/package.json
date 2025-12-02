@@ -1,7 +1,7 @@
 {
   "name": "tutly",
   "description": "Tutly CLI - Command line interface for Tutly platform",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "author": "Tutly",
   "bin": {
     "tutly": "./bin/run"

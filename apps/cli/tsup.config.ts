@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 import packageJson from "./package.json";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/commands/**/*.ts"],
+  entry: ["src/index.ts", "src/commands/**/*.ts", "src/hooks/**/*.ts"],
   format: ["cjs"],
   dts: true,
   splitting: false,
