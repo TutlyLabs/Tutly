@@ -128,6 +128,7 @@ export class TutlyAPI {
   }
   async createSubmissionRepo(
     assignmentId: string,
+    type: "SUBMISSION" | "TEMPLATE" = "SUBMISSION",
   ): Promise<{ success: boolean; repoUrl?: string; error?: string }> {
     const response = await fetch(
       `${this.baseUrl}/git/create`,
@@ -139,7 +140,7 @@ export class TutlyAPI {
         },
         body: JSON.stringify({
           assignmentId,
-          type: "SUBMISSION",
+          type,
         }),
       },
     );

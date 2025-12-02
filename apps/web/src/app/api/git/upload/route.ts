@@ -36,6 +36,9 @@ export async function POST(req: NextRequest) {
           })
         )?.courseId,
       },
+      include: {
+        user: true,
+      },
     });
 
     if (!enrolledUser) {
@@ -52,16 +55,39 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (!submission?.gitRepoPath) {
+    let gitRepoPath = submission?.gitRepoPath;
+
+    // INSTRUCTOR OVERRIDE: If instructor/admin, use template repo
+    if (
+      enrolledUser.user.role === "INSTRUCTOR" ||
+      enrolledUser.user.role === "ADMIN"
+    ) {
+      const attachment = await db.attachment.findUnique({
+        where: { id: assignmentId },
+      });
+      if (attachment?.gitTemplateRepo) {
+        gitRepoPath = attachment.gitTemplateRepo;
+      }
+    }
+
+    if (!gitRepoPath) {
       return NextResponse.json(
-        { error: "Submission repository not found" },
+        { error: "Repository not found" },
         { status: 404 },
       );
     }
 
-    if (submission.status === "SUBMITTED" && action === "SUBMIT") {
+    // Block updates if already submitted (unless instructor override)
+    const isInstructor =
+      enrolledUser.user.role === "INSTRUCTOR" ||
+      enrolledUser.user.role === "ADMIN";
+
+    if (!isInstructor && submission?.status === "SUBMITTED") {
       return NextResponse.json(
-        { error: "Assignment already submitted" },
+        {
+          error:
+            "Assignment already submitted. You cannot make further changes.",
+        },
         { status: 403 },
       );
     }
@@ -72,19 +98,26 @@ export async function POST(req: NextRequest) {
     const zip = new AdmZip(buffer);
     const zipEntries = zip.getEntries();
 
-    const files: { path: string; content: string | Buffer }[] = [];
+    const filesMap = new Map<
+      string,
+      { path: string; content: string | Buffer }
+    >();
 
     for (const entry of zipEntries) {
       if (!entry.isDirectory) {
-        files.push({
-          path: entry.entryName,
+        // Sanitize path: remove leading slashes and normalize
+        const path = entry.entryName.replace(/^\/+/, "");
+        filesMap.set(path, {
+          path,
           content: entry.getData(),
         });
       }
     }
 
+    const files = Array.from(filesMap.values());
+
     // 3. Commit to Gitea
-    const [owner, repo] = submission.gitRepoPath.split("/");
+    const [owner, repo] = gitRepoPath.split("/");
 
     const commitFiles = files.map((f) => ({
       path: f.path,
@@ -108,8 +141,8 @@ export async function POST(req: NextRequest) {
 
     const updatedCount = commitFiles.length;
 
-    // Update submission status only if action is SUBMIT
-    if (action === "SUBMIT") {
+    // Update submission status only if action is SUBMIT and it's a student submission
+    if (action === "SUBMIT" && submission) {
       await db.submission.update({
         where: { id: submission.id },
         data: {
@@ -121,7 +154,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      submissionId: submission.id,
+      submissionId: submission?.id,
       filesProcessed: updatedCount,
     });
   } catch (error) {

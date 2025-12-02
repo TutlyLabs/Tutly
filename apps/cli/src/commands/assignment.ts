@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import { Command, flags } from "@oclif/command";
 
 import { createAPIClient } from "../lib/api/client";
-import { isAuthenticated } from "../lib/auth/device";
+import { getCurrentUser, isAuthenticated } from "../lib/auth/device";
 
 export default class Assignment extends Command {
   static description = "Clone template files for an assignment";
@@ -45,10 +45,15 @@ export default class Assignment extends Command {
 
     try {
       const api = await createAPIClient();
+      const user = await getCurrentUser();
+      const type =
+        user?.role === "INSTRUCTOR" || user?.role === "ADMIN"
+          ? "TEMPLATE"
+          : "SUBMISSION";
 
       // 1. Initialize/Get Submission Repo URL
-      this.log("  • Initializing workspace...");
-      const repoInfo = await api.createSubmissionRepo(assignmentId);
+      this.log(`  • Initializing workspace (${type.toLowerCase()})...`);
+      const repoInfo = await api.createSubmissionRepo(assignmentId, type);
 
       if (!repoInfo.repoUrl) {
         this.log("\n❌ Failed to initialize workspace.");

@@ -352,7 +352,11 @@ export const giteaClient = {
       const results = [];
       for (const file of files) {
         try {
-          const encodedPath = file.path.split("/").map(encodeURIComponent).join("/");
+          const cleanPath = file.path.replace(/^\/+/, "");
+          const encodedPath = cleanPath
+            .split("/")
+            .map(encodeURIComponent)
+            .join("/");
           const url = `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}`;
 
           if (file.status === "deleted") {
@@ -375,26 +379,35 @@ export const giteaClient = {
                 },
                 body: JSON.stringify({
                   sha: fileData.sha,
-                  message: `Delete ${file.path}`,
+                  message: `Delete ${cleanPath}`,
                   branch: tempBranchName,
                   ...(author && { author }),
                 }),
               });
 
               if (!deleteResponse.ok) {
-                throw new Error(`Failed to delete ${file.path}`);
+                throw new Error(`Failed to delete ${cleanPath}`);
               }
             }
           } else {
             // For both create and update
             let sha: string | undefined;
 
-            // Always try to get existing file SHA from the temp branch
-            const getResponse = await fetch(`${url}?ref=${tempBranchName}`, {
+            // Try to get existing file SHA from the temp branch
+            let getResponse = await fetch(`${url}?ref=${tempBranchName}`, {
               headers: {
                 Authorization: `token ${GITEA_ADMIN_TOKEN}`,
               },
             });
+
+            // Fallback: Try getting SHA from the base branch if temp branch fails (e.g. 404 but file exists in main)
+            if (!getResponse.ok && getResponse.status === 404) {
+              getResponse = await fetch(`${url}?ref=${branch}`, {
+                headers: {
+                  Authorization: `token ${GITEA_ADMIN_TOKEN}`,
+                },
+              });
+            }
 
             if (getResponse.ok) {
               const fileData = await getResponse.json();
@@ -406,15 +419,17 @@ export const giteaClient = {
               ? file.content.toString("base64")
               : Buffer.from(file.content).toString("base64");
 
+            const method = sha ? "PUT" : "POST";
+
             const response = await fetch(url, {
-              method: "PUT",
+              method,
               headers: {
                 Authorization: `token ${GITEA_ADMIN_TOKEN}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
                 content: contentBase64,
-                message: `${sha ? "Update" : "Add"} ${file.path}`,
+                message: `${sha ? "Update" : "Add"} ${cleanPath}`,
                 branch: tempBranchName,
                 ...(sha && { sha }),
                 ...(author && { author }),
@@ -465,21 +480,50 @@ export const giteaClient = {
 
       // Step 5: Merge the PR with squash
       const mergeUrl = `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${prNumber}/merge`;
-      const mergeResponse = await fetch(mergeUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `token ${GITEA_ADMIN_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          Do: "squash",
-          merge_message_field: message,
-          delete_branch_after_merge: true,
-        }),
-      });
 
-      if (!mergeResponse.ok) {
-        const error = await mergeResponse.text();
+      let mergeResponse;
+      let attempts = 0;
+      const maxAttempts = 3;
+
+      while (attempts < maxAttempts) {
+        mergeResponse = await fetch(mergeUrl, {
+          method: "POST",
+          headers: {
+            Authorization: `token ${GITEA_ADMIN_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            Do: "squash",
+            merge_message_field: message,
+            delete_branch_after_merge: true,
+          }),
+        });
+
+        if (mergeResponse.ok) break;
+
+        const error = await mergeResponse.clone().text();
+        if (error.includes("Please try again later")) {
+          attempts++;
+          if (attempts < maxAttempts) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            continue;
+          }
+        }
+
+        break;
+      }
+
+      if (!mergeResponse?.ok) {
+        const error = await mergeResponse?.text();
+
+        if (error && error.includes("nothing to commit")) {
+          await this.deleteBranch(owner, repo, tempBranchName);
+          return {
+            success: true,
+            results,
+          };
+        }
+
         // Try to clean up the branch
         await this.deleteBranch(owner, repo, tempBranchName);
         throw new Error(`Failed to merge: ${error}`);

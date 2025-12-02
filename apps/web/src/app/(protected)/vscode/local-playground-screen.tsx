@@ -87,8 +87,21 @@ export function LocalPlaygroundSetupScreen({
     latest: string;
   } | null>(null);
 
+  const [latestCliVersion, setLatestCliVersion] = useState<string | null>(null);
+
   useEffect(() => {
     runPreflightChecks();
+
+    fetch("/api/cli/latest-version")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.version) {
+          setLatestCliVersion(data.version);
+        }
+      })
+      .catch((err) =>
+        console.error("Failed to fetch latest CLI version:", err),
+      );
 
     if (assignmentId) {
       fetch(`/api/git/create?assignmentId=${assignmentId}&type=SUBMISSION`)
@@ -531,7 +544,9 @@ export function LocalPlaygroundSetupScreen({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-white/60">Run in your terminal:</span>
-                    <span className="text-xs text-white/40">v1.0.0</span>
+                    <span className="text-xs text-white/40">
+                      {latestCliVersion ? `v${latestCliVersion}` : "Latest"}
+                    </span>
                   </div>
 
                   <div className="space-y-2">
