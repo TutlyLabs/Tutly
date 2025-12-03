@@ -8,7 +8,7 @@ const ROOT_DIR = path.resolve(__dirname, '../..');
 const PLAYGROUNDS_DIR = __dirname;
 const VSCODE_DIR = path.join(PLAYGROUNDS_DIR, 'vscode');
 const VSCODE_ASSETS_DIR = path.join(VSCODE_DIR, 'assets');
-const GIT_FS_DIR = path.join(ROOT_DIR, 'packages/git-fs');
+const GIT_FS_DIR = path.join(ROOT_DIR, 'packages/fsrelay');
 const VSCODE_WEB_DIST = path.join(ROOT_DIR, 'node_modules/vscode-web/dist');
 
 console.log('🚀 Setting up Tutly Playgrounds...\n');
@@ -35,20 +35,20 @@ if (fs.existsSync(VSCODE_WEB_DIST)) {
   process.exit(1);
 }
 
-// Build git-fs extension
-console.log('\n🔨 Building git-fs extension...');
+// Build fsrelay extension
+console.log('\n🔨 Building fsrelay extension...');
 try {
   execSync('pnpm build', { cwd: GIT_FS_DIR, stdio: 'inherit' });
-  console.log('✅ git-fs build complete');
+  console.log('✅ fsrelay build complete');
 } catch (error) {
-  console.error('❌ git-fs build failed:', error.message);
+  console.error('❌ fsrelay build failed:', error.message);
   process.exit(1);
 }
 
-// Copy git-fs extension
-console.log('\n📦 Copying git-fs extension...');
+// Copy fsrelay extension
+console.log('\n📦 Copying fsrelay extension...');
 const extensionsDir = path.join(VSCODE_ASSETS_DIR, 'extensions');
-const gitfsDest = path.join(extensionsDir, 'git-fs');
+const gitfsDest = path.join(extensionsDir, 'fsrelay');
 
 // Ensure extensions directory exists
 if (!fs.existsSync(extensionsDir)) {
@@ -104,9 +104,9 @@ extensionFiles.forEach(({ src, isFile }) => {
   }
 });
 
-// Update extensions.json to include git-fs
+// Update extensions.json to include fsrelay
 const extensionsJsonPath = path.join(VSCODE_DIR, 'extensions.json');
-const extensions = ['git-fs'];
+const extensions = ['fsrelay'];
 fs.writeFileSync(extensionsJsonPath, JSON.stringify(extensions, null, 2));
 console.log(`\n📄 Updated extensions.json with ${extensions.length} custom extension(s)`);
 
@@ -114,7 +114,7 @@ console.log('\n✅ Tutly Playgrounds setup complete!');
 console.log('\n📝 What was copied:');
 console.log('   - VSCode Web assets → vscode/assets/');
 console.log('   - Built-in extensions → vscode/assets/extensions/');
-console.log('   - git-fs extension → vscode/assets/extensions/git-fs/');
+console.log('   - fsrelay extension → vscode/assets/extensions/fsrelay/');
 console.log('\n🎉 Start the playground with:');
 console.log('   pnpm start');
 console.log('   Then visit: http://localhost:8080/pages/preflight.html\n');

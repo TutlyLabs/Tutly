@@ -6,7 +6,7 @@ import { giteaClient } from "@/lib/gitea";
 /**
  * Tutly FS API - Provides file system operations for Git repositories
  * Endpoints:
- * - GET /api/git-fs/contents?assignmentId=...&path=...&ref=...&type=TEMPLATE
+ * - GET /api/fsrelay/contents?assignmentId=...&path=...&ref=...&type=TEMPLATE
  */
 
 export const dynamic = "force-dynamic";

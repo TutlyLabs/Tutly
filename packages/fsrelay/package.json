@@ -1,7 +1,7 @@
 {
-  "name": "fsrelay",
-  "displayName": "Tutly File System Provider",
-  "description": "A VS Code extension that provides file system and terminal access",
+  "name": "@tutly/fsrelay",
+  "displayName": "Tutly Git File System Provider",
+  "description": "A VS Code extension that provides file system access to Git repositories",
   "version": "0.0.1",
   "publisher": "tutly",
   "engines": {
@@ -10,47 +10,11 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": ["*"],
-  "browser": "./dist/extension.js",
-  "enabledApiProposals": [
-    "fileSearchProvider",
-    "textSearchProvider"
+  "activationEvents": [
+    "*"
   ],
+  "browser": "./dist/extension.js",
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "tutlyQuestionContainer",
-          "title": "Question",
-          "icon": "$(lightbulb)"
-        }
-      ],
-      "panel": [
-        {
-          "id": "tutly-preview-container",
-          "title": "Preview",
-          "icon": "media/preview-dark.svg"
-        }
-      ]
-    },
-    "views": {
-      "tutlyQuestionContainer": [
-        {
-          "id": "tutlyQuestionPanel",
-          "name": "Question",
-          "when": "true",
-          "type": "webview"
-        }
-      ],
-      "tutly-preview-container": [
-        {
-          "type": "webview",
-          "id": "tutly.previewView",
-          "name": "Preview",
-          "contextualTitle": "Preview"
-        }
-      ]
-    },
     "themes": [
       {
         "id": "Default Dark+",
@@ -91,197 +55,153 @@
     ],
     "commands": [
       {
-        "command": "tutly.connectToServer",
-        "title": "Connect to Tutly File Server",
-        "category": "Tutly"
+        "command": "tutlyfs.run",
+        "title": "Run Code"
       },
       {
-        "command": "tutly.disconnectFromServer", 
-        "title": "Disconnect from Tutly File Server",
-        "category": "Tutly"
+        "command": "tutlyfs.submit",
+        "title": "Submit Code"
       },
       {
-        "command": "tutly.openWorkspace",
-        "title": "Open Tutly Workspace",
-        "category": "Tutly"
-      },
-      {
-        "command": "tutly.refresh",
-        "title": "Refresh",
-        "icon": "$(refresh)",
-        "category": "Tutly"
-      },
-      {
-        "command": "tutly.createTerminal",
-        "title": "Create Tutly Terminal",
-        "icon": "$(terminal)",
-        "category": "Tutly"
-      },
-      {
-        "command": "tutly.setDefaultTerminal",
-        "title": "Set Tutly as Default Terminal",
-        "category": "Tutly"
-      },
-      {
-        "command": "preview.toggle",
-        "title": "Toggle Preview",
-        "icon": {
-          "light": "media/preview-light.svg",
-          "dark": "media/preview-dark.svg"
-        }
-      },
-      {
-        "command": "preview.open",
-        "title": "Open Preview",
-        "icon": "$(globe)"
-      },
-      {
-        "command": "preview.openInBrowser",
-        "title": "Open in Browser",
-        "icon": "$(link-external)"
-      },
-      {
-        "command": "preview.refresh",
-        "title": "Refresh Preview",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "tutlyQuestion.refresh",
-        "title": "Refresh Question",
-        "icon": "$(refresh)"
+        "command": "tutlyfs.save",
+        "title": "Save Changes"
       }
     ],
-    "menus": {
-      "view/title": [
+    "keybindings": [
+      {
+        "command": "tutlyfs.run",
+        "key": "ctrl+alt+shift+r",
+        "mac": "cmd+alt+shift+r"
+      },
+      {
+        "command": "tutlyfs.submit",
+        "key": "ctrl+alt+shift+s",
+        "mac": "cmd+alt+shift+s"
+      },
+      {
+        "command": "tutlyfs.save",
+        "key": "ctrl+alt+shift+v",
+        "mac": "cmd+alt+shift+v"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
         {
-          "command": "tutlyQuestion.refresh",
-          "when": "view == tutlyQuestionPanel",
-          "group": "navigation"
-        },
-        {
-          "command": "preview.refresh",
-          "when": "view == tutly.previewView",
-          "group": "navigation@1"
-        },
-        {
-          "command": "preview.openInBrowser",
-          "when": "view == tutly.previewView",
-          "group": "navigation@2"
-        }
-      ],
-      "terminal/title/context": [
-        {
-          "command": "tutly.createTerminal",
-          "group": "navigation"
-        }
-      ],
-      "commandPalette": [
-        {
-          "command": "tutly.createTerminal"
-        },
-        {
-          "command": "tutly.setDefaultTerminal"
-        },
-        {
-          "command": "preview.toggle"
-        },
-        {
-          "command": "preview.open"
-        },
-        {
-          "command": "preview.openInBrowser"
-        },
-        {
-          "command": "preview.refresh"
-        }
-      ],
-      "editor/title": [
-        {
-          "command": "preview.toggle",
-          "group": "navigation@1",
-          "when": "true"
+          "id": "tutly-container",
+          "title": "Tutly",
+          "icon": "$(repo)"
         }
       ]
     },
-    "keybindings": [
-      {
-        "command": "tutly.createTerminal",
-        "key": "ctrl+shift+`",
-        "mac": "cmd+shift+`",
-        "when": "!terminalFocus"
-      }
-    ],
-    "terminal": {
-      "profiles": [
+    "views": {
+      "tutly-container": [
         {
-          "id": "tutly.terminal-profile",
-          "title": "Tutly Terminal"
+          "type": "webview",
+          "id": "tutly.webview",
+          "name": "Tutly",
+          "visibility": "visible"
         }
       ]
     },
     "configuration": {
-      "title": "Tutly File System",
+      "title": "Tutly FS",
       "properties": {
-        "tutly.server.host": {
+        "tutlyfs.assignmentId": {
           "type": "string",
-          "default": "localhost",
-          "description": "Host address of the Tutly file server"
+          "default": "",
+          "description": "Assignment ID for the repository"
         },
-        "tutly.server.port": {
-          "type": "number", 
-          "default": 3001,
-          "description": "Port number of the Tutly file server"
-        },
-        "tutly.server.apiKey": {
+        "tutlyfs.submissionId": {
           "type": "string",
-          "default": "tutly-dev-key",
-          "description": "API key for Tutly file server authentication"
+          "default": "",
+          "description": "Submission ID for the repository"
         },
-        "tutly.server.autoConnect": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically connect to server on extension activation"
+        "tutlyfs.type": {
+          "type": "string",
+          "enum": [
+            "TEMPLATE",
+            "SUBMISSION"
+          ],
+          "default": "TEMPLATE",
+          "description": "Repository type"
         },
-        "preview.autoDetect": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically detect and open preview for running applications"
+        "tutlyfs.mode": {
+          "type": "string",
+          "enum": [
+            "clone",
+            "ondemand"
+          ],
+          "default": "clone",
+          "description": "File system mode: 'clone' (full repo, writable ephemeral) or 'ondemand' (read-only)"
         },
-        "preview.defaultPort": {
-          "type": "number",
-          "default": 3000,
-          "description": "Default port to check for preview"
-        },
-        "preview.portRange": {
-          "type": "array",
-          "default": [3000, 3001, 4000, 5000, 8000, 8080, 8888, 9000],
-          "description": "Ports to monitor for auto-preview"
+        "tutlyfs.webOrigin": {
+          "type": "string",
+          "default": "",
+          "description": "Web origin for loading webview resources"
         }
       }
+    },
+    "terminal": {
+      "profiles": [
+        {
+          "id": "tutly.terminal-profile",
+          "title": "Tutly Terminal",
+          "icon": "$(terminal)"
+        }
+      ]
     }
   },
   "scripts": {
-    "build": "webpack --mode production",
-    "dev": "webpack --mode development --watch", 
-    "package": "webpack --mode production && vsce package",
-    "test": "node ./out/test/runTest.js"
+    "build": "webpack --mode production && webpack --config webpack-react.config.js",
+    "build-extension": "webpack --mode production",
+    "build-webview": "webpack --config webpack-react.config.js",
+    "dev": "webpack --mode development --watch",
+    "dev-webview": "webpack --config webpack-react.config.js --watch",
+    "watch": "npm-run-all --parallel dev dev-webview",
+    "package": "pnpm run build"
   },
   "devDependencies": {
+    "@babel/core": "^7.23.2",
+    "@babel/preset-env": "^7.23.2",
+    "@babel/preset-react": "^7.23.2",
+    "@babel/preset-typescript": "^7.23.2",
+    "@tailwindcss/postcss": "^4.0.15",
     "@types/node": "^22.13.11",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@types/vscode": "^1.75.0",
-    "@types/ws": "^8.5.12",
+    "autoprefixer": "^10.4.16",
+    "babel-loader": "^9.1.3",
+    "css-loader": "^6.8.1",
+    "css-minimizer-webpack-plugin": "^5.0.1",
+    "mini-css-extract-plugin": "^2.7.6",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.5.3",
+    "postcss-loader": "^7.3.3",
+    "style-loader": "^3.3.3",
+    "tailwindcss": "^4.0.15",
     "ts-loader": "^9.5.1",
     "typescript": "5.5.4",
+    "url-loader": "^4.1.1",
     "webpack": "^5.96.0",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@tiptap/extension-highlight": "^3.6.6",
+    "@tiptap/extension-image": "^3.6.6",
+    "@tiptap/extension-list": "^3.6.6",
+    "@tiptap/extension-subscript": "^3.6.6",
+    "@tiptap/extension-superscript": "^3.6.6",
+    "@tiptap/extension-task-item": "^3.11.0",
+    "@tiptap/extension-task-list": "^3.11.0",
+    "@tiptap/extension-text-align": "^3.6.6",
+    "@tiptap/extension-typography": "^3.6.6",
+    "@tiptap/html": "^3.11.0",
+    "@tiptap/starter-kit": "^3.6.6",
+    "@uiw/react-md-editor": "^4.0.8",
     "buffer": "^6.0.3",
-    "path-browserify": "^1.0.1",
-    "querystring-es3": "^0.2.1",
-    "stream-browserify": "^3.0.0",
-    "url": "^0.11.4",
-    "util": "^0.12.5",
-    "ws": "^8.18.0"
+    "jszip": "^3.10.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
