@@ -1,7 +1,7 @@
 {
   "name": "@tutly/fsrelay",
-  "displayName": "Tutly Git File System Provider",
-  "description": "A VS Code extension that provides file system access to Git repositories",
+  "displayName": "Tutly File System Provider",
+  "description": "A VS Code extension that provides file system and terminal access",
   "version": "0.0.1",
   "publisher": "tutly",
   "engines": {

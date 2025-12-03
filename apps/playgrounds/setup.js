@@ -8,7 +8,7 @@ const ROOT_DIR = path.resolve(__dirname, '../..');
 const PLAYGROUNDS_DIR = __dirname;
 const VSCODE_DIR = path.join(PLAYGROUNDS_DIR, 'vscode');
 const VSCODE_ASSETS_DIR = path.join(VSCODE_DIR, 'assets');
-const GIT_FS_DIR = path.join(ROOT_DIR, 'packages/fsrelay');
+const FSRELAY_DIR = path.join(ROOT_DIR, 'packages/fsrelay');
 const VSCODE_WEB_DIST = path.join(ROOT_DIR, 'node_modules/vscode-web/dist');
 
 console.log('🚀 Setting up Tutly Playgrounds...\n');
@@ -38,7 +38,7 @@ if (fs.existsSync(VSCODE_WEB_DIST)) {
 // Build fsrelay extension
 console.log('\n🔨 Building fsrelay extension...');
 try {
-  execSync('pnpm build', { cwd: GIT_FS_DIR, stdio: 'inherit' });
+  execSync('pnpm build', { cwd: FSRELAY_DIR, stdio: 'inherit' });
   console.log('✅ fsrelay build complete');
 } catch (error) {
   console.error('❌ fsrelay build failed:', error.message);
@@ -48,7 +48,7 @@ try {
 // Copy fsrelay extension
 console.log('\n📦 Copying fsrelay extension...');
 const extensionsDir = path.join(VSCODE_ASSETS_DIR, 'extensions');
-const gitfsDest = path.join(extensionsDir, 'fsrelay');
+const fsrelayDest = path.join(extensionsDir, 'fsrelay');
 
 // Ensure extensions directory exists
 if (!fs.existsSync(extensionsDir)) {
@@ -80,13 +80,13 @@ const extensionFiles = [
   { src: 'themes', isFile: false }
 ];
 
-if (!fs.existsSync(gitfsDest)) {
-  fs.mkdirSync(gitfsDest, { recursive: true });
+if (!fs.existsSync(fsrelayDest)) {
+  fs.mkdirSync(fsrelayDest, { recursive: true });
 }
 
 extensionFiles.forEach(({ src, isFile }) => {
-  const srcPath = path.join(GIT_FS_DIR, src);
-  const destPath = path.join(gitfsDest, src);
+  const srcPath = path.join(FSRELAY_DIR, src);
+  const destPath = path.join(fsrelayDest, src);
 
   if (fs.existsSync(srcPath)) {
     try {
