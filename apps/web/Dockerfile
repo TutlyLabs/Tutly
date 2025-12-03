@@ -51,6 +51,8 @@ RUN node apps/web/scripts/copy-vscode-assets.js
 FROM base AS runner
 WORKDIR /app
 
+RUN apk add --no-cache git
+
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

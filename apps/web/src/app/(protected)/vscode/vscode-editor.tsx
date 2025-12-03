@@ -96,11 +96,10 @@ export default function VSCodeEditor({
             <div className="absolute left-1/2 -translate-x-1/2">
               <Button
                 onClick={() => triggerCommand("run")}
-                className="group relative h-10 rounded-lg border-0 bg-gradient-to-r from-emerald-500 to-green-600 px-8 font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:from-emerald-600 hover:to-green-700 hover:shadow-emerald-500/40"
+                className="h-8 gap-1.5 border-none bg-emerald-600 px-4 text-xs text-white transition-colors hover:bg-emerald-700 cursor-pointer"
               >
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-emerald-400/0 via-white/20 to-emerald-400/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                <Play className="mr-2 h-4.5 w-4.5 fill-current" />
-                <span className="relative">Run Code</span>
+                <Play className="h-3.5 w-3.5 fill-current" />
+                Run Code
               </Button>
             </div>
           )}
