@@ -113,9 +113,7 @@ export const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="inline-block">
-                {button}
-              </span>
+              <span className="inline-block">{button}</span>
             </TooltipTrigger>
             {!hasTemplateRepo && (
               <TooltipContent>
