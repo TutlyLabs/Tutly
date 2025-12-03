@@ -1,30 +1,23 @@
 const path = require('path');
+const { exec } = require('child_process');
 
 module.exports = {
   target: 'webworker',
-  mode: 'none',
   entry: './src/extension.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'extension.js',
-    libraryTarget: 'commonjs2'
+    libraryTarget: 'commonjs2',
+    devtoolModuleFilenameTemplate: '../[resource-path]'
   },
+  devtool: 'inline-source-map',
   externals: {
     vscode: 'commonjs vscode'
   },
   resolve: {
     extensions: ['.ts', '.js'],
     fallback: {
-      "buffer": require.resolve("buffer/"),
-      "stream": require.resolve("stream-browserify"),
-      "util": require.resolve("util/"),
-      "path": require.resolve("path-browserify"),
-      "querystring": require.resolve("querystring-es3"),
-      "url": require.resolve("url/"),
-      "crypto": false,
-      "fs": false,
-      "net": false,
-      "tls": false
+      buffer: require.resolve('buffer/')
     }
   },
   module: {
@@ -40,8 +33,16 @@ module.exports = {
       }
     ]
   },
-  devtool: 'nosources-source-map',
-  infrastructureLogging: {
-    level: "log"
-  }
+  plugins: [
+    {
+      apply: (compiler) => {
+        compiler.hooks.afterEmit.tap('CopyAssetsPlugin', (compilation) => {
+          exec('node ../../apps/web/scripts/copy-vscode-assets.js', (err, stdout, stderr) => {
+            if (stdout) process.stdout.write(stdout);
+            if (stderr) process.stderr.write(stderr);
+          });
+        });
+      }
+    }
+  ]
 };

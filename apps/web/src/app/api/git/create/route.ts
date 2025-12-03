@@ -193,6 +193,42 @@ export async function POST(req: NextRequest) {
         data: { gitTemplateRepo: gitRepoPath },
       });
 
+      // Add initial .tutly/config.yaml to the template
+      try {
+        const defaultConfig = `version: 1
+
+run:
+  command: "npm test"
+  description: "Run tests"
+
+readonly:
+  - "tests/**/*"
+  - ".tutly/**/*"
+  - "package.json"
+`;
+
+        await giteaClient.createCommit(
+          owner,
+          repoName,
+          "main",
+          "Add Tutly configuration",
+          [
+            {
+              path: ".tutly/config.yaml",
+              content: defaultConfig,
+              status: "added",
+            },
+          ],
+          {
+            name: session.user.name || session.user.username,
+            email: session.user.email || `${session.user.username}@tutly.in`,
+          },
+        );
+      } catch (configError) {
+        console.log("Failed to add initial config.yaml:", configError);
+        // Don't fail the whole operation if config creation fails
+      }
+
       // Retrieve the session token to embed in the clone URL.
       const token = session.session?.token;
       const expiresAt = session.session?.expiresAt;

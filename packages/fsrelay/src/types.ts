@@ -20,6 +20,14 @@ export interface ExtensionConfig {
   assignmentId?: string;
   serverUrl?: string;
   apiKey?: string;
+  tutlyConfig?: {
+    version?: number;
+    run?: {
+      command: string;
+      description?: string;
+    };
+    readonly?: string[];
+  };
 }
 
 export type GitContentsResponse = GitFileEntry | GitFileEntry[];

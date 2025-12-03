@@ -66,7 +66,7 @@ apps/playgrounds/extensions/
 apps/playgrounds/tutly-vscode-web
 
 # VSCode extension builds
-packages/git-fs/dist/
+packages/fsrelay/dist/
 apps/web/public/vscode/extensions/*
 
 # VSCode static files (served from node_modules)

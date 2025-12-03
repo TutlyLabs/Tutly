@@ -17,6 +17,7 @@ require(["vs/workbench/workbench.web.main"], function (workbench) {
       tutlyConfig = {
         ...tutlyConfig,
         ...decoded,
+        tutlyConfig: decoded.tutlyConfig,
       };
     } catch (error) {
       console.error("Failed to parse config parameter:", error);

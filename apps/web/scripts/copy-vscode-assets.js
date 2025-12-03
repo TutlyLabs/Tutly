@@ -19,8 +19,8 @@ const publicVscodeDir = join(webDir, "public/vscode");
 
 const EXTENSIONS = [
   {
-    name: "git-fs",
-    sourcePath: join(rootDir, "packages/git-fs"),
+    name: "fsrelay",
+    sourcePath: join(rootDir, "packages/fsrelay"),
   },
 ];
 

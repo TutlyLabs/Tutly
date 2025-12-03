@@ -77,8 +77,7 @@ const extensionFiles = [
   { src: 'package.json', isFile: true },
   { src: 'package.nls.json', isFile: true },
   { src: 'dist', isFile: false },
-  { src: 'themes', isFile: false },
-  { src: 'media', isFile: false }
+  { src: 'themes', isFile: false }
 ];
 
 if (!fs.existsSync(fsrelayDest)) {

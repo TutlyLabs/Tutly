@@ -19,7 +19,7 @@ export class GitApiClient {
     params.set('ref', 'main');
     params.set('assignmentId', context.assignmentId || '');
 
-    const url = `/api/git-fs?${params.toString()}`;
+    const url = `/api/fsrelay?${params.toString()}`;
     const response = await fetch(url, {
       credentials: 'include',
       headers: {
@@ -42,7 +42,7 @@ export class GitApiClient {
     params.set('ref', 'main');
     params.set('assignmentId', context.assignmentId || '');
 
-    const url = `/api/git-fs?${params.toString()}`;
+    const url = `/api/fsrelay?${params.toString()}`;
     const response = await fetch(url, {
       credentials: 'include',
     });
@@ -63,7 +63,7 @@ export class GitApiClient {
     params.set('operation', 'commit');
     params.set('assignmentId', context.assignmentId || '');
 
-    const url = `/api/git-fs?${params.toString()}`;
+    const url = `/api/fsrelay?${params.toString()}`;
     const response = await fetch(url, {
       method: 'POST',
       credentials: 'include',

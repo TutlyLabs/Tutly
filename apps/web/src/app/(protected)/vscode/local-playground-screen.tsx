@@ -113,13 +113,16 @@ export function LocalPlaygroundSetupScreen({
         })
         .catch((err) => console.error("Failed to fetch repo URL:", err));
     }
+  }, [assignmentId]);
 
-    let interval: NodeJS.Timeout;
-    if (!isConnected) {
-      interval = setInterval(runPreflightChecks, 2000);
+  useEffect(() => {
+    if (isConnected) {
+      return;
     }
+
+    const interval = setInterval(runPreflightChecks, 2000);
     return () => clearInterval(interval);
-  }, [isConnected, assignmentId]);
+  }, [isConnected]);
 
   const isVersionOutdated = (current: string, latest: string) => {
     try {
@@ -188,11 +191,11 @@ export function LocalPlaygroundSetupScreen({
           }
         }
 
-        // 2. Verify .tutly.json if assignmentId is present
+        // 2. Verify .tutly/workspace.json if assignmentId is present
         if (assignmentId) {
           try {
             const metadataRes = await fetch(
-              "http://localhost:4242/api/files/.tutly.json",
+              "http://localhost:4242/api/files/.tutly/workspace.json",
               {
                 headers: { "x-api-key": "tutly-dev-key" },
                 signal: controller.signal,
@@ -201,7 +204,7 @@ export function LocalPlaygroundSetupScreen({
 
             if (!metadataRes.ok) {
               setErrorMessage(
-                "Missing .tutly.json file. Are you in the correct directory?",
+                "Missing .tutly/workspace.json file. Are you in the correct directory?",
               );
               setIsConnected(false);
               setPreflightStatus("error");
@@ -210,7 +213,7 @@ export function LocalPlaygroundSetupScreen({
 
             const metadataFile = await metadataRes.json();
             if (metadataFile.type !== "file" || !metadataFile.content) {
-              setErrorMessage("Invalid .tutly.json file format.");
+              setErrorMessage("Invalid .tutly/workspace.json file format.");
               setIsConnected(false);
               setPreflightStatus("error");
               return;

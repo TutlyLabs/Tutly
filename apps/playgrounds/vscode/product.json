@@ -43,10 +43,6 @@
     "workbench.editor.enablePreview": false,
     "workbench.tree.renderIndentGuides": "none",
     "workbench.colorTheme": "Default Dark Modern",
-    "workbench.activityBar.visible": true,
-    "tutly.server.port": 4242,
-    "tutly.server.host": "localhost",
-    "tutly.server.apiKey": "tutly-dev-key",
-    "tutly.server.autoConnect": true
+    "workbench.activityBar.visible": true
   }
 }
