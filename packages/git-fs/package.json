@@ -15,6 +15,44 @@
   ],
   "browser": "./dist/extension.js",
   "contributes": {
+    "themes": [
+      {
+        "id": "Default Dark+",
+        "label": "Default Dark+",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dark_plus.json"
+      },
+      {
+        "id": "Default Dark Modern",
+        "label": "Default Dark Modern",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dark_modern.json"
+      },
+      {
+        "id": "Default Light+",
+        "label": "Default Light+",
+        "uiTheme": "vs",
+        "path": "./themes/light_plus.json"
+      },
+      {
+        "id": "Default Light Modern",
+        "label": "Default Light Modern",
+        "uiTheme": "vs",
+        "path": "./themes/light_modern.json"
+      },
+      {
+        "id": "Visual Studio Dark",
+        "label": "Visual Studio Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/dark_vs.json"
+      },
+      {
+        "id": "Visual Studio Light",
+        "label": "Visual Studio Light",
+        "uiTheme": "vs",
+        "path": "./themes/light_vs.json"
+      }
+    ],
     "commands": [
       {
         "command": "tutlyfs.run",
