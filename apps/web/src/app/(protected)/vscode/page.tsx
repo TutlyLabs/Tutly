@@ -34,9 +34,7 @@ export default async function VSCodePage({
 
   if (configParam) {
     try {
-      const secret = new TextEncoder().encode(
-        process.env.TUTLY_VSCODE_SECRET
-      );
+      const secret = new TextEncoder().encode(process.env.TUTLY_VSCODE_SECRET);
       const { payload } = await jwtVerify(configParam, secret);
       const decoded = payload as any;
 
@@ -103,6 +101,7 @@ export default async function VSCodePage({
       assignmentName={assignment?.title}
       courseName={assignment?.class?.course?.title}
       userName={user.name || user.username}
+      userId={user.id}
       hasRunCommand={hasRunCommand}
     />
   );

@@ -28,6 +28,7 @@ interface PlaygroundSetupScreenProps {
   assignmentName?: string;
   courseName?: string;
   userName: string;
+  userId: string;
   onComplete: () => void;
 }
 
@@ -70,6 +71,7 @@ export function LocalPlaygroundSetupScreen({
   assignmentName,
   courseName,
   userName,
+  userId,
   onComplete,
 }: PlaygroundSetupScreenProps) {
   const [preflightStatus, setPreflightStatus] =
@@ -223,6 +225,15 @@ export function LocalPlaygroundSetupScreen({
             if (metadata.assignmentId !== assignmentId) {
               setErrorMessage(
                 `Incorrect assignment. Expected ${assignmentId}, found ${metadata.assignmentId}`,
+              );
+              setIsConnected(false);
+              setPreflightStatus("error");
+              return;
+            }
+
+            if (metadata.userId && metadata.userId !== userId) {
+              setErrorMessage(
+                "User mismatch. This folder belongs to another user. Please delete it and re-clone.",
               );
               setIsConnected(false);
               setPreflightStatus("error");

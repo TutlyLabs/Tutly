@@ -91,7 +91,10 @@ export const GitTemplateSection = ({ assignment }: { assignment: any }) => {
                 if (configResponse.ok) {
                   const configData = await configResponse.json();
                   if (configData.success && configData.config) {
-                    window.open(`/vscode?config=${encodeURIComponent(configData.config)}`, "_blank");
+                    window.open(
+                      `/vscode?config=${encodeURIComponent(configData.config)}`,
+                      "_blank",
+                    );
                     return;
                   }
                 }

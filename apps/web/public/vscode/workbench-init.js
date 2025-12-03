@@ -13,7 +13,9 @@ require(["vs/workbench/workbench.web.main"], async function (workbench) {
   const configParam = params.get("config");
   if (configParam) {
     try {
-      const response = await fetch(`/api/vscode/verify?token=${encodeURIComponent(configParam)}`);
+      const response = await fetch(
+        `/api/vscode/verify?token=${encodeURIComponent(configParam)}`,
+      );
       if (response.ok) {
         const decoded = await response.json();
         tutlyConfig = {

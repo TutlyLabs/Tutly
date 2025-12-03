@@ -56,7 +56,11 @@ export async function GET(req: NextRequest) {
         "main",
       );
 
-      if (configContents && !Array.isArray(configContents) && configContents.content) {
+      if (
+        configContents &&
+        !Array.isArray(configContents) &&
+        configContents.content
+      ) {
         // Decode base64 content
         const configYaml = Buffer.from(
           configContents.content,
@@ -67,7 +71,9 @@ export async function GET(req: NextRequest) {
         tutlyConfig = yaml.load(configYaml) as TutlyConfig;
       }
     } catch (error) {
-      console.warn("Config file not found in template repository, using default.");
+      console.warn(
+        "Config file not found in template repository, using default.",
+      );
     }
 
     const configPayload = {
@@ -76,9 +82,7 @@ export async function GET(req: NextRequest) {
       tutlyConfig,
     };
 
-    const secret = new TextEncoder().encode(
-      process.env.TUTLY_VSCODE_SECRET
-    );
+    const secret = new TextEncoder().encode(process.env.TUTLY_VSCODE_SECRET);
 
     const token = await new SignJWT(configPayload)
       .setProtectedHeader({ alg: "HS256" })
@@ -90,7 +94,6 @@ export async function GET(req: NextRequest) {
       success: true,
       config: token,
     });
-
   } catch (error) {
     console.error("Error in config endpoint:", error);
     return NextResponse.json(

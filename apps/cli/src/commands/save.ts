@@ -6,7 +6,7 @@ import AdmZip from "adm-zip";
 import ignore, { Ignore } from "ignore";
 
 import { createAPIClient } from "../lib/api/client";
-import { isAuthenticated } from "../lib/auth/device";
+import { getCurrentUser, isAuthenticated } from "../lib/auth/device";
 import { findAssignmentRoot } from "../lib/utils";
 
 export default class Save extends Command {
@@ -56,6 +56,18 @@ export default class Save extends Command {
       if (!assignmentId) {
         this.log("❌ Invalid .tutly/workspace.json file: missing assignmentId");
         this.exit(1);
+      }
+
+      if (metadata.userId) {
+        const user = await getCurrentUser();
+        if (user && user.id !== metadata.userId) {
+          this.log(
+            `\n❌ User mismatch: This assignment was cloned by a different user.`,
+          );
+          this.log(`Expected user ID: ${metadata.userId}, Found: ${user.id}`);
+          this.log(`Please clone the assignment again with your own account.`);
+          this.exit(1);
+        }
       }
 
       this.log(`\n💾 Saving work for: ${metadata.title}...`);

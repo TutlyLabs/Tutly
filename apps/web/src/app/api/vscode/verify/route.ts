@@ -9,15 +9,10 @@ export async function GET(req: NextRequest) {
     const token = searchParams.get("token");
 
     if (!token) {
-      return NextResponse.json(
-        { error: "Missing token" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing token" }, { status: 400 });
     }
 
-    const secret = new TextEncoder().encode(
-      process.env.TUTLY_VSCODE_SECRET
-    );
+    const secret = new TextEncoder().encode(process.env.TUTLY_VSCODE_SECRET);
 
     try {
       const { payload } = await jwtVerify(token, secret);

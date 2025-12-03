@@ -12,6 +12,7 @@ interface VSCodeEditorProps {
   assignmentName?: string;
   courseName?: string;
   userName: string;
+  userId: string;
   hasRunCommand?: boolean;
 }
 
@@ -21,6 +22,7 @@ export default function VSCodeEditor({
   assignmentName,
   courseName,
   userName,
+  userId,
   hasRunCommand = false,
 }: VSCodeEditorProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -71,34 +73,35 @@ export default function VSCodeEditor({
             assignmentName={assignmentName}
             courseName={courseName}
             userName={userName}
+            userId={userId}
             onComplete={handleSetupComplete}
           />
         )}
 
         {/* Compact Header */}
-        <div className="flex h-12 shrink-0 items-center justify-between border-b border-[#2b2b2b] bg-[#1e1e1e] px-6 text-[#cccccc] select-none">
+        <div className="flex h-9 shrink-0 items-center justify-between border-b border-[#2b2b2b] bg-[#1e1e1e] px-4 text-[#cccccc] select-none">
           {/* Left Section */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-xs">
               <span className="font-semibold text-white">VS Code</span>
               <span className="text-[#5a5a5a]">/</span>
               <span>Editor</span>
             </div>
-            <div className="h-4 w-[1px] bg-[#333]" />
-            <div className="flex items-center gap-1.5 text-xs">
+            <div className="h-3 w-[1px] bg-[#333]" />
+            <div className="flex items-center gap-1.5 text-[10px]">
               <div className="h-1.5 w-1.5 rounded-full bg-green-500/80 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
               <span className="opacity-60">Online</span>
             </div>
           </div>
 
-          {/* Center Section - Premium Run Button */}
+          {/* Center Section - Run Button */}
           {hasRunCommand && (
             <div className="absolute left-1/2 -translate-x-1/2">
               <Button
                 onClick={() => triggerCommand("run")}
-                className="h-8 gap-1.5 border-none bg-emerald-600 px-4 text-xs text-white transition-colors hover:bg-emerald-700 cursor-pointer"
+                className="h-7 cursor-pointer gap-1.5 border-none bg-emerald-600 px-3 text-xs text-white transition-colors hover:bg-emerald-700"
               >
-                <Play className="h-3.5 w-3.5 fill-current" />
+                <Play className="h-3 w-3 fill-current" />
                 Run Code
               </Button>
             </div>
@@ -110,17 +113,17 @@ export default function VSCodeEditor({
               variant="ghost"
               size="sm"
               onClick={() => triggerCommand("save")}
-              className="h-8 gap-1.5 px-3 text-xs text-[#cccccc] transition-colors hover:bg-[#2b2b2b] hover:text-white"
+              className="h-7 gap-1.5 px-3 text-xs text-[#cccccc] transition-colors hover:bg-[#2b2b2b] hover:text-white"
             >
-              <Save className="h-3.5 w-3.5" />
+              <Save className="h-3 w-3" />
               Save
             </Button>
             <Button
               size="sm"
               onClick={() => triggerCommand("submit")}
-              className="h-8 gap-1.5 border-none bg-[#007acc] px-4 text-xs text-white transition-colors hover:bg-[#0063a5]"
+              className="h-7 gap-1.5 border-none bg-[#007acc] px-3 text-xs text-white transition-colors hover:bg-[#0063a5]"
             >
-              <Send className="h-3.5 w-3.5" />
+              <Send className="h-3 w-3" />
               Submit
             </Button>
           </div>

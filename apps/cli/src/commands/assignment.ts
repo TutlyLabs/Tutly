@@ -87,6 +87,7 @@ export default class Assignment extends Command {
         courseId: details.assignment?.class?.courseId,
         path: absoluteOutputDir,
         clonedAt: new Date().toISOString(),
+        userId: user?.id,
       };
 
       await writeFile(
@@ -95,20 +96,7 @@ export default class Assignment extends Command {
       );
       this.log(`  ✓ Created: .tutly/workspace.json`);
 
-      this.log("\n✨ Assignment workspace ready!");
-      this.log(`\n📝 Next steps:`);
-      if (outputDir !== ".") {
-        this.log(`   1. cd ${outputDir}`);
-      }
-      this.log(
-        `   ${outputDir !== "." ? "2" : "1"}. Install dependencies (if any): npm install`,
-      );
-      this.log(
-        `   ${outputDir !== "." ? "3" : "2"}. Start working on your assignment`,
-      );
-      this.log(
-        `   ${outputDir !== "." ? "4" : "3"}. Use 'tutly submit' when ready to submit\n`,
-      );
+      this.log(`\n✨ Cloned into ${outputDir}`);
     } catch (error) {
       this.log(
         `\n❌ Failed to setup assignment: ${error instanceof Error ? error.message : "Unknown error"}`,
