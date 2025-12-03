@@ -83,7 +83,7 @@ export default class Save extends Command {
         "dist",
         "build",
         "coverage",
-        ".tutly",
+        ".tutly/workspace.json",
         ".DS_Store",
       ]);
 

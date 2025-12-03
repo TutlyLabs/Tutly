@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { GitApiClient } from '../../api';
 import { GitContext } from '../../types';
 import * as JSZip from 'jszip';
+import * as yaml from 'js-yaml';
+import { minimatch } from 'minimatch';
 import { SourceControlProvider } from '../../providers/source-control/sourceControlProvider';
 
 interface MemFile {
@@ -38,7 +40,7 @@ export class MemFileSystemProvider implements vscode.FileSystemProvider {
 
   private sourceControlProvider?: SourceControlProvider;
 
-  constructor(private apiClient: GitApiClient, private context: GitContext) { }
+  constructor(private apiClient: GitApiClient, private context: GitContext, private isInstructor: boolean) { }
 
   /**
    * Set the source control provider for tracking changes
@@ -47,12 +49,30 @@ export class MemFileSystemProvider implements vscode.FileSystemProvider {
     this.sourceControlProvider = provider;
   }
 
+  private readonlyPatterns: string[] = [];
+
   /**
    * Initialize the file system with a git archive (zip)
    */
   async initialize(archiveBuffer: ArrayBuffer) {
     this.root.entries.clear();
+    this.readonlyPatterns = [];
     const zip = await JSZip.loadAsync(archiveBuffer);
+
+    // Try to load .tutly/config.yaml
+    const configEntry = zip.file('.tutly/config.yaml');
+    if (configEntry) {
+      try {
+        const configContent = await configEntry.async('string');
+        const config = yaml.load(configContent) as any;
+        if (config && Array.isArray(config.readonly)) {
+          this.readonlyPatterns = config.readonly;
+          console.log('Loaded readonly patterns:', this.readonlyPatterns);
+        }
+      } catch (error) {
+        console.error('Failed to load .tutly/config.yaml:', error);
+      }
+    }
 
     // Filter out directories (they end with /) and process files
     const files = Object.keys(zip.files).filter(name => !zip.files[name].dir);
@@ -107,13 +127,46 @@ export class MemFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   stat(uri: vscode.Uri): vscode.FileStat {
-    return this._lookup(uri, false);
+    const entry = this._lookup(uri, false);
+    const stat: vscode.FileStat = {
+      type: entry.type,
+      ctime: entry.ctime,
+      mtime: entry.mtime,
+      size: entry.size,
+    };
+
+    if (uri.path.endsWith('.tutly/workspace.json')) {
+      stat.permissions = vscode.FilePermission.Readonly;
+    }
+
+    if (!this.isInstructor && entry.type === vscode.FileType.File && this._isReadonly(uri.path)) {
+      stat.permissions = vscode.FilePermission.Readonly;
+    }
+
+    return stat;
   }
 
   readDirectory(uri: vscode.Uri): [string, vscode.FileType][] {
     const entry = this._lookupAsDirectory(uri, false);
     const result: [string, vscode.FileType][] = [];
+
+    // Get the directory path relative to root
+    const dirPath = uri.path === '/' ? '' : uri.path;
+
     for (const [name, child] of entry.entries) {
+      // Construct full path for the child
+      const childPath = dirPath ? `${dirPath}/${name}` : `/${name}`;
+
+      // If student, hide .tutly folder
+      if (!this.isInstructor && name === '.tutly') {
+        continue;
+      }
+
+      // If student, hide readonly files
+      if (!this.isInstructor && child.type === vscode.FileType.File && this._isReadonly(childPath)) {
+        continue;
+      }
+
       result.push([name, child.type]);
     }
     return result;
@@ -125,6 +178,20 @@ export class MemFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): void {
+    if (!this.isInstructor && this._isReadonly(uri.path)) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
+    // Prevent students from editing .tutly/config.yaml
+    if (!this.isInstructor && uri.path.endsWith('.tutly/config.yaml')) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
+    // Prevent anyone from editing .tutly/workspace.json
+    if (uri.path.endsWith('.tutly/workspace.json')) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
     const basename = this._basename(uri.path);
     const parent = this._lookupParentDirectory(uri);
     let entry = parent.entries.get(basename);
@@ -195,6 +262,18 @@ export class MemFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): void {
+    if (!this.isInstructor && this._isReadonly(oldUri.path)) {
+      throw vscode.FileSystemError.NoPermissions(oldUri);
+    }
+    if (!this.isInstructor && this._isReadonly(newUri.path)) {
+      throw vscode.FileSystemError.NoPermissions(newUri);
+    }
+
+    // Prevent renaming .tutly/workspace.json
+    if (oldUri.path.endsWith('.tutly/workspace.json') || newUri.path.endsWith('.tutly/workspace.json')) {
+      throw vscode.FileSystemError.NoPermissions(oldUri);
+    }
+
     if (!options.overwrite && this._lookup(newUri, true)) {
       throw vscode.FileSystemError.FileExists(newUri);
     }
@@ -223,6 +302,10 @@ export class MemFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   delete(uri: vscode.Uri): void {
+    if (!this.isInstructor && this._isReadonly(uri.path)) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
     const dirname = uri.with({ path: this._dirname(uri.path) });
     const basename = this._basename(uri.path);
     const parent = this._lookupAsDirectory(dirname, false);
@@ -245,6 +328,10 @@ export class MemFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   createDirectory(uri: vscode.Uri): void {
+    if (!this.isInstructor && this._isReadonly(uri.path)) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
     const basename = this._basename(uri.path);
     const dirname = uri.with({ path: this._dirname(uri.path) });
     const parent = this._lookupAsDirectory(dirname, false);
@@ -262,6 +349,18 @@ export class MemFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   // --- Helpers ---
+
+  private _isReadonly(path: string): boolean {
+    // Normalize path to remove leading slash
+    const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+
+    for (const pattern of this.readonlyPatterns) {
+      if (minimatch(normalizedPath, pattern)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   private _basename(path: string): string {
     path = this._trim(path);

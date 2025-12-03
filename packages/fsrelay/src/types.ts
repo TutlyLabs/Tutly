@@ -20,6 +20,7 @@ export interface ExtensionConfig {
   assignmentId?: string;
   serverUrl?: string;
   apiKey?: string;
+  isInstructor?: boolean;
   tutlyConfig?: {
     version?: number;
     run?: {

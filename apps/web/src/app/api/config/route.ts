@@ -3,6 +3,7 @@ import { giteaClient } from "@/lib/gitea";
 import { db } from "@/lib/db";
 import yaml from "js-yaml";
 import { SignJWT } from "jose";
+import { auth } from "@/server/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,10 @@ interface TutlyConfig {
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    const isInstructor =
+      session?.user?.role === "INSTRUCTOR" || session?.user?.role === "ADMIN";
+
     const { searchParams } = new URL(req.url);
     const assignmentId = searchParams.get("assignmentId");
 
@@ -80,6 +85,7 @@ export async function GET(req: NextRequest) {
       mode: "fsrelay",
       assignmentId,
       tutlyConfig,
+      isInstructor,
     };
 
     const secret = new TextEncoder().encode(process.env.TUTLY_VSCODE_SECRET);

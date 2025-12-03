@@ -200,7 +200,9 @@
     "@tiptap/starter-kit": "^3.6.6",
     "@uiw/react-md-editor": "^4.0.8",
     "buffer": "^6.0.3",
+    "js-yaml": "^4.1.1",
     "jszip": "^3.10.1",
+    "minimatch": "^10.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }

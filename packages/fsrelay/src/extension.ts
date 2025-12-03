@@ -142,6 +142,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 async function activateGitFsMode(context: vscode.ExtensionContext, config?: ExtensionConfig) {
   let assignmentId = config?.assignmentId;
+  const isInstructor = config?.isInstructor || false;
 
   if (!assignmentId) {
     vscode.window.showInputBox({
@@ -155,7 +156,7 @@ async function activateGitFsMode(context: vscode.ExtensionContext, config?: Exte
           title: "Setting up Tutly FS (GitFS Mode)...",
           cancellable: false
         }, async () => {
-          initializeGitFileSystem({ assignmentId: input, submissionId: '', type: 'TEMPLATE' }, context);
+          initializeGitFileSystem({ assignmentId: input, submissionId: '', type: 'TEMPLATE' }, context, isInstructor);
           await new Promise(resolve => setTimeout(resolve, 1500));
           vscode.window.setStatusBarMessage('$(check) Tutly GitFS Ready', 5000);
           try {
@@ -173,7 +174,7 @@ async function activateGitFsMode(context: vscode.ExtensionContext, config?: Exte
       title: "Setting up Tutly FS (GitFS Mode)...",
       cancellable: false
     }, async () => {
-      initializeGitFileSystem({ assignmentId: assignmentId!, submissionId: '', type: 'TEMPLATE' }, context);
+      initializeGitFileSystem({ assignmentId: assignmentId!, submissionId: '', type: 'TEMPLATE' }, context, isInstructor);
       await new Promise(resolve => setTimeout(resolve, 1500));
       vscode.window.setStatusBarMessage('$(check) Tutly GitFS Ready', 5000);
       try {
@@ -188,13 +189,14 @@ async function activateGitFsMode(context: vscode.ExtensionContext, config?: Exte
 async function activateFsRelayMode(context: vscode.ExtensionContext, config?: ExtensionConfig) {
   const serverUrl = config?.serverUrl || 'http://localhost:4242';
   const apiKey = config?.apiKey || 'tutly-dev-key';
+  const isInstructor = config?.isInstructor || false;
 
   vscode.window.withProgress({
     location: vscode.ProgressLocation.Notification,
     title: "Setting up Tutly File system...",
     cancellable: false
   }, async () => {
-    await initializeFsRelayFileSystem(serverUrl, apiKey, context);
+    await initializeFsRelayFileSystem(serverUrl, apiKey, context, isInstructor);
     await new Promise(resolve => setTimeout(resolve, 1500));
     vscode.window.setStatusBarMessage('$(check) Tutly File system Ready', 5000);
     try {
@@ -242,7 +244,7 @@ async function activateFsRelayMode(context: vscode.ExtensionContext, config?: Ex
 
 }
 
-const initializeGitFileSystem = async (ctx: GitContext, context: vscode.ExtensionContext) => {
+const initializeGitFileSystem = async (ctx: GitContext, context: vscode.ExtensionContext, isInstructor: boolean) => {
   await closeAllTutlyEditors();
 
   apiClient = new GitApiClient();
@@ -254,7 +256,7 @@ const initializeGitFileSystem = async (ctx: GitContext, context: vscode.Extensio
   }, async () => {
     try {
       const archive = await apiClient!.getArchive(ctx);
-      const memFs = new MemFileSystemProvider(apiClient!, ctx);
+      const memFs = new MemFileSystemProvider(apiClient!, ctx, isInstructor);
       await memFs.initialize(archive);
 
       // Create and set up source control provider
@@ -278,10 +280,10 @@ const initializeGitFileSystem = async (ctx: GitContext, context: vscode.Extensio
   });
 };
 
-const initializeFsRelayFileSystem = async (serverUrl: string, apiKey: string, context: vscode.ExtensionContext) => {
+const initializeFsRelayFileSystem = async (serverUrl: string, apiKey: string, context: vscode.ExtensionContext, isInstructor: boolean) => {
   await closeAllTutlyEditors();
 
-  const fsRelayProvider = new FsRelayFileSystemProvider(serverUrl, apiKey);
+  const fsRelayProvider = new FsRelayFileSystemProvider(serverUrl, apiKey, isInstructor);
 
   try {
     await fsRelayProvider.ensureConnected();

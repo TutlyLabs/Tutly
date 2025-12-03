@@ -197,9 +197,9 @@ export async function POST(req: NextRequest) {
       try {
         const defaultConfig = `version: 1
 
-run:
-  command: "npm test"
-  description: "Run tests"
+# run:
+#   command: "npm test"
+#   description: "Run tests"
 
 readonly:
   - "tests/**/*"

@@ -107,6 +107,9 @@ export async function POST(req: NextRequest) {
         name: session.user.name || session.user.username,
         email: session.user.email || `${session.user.username}@tutly.in`,
       },
+      {
+        checkReadonly: !isInstructor,
+      },
     );
 
     const updatedCount = result.filesProcessed;

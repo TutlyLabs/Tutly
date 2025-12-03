@@ -4,6 +4,8 @@ import simpleGit from "simple-git";
 import tmp from "tmp";
 import { promises as fs } from "fs";
 import path from "path";
+import yaml from "js-yaml";
+import { minimatch } from "minimatch";
 
 const GITEA_API_URL = env.GITEA_API_URL;
 const GITEA_ADMIN_TOKEN = env.GITEA_ADMIN_TOKEN;
@@ -71,6 +73,7 @@ export async function commitAndPushZip(
   repo: string,
   message: string,
   author: { name: string; email: string },
+  options?: { checkReadonly?: boolean },
 ): Promise<{ success: true; filesProcessed: number }> {
   const tmpDir = tmp.dirSync({ unsafeCleanup: true });
   const workDir = tmpDir.name;
@@ -81,6 +84,31 @@ export async function commitAndPushZip(
     // Clone repository
     const git = simpleGit();
     await git.clone(remoteUrl, workDir, ["--depth", "1", "--branch", "main"]);
+
+    // Read config for readonly check BEFORE clearing directory
+    let readonlyPatterns: string[] = [];
+    if (options?.checkReadonly) {
+      try {
+        const configPath = path.join(workDir, ".tutly", "config.yaml");
+        if (
+          await fs
+            .stat(configPath)
+            .then(() => true)
+            .catch(() => false)
+        ) {
+          const configContent = await fs.readFile(configPath, "utf-8");
+          const config = yaml.load(configContent) as any;
+          if (config && Array.isArray(config.readonly)) {
+            readonlyPatterns = config.readonly;
+          }
+        }
+      } catch (e) {
+        console.warn(
+          "Failed to read .tutly/config.yaml for readonly check:",
+          e,
+        );
+      }
+    }
 
     // Clear working directory (preserving .git) to detect deletions
     await clearWorkingDirectory(workDir);
@@ -98,6 +126,26 @@ export async function commitAndPushZip(
     await gitRepo.add("-A");
 
     const status = await gitRepo.status();
+
+    // Check for readonly violations
+    if (options?.checkReadonly && readonlyPatterns.length > 0) {
+      const changedFiles = [
+        ...status.modified,
+        ...status.deleted,
+        ...status.created,
+        ...status.renamed.map((r) => r.to),
+      ];
+
+      for (const file of changedFiles) {
+        for (const pattern of readonlyPatterns) {
+          if (minimatch(file, pattern)) {
+            throw new Error(
+              `Security Violation: Cannot modify readonly file '${file}' (matches '${pattern}').`,
+            );
+          }
+        }
+      }
+    }
 
     if (status.files.length === 0) {
       return { success: true, filesProcessed: 0 };

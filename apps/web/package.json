@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "3.3.5",
+  "version": "3.3.6",
   "private": true,
   "type": "module",
   "engines": {
@@ -90,6 +90,7 @@
     "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",
     "jiti": "^2.4.2",
+    "js-yaml": "^4.1.1",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lexical": "^0.30.0",
@@ -97,6 +98,7 @@
     "lucide-react": "^0.487.0",
     "marked": "^15.0.8",
     "mime-types": "^3.0.2",
+    "minimatch": "^10.1.1",
     "next": "^15.2.3",
     "next-themes": "^0.4.6",
     "nuqs": "^2.4.1",

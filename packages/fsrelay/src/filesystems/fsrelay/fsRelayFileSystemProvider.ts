@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as yaml from 'js-yaml';
+import { minimatch } from 'minimatch';
 
 interface ApiResponse {
   entries?: Array<{ name: string; type: 'file' | 'directory' }>;
@@ -14,7 +16,9 @@ export class FsRelayFileSystemProvider implements vscode.FileSystemProvider {
   private serverUrl: string;
   private apiKey: string;
 
-  constructor(serverUrl: string = 'http://localhost:4242', apiKey: string = 'tutly-dev-key') {
+  private readonlyPatterns: string[] = [];
+
+  constructor(serverUrl: string = 'http://localhost:4242', apiKey: string = 'tutly-dev-key', private isInstructor: boolean = false) {
     this.serverUrl = serverUrl;
     this.apiKey = apiKey;
   }
@@ -47,6 +51,26 @@ export class FsRelayFileSystemProvider implements vscode.FileSystemProvider {
         const health = await response.json();
         this._connected = true;
         console.log('Connected to file server', health);
+
+        try {
+          const configResponse = await fetch(`${this.serverUrl}/api/files/.tutly/config.yaml`, {
+            headers: { 'x-api-key': this.apiKey }
+          });
+          if (configResponse.ok) {
+            const data = await configResponse.json();
+            if (data.content) {
+              const configContent = data.content;
+              const config = yaml.load(configContent) as any;
+              if (config && Array.isArray(config.readonly)) {
+                this.readonlyPatterns = config.readonly;
+                console.log('Loaded readonly patterns:', this.readonlyPatterns);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to load .tutly/config.yaml:', e);
+        }
+
       } else {
         throw new Error(`Server responded with ${response.status} ${response.statusText}`);
       }
@@ -115,12 +139,23 @@ export class FsRelayFileSystemProvider implements vscode.FileSystemProvider {
         };
       } else {
         // File
-        return {
+        const stat: vscode.FileStat = {
           type: vscode.FileType.File,
           ctime: Date.now(),
           mtime: Date.now(),
           size: result.size || 0
         };
+
+        // Always mark .tutly/workspace.json as readonly
+        if (uri.path.endsWith('.tutly/workspace.json')) {
+          stat.permissions = vscode.FilePermission.Readonly;
+        }
+
+        if (!this.isInstructor && this._isReadonly(uri.path)) {
+          stat.permissions = vscode.FilePermission.Readonly;
+        }
+
+        return stat;
       }
     } catch (error) {
       console.error('stat error:', error);
@@ -139,10 +174,28 @@ export class FsRelayFileSystemProvider implements vscode.FileSystemProvider {
         throw new Error('Not a directory');
       }
 
-      return result.entries.map((entry): [string, vscode.FileType] => [
-        entry.name,
-        entry.type === 'directory' ? vscode.FileType.Directory : vscode.FileType.File
-      ]);
+      const entries: [string, vscode.FileType][] = [];
+      const dirPath = uri.path === '/' ? '' : uri.path;
+
+      for (const entry of result.entries) {
+        const childPath = dirPath ? `${dirPath}/${entry.name}` : `/${entry.name}`;
+
+        if (!this.isInstructor && entry.name === '.tutly') {
+          continue;
+        }
+
+        // If student, hide readonly files
+        if (!this.isInstructor && entry.type !== 'directory' && this._isReadonly(childPath)) {
+          continue;
+        }
+
+        entries.push([
+          entry.name,
+          entry.type === 'directory' ? vscode.FileType.Directory : vscode.FileType.File
+        ]);
+      }
+
+      return entries;
     } catch (error) {
       console.error('readDirectory error:', error);
       throw vscode.FileSystemError.FileNotFound(uri);
@@ -172,6 +225,20 @@ export class FsRelayFileSystemProvider implements vscode.FileSystemProvider {
     content: Uint8Array,
     options: { create: boolean; overwrite: boolean }
   ): Promise<void> {
+    if (!this.isInstructor && this._isReadonly(uri.path)) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
+    // Prevent students from editing .tutly/config.yaml
+    if (!this.isInstructor && uri.path.endsWith('.tutly/config.yaml')) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
+    // Prevent anyone from editing .tutly/workspace.json
+    if (uri.path.endsWith('.tutly/workspace.json')) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
     const path = uri.path.substring(1);
 
     try {
@@ -217,6 +284,18 @@ export class FsRelayFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): Promise<void> {
+    if (!this.isInstructor && this._isReadonly(oldUri.path)) {
+      throw vscode.FileSystemError.NoPermissions(oldUri);
+    }
+    if (!this.isInstructor && this._isReadonly(newUri.path)) {
+      throw vscode.FileSystemError.NoPermissions(newUri);
+    }
+
+    // Prevent renaming .tutly/workspace.json
+    if (oldUri.path.endsWith('.tutly/workspace.json') || newUri.path.endsWith('.tutly/workspace.json')) {
+      throw vscode.FileSystemError.NoPermissions(oldUri);
+    }
+
     try {
       // Read content from old file
       const content = await this.readFile(oldUri);
@@ -240,6 +319,15 @@ export class FsRelayFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   async delete(uri: vscode.Uri, options: { recursive: boolean }): Promise<void> {
+    if (!this.isInstructor && this._isReadonly(uri.path)) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
+    // Prevent deleting .tutly/workspace.json
+    if (uri.path.endsWith('.tutly/workspace.json')) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
     const path = uri.path.substring(1);
 
     try {
@@ -263,6 +351,10 @@ export class FsRelayFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   async createDirectory(uri: vscode.Uri): Promise<void> {
+    if (!this.isInstructor && this._isReadonly(uri.path)) {
+      throw vscode.FileSystemError.NoPermissions(uri);
+    }
+
     const path = uri.path.substring(1);
 
     try {
@@ -307,5 +399,16 @@ export class FsRelayFileSystemProvider implements vscode.FileSystemProvider {
 
   watch(): vscode.Disposable {
     return new vscode.Disposable(() => { });
+  }
+
+  private _isReadonly(path: string): boolean {
+    const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+
+    for (const pattern of this.readonlyPatterns) {
+      if (minimatch(normalizedPath, pattern)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

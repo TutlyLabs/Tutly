@@ -43,9 +43,9 @@
     "workbench.view.alwaysShowHeaderActions": true,
     "files.exclude": {
       "**/.vscode": true,
-      "**/.tutly": true,
       "**/.git": true,
       "**/.DS_Store": true,
+      "**/.tutly/workspace.json": true,
       "**/.data": true,
       "*.rar": true,
       "*.tar": true,
