@@ -1,6 +1,8 @@
 import VSCodeEditor from "./vscode-editor";
 import { db } from "@/lib/db";
 import { getServerSessionOrRedirect } from "@/lib/auth";
+import { jwtVerify } from "jose";
+import { ShieldAlert } from "lucide-react";
 
 export default async function VSCodePage({
   searchParams,
@@ -28,9 +30,16 @@ export default async function VSCodePage({
   const configParam = resolvedParams.config as string | undefined;
   let hasRunCommand = false;
 
+  let isAuthorized = true;
+
   if (configParam) {
     try {
-      const decoded = JSON.parse(atob(configParam));
+      const secret = new TextEncoder().encode(
+        process.env.TUTLY_VSCODE_SECRET
+      );
+      const { payload } = await jwtVerify(configParam, secret);
+      const decoded = payload as any;
+
       if (decoded.assignmentId && !assignmentId) {
         assignmentId = decoded.assignmentId;
       }
@@ -38,8 +47,25 @@ export default async function VSCodePage({
         hasRunCommand = true;
       }
     } catch (error) {
-      console.error("Failed to parse config param:", error);
+      console.error("Failed to verify config param:", error);
+      isAuthorized = false;
     }
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-zinc-950 text-white">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="rounded-full bg-red-500/10 p-4">
+            <ShieldAlert className="h-8 w-8 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-bold">Unauthorized Access</h1>
+          <p className="text-zinc-400">
+            The configuration token is invalid or has been tampered with.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (assignmentId) {

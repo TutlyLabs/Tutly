@@ -1,4 +1,4 @@
-require(["vs/workbench/workbench.web.main"], function (workbench) {
+require(["vs/workbench/workbench.web.main"], async function (workbench) {
   const params = new URLSearchParams(window.location.search);
 
   // Parse config from URL parameter (base64-encoded JSON)
@@ -13,14 +13,19 @@ require(["vs/workbench/workbench.web.main"], function (workbench) {
   const configParam = params.get("config");
   if (configParam) {
     try {
-      const decoded = JSON.parse(atob(configParam));
-      tutlyConfig = {
-        ...tutlyConfig,
-        ...decoded,
-        tutlyConfig: decoded.tutlyConfig,
-      };
+      const response = await fetch(`/api/vscode/verify?token=${encodeURIComponent(configParam)}`);
+      if (response.ok) {
+        const decoded = await response.json();
+        tutlyConfig = {
+          ...tutlyConfig,
+          ...decoded,
+          tutlyConfig: decoded.tutlyConfig,
+        };
+      } else {
+        console.error("Failed to verify config token:", await response.text());
+      }
     } catch (error) {
-      console.error("Failed to parse config parameter:", error);
+      console.error("Failed to verify config parameter:", error);
     }
   }
 

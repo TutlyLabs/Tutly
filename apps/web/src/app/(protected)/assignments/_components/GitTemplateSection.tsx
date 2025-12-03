@@ -88,28 +88,18 @@ export const GitTemplateSection = ({ assignment }: { assignment: any }) => {
                   `/api/config?assignmentId=${assignment.id}`,
                 );
 
-                const config: any = {
-                  mode: "fsrelay",
-                  assignmentId: assignment.id,
-                };
-
                 if (configResponse.ok) {
                   const configData = await configResponse.json();
                   if (configData.success && configData.config) {
-                    config.tutlyConfig = configData.config;
+                    window.open(`/vscode?config=${encodeURIComponent(configData.config)}`, "_blank");
+                    return;
                   }
                 }
 
-                const encodedConfig = btoa(JSON.stringify(config));
-                window.open(`/vscode?config=${encodedConfig}`, "_blank");
+                throw new Error("Failed to get config");
               } catch (error) {
                 console.error("Error launching playground:", error);
-                const config = {
-                  mode: "fsrelay",
-                  assignmentId: assignment.id,
-                };
-                const encodedConfig = btoa(JSON.stringify(config));
-                window.open(`/vscode?config=${encodedConfig}`, "_blank");
+                toast.error("Failed to launch playground");
               } finally {
                 setIsLaunching(false);
               }

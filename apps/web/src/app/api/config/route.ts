@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { giteaClient } from "@/lib/gitea";
 import { db } from "@/lib/db";
 import yaml from "js-yaml";
+import { SignJWT } from "jose";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,8 @@ export async function GET(req: NextRequest) {
     // Parse owner/repo from gitTemplateRepo
     const [owner, repo] = assignment.gitTemplateRepo.split("/");
 
+    let tutlyConfig: TutlyConfig = {};
+
     try {
       // Fetch .tutly/config.yaml from Gitea
       const configContents = await giteaClient.getContents(
@@ -53,33 +56,41 @@ export async function GET(req: NextRequest) {
         "main",
       );
 
-      if (!configContents || Array.isArray(configContents)) {
-        return NextResponse.json(
-          { error: "Config file not found or is a directory" },
-          { status: 404 },
-        );
+      if (configContents && !Array.isArray(configContents) && configContents.content) {
+        // Decode base64 content
+        const configYaml = Buffer.from(
+          configContents.content,
+          "base64",
+        ).toString("utf-8");
+
+        // Parse YAML
+        tutlyConfig = yaml.load(configYaml) as TutlyConfig;
       }
-
-      // Decode base64 content
-      const configYaml = Buffer.from(
-        configContents.content || "",
-        "base64",
-      ).toString("utf-8");
-
-      // Parse YAML
-      const config = yaml.load(configYaml) as TutlyConfig;
-
-      return NextResponse.json({
-        success: true,
-        config,
-      });
     } catch (error) {
-      console.error("Error fetching config from Gitea:", error);
-      return NextResponse.json(
-        { error: "Config file not found in template repository" },
-        { status: 404 },
-      );
+      console.warn("Config file not found in template repository, using default.");
     }
+
+    const configPayload = {
+      mode: "fsrelay",
+      assignmentId,
+      tutlyConfig,
+    };
+
+    const secret = new TextEncoder().encode(
+      process.env.TUTLY_VSCODE_SECRET
+    );
+
+    const token = await new SignJWT(configPayload)
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("24h")
+      .sign(secret);
+
+    return NextResponse.json({
+      success: true,
+      config: token,
+    });
+
   } catch (error) {
     console.error("Error in config endpoint:", error);
     return NextResponse.json(
