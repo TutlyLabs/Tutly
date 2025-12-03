@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/server/auth";
 import { db } from "@/lib/db";
-import { giteaClient } from "@/lib/gitea";
-import AdmZip from "adm-zip";
+import { commitAndPushZip } from "@/lib/git-operations";
 
 export const dynamic = "force-dynamic";
 
@@ -92,54 +91,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Process Zip File
+    // 2. Get file buffer
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const zip = new AdmZip(buffer);
-    const zipEntries = zip.getEntries();
+    const zipBuffer = Buffer.from(arrayBuffer);
 
-    const filesMap = new Map<
-      string,
-      { path: string; content: string | Buffer }
-    >();
-
-    for (const entry of zipEntries) {
-      if (!entry.isDirectory) {
-        // Sanitize path: remove leading slashes and normalize
-        const path = entry.entryName.replace(/^\/+/, "");
-        filesMap.set(path, {
-          path,
-          content: entry.getData(),
-        });
-      }
-    }
-
-    const files = Array.from(filesMap.values());
-
-    // 3. Commit to Gitea
+    // 3. Commit and push using git commands
     const [owner, repo] = gitRepoPath.split("/");
 
-    const commitFiles = files.map((f) => ({
-      path: f.path,
-      content: f.content,
-      status: "modified" as const,
-    }));
+    const result = await commitAndPushZip(
+      zipBuffer,
+      owner,
+      repo,
+      action === "SUBMIT" ? "Submission upload via CLI" : "Save via CLI",
+      {
+        name: session.user.name || session.user.username,
+        email: session.user.email || `${session.user.username}@tutly.in`,
+      },
+    );
 
-    if (commitFiles.length > 0) {
-      await giteaClient.createCommit(
-        owner,
-        repo,
-        "main",
-        action === "SUBMIT" ? "Submission upload via CLI" : "Save via CLI",
-        commitFiles,
-        {
-          name: session.user.name || session.user.username,
-          email: session.user.email || `${session.user.username}@tutly.in`,
-        },
-      );
-    }
-
-    const updatedCount = commitFiles.length;
+    const updatedCount = result.filesProcessed;
 
     // Update submission status only if action is SUBMIT and it's a student submission
     if (action === "SUBMIT" && submission) {

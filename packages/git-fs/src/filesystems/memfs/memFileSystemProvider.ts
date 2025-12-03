@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { GitApiClient } from '../../api';
 import { GitContext } from '../../types';
-import { Buffer } from 'buffer';
 import * as JSZip from 'jszip';
 import { SourceControlProvider } from '../../providers/source-control/sourceControlProvider';
 

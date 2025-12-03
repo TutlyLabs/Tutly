@@ -1,10 +1,8 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import { Hook } from "@oclif/config";
-import updateNotifier from "update-notifier";
 
 const hook: Hook<"init"> = async function (options) {
-  // Skip check for certain commands to avoid loops or blocking help
   if (
     options.id === "update" ||
     options.id === "help" ||
@@ -14,6 +12,8 @@ const hook: Hook<"init"> = async function (options) {
   }
 
   try {
+    const { default: updateNotifier } = await import("update-notifier");
+
     const pkg = JSON.parse(
       readFileSync(join(__dirname, "../../../package.json"), "utf8"),
     );
