@@ -7,13 +7,13 @@
     "version": "1.75.0",
     "quality": "stable",
     "extensionEnabledApiProposals": {
-      "tutly.fsrelay": [
+      "tutly.git-fs": [
         "fileSearchProvider",
         "textSearchProvider"
       ]
     },
     "extensionKind": {
-      "tutly.fsrelay": ["ui", "workspace"]
+      "tutly.git-fs": ["ui", "workspace"]
     }
   },
   "configurationDefaults": {
@@ -43,10 +43,6 @@
     "workbench.editor.enablePreview": false,
     "workbench.tree.renderIndentGuides": "none",
     "workbench.colorTheme": "Default Dark Modern",
-    "workbench.activityBar.visible": true,
-    "tutly.server.port": 4242,
-    "tutly.server.host": "localhost",
-    "tutly.server.apiKey": "tutly-dev-key",
-    "tutly.server.autoConnect": true
+    "workbench.activityBar.visible": true
   }
 }
