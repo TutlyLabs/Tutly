@@ -6,7 +6,7 @@ export function findAssignmentRoot(startDir: string): string | null {
   const root = resolve("/");
 
   while (true) {
-    if (existsSync(join(currentDir, ".tutly.json"))) {
+    if (existsSync(join(currentDir, ".tutly", "workspace.json"))) {
       return currentDir;
     }
 

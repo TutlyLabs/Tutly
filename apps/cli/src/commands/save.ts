@@ -39,7 +39,7 @@ export default class Save extends Command {
 
     if (!submissionDir) {
       this.log(
-        "❌ No .tutly.json file found in this directory or any parent directories.",
+        "❌ No .tutly/workspace.json file found in this directory or any parent directories.",
       );
       this.log(
         "Make sure you're in a directory created by 'tutly assignment <id>'",
@@ -47,14 +47,14 @@ export default class Save extends Command {
       this.exit(1);
     }
 
-    const metadataPath = join(submissionDir, ".tutly.json");
+    const metadataPath = join(submissionDir, ".tutly", "workspace.json");
 
     try {
       const metadata = JSON.parse(await readFile(metadataPath, "utf-8"));
       const assignmentId = metadata.assignmentId;
 
       if (!assignmentId) {
-        this.log("❌ Invalid .tutly.json file: missing assignmentId");
+        this.log("❌ Invalid .tutly/workspace.json file: missing assignmentId");
         this.exit(1);
       }
 
@@ -71,7 +71,7 @@ export default class Save extends Command {
         "dist",
         "build",
         "coverage",
-        ".tutly.json",
+        ".tutly",
         ".DS_Store",
       ]);
 

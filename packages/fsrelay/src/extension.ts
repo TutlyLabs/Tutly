@@ -23,8 +23,24 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register TutlyFS commands globally
   context.subscriptions.push(
-    vscode.commands.registerCommand('tutlyfs.run', () => {
-      vscode.window.showInformationMessage('No run command available!');
+    vscode.commands.registerCommand('tutlyfs.run', async () => {
+      try {
+        const runCommand = config?.tutlyConfig?.run?.command;
+
+        if (!runCommand) {
+          vscode.window.showWarningMessage(
+            'No run command configured. Add a .tutly/config.yaml file to your template repository.'
+          );
+          return;
+        }
+
+        runCommandInTerminal(runCommand);
+
+        const description = config?.tutlyConfig?.run?.description || runCommand;
+        vscode.window.showInformationMessage(`Running: ${description}`);
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to execute run command: ${error}`);
+      }
     })
   );
 

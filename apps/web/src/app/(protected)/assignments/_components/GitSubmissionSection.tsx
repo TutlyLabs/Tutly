@@ -13,6 +13,7 @@ import {
 
 export const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
   const [isCreating, setIsCreating] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
   const [hasTemplateRepo, setHasTemplateRepo] = useState(false);
   const [repoData, setRepoData] = useState<{
     repoUrl: string;
@@ -128,19 +129,49 @@ export const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
       ) : (
         <div className="flex items-center gap-3">
           <Button
-            onClick={() => {
-              const config = {
-                mode: "fsrelay",
-                assignmentId: assignment.id,
-              };
-              const encodedConfig = btoa(JSON.stringify(config));
-              window.open(`/vscode?config=${encodedConfig}`, "_blank");
+            onClick={async () => {
+              setIsLaunching(true);
+              try {
+                const configResponse = await fetch(
+                  `/api/config?assignmentId=${assignment.id}`,
+                );
+
+                const config: any = {
+                  mode: "fsrelay",
+                  assignmentId: assignment.id,
+                };
+
+                if (configResponse.ok) {
+                  const configData = await configResponse.json();
+                  if (configData.success && configData.config) {
+                    config.tutlyConfig = configData.config;
+                  }
+                }
+
+                const encodedConfig = btoa(JSON.stringify(config));
+                window.open(`/vscode?config=${encodedConfig}`, "_blank");
+              } catch (error) {
+                console.error("Error launching playground:", error);
+                const config = {
+                  mode: "fsrelay",
+                  assignmentId: assignment.id,
+                };
+                const encodedConfig = btoa(JSON.stringify(config));
+                window.open(`/vscode?config=${encodedConfig}`, "_blank");
+              } finally {
+                setIsLaunching(false);
+              }
             }}
+            disabled={isLaunching}
             size="sm"
-            className="h-8 cursor-pointer border-transparent bg-blue-600 px-4 text-xs font-medium text-white hover:bg-blue-700"
+            className="h-8 cursor-pointer border-transparent bg-blue-600 px-4 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <FiTerminal className="mr-2 h-3.5 w-3.5" />
-            Launch Playground
+            {isLaunching ? (
+              <FiRefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <FiTerminal className="mr-2 h-3.5 w-3.5" />
+            )}
+            {isLaunching ? "Loading..." : "Launch Playground"}
           </Button>
         </div>
       )}

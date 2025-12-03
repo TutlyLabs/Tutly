@@ -137,6 +137,7 @@
     "@tutly/typescript-config": "workspace:*",
     "@types/adm-zip": "^0.5.7",
     "@types/bcryptjs": "^3.0.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/lodash.throttle": "^4.1.9",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^22.13.11",

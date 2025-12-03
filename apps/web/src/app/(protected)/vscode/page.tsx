@@ -26,12 +26,16 @@ export default async function VSCodePage({
   let assignmentId = resolvedParams.assignmentId as string | undefined;
 
   const configParam = resolvedParams.config as string | undefined;
-  if (configParam && !assignmentId) {
+  let hasRunCommand = false;
+
+  if (configParam) {
     try {
       const decoded = JSON.parse(atob(configParam));
-      console.log(decoded);
-      if (decoded.assignmentId) {
+      if (decoded.assignmentId && !assignmentId) {
         assignmentId = decoded.assignmentId;
+      }
+      if (decoded.tutlyConfig?.run?.command) {
+        hasRunCommand = true;
       }
     } catch (error) {
       console.error("Failed to parse config param:", error);
@@ -73,6 +77,7 @@ export default async function VSCodePage({
       assignmentName={assignment?.title}
       courseName={assignment?.class?.course?.title}
       userName={user.name || user.username}
+      hasRunCommand={hasRunCommand}
     />
   );
 }

@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { Command, flags } from "@oclif/command";
 
@@ -76,8 +76,11 @@ export default class Assignment extends Command {
 
       await api.downloadAndExtractArchive(archiveUrl, outputDir);
 
-      // 4. Create .tutly.json metadata
+      // 4. Create .tutly/ directory structure
       const absoluteOutputDir = resolve(outputDir);
+      const tutlyDir = join(outputDir, ".tutly");
+      await mkdir(tutlyDir, { recursive: true });
+
       const metadata = {
         assignmentId: assignmentId,
         title: assignmentTitle,
@@ -87,10 +90,10 @@ export default class Assignment extends Command {
       };
 
       await writeFile(
-        join(outputDir, ".tutly.json"),
+        join(tutlyDir, "workspace.json"),
         JSON.stringify(metadata, null, 2),
       );
-      this.log(`  ✓ Created: .tutly.json`);
+      this.log(`  ✓ Created: .tutly/workspace.json`);
 
       this.log("\n✨ Assignment workspace ready!");
       this.log(`\n📝 Next steps:`);
