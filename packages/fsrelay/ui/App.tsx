@@ -5,7 +5,7 @@ import "@vscode-elements/elements/dist/vscode-tab-header";
 import "@vscode-elements/elements/dist/vscode-tab-panel";
 import { QuestionTab } from "./components/QuestionTab";
 import { TestsTab } from "./components/TestsTab";
-import { PreviewTab } from "./components/PreviewTab";
+
 
 interface Assignment {
   id: string;
@@ -88,7 +88,6 @@ export function App() {
       <vscode-tabs selected-index="0" className="flex-1 flex flex-col" style={{ height: '100%' }}>
         <vscode-tab-header slot="header">Question</vscode-tab-header>
         <vscode-tab-header slot="header">Tests</vscode-tab-header>
-        <vscode-tab-header slot="header">Preview</vscode-tab-header>
 
         <vscode-tab-panel style={{ height: '100%', overflow: 'auto' }}>
           <QuestionTab assignment={assignment} />
@@ -96,10 +95,6 @@ export function App() {
 
         <vscode-tab-panel style={{ height: '100%', overflow: 'hidden' }}>
           <TestsTab />
-        </vscode-tab-panel>
-
-        <vscode-tab-panel style={{ height: '100%', overflow: 'hidden' }}>
-          <PreviewTab />
         </vscode-tab-panel>
       </vscode-tabs>
     </div>

@@ -201,9 +201,9 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
 
       if (response.ok) {
         const data = await response.json();
-        this._webview.postMessage({ type: 'testDiscovery', files: data.files || [] });
+        this._webview.postMessage({ type: 'testDiscovery', data });
       } else {
-        this._webview.postMessage({ type: 'testDiscovery', files: [] });
+        this._webview.postMessage({ type: 'testDiscovery', data: { tests: [] } });
       }
     } catch (error) {
       this._webview.postMessage({

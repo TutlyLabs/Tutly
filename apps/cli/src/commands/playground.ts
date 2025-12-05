@@ -328,45 +328,66 @@ export default class Playground extends Command {
 
     this.app.get("/api/test/discover", async (req, res) => {
       try {
-        const testFiles: string[] = [];
+        const { exec } = require("child_process");
+        const { promisify } = require("util");
+        const execAsync = promisify(exec);
 
-        const findTestFiles = async (
-          dir: string,
-          relativePath: string = "",
-        ) => {
-          const items = await fs.readdir(dir);
+        // Run tests with --dry-run to list all tests without executing
+        const command =
+          req.query?.command ||
+          "npm test --silent -- --reporter json --dry-run";
 
-          for (const item of items) {
-            if (item === "node_modules" || item.startsWith(".")) continue;
+        this.log(`Discovering tests with: ${command}`);
 
-            const fullPath = path.join(dir, item);
-            const itemRelativePath = relativePath
-              ? `${relativePath}/${item}`
-              : item;
+        try {
+          const { stdout } = await execAsync(command, {
+            cwd: baseDir,
+            timeout: 30000,
+            maxBuffer: 10 * 1024 * 1024,
+          });
 
-            try {
-              const stats = await fs.stat(fullPath);
-
-              if (stats.isDirectory()) {
-                await findTestFiles(fullPath, itemRelativePath);
-              } else if (
-                item.endsWith(".spec.js") ||
-                item.endsWith(".spec.ts") ||
-                item.endsWith(".test.js") ||
-                item.endsWith(".test.ts") ||
-                item.endsWith(".spec.jsx") ||
-                item.endsWith(".spec.tsx") ||
-                item.endsWith(".test.jsx") ||
-                item.endsWith(".test.tsx")
-              ) {
-                testFiles.push(itemRelativePath);
-              }
-            } catch {}
+          const results = JSON.parse(stdout);
+          res.json({
+            stats: results.stats || {
+              suites: 0,
+              tests: results.tests?.length || 0,
+              passes: 0,
+              failures: 0,
+              pending: results.tests?.length || 0,
+              duration: 0,
+            },
+            tests: results.tests || [],
+            passes: [],
+            failures: [],
+            pending: results.tests || [],
+          });
+        } catch (execError: any) {
+          const output = execError.stdout || "";
+          try {
+            const results = JSON.parse(output);
+            res.json({
+              stats: results.stats || {
+                suites: 0,
+                tests: results.tests?.length || 0,
+                passes: 0,
+                failures: 0,
+                pending: results.tests?.length || 0,
+                duration: 0,
+              },
+              tests: results.tests || [],
+              passes: [],
+              failures: [],
+              pending: results.tests || [],
+            });
+          } catch {
+            res.status(500).json({
+              error: "Failed to discover tests",
+              message: execError.message,
+              stdout: output,
+              stderr: execError.stderr || "",
+            });
           }
-        };
-
-        await findTestFiles(baseDir);
-        res.json({ files: testFiles });
+        }
       } catch (error) {
         res.status(500).json({ error: (error as Error).message });
       }
