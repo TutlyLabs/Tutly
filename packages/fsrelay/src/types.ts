@@ -27,6 +27,10 @@ export interface ExtensionConfig {
       command: string;
       description?: string;
     };
+    test?: {
+      command: string;
+      description?: string;
+    };
     readonly?: string[];
   };
 }

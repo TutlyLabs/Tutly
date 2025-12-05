@@ -144,16 +144,21 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
 
     try {
       let serverUrl = 'http://localhost:4242';
+      let testCommand = 'npm test --silent -- --reporter json';
       try {
         const config = await vscode.commands.executeCommand<any>('tutlyfs.getConfig');
         serverUrl = config?.serverUrl || 'http://localhost:4242';
+        const configTestCommand = config?.tutlyConfig?.test?.command;
+        if (configTestCommand) {
+          testCommand = configTestCommand;
+        }
       } catch {
       }
 
       const response = await fetch(`${serverUrl}/api/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ command: 'npm test' })
+        body: JSON.stringify({ command: testCommand })
       });
 
       if (!response.ok) {
