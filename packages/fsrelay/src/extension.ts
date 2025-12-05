@@ -21,26 +21,15 @@ export async function activate(context: vscode.ExtensionContext) {
     terminal.sendText(command);
   };
 
+  const provider = new TutlyViewProvider(context.extensionUri);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(TutlyViewProvider.viewType, provider)
+  );
+
   // Register TutlyFS commands globally
   context.subscriptions.push(
     vscode.commands.registerCommand('tutlyfs.run', async () => {
-      try {
-        const runCommand = config?.tutlyConfig?.run?.command;
-
-        if (!runCommand) {
-          vscode.window.showWarningMessage(
-            'No run command configured. Add a .tutly/config.yaml file to your template repository.'
-          );
-          return;
-        }
-
-        runCommandInTerminal(runCommand);
-
-        const description = config?.tutlyConfig?.run?.description || runCommand;
-        vscode.window.showInformationMessage(`Running: ${description}`);
-      } catch (error) {
-        vscode.window.showErrorMessage(`Failed to execute run command: ${error}`);
-      }
+      await provider.triggerRunTests();
     })
   );
 
@@ -56,9 +45,10 @@ export async function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  const provider = new TutlyViewProvider(context.extensionUri);
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(TutlyViewProvider.viewType, provider)
+    vscode.commands.registerCommand('tutlyfs.runTests', async () => {
+      await provider.triggerRunTests();
+    })
   );
 
   setTimeout(async () => {

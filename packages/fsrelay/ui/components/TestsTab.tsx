@@ -69,13 +69,26 @@ declare global {
   }
 }
 
-export function TestsTab() {
+interface TestsTabProps {
+  autoRunTrigger?: number;
+}
+
+export function TestsTab({ autoRunTrigger = 0 }: TestsTabProps) {
   const [state, setState] = useState<TestState>("idle");
   const [discoveredTests, setDiscoveredTests] = useState<TestResult[]>([]);
   const [testResults, setTestResults] = useState<TestRunResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [progressMessage, setProgressMessage] = useState<string>("");
   const [expandedTests, setExpandedTests] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (autoRunTrigger > 0) {
+      setState("running");
+      setError(null);
+      setProgressMessage("Starting test runner...");
+      window.vscode?.postMessage({ type: "runTests" });
+    }
+  }, [autoRunTrigger]);
 
   const normalizeMochaResults = (data: MochaTestRunResult): TestRunResult => {
     const normalizeTest = (test: MochaTestResult, index: number): TestResult => {
@@ -260,8 +273,7 @@ export function TestsTab() {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-[#1e1e1e] text-[#cccccc]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-        <p className="text-sm font-medium mb-2">Running Tests</p>
-        <p className="text-xs text-[#858585] animate-pulse">{progressMessage || "Please wait..."}</p>
+        <p className="text-sm text-[#858585] animate-pulse">{progressMessage || "Running tests..."}</p>
       </div>
     );
   }

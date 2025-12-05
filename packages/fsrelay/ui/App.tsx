@@ -1,5 +1,5 @@
 /// <reference path="./vscode-elements.d.ts" />
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "@vscode-elements/elements/dist/vscode-tabs";
 import "@vscode-elements/elements/dist/vscode-tab-header";
 import "@vscode-elements/elements/dist/vscode-tab-panel";
@@ -18,6 +18,8 @@ export function App() {
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [runTestsOnMount, setRunTestsOnMount] = useState(0);
+  const tabsRef = useRef<any>(null);
 
   useEffect(() => {
     const assignmentId = (window as any).ASSIGNMENT_ID;
@@ -48,6 +50,20 @@ export function App() {
     }
 
     setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "switchToTestsAndRun") {
+        if (tabsRef.current) {
+          tabsRef.current.selectedIndex = 1;
+        }
+        setRunTestsOnMount(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
 
   if (loading) {
@@ -85,7 +101,7 @@ export function App() {
 
   return (
     <div className="h-screen flex flex-col bg-[#1e1e1e]">
-      <vscode-tabs selected-index="0" className="flex-1 flex flex-col" style={{ height: '100%' }}>
+      <vscode-tabs ref={tabsRef} selected-index={0} className="flex-1 flex flex-col" style={{ height: '100%' }}>
         <vscode-tab-header slot="header">Question</vscode-tab-header>
         <vscode-tab-header slot="header">Tests</vscode-tab-header>
 
@@ -94,9 +110,10 @@ export function App() {
         </vscode-tab-panel>
 
         <vscode-tab-panel style={{ height: '100%', overflow: 'hidden' }}>
-          <TestsTab />
+          <TestsTab autoRunTrigger={runTestsOnMount} />
         </vscode-tab-panel>
       </vscode-tabs>
     </div>
   );
 }
+

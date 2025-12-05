@@ -4,6 +4,7 @@ import { AssignmentApiClient, AssignmentDetails } from '../../api';
 export class TutlyViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'tutly.webview';
   private _webview: vscode.Webview | undefined;
+  private _view: vscode.WebviewView | undefined;
 
   constructor(private readonly _extensionUri: vscode.Uri) { }
 
@@ -21,6 +22,7 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
 
     // Store webview reference for sending messages back
     this._webview = webviewView.webview;
+    this._view = webviewView;
 
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage(async (data) => {
@@ -39,6 +41,20 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
           break;
       }
     });
+  }
+
+  public async triggerRunTests(): Promise<void> {
+    if (this._view) {
+      this._view.show(true);
+    }
+
+    if (this._webview) {
+      this._webview.postMessage({ type: 'switchToTestsAndRun' });
+    }
+  
+    setTimeout(() => {
+      this._handleRunTests();
+    }, 100);
   }
 
   private async _fetchAssignmentData(
