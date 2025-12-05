@@ -273,7 +273,8 @@ export default class Playground extends Command {
         const { promisify } = require("util");
         const execAsync = promisify(exec);
 
-        const command = req.body?.command || "npm test -- --reporter json";
+        const command =
+          req.body?.command || "npm test --silent -- --reporter json";
 
         this.log(`Running test command: ${command}`);
 
@@ -287,7 +288,7 @@ export default class Playground extends Command {
           try {
             const results = JSON.parse(stdout);
             res.json(results);
-          } catch (parseError) {
+          } catch {
             res.json({
               stats: {
                 suites: 0,
@@ -329,14 +330,19 @@ export default class Playground extends Command {
       try {
         const testFiles: string[] = [];
 
-        const findTestFiles = async (dir: string, relativePath: string = "") => {
+        const findTestFiles = async (
+          dir: string,
+          relativePath: string = "",
+        ) => {
           const items = await fs.readdir(dir);
 
           for (const item of items) {
             if (item === "node_modules" || item.startsWith(".")) continue;
 
             const fullPath = path.join(dir, item);
-            const itemRelativePath = relativePath ? `${relativePath}/${item}` : item;
+            const itemRelativePath = relativePath
+              ? `${relativePath}/${item}`
+              : item;
 
             try {
               const stats = await fs.stat(fullPath);
@@ -355,8 +361,7 @@ export default class Playground extends Command {
               ) {
                 testFiles.push(itemRelativePath);
               }
-            } catch {
-            }
+            } catch {}
           }
         };
 
