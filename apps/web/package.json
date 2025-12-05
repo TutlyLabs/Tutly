@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "3.3.6",
+  "version": "3.3.7",
   "private": true,
   "type": "module",
   "engines": {
@@ -79,7 +79,7 @@
     "adm-zip": "^0.5.16",
     "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
-    "better-auth": "^1.2.10",
+    "better-auth": "^1.4.5",
     "browser-image-compression": "^2.0.2",
     "cheerio": "^1.0.0-rc.12",
     "class-variance-authority": "^0.7.1",
