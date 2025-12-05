@@ -266,6 +266,106 @@ export default class Playground extends Command {
         }
       }
     });
+
+    this.app.post("/api/test", async (req, res) => {
+      try {
+        const { exec } = require("child_process");
+        const { promisify } = require("util");
+        const execAsync = promisify(exec);
+
+        const command = req.body?.command || "npm test -- --reporter json";
+
+        this.log(`Running test command: ${command}`);
+
+        try {
+          const { stdout, stderr } = await execAsync(command, {
+            cwd: baseDir,
+            timeout: 120000, // 2 minute timeout
+            maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+          });
+
+          try {
+            const results = JSON.parse(stdout);
+            res.json(results);
+          } catch (parseError) {
+            res.json({
+              stats: {
+                suites: 0,
+                tests: 0,
+                passes: 0,
+                failures: 0,
+                pending: 0,
+                duration: 0,
+              },
+              tests: [],
+              failures: [],
+              passes: [],
+              rawOutput: stdout,
+              stderr: stderr,
+            });
+          }
+        } catch (execError: any) {
+          const output = execError.stdout || "";
+          const errorOutput = execError.stderr || "";
+
+          try {
+            const results = JSON.parse(output);
+            res.json(results);
+          } catch {
+            res.status(500).json({
+              error: "Test execution failed",
+              message: execError.message,
+              stdout: output,
+              stderr: errorOutput,
+            });
+          }
+        }
+      } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+      }
+    });
+
+    this.app.get("/api/test/discover", async (req, res) => {
+      try {
+        const testFiles: string[] = [];
+
+        const findTestFiles = async (dir: string, relativePath: string = "") => {
+          const items = await fs.readdir(dir);
+
+          for (const item of items) {
+            if (item === "node_modules" || item.startsWith(".")) continue;
+
+            const fullPath = path.join(dir, item);
+            const itemRelativePath = relativePath ? `${relativePath}/${item}` : item;
+
+            try {
+              const stats = await fs.stat(fullPath);
+
+              if (stats.isDirectory()) {
+                await findTestFiles(fullPath, itemRelativePath);
+              } else if (
+                item.endsWith(".spec.js") ||
+                item.endsWith(".spec.ts") ||
+                item.endsWith(".test.js") ||
+                item.endsWith(".test.ts") ||
+                item.endsWith(".spec.jsx") ||
+                item.endsWith(".spec.tsx") ||
+                item.endsWith(".test.jsx") ||
+                item.endsWith(".test.tsx")
+              ) {
+                testFiles.push(itemRelativePath);
+              }
+            } catch {
+            }
+          }
+        };
+
+        await findTestFiles(baseDir);
+        res.json({ files: testFiles });
+      } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+      }
+    });
   }
 
   private async setupWebSocket() {
