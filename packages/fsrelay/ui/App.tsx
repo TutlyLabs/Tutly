@@ -1,6 +1,11 @@
+/// <reference path="./vscode-elements.d.ts" />
 import React, { useEffect, useState } from "react";
-import { MarkdownPreview } from "./components/MarkdownPreview";
-import { generateAssignmentHtml } from "../src/utils/tiptap";
+import "@vscode-elements/elements/dist/vscode-tabs";
+import "@vscode-elements/elements/dist/vscode-tab-header";
+import "@vscode-elements/elements/dist/vscode-tab-panel";
+import { QuestionTab } from "./components/QuestionTab";
+import { TestsTab } from "./components/TestsTab";
+import { PreviewTab } from "./components/PreviewTab";
 
 interface Assignment {
   id: string;
@@ -79,28 +84,24 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] text-white p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">{assignment.title}</h1>
-          <div className="h-1 w-20 bg-blue-500 rounded"></div>
-        </div>
+    <div className="h-screen flex flex-col bg-[#1e1e1e]">
+      <vscode-tabs selected-index="0" className="flex-1 flex flex-col" style={{ height: '100%' }}>
+        <vscode-tab-header slot="header">Question</vscode-tab-header>
+        <vscode-tab-header slot="header">Tests</vscode-tab-header>
+        <vscode-tab-header slot="header">Preview</vscode-tab-header>
 
-        {/* Assignment Details */}
-        {assignment.detailsJson ? (
-          <div
-            dangerouslySetInnerHTML={{ __html: generateAssignmentHtml(assignment.detailsJson) }}
-          />
-        ) : assignment.details ? (
-          <MarkdownPreview
-            content={assignment.details}
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground bg-muted/10 rounded-lg border border-border/50">
-            <p>No assignment details available.</p>
-          </div>
-        )}
-      </div>
+        <vscode-tab-panel style={{ height: '100%', overflow: 'auto' }}>
+          <QuestionTab assignment={assignment} />
+        </vscode-tab-panel>
+
+        <vscode-tab-panel style={{ height: '100%', overflow: 'hidden' }}>
+          <TestsTab />
+        </vscode-tab-panel>
+
+        <vscode-tab-panel style={{ height: '100%', overflow: 'hidden' }}>
+          <PreviewTab />
+        </vscode-tab-panel>
+      </vscode-tabs>
     </div>
   );
 }

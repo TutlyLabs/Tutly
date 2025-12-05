@@ -3,6 +3,7 @@ import { AssignmentApiClient, AssignmentDetails } from '../../api';
 
 export class TutlyViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'tutly.webview';
+  private _webview: vscode.Webview | undefined;
 
   constructor(private readonly _extensionUri: vscode.Uri) { }
 
@@ -18,7 +19,10 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = await this._getHtmlForWebview(webviewView.webview);
 
-    // Handle messages from the webview (for notifications only)
+    // Store webview reference for sending messages back
+    this._webview = webviewView.webview;
+
+    // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
         case 'info':
@@ -26,6 +30,12 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
           break;
         case 'error':
           vscode.window.showErrorMessage(data.message);
+          break;
+        case 'runTests':
+          await this._handleRunTests();
+          break;
+        case 'discoverTests':
+          await this._handleDiscoverTests();
           break;
       }
     });
@@ -110,7 +120,7 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
       <html lang="en">
       <head>
         <meta charset="UTF-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src https: data:;">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src https: data:; frame-src http://localhost:* https://localhost:* http://127.0.0.1:* https://127.0.0.1:*; child-src http://localhost:* https://localhost:* http://127.0.0.1:* https://127.0.0.1:*;">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>${cssContent}</style>
         <title>Tutly Webview</title>
@@ -125,6 +135,77 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
         </script>
       </body>
       </html>`;
+  }
+
+  private async _handleRunTests(): Promise<void> {
+    if (!this._webview) return;
+
+    this._webview.postMessage({ type: 'testProgress', message: 'Running tests...' });
+
+    try {
+      let serverUrl = 'http://localhost:4242';
+      try {
+        const config = await vscode.commands.executeCommand<any>('tutlyfs.getConfig');
+        serverUrl = config?.serverUrl || 'http://localhost:4242';
+      } catch {
+      }
+
+      const response = await fetch(`${serverUrl}/api/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: 'npm test' })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Test execution failed: ${response.statusText}`);
+      }
+
+      const results = await response.json();
+
+      if (results.error) {
+        this._webview.postMessage({
+          type: 'testError',
+          error: results.error + (results.message ? `: ${results.message}` : '')
+        });
+      } else {
+        this._webview.postMessage({ type: 'testResults', data: results });
+      }
+    } catch (error) {
+      this._webview.postMessage({
+        type: 'testError',
+        error: `Failed to run tests: ${error}. Make sure the CLI server is running.`
+      });
+    }
+  }
+
+  private async _handleDiscoverTests(): Promise<void> {
+    if (!this._webview) return;
+
+    try {
+      let serverUrl = 'http://localhost:4242';
+      try {
+        const config = await vscode.commands.executeCommand<any>('tutlyfs.getConfig');
+        serverUrl = config?.serverUrl || 'http://localhost:4242';
+      } catch {
+      }
+
+      const response = await fetch(`${serverUrl}/api/test/discover`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this._webview.postMessage({ type: 'testDiscovery', files: data.files || [] });
+      } else {
+        this._webview.postMessage({ type: 'testDiscovery', files: [] });
+      }
+    } catch (error) {
+      this._webview.postMessage({
+        type: 'testError',
+        error: `Failed to discover tests: ${error}`
+      });
+    }
   }
 }
 
