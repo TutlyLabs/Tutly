@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getServerSessionOrRedirect } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import type { Role } from "@/lib/prisma";
