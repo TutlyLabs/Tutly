@@ -1,4 +1,4 @@
-import { NotificationEvent, NotificationMedium } from "@prisma/client";
+import { NotificationEvent, NotificationMedium } from "@/lib/prisma";
 import { z } from "zod";
 
 import { db } from "@/lib/db";

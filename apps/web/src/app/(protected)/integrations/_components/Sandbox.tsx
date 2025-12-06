@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Account } from "@prisma/client";
+import type { Account } from "@/lib/prisma";
 import { CheckCircle2, Loader2, SkipForward, XCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";

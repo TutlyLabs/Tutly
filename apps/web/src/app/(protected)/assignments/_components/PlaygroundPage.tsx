@@ -4,7 +4,7 @@ import {
   type SandpackFiles,
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
-import { type submissionMode } from "@prisma/client";
+import { type submissionMode } from "@/lib/prisma";
 import { useMemo } from "react";
 
 import NoDataFound from "@/components/NoDataFound";

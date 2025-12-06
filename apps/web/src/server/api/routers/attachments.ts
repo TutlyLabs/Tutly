@@ -1,4 +1,4 @@
-import type { attachmentType, submissionMode } from "@prisma/client";
+import type { attachmentType, submissionMode } from "@/lib/prisma";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

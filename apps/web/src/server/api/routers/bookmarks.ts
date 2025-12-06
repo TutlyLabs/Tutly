@@ -1,4 +1,4 @@
-import { BookMarkCategory } from "@prisma/client";
+import { BookMarkCategory } from "@/lib/prisma";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

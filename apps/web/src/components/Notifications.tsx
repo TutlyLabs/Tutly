@@ -1,6 +1,6 @@
 "use client";
 
-import type { Notification, NotificationEvent } from "@prisma/client";
+import type { Notification, NotificationEvent } from "@/lib/prisma";
 import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import {

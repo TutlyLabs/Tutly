@@ -1,6 +1,6 @@
 "use client";
 
-import type { File } from "@prisma/client";
+import type { File } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
 import { Download, FileText, Plus, Trash2 } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";

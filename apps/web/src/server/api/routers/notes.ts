@@ -1,4 +1,4 @@
-import { NoteCategory } from "@prisma/client";
+import { NoteCategory } from "@/lib/prisma";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

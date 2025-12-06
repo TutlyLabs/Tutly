@@ -1,4 +1,4 @@
-import type { EventAttachmentType } from "@prisma/client";
+import type { EventAttachmentType } from "@/lib/prisma";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

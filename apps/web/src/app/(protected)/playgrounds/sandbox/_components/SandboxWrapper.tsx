@@ -5,7 +5,7 @@ import {
   type SandpackProps,
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
-import type { Attachment } from "@prisma/client";
+import type { Attachment } from "@/lib/prisma";
 import { useMemo, useState } from "react";
 
 import { SandboxEmbed } from "./SandboxEmbed";

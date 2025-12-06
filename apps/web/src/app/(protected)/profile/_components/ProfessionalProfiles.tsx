@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@prisma/client";
+import type { Profile } from "@/lib/prisma";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";

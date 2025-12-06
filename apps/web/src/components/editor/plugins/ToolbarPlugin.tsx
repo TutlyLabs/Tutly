@@ -1,4 +1,4 @@
-import { type FileType } from "@prisma/client";
+import { type FileType } from "@/lib/prisma";
 import {
   $isListNode,
   INSERT_CHECK_LIST_COMMAND,

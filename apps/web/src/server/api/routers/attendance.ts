@@ -1,5 +1,5 @@
 // todo: fix overall attendance for mentor exceeding 100%
-import type { Prisma, Role } from "@prisma/client";
+import type { Prisma, Role } from "@/lib/prisma";
 import { z } from "zod";
 
 import { db } from "@/lib/db";

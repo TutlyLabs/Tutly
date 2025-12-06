@@ -1,4 +1,4 @@
-import type { Course, submission, User } from "@prisma/client";
+import type { Course, submission, User } from "@/lib/prisma";
 import { z } from "zod";
 
 import { db } from "@/lib/db";

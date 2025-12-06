@@ -1,6 +1,6 @@
 "use client";
 
-import type { NoteCategory, Notes } from "@prisma/client";
+import type { NoteCategory, Notes } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
 import { BookOpen, FileQuestion, ScrollText } from "lucide-react";
 import { useState } from "react";

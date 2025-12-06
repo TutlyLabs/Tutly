@@ -1,4 +1,4 @@
-import type { pointCategory } from "@prisma/client";
+import type { pointCategory } from "@/lib/prisma";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

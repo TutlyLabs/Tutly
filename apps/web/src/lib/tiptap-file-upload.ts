@@ -1,4 +1,4 @@
-import { FileType } from "@prisma/client";
+import { FileType } from "@/lib/prisma";
 import axios from "axios";
 import imageCompression from "browser-image-compression";
 import { toast } from "sonner";

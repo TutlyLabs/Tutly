@@ -51,7 +51,7 @@ yarn-error.log*
 *.swp
 .DS_Store
 Thumbs.db
-/generated/prisma
+/prisma/generated
 
 # VSCode assets
 /public/vscode/assets
