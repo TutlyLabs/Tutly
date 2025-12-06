@@ -4,7 +4,7 @@ import {
   SandpackCodeEditor,
   SandpackPreview,
 } from "@codesandbox/sandpack-react";
-import type { Attachment } from "@prisma/client";
+import type { Attachment } from "@/lib/prisma";
 // @ts-expect-error - sandpack-file-explorer package has incorrect type definitions
 import { SandpackFileExplorer } from "sandpack-file-explorer";
 

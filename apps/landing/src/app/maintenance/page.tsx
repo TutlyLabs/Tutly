@@ -19,7 +19,7 @@ export default function UnderMaintenance() {
           </h1>
 
           <h2 className="text-xl font-semibold md:text-2xl">
-            We'll be back online shortly
+            We&apos;ll be back online shortly
           </h2>
         </div>
         <Image
@@ -31,8 +31,8 @@ export default function UnderMaintenance() {
         />
         <p className="mx-auto mt-5 max-w-[700px] text-center text-base md:text-xl">
           Our server is down due to unforeseen reasons. The engineering team is
-          already working on it. We're treating the issue with the urgency it
-          deserves. Thanks for your patience!
+          already working on it. We&apos;re treating the issue with the urgency
+          it deserves. Thanks for your patience!
         </p>
       </div>
     </div>

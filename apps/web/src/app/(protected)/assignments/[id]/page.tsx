@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSessionOrRedirect } from "@/lib/auth";
 import { db } from "@/lib/db";
 import AssignmentPage from "../_components/AssignmentPage";
-import type { Attachment, submission as Submission } from "@prisma/client";
+import type { Attachment, submission as Submission } from "@/lib/prisma";
 import { isFeatureEnabled } from "@/lib/featureFlags";
 
 interface AssignmentPageProps {

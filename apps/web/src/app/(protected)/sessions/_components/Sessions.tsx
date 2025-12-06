@@ -1,6 +1,6 @@
 "use client";
 
-import type { Account, Session } from "@prisma/client";
+import type { Account, Session } from "@/lib/prisma";
 import { HardDrive, Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";

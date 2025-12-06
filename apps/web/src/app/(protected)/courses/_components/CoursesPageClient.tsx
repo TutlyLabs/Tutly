@@ -1,6 +1,6 @@
 "use client";
 
-import type { Course } from "@prisma/client";
+import type { Course } from "@/lib/prisma";
 import { useRouter } from "next/navigation";
 import type { SessionUser } from "@/lib/auth";
 

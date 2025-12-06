@@ -12,19 +12,20 @@
     "clean": "rm -rf dist",
     "dev": "tsc -w",
     "lint": "eslint \"src/**/*.ts*\" --max-warnings 0",
+    "lint:fix": "eslint \"src/**/*.ts*\" --fix",
     "test": "jest"
   },
   "jest": {
     "preset": "@tutly/jest-presets/node"
   },
   "devDependencies": {
-    "@jest/globals": "^29.7.0",
+    "@jest/globals": "^30.2.0",
     "@tutly/eslint-config": "workspace:*",
     "@tutly/jest-presets": "workspace:*",
     "@tutly/typescript-config": "workspace:*",
-    "@types/node": "^22.13.11",
-    "eslint": "^8.57.0",
-    "jest": "^29.7.0",
-    "typescript": "5.5.4"
+    "@types/node": "^24.10.1",
+    "eslint": "^9.39.1",
+    "jest": "^30.2.0",
+    "typescript": "5.9.3"
   }
 }

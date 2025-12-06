@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import "@/styles/globals.css";
 import { getVersion } from "@/lib/version";
 import ThemeToggle from "@/components/ThemeToggle";

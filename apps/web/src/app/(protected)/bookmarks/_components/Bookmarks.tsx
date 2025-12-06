@@ -1,6 +1,6 @@
 "use client";
 
-import type { BookMarkCategory, BookMarks } from "@prisma/client";
+import type { BookMarkCategory, BookMarks } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
 import { Bell, BookOpen, FileQuestion, ScrollText } from "lucide-react";
 import Link from "next/link";

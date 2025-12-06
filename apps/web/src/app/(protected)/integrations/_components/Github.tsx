@@ -10,7 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { authClient } from "@/server/auth/client";
-import type { Account } from "@prisma/client";
+import type { Account } from "@/lib/prisma";
 import Image from "next/image";
 
 export const GithubIntegration = ({

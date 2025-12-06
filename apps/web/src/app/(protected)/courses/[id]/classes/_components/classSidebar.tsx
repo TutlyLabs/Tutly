@@ -1,6 +1,6 @@
 "use client";
 
-import type { Class, Folder } from "@prisma/client";
+import type { Class, Folder } from "@/lib/prisma";
 import { useEffect, useState } from "react";
 import { FaFolder, FaFolderOpen } from "react-icons/fa6";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";

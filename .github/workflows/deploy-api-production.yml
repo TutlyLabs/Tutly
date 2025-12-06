@@ -30,12 +30,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.18.0"
+          node-version: "22"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: "10.6.3"
+          version: "10.24.0"
 
       - name: Install dependencies
         run: |
@@ -43,7 +43,7 @@ jobs:
           pnpm install --frozen-lockfile --filter=api
 
       - name: Install Vercel CLI
-        run: npm install -g vercel@33.2.0
+        run: npm install -g vercel@latest
 
       - name: Build API App with Turbo
         run: |

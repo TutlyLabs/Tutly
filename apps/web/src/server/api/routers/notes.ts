@@ -1,4 +1,4 @@
-import { NoteCategory } from "@prisma/client";
+import { NoteCategory } from "@/lib/prisma";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -13,7 +13,7 @@ export const notesRouter = createTRPCRouter({
         descriptionJson: z.any().nullable().optional(),
         tags: z.array(z.string()),
         objectId: z.string(),
-        causedObjects: z.record(z.string()).optional(),
+        causedObjects: z.record(z.string(), z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

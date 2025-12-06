@@ -1,6 +1,6 @@
 "use client";
 
-import type { Attachment } from "@prisma/client";
+import type { Attachment } from "@/lib/prisma";
 import { Calendar, RefreshCw } from "lucide-react";
 
 import MarkdownPreview from "@/components/MarkdownPreview";

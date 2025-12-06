@@ -1,4 +1,4 @@
-import type { Attendance, submission, User } from "@prisma/client";
+import type { Attendance, submission, User } from "@/lib/prisma";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

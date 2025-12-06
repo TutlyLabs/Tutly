@@ -1,6 +1,6 @@
 "use client";
 
-import type { Profile, User } from "@prisma/client";
+import type { Profile, User } from "@/lib/prisma";
 import { useState } from "react";
 import { toast } from "sonner";
 

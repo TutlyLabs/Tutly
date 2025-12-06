@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import { api } from "@/trpc/react";
-import type { User } from "@prisma/client";
+import type { User } from "@/lib/prisma";
 import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";

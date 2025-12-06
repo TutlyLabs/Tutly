@@ -1,7 +1,7 @@
 "use client";
 
-import type { Attachment } from "@prisma/client";
-import { FileType } from "@prisma/client";
+import type { Attachment } from "@/lib/prisma";
+import { FileType } from "@/lib/prisma";
 import dayjs from "dayjs";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";

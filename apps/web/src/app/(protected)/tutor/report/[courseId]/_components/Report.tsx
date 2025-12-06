@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import day from "@/lib/dayjs";
 
-import type { Course } from "@prisma/client";
+import type { Course } from "@/lib/prisma";
 import NoDataFound from "@/components/NoDataFound";
 
 declare module "jspdf" {

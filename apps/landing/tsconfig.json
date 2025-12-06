@@ -10,7 +10,12 @@
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "types": [
+      "node",
+      "react",
+      "react-dom"
+    ]
   },
   "exclude": [
     "node_modules",

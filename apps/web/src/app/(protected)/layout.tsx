@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import "@/styles/globals.css";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
 import { AppHeader } from "@/components/sidebar/AppHeader";

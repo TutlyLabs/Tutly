@@ -78,7 +78,7 @@ import "./styles.scss";
 
 // --- Utils ---
 import { cn } from "@/lib/utils";
-import { JsonValue } from "@prisma/client/runtime/library";
+import { JsonValue } from "@/lib/prisma";
 
 const convertStringToJson = (text: string) => {
   if (!text || text.trim() === "") {

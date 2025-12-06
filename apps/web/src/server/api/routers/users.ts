@@ -1,4 +1,4 @@
-import type { Role } from "@prisma/client";
+import type { Role } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -137,12 +137,12 @@ export const usersRouter = createTRPCRouter({
               .nullable(),
             hobbies: z.array(z.string()),
             aboutMe: z.string(),
-            socialLinks: z.record(z.string()),
-            professionalProfiles: z.record(z.string()),
-            academicDetails: z.record(z.string()),
-            experiences: z.array(z.record(z.any())),
-            address: z.record(z.string()),
-            documents: z.record(z.string()),
+            socialLinks: z.record(z.string(), z.string()),
+            professionalProfiles: z.record(z.string(), z.string()),
+            academicDetails: z.record(z.string(), z.string()),
+            experiences: z.array(z.record(z.string(), z.any())),
+            address: z.record(z.string(), z.string()),
+            documents: z.record(z.string(), z.string()),
           })
           .partial(),
       }),

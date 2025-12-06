@@ -18,7 +18,7 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
-import { type FileType } from "@prisma/client";
+import { type FileType } from "@/lib/prisma";
 import { $createTextNode, type LexicalNode, type TextNode } from "lexical";
 
 import { cn } from "@/lib/utils";

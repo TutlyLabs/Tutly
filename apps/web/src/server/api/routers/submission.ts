@@ -4,8 +4,8 @@ import type {
   Point,
   submission,
   User,
-} from "@prisma/client";
-import type { InputJsonValue } from "@prisma/client/runtime/library";
+} from "@/lib/prisma";
+import type { InputJsonValue } from "@/lib/prisma";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

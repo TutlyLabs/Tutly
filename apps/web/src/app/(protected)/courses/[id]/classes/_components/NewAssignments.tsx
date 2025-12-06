@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Attachment } from "@prisma/client";
-import type { attachmentType, submissionMode } from "@prisma/client";
-import { FileType } from "@prisma/client";
+import type { Attachment } from "@/lib/prisma";
+import type { attachmentType, submissionMode } from "@/lib/prisma";
+import { FileType } from "@/lib/prisma";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";

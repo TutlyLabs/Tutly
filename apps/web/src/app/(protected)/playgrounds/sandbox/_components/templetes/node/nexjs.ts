@@ -43,7 +43,7 @@ module.exports = nextConfig
         private: true,
         scripts: {
           dev: "NEXT_TELEMETRY_DISABLED=1 next dev",
-          build: "next build",
+          build: "next build --webpack",
           start: "next start",
           lint: "next lint",
         },
