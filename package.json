@@ -2,7 +2,7 @@
   "name": "@tutly/root",
   "private": true,
   "engines": {
-    "node": ">=22",
+    "node": "22.x",
     "pnpm": ">=9.6.0"
   },
   "packageManager": "pnpm@10.24.0",
