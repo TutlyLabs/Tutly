@@ -7,7 +7,7 @@
     "node": "22.x"
   },
   "scripts": {
-    "build": "next build",
+    "build": "next build --webpack",
     "check": "next lint && tsc --noEmit",
     "clean": "git clean -xdf .cache .next .turbo node_modules",
     "db:generate": "prisma generate",
@@ -19,7 +19,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "postinstall": "prisma generate && node scripts/copy-vscode-assets.js",
-    "preview": "next build && next start",
+    "preview": "next build --webpack && next start",
     "start": "next start"
   },
   "dependencies": {
