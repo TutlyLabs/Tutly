@@ -43,7 +43,7 @@ jobs:
           pnpm install --frozen-lockfile --filter=landing
 
       - name: Install Vercel CLI
-        run: npm install -g vercel@33.2.0
+        run: npm install -g vercel@latest
 
       - name: Build Landing App with Turbo
         run: |
