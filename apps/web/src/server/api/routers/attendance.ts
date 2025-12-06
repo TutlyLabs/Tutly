@@ -25,7 +25,7 @@ export const attendanceRouter = createTRPCRouter({
     .input(
       z.object({
         classId: z.string(),
-        data: z.array(z.record(z.unknown())),
+        data: z.array(z.record(z.string(), z.unknown())),
         maxInstructionDuration: z.number(),
       }),
     )

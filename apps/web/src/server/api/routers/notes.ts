@@ -13,7 +13,7 @@ export const notesRouter = createTRPCRouter({
         descriptionJson: z.any().nullable().optional(),
         tags: z.array(z.string()),
         objectId: z.string(),
-        causedObjects: z.record(z.string()).optional(),
+        causedObjects: z.record(z.string(), z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

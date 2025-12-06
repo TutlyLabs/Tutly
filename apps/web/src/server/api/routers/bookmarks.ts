@@ -9,7 +9,7 @@ export const bookmarksRouter = createTRPCRouter({
       z.object({
         category: z.nativeEnum(BookMarkCategory),
         objectId: z.string(),
-        causedObjects: z.record(z.string()).optional(),
+        causedObjects: z.record(z.string(), z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
