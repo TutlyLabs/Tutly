@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -20,22 +20,20 @@ export const AnimatedTestimonials = ({
   autoplay?: boolean;
 }) => {
   const [active, setActive] = useState(0);
-  const [randomRotation, setRandomRotation] = useState<number[]>([]);
 
-  useEffect(() => {
-    // Ensure random values are generated ONLY on the client
-    setRandomRotation(
-      testimonials.map(() => Math.floor(Math.random() * 21) - 10),
-    );
-  }, [testimonials]);
+  // Generate random rotations once on mount - use useMemo to avoid cascading renders
+  const randomRotation = useMemo(
+    () => testimonials.map(() => Math.floor(Math.random() * 21) - 10),
+    [testimonials.length],
+  );
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setActive((prev) => (prev + 1) % testimonials.length);
-  };
+  }, [testimonials.length]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     setActive((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
+  }, [testimonials.length]);
 
   const isActive = (index: number) => {
     return index === active;
@@ -46,7 +44,7 @@ export const AnimatedTestimonials = ({
       const interval = setInterval(handleNext, 5000);
       return () => clearInterval(interval);
     }
-  }, [autoplay]);
+  }, [autoplay, handleNext]);
 
   return (
     <div className="mx-auto max-w-sm px-4 py-10 font-sans antialiased md:max-w-4xl md:px-8 lg:px-12">

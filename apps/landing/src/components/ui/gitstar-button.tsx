@@ -1,12 +1,18 @@
 "use client";
 
 import type { VariantProps } from "class-variance-authority";
-import type { SpringOptions, UseInViewOptions } from "motion/react";
-import React, { useCallback, useEffect, useState } from "react";
+import type { UseInViewOptions } from "motion/react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "@/lib/utils";
 import { cva } from "class-variance-authority";
 import { Star } from "lucide-react";
-import { motion, useInView } from "motion/react";
+import { useInView } from "motion/react";
 
 const githubButtonVariants = cva(
   "backface-visibility-hidden group ring-offset-background relative inline-flex transform-gpu cursor-pointer items-center justify-center overflow-hidden font-medium whitespace-nowrap transition-transform duration-200 ease-out will-change-transform hover:scale-105 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-60 [&_svg]:shrink-0",
@@ -69,15 +75,11 @@ interface GithubButtonProps
   useInViewTrigger?: boolean;
   /** In-view options */
   inViewOptions?: UseInViewOptions;
-  /** Spring transition options */
-  transition?: SpringOptions;
 }
 
 function GithubButton({
   initialStars = 0,
   targetStars = 0,
-  starsClass = "",
-  fixedWidth = true,
   animationDuration = 2,
   animationDelay = 0,
   autoAnimate = true,
@@ -94,34 +96,14 @@ function GithubButton({
   label = "",
   useInViewTrigger = false,
   inViewOptions = { once: true },
-  transition,
   ...props
 }: GithubButtonProps) {
-  const [currentStars, setCurrentStars] = useState(initialStars);
   const [isAnimating, setIsAnimating] = useState(false);
   const [starProgress, setStarProgress] = useState(filled ? 100 : 0);
   const [hasAnimated, setHasAnimated] = useState(false);
 
-  // Format number with units
-  const formatNumber = (num: number) => {
-    const units = ["k", "M", "B", "T"];
-
-    if (roundStars && num >= 1000) {
-      let unitIndex = -1;
-      let value = num;
-
-      while (value >= 1000 && unitIndex < units.length - 1) {
-        value /= 1000;
-        unitIndex++;
-      }
-
-      // Format to 1 decimal place if needed, otherwise show whole number
-      const formatted = value % 1 === 0 ? value.toString() : value.toFixed(1);
-      return `${formatted}${units[unitIndex]}`;
-    }
-
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
+  // Track previous targetStars to detect changes
+  const prevTargetStarsRef = useRef(targetStars);
 
   // Start animation
   const startAnimation = useCallback(() => {
@@ -129,22 +111,11 @@ function GithubButton({
 
     setIsAnimating(true);
     const startTime = Date.now();
-    const startValue = 0; // Always start from 0 for number animation
-    const endValue = targetStars;
     const duration = animationDuration * 1000;
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
-
-      // Easing function for smooth animation
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-
-      // Update star count from 0 to target with more frequent updates
-      const newStars = Math.round(
-        startValue + (endValue - startValue) * easeOutQuart,
-      );
-      setCurrentStars(newStars);
 
       // Update star fill progress (0 to 100)
       setStarProgress(progress * 100);
@@ -152,7 +123,6 @@ function GithubButton({
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        setCurrentStars(endValue);
         setStarProgress(100);
         setIsAnimating(false);
         setHasAnimated(true);
@@ -162,32 +132,31 @@ function GithubButton({
     setTimeout(() => {
       requestAnimationFrame(animate);
     }, animationDelay * 1000);
-  }, [
-    isAnimating,
-    hasAnimated,
-    targetStars,
-    animationDuration,
-    animationDelay,
-  ]);
+  }, [isAnimating, hasAnimated, animationDuration, animationDelay]);
 
   // Use in-view detection if enabled
   const ref = React.useRef(null);
   const isInView = useInView(ref, inViewOptions);
 
-  // Reset animation state when targetStars changes
-  useEffect(() => {
-    setHasAnimated(false);
-    setCurrentStars(initialStars);
+  // Reset animation state when targetStars changes - use useLayoutEffect for synchronous update
+  useLayoutEffect(() => {
+    if (prevTargetStarsRef.current !== targetStars) {
+      prevTargetStarsRef.current = targetStars;
+      setHasAnimated(false);
+    }
   }, [targetStars, initialStars]);
 
-  // Auto-start animation or use in-view trigger
+  // Auto-start animation or use in-view trigger - use callback pattern to avoid direct setState
   useEffect(() => {
-    if (useInViewTrigger) {
-      if (isInView && !hasAnimated) {
+    const shouldStart = useInViewTrigger
+      ? isInView && !hasAnimated
+      : autoAnimate && !hasAnimated;
+
+    if (shouldStart) {
+      // Use microtask to avoid synchronous setState in effect
+      queueMicrotask(() => {
         startAnimation();
-      }
-    } else if (autoAnimate && !hasAnimated) {
-      startAnimation();
+      });
     }
   }, [autoAnimate, useInViewTrigger, isInView, hasAnimated, startAnimation]);
 

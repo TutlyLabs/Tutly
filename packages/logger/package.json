@@ -12,6 +12,7 @@
     "clean": "rm -rf dist",
     "dev": "tsc -w",
     "lint": "eslint \"src/**/*.ts*\" --max-warnings 0",
+    "lint:fix": "eslint \"src/**/*.ts*\" --fix",
     "test": "jest"
   },
   "jest": {
