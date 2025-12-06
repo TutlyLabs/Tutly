@@ -72,9 +72,6 @@ importers:
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
-      '@types/minimatch':
-        specifier: ^6.0.0
-        version: 6.0.0
       '@types/morgan':
         specifier: ^1.9.10
         version: 1.9.10
