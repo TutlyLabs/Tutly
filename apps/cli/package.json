@@ -43,7 +43,7 @@
     "@types/update-notifier": "^6.0.8",
     "@types/ws": "^8.18.1",
     "chai": "^6",
-    "eslint": "^9.39.1",
+    "eslint": "^8.57.1",
     "eslint-config-oclif": "^6.0",
     "eslint-config-oclif-typescript": "^3.1",
     "globby": "^16.0.0",
