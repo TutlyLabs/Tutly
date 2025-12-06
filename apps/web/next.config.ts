@@ -7,7 +7,6 @@ const monorepoRoot = path.resolve(__dirname, "../..");
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  outputFileTracingRoot: monorepoRoot,
 
   /** We already do linting and typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: true },
