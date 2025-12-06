@@ -9,7 +9,9 @@
       "outputs": [
         ".cache/tsbuildinfo.json",
         "dist/**",
-        "build/**"
+        "build/**",
+        ".next/**",
+        "!.next/cache/**"
       ]
     },
     "dev": {
