@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import "@/styles/globals.css";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
