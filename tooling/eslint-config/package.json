@@ -16,12 +16,12 @@
     "server.js"
   ],
   "dependencies": {
-    "@eslint/js": "^9.18.0",
+    "@eslint/js": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-config-turbo": "^2.6.3",
     "eslint-plugin-only-warn": "^1.1.0",
-    "globals": "^16.2.0",
-    "typescript-eslint": "^8.48.1"
+    "globals": "^16.5.0",
+    "typescript-eslint": "^8.49.0"
   },
   "devDependencies": {
     "typescript": "5.9.3"

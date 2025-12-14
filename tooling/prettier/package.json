@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@tutly/typescript-config": "workspace:*",
-    "@types/node": "^24.10.1",
+    "@types/node": "^25.0.2",
     "typescript": "catalog:"
   },
   "prettier": "@tutly/prettier-config"

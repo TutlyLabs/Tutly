@@ -1,6 +1,6 @@
 {
   "name": "landing",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "engines": {
     "node": "22.x"
@@ -16,24 +16,24 @@
   "dependencies": {
     "@tabler/icons-react": "^3.35.0",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.23.25",
-    "motion": "^12.23.25",
-    "next": "^16.0.7",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
+    "framer-motion": "^12.23.26",
+    "motion": "^12.23.26",
+    "next": "^16.0.10",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
-    "@tailwindcss/postcss": "^4.1.17",
+    "@tailwindcss/postcss": "^4.1.18",
     "@tutly/eslint-config": "workspace:*",
     "@tutly/typescript-config": "workspace:*",
-    "@types/node": "^24.10.1",
+    "@types/node": "^25.0.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "eslint": "^9.39.1",
-    "eslint-config-next": "^16.0.7",
-    "tailwindcss": "^4.1.17",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.0.10",
+    "tailwindcss": "^4.1.18",
     "typescript": "5.9.3"
   }
 }
