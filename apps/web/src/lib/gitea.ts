@@ -101,6 +101,40 @@ export const giteaClient = {
     return response.ok;
   },
 
+  async updateRepo(
+    owner: string,
+    name: string,
+    updates: {
+      private?: boolean;
+      description?: string;
+      website?: string;
+      template?: boolean;
+      archived?: boolean;
+    },
+  ) {
+    const response = await fetch(
+      `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `token ${GITEA_ADMIN_TOKEN}`,
+        },
+        body: JSON.stringify(updates),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error(
+        `Failed to update repo ${owner}/${name}: ${response.status} ${error}`,
+      );
+      throw new Error(`Failed to update repository`);
+    }
+
+    return response.json();
+  },
+
   async checkOrgExists(org: string) {
     const response = await fetch(
       `${GITEA_API_URL}/api/v1/orgs/${encodeURIComponent(org)}`,
