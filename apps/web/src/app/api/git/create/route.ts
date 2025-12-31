@@ -48,6 +48,9 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ exists: false });
       }
 
+      const [owner, repoName] = attachment.gitTemplateRepo.split("/");
+      const repoDetails = await giteaClient.getRepo(owner, repoName);
+
       let repoUrl = `${APP_URL}/api/git/assignment/${assignmentId}.git`;
       if (token) {
         const urlObj = new URL(repoUrl);
@@ -60,6 +63,7 @@ export async function GET(req: NextRequest) {
         exists: true,
         repoUrl,
         expiresAt,
+        isPrivate: repoDetails?.private ?? true,
       });
     }
 
@@ -87,6 +91,9 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ exists: false });
       }
 
+      const [owner, repoName] = submission.gitRepoPath.split("/");
+      const repoDetails = await giteaClient.getRepo(owner, repoName);
+
       let repoUrl = `${APP_URL}/api/git/submission/${submission.id}.git`;
       if (token) {
         const urlObj = new URL(repoUrl);
@@ -101,6 +108,7 @@ export async function GET(req: NextRequest) {
         expiresAt,
         lastUpdated: submission.updatedAt,
         submissionId: submission.id,
+        isPrivate: repoDetails?.private ?? true,
       });
     }
 

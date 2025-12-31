@@ -54,6 +54,7 @@ export const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
               : undefined,
             id: data.submissionId,
           });
+          setIsPrivate(data.isPrivate ?? true);
         }
       } catch (error) {
         console.error("Error loading existing repo:", error);
@@ -109,7 +110,7 @@ export const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
         body: JSON.stringify({
           type: "SUBMISSION",
           assignmentId: assignment.id,
-          private: makePrivate,
+          isPrivate: makePrivate,
         }),
       });
 

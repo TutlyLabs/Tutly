@@ -101,6 +101,24 @@ export const giteaClient = {
     return response.ok;
   },
 
+  async getRepo(owner: string, name: string) {
+    const response = await fetch(
+      `${GITEA_API_URL}/api/v1/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `token ${GITEA_ADMIN_TOKEN}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.json();
+  },
+
   async updateRepo(
     owner: string,
     name: string,

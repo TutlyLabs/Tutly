@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { type, assignmentId, private: isPrivate } = body;
+    const { type, assignmentId, isPrivate } = body;
 
     if (!assignmentId) {
       return NextResponse.json(
@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest) {
 
     if (typeof isPrivate !== "boolean") {
       return NextResponse.json(
-        { error: "Missing or invalid 'private' field" },
+        { error: "Missing or invalid 'isPrivate' field" },
         { status: 400 },
       );
     }

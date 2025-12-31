@@ -33,6 +33,7 @@ export const GitTemplateSection = ({ assignment }: { assignment: any }) => {
             repoUrl: data.repoUrl,
             expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
           });
+          setIsPrivate(data.isPrivate ?? true);
         }
       } catch (error) {
         console.error("Error loading existing repo:", error);
@@ -79,7 +80,7 @@ export const GitTemplateSection = ({ assignment }: { assignment: any }) => {
         body: JSON.stringify({
           type: "TEMPLATE",
           assignmentId: assignment.id,
-          private: makePrivate,
+          isPrivate: makePrivate,
         }),
       });
 
