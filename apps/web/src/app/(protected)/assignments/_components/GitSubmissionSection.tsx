@@ -240,6 +240,7 @@ export const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
                       {isPrivate ? "Private" : "Public"}
                     </span>
                   </div>
+                  {/* Switch is checked when repository is public (!isPrivate) */}
                   <Switch
                     checked={!isPrivate}
                     onCheckedChange={(checked) =>

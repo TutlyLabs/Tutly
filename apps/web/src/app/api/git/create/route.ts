@@ -51,6 +51,12 @@ export async function GET(req: NextRequest) {
       const [owner, repoName] = attachment.gitTemplateRepo.split("/");
       const repoDetails = await giteaClient.getRepo(owner, repoName);
 
+      if (!repoDetails) {
+        console.error(
+          `Failed to get repository details for template: ${attachment.gitTemplateRepo}`,
+        );
+      }
+
       let repoUrl = `${APP_URL}/api/git/assignment/${assignmentId}.git`;
       if (token) {
         const urlObj = new URL(repoUrl);
@@ -93,6 +99,12 @@ export async function GET(req: NextRequest) {
 
       const [owner, repoName] = submission.gitRepoPath.split("/");
       const repoDetails = await giteaClient.getRepo(owner, repoName);
+
+      if (!repoDetails) {
+        console.error(
+          `Failed to get repository details for submission: ${submission.gitRepoPath}`,
+        );
+      }
 
       let repoUrl = `${APP_URL}/api/git/submission/${submission.id}.git`;
       if (token) {

@@ -113,6 +113,10 @@ export const giteaClient = {
     );
 
     if (!response.ok) {
+      const error = await response.text();
+      console.error(
+        `Failed to get repo ${owner}/${name}: ${response.status} ${error}`,
+      );
       return null;
     }
 
