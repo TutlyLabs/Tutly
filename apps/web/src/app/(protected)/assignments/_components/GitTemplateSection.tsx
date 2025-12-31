@@ -1,13 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FiRefreshCw, FiTerminal } from "react-icons/fi";
+import { FiRefreshCw, FiTerminal, FiLock, FiUnlock } from "react-icons/fi";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export const GitTemplateSection = ({ assignment }: { assignment: any }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(true);
   const [repoData, setRepoData] = useState<{
     repoUrl: string;
     expiresAt?: Date;
@@ -59,6 +67,35 @@ export const GitTemplateSection = ({ assignment }: { assignment: any }) => {
       toast.error("Error initializing workspace");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const updateRepoVisibility = async (makePrivate: boolean) => {
+    setIsUpdatingVisibility(true);
+    try {
+      const response = await fetch("/api/git/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "TEMPLATE",
+          assignmentId: assignment.id,
+          private: makePrivate,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsPrivate(makePrivate);
+        toast.success(
+          `Repository is now ${makePrivate ? "private" : "public"}`,
+        );
+      } else {
+        toast.error(data.error || "Failed to update repository visibility");
+      }
+    } catch (error) {
+      toast.error("Error updating repository visibility");
+    } finally {
+      setIsUpdatingVisibility(false);
     }
   };
 
@@ -118,6 +155,58 @@ export const GitTemplateSection = ({ assignment }: { assignment: any }) => {
             )}
             {isLaunching ? "Loading..." : "Launch Playground"}
           </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 px-3 text-xs"
+              >
+                {isPrivate ? (
+                  <FiLock className="mr-1.5 h-3.5 w-3.5" />
+                ) : (
+                  <FiUnlock className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                {isPrivate ? "Private" : "Public"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72" align="end">
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium leading-none">
+                    Repository Visibility
+                  </h4>
+                  <p className="text-muted-foreground text-xs">
+                    Control who can see this repository
+                  </p>
+                </div>
+                <div className="flex items-center justify-between space-x-2">
+                  <div className="flex items-center space-x-2">
+                    {isPrivate ? (
+                      <FiLock className="h-4 w-4" />
+                    ) : (
+                      <FiUnlock className="h-4 w-4" />
+                    )}
+                    <span className="text-sm">
+                      {isPrivate ? "Private" : "Public"}
+                    </span>
+                  </div>
+                  <Switch
+                    checked={!isPrivate}
+                    onCheckedChange={(checked) =>
+                      updateRepoVisibility(!checked)
+                    }
+                    disabled={isUpdatingVisibility}
+                  />
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  {isPrivate
+                    ? "Only you and collaborators can access this repository."
+                    : "Anyone can view this repository."}
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       )}
     </div>
