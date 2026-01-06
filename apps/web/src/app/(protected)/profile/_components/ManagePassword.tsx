@@ -72,7 +72,7 @@ const ManagePassword = ({
     e.preventDefault();
     setIsLoading(true);
     try {
-      const result = await authClient.forgetPassword({
+      const result = await authClient.requestPasswordReset({
         email: email,
         redirectTo: "/reset-password",
       });
