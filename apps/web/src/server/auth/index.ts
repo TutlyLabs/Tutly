@@ -11,6 +11,7 @@ import {
   ZOOM_CLIENT_ID,
   ZOOM_CLIENT_SECRET,
   BETTER_AUTH_SECRET,
+  BETTER_AUTH_URL,
 } from "@/lib/constants";
 import { db } from "../../lib/db";
 import { randomUUID } from "crypto";
@@ -28,6 +29,7 @@ const resend = new Resend(RESEND_API_KEY);
 
 export const auth = betterAuth({
   secret: BETTER_AUTH_SECRET,
+  baseURL: BETTER_AUTH_URL,
   database: prismaAdapter(db, {
     provider: "postgresql",
   }),

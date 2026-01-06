@@ -8,6 +8,10 @@ export const DATABASE_URL =
 
 // Better Auth Configuration
 export const BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET || "topsecret";
+export const BETTER_AUTH_URL =
+  process.env.BETTER_AUTH_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  "http://localhost:3000";
 
 // AWS Configuration
 export const AWS_BUCKET_NAME = process.env.AWS_BUCKET_NAME || "tutly-local";
