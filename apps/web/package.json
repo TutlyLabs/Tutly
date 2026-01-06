@@ -92,7 +92,7 @@
     "input-otp": "^1.4.2",
     "jiti": "^2.6.1",
     "js-yaml": "^4.1.1",
-    "jspdf": "^3.0.4",
+    "jspdf": "^4.0.0",
     "jspdf-autotable": "^5.0.2",
     "lexical": "^0.39.0",
     "lodash.throttle": "^4.1.1",
