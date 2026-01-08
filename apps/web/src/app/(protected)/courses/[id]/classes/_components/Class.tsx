@@ -10,7 +10,6 @@ import Link from "next/link";
 import {
   FaBookmark,
   FaClock,
-  FaExternalLinkAlt,
   FaPencilAlt,
   FaPlus,
   FaRegBookmark,
@@ -20,6 +19,7 @@ import {
   FaTrashAlt,
   FaUpload,
 } from "react-icons/fa";
+import { ExternalLink } from "lucide-react";
 import { RiEdit2Fill } from "react-icons/ri";
 import { useDebounce } from "use-debounce";
 import { useRouter } from "next/navigation";
@@ -305,6 +305,15 @@ export default function Class({
 
   const videoId = getVideoId();
 
+  const openVideoInNewTab = () => {
+    if (!videoId || !videoType) return;
+    const url =
+      videoType === "DRIVE"
+        ? `https://drive.google.com/file/d/${videoId}/view`
+        : `https://www.youtube.com/watch?v=${videoId}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const renderVideo = () => {
     if (!videoId) {
       return (
@@ -326,7 +335,7 @@ export default function Class({
     if (attachment.attachmentType === "ASSIGNMENT") {
       return (
         <Link href={`/assignments/${attachment.id}`}>
-          <FaExternalLinkAlt className="m-auto h-4 w-4" />
+          <ExternalLink className="m-auto h-4 w-4" />
         </Link>
       );
     }
@@ -334,7 +343,7 @@ export default function Class({
     if (attachment.link) {
       return (
         <Link href={attachment.link} className="text-sm">
-          <FaExternalLinkAlt className="m-auto h-4 w-4" />
+          <ExternalLink className="m-auto h-4 w-4" />
         </Link>
       );
     }
@@ -437,6 +446,16 @@ export default function Class({
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <div className="flex items-center gap-3">
                     <p className="text-xl font-semibold">{title}</p>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={openVideoInNewTab}
+                      className="flex cursor-pointer items-center gap-2 hover:bg-blue-500/10"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span className="text-xs">Open Video</span>
+                    </Button>
 
                     {haveAdminAccess &&
                       attendanceData?.data?.attendance?.length === 0 && (

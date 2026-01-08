@@ -8,6 +8,7 @@ const DriveEmbed = ({ embedId }: { embedId: string }) => (
       allowFullScreen
       title="Embedded Drive"
       className="aspect-video w-full"
+      referrerPolicy="no-referrer"
     />
   </div>
 );
