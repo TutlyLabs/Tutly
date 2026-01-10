@@ -23,6 +23,23 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "frame-src 'self' https://www.youtube.com https://drive.google.com https://*.googleusercontent.com https://accounts.google.com https://play.google.com https://clients6.google.com",
+              "frame-ancestors 'self'",
+            ].join("; "),
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
