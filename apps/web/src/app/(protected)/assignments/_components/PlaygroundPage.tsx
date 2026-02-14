@@ -33,6 +33,7 @@ function SubmissionSandbox({
       options: {
         ...assignment?.sandboxTemplate?.options,
         readOnly: true,
+        bundlerURL: process.env.NEXT_PUBLIC_SANDPACK_BUNDLER_URL,
       },
       files,
     };

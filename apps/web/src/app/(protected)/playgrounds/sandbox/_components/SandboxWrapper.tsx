@@ -49,6 +49,7 @@ export function SandboxWrapper({
         showRefreshButton: true,
         showConsoleButton: true,
         showConsole: false,
+        bundlerURL: process.env.NEXT_PUBLIC_SANDPACK_BUNDLER_URL,
       },
     }),
     [template, config.closableTabs],

@@ -155,7 +155,8 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
       driveIframe.style.width = "100%";
       driveIframe.style.height = "100%";
       driveIframe.style.border = "none";
-      driveIframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      driveIframe.allow =
+        "autoplay; encrypted-media; picture-in-picture; fullscreen";
       driveIframe.allowFullscreen = true;
       driveIframe.referrerPolicy = "strict-origin-when-cross-origin";
       driveIframe.setAttribute("credentialless", "true");

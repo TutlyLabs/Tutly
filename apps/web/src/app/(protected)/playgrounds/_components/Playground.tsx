@@ -69,7 +69,14 @@ const Playground = ({
 
   return (
     <div className="relative h-[95vh]">
-      <SandpackProvider files={startingFiles} template={template} theme="light">
+      <SandpackProvider
+        files={startingFiles}
+        template={template}
+        theme="light"
+        options={{
+          bundlerURL: process.env.NEXT_PUBLIC_SANDPACK_BUNDLER_URL,
+        }}
+      >
         {isFullScreen && (
           <div className="fixed inset-0 z-50 bg-white">
             <button
