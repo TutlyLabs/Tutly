@@ -4,9 +4,10 @@ import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
 /**
- * Validates if a URL is a valid HTTPS or HTTP URL
+ * Validates if a URL has a valid HTTP or HTTPS protocol
+ * Note: This only validates the protocol, not other URL components like hostname or path
  * @param url The URL to validate
- * @returns true if valid, false otherwise
+ * @returns true if the URL has http: or https: protocol, false otherwise
  */
 function isValidBundlerUrl(url: string): boolean {
   try {
@@ -22,9 +23,16 @@ function isValidBundlerUrl(url: string): boolean {
  * A hook that returns the bundler URL from query parameters or environment variables
  *
  * Priority order:
- * 1. Query parameter "bundler" (if valid)
+ * 1. Query parameter "bundler" (if valid URL with http/https protocol)
  * 2. Environment variable NEXT_PUBLIC_SANDPACK_BUNDLER_URL
  * 3. undefined
+ *
+ * @example
+ * // Use in a component
+ * const bundlerUrl = useBundlerUrl();
+ * 
+ * // In browser, navigate to:
+ * // /playground?bundler=https://bundler.tutly.in/
  *
  * @returns The bundler URL or undefined
  */
