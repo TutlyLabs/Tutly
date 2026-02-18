@@ -14,6 +14,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { useBundlerUrl } from "@/hooks/use-bundler-url";
 
 import FileExplorer from "./FileExplorer";
 import MonacoEditor from "./MonacoEditor";
@@ -54,6 +55,7 @@ const Playground = ({
   template?: SandpackPredefinedTemplate;
   currentUser: SessionUser;
 }) => {
+  const bundlerUrl = useBundlerUrl();
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [staticLogs, setStaticLogs] = useState<string[]>([]);
 
@@ -74,7 +76,7 @@ const Playground = ({
         template={template}
         theme="light"
         options={{
-          bundlerURL: process.env.NEXT_PUBLIC_SANDPACK_BUNDLER_URL,
+          bundlerURL: bundlerUrl,
         }}
       >
         {isFullScreen && (
