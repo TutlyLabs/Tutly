@@ -11,6 +11,7 @@ import NoDataFound from "@/components/NoDataFound";
 import { SandboxEmbed } from "../../playgrounds/sandbox/_components/SandboxEmbed";
 import "../../playgrounds/sandbox/_components/styles.css";
 import { glassyTheme } from "../../playgrounds/sandbox/_components/theme";
+import { useBundlerUrl } from "@/hooks/use-bundler-url";
 
 import EvaluateSubmission from "./evaluateSubmission";
 
@@ -21,6 +22,7 @@ function SubmissionSandbox({
   files: SandpackFiles;
   assignment?: any;
 }) {
+  const bundlerUrl = useBundlerUrl();
   const config = {
     fileExplorer: false,
     closableTabs: false,
@@ -33,11 +35,11 @@ function SubmissionSandbox({
       options: {
         ...assignment?.sandboxTemplate?.options,
         readOnly: true,
-        bundlerURL: process.env.NEXT_PUBLIC_SANDPACK_BUNDLER_URL,
+        bundlerURL: bundlerUrl,
       },
       files,
     };
-  }, [files, assignment]);
+  }, [files, assignment, bundlerUrl]);
 
   if (!sandpackProps) {
     return <NoDataFound message="No sandbox template found" />;

@@ -7,6 +7,7 @@ import {
 } from "@codesandbox/sandpack-react";
 import type { Attachment } from "@/lib/prisma";
 import { useMemo, useState } from "react";
+import { useBundlerUrl } from "@/hooks/use-bundler-url";
 
 import { SandboxEmbed } from "./SandboxEmbed";
 import { SandboxHeader } from "./SandboxHeader";
@@ -31,6 +32,7 @@ export function SandboxWrapper({
   assignment,
   currentUser,
 }: SandboxWrapperProps) {
+  const bundlerUrl = useBundlerUrl();
   const config = {
     fileExplorer: !assignment || (canEditTemplate && isEditingTemplate),
     closableTabs: !assignment,
@@ -49,10 +51,10 @@ export function SandboxWrapper({
         showRefreshButton: true,
         showConsoleButton: true,
         showConsole: false,
-        bundlerURL: process.env.NEXT_PUBLIC_SANDPACK_BUNDLER_URL,
+        bundlerURL: bundlerUrl,
       },
     }),
-    [template, config.closableTabs],
+    [template, config.closableTabs, bundlerUrl],
   );
 
   const initialSavedTemplate =
