@@ -45,6 +45,7 @@ export const authClient = createAuthClient({
         INSTRUCTOR: instructorRole,
         MENTOR: mentorRole,
         STUDENT: studentRole,
+        SUPER_ADMIN: adminRole,
       },
     }),
   ],

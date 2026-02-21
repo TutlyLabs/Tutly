@@ -21,7 +21,10 @@
         "GOOGLE_CLIENT_SECRET",
         "GITHUB_CLIENT_ID",
         "GITHUB_CLIENT_SECRET",
-        "DATABASE_URL"
+        "DATABASE_URL",
+        "CLOUDFLARE_API_TOKEN",
+        "CLOUDFLARE_ZONE_ID",
+        "APP_SERVER_IP"
       ]
     }
   }

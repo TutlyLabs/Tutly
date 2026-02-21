@@ -18,6 +18,14 @@ enum Role {
   MENTOR
   STUDENT
   ADMIN
+  SUPER_ADMIN
+}
+
+enum OrgStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
 }
 
 model Organization {
@@ -26,7 +34,53 @@ model Organization {
   orgCode String @unique
   name    String
 
-  users User[]
+  // Organization details
+  description  String?
+  logo         String?
+  website      String?
+  contactEmail String?
+  contactPhone String?
+
+  // Domain & subdomain
+  subdomain    String? @unique // e.g. "acme" → acme.tutly.in
+  customDomain String? @unique // e.g. "learn.acme.com"
+
+  // Status
+  status OrgStatus @default(PENDING)
+
+  users   User[]
+  domains OrganizationDomain[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum DomainStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  FAILED
+  REMOVED
+}
+
+enum DomainType {
+  SUBDOMAIN // *.tutly.in
+  CUSTOM // CNAME-based custom domain
+}
+
+model OrganizationDomain {
+  id String @id @default(uuid())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  domain     String       @unique
+  domainType DomainType
+  status     DomainStatus @default(PENDING_VERIFICATION)
+
+  cloudflareRecordId String?
+
+  cnameTarget String?
+  verifiedAt  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

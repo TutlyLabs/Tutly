@@ -8,6 +8,10 @@ export default async function DashboardPage() {
     redirect("/sign-in");
   }
 
+  if (session.user.role === "SUPER_ADMIN") {
+    redirect("/super-admin");
+  }
+
   const currentUser = session.user;
 
   return <Dashboard name={currentUser.name} currentUser={currentUser} />;
