@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
   /** We already do linting and typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: true },
 
+  serverExternalPackages: ["better-auth", "@better-auth/cli"],
+
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["*.tutly.in", "localhost:3000", "*.localhost:3000"],
+    },
+  },
+
   // transpilePackages: [],
 
   images: {
