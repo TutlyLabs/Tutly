@@ -34,6 +34,11 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   advanced: {
+    crossSubDomainCookies: {
+      enabled: process.env.NODE_ENV === "production",
+      domain: process.env.NODE_ENV === "production" ? "tutly.in" : undefined,
+    },
+    useSecureCookies: process.env.NODE_ENV === "production",
     database: {
       generateId: () => randomUUID(),
     },
@@ -108,7 +113,7 @@ export const auth = betterAuth({
       });
     },
   },
-  roles: ["STUDENT", "INSTRUCTOR", "ADMIN", "MENTOR"],
+  roles: ["STUDENT", "INSTRUCTOR", "ADMIN", "MENTOR", "SUPER_ADMIN"],
   socialProviders: {
     ...(GOOGLE_CLIENT_ID &&
       GOOGLE_CLIENT_SECRET && {
@@ -158,13 +163,14 @@ export const auth = betterAuth({
     bearer(),
     admin({
       ac,
-      adminRoles: ["ADMIN", "INSTRUCTOR"],
+      adminRoles: ["ADMIN", "INSTRUCTOR", "SUPER_ADMIN"],
       impersonationSessionDuration: 60 * 60, // 1 hour
       roles: {
         ADMIN: adminRole,
         INSTRUCTOR: instructorRole,
         MENTOR: mentorRole,
         STUDENT: studentRole,
+        SUPER_ADMIN: adminRole,
       },
     }),
     customSession(async ({ user, session }) => {

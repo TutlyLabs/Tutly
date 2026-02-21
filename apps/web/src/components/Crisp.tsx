@@ -5,7 +5,7 @@ import { useLayout } from "@/providers/layout-provider";
 
 interface CrispProps {
   user?: {
-    email: string;
+    email: string | null;
     name: string;
     image: string | null;
     role: { name: string } | string;

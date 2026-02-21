@@ -3,11 +3,14 @@ import {
   BarChart,
   Bookmark,
   Brain,
+  Building2,
   Calendar,
   ClipboardList,
+  Globe,
   GraduationCap,
   HardDrive,
   Home,
+  LayoutDashboard,
   Plug,
   Terminal,
   Users,
@@ -15,6 +18,29 @@ import {
 } from "lucide-react";
 
 import type { SidebarItem } from "@/components/sidebar/AppSidebar";
+
+const SuperAdminItems = [
+  {
+    title: "Dashboard",
+    url: "/super-admin",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Organizations",
+    url: "/super-admin/organizations",
+    icon: Building2,
+  },
+  {
+    title: "Users",
+    url: "/super-admin/users",
+    icon: Users,
+  },
+  {
+    title: "Domains",
+    url: "/super-admin/domains",
+    icon: Globe,
+  },
+];
 
 const InstructorItems = [
   {
@@ -399,6 +425,10 @@ export function getDefaultSidebarItems({
     } else {
       items = InstructorItems as SidebarItem[];
     }
+  } else if (role === "SUPER_ADMIN") {
+    items = SuperAdminItems as SidebarItem[];
+  } else if (role === "ADMIN") {
+    items = AdminItems as SidebarItem[];
   } else if (role === "MENTOR") {
     items = MentorItems as SidebarItem[];
   } else if (role === "STUDENT") {

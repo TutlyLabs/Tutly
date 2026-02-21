@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { authClient } from "@/server/auth/client";
 import { SocialSignin } from "./SocialSignin";
 import { useFeatureFlags } from "./FeatureFlagsProvider";
-import { useRouter } from "next/navigation";
+import { loginRedirectAction } from "./actions";
 
 const signInSchema = z.object({
   email: z.string().min(1, "Username or email is required"),
@@ -31,11 +31,15 @@ const signInSchema = z.object({
 
 type SignInInput = z.infer<typeof signInSchema>;
 
-export function SignIn() {
+interface SignInProps {
+  orgName?: string | null;
+  orgLogo?: string | null;
+}
+
+export function SignIn({ orgName, orgLogo }: SignInProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { isGoogleSignInEnabled, isGithubSignInEnabled } = useFeatureFlags();
-  const router = useRouter();
 
   const form = useForm<SignInInput>({
     resolver: zodResolver(signInSchema),
@@ -71,7 +75,6 @@ export function SignIn() {
               email: values.email,
               password: values.password,
               rememberMe: true,
-              callbackURL: "/dashboard",
             },
             {
               onSuccess: (ctx) => {
@@ -87,7 +90,6 @@ export function SignIn() {
               username: values.email,
               password: values.password,
               rememberMe: true,
-              callbackURL: "/dashboard",
             },
             {
               onSuccess: (ctx) => {
@@ -99,7 +101,9 @@ export function SignIn() {
             },
           );
       if (result?.data?.user) {
-        router.push("/dashboard");
+        const token = (result.data as any).token || "";
+        const redirectUrl = await loginRedirectAction(token, result.data.user);
+        window.location.href = redirectUrl;
         return;
       }
       toast.error(result?.error?.message || "Failed to sign in", {
@@ -121,8 +125,19 @@ export function SignIn() {
     <div className="flex min-h-screen items-center justify-center p-2">
       <Card className="w-full max-w-[400px] border-white/30 bg-white/20 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-900/20">
         <CardHeader>
+          {orgLogo && (
+            <div className="bg-sidebar-primary mx-auto mb-2 flex aspect-square size-16 items-center justify-center overflow-hidden rounded-xl shadow-sm">
+              <img
+                src={orgLogo}
+                alt={orgName || "Organization Logo"}
+                width={64}
+                height={64}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
           <CardTitle className="text-center text-2xl font-bold">
-            Sign In
+            Sign In {orgName ? `to ${orgName}` : ""}
           </CardTitle>
         </CardHeader>
         <CardContent>

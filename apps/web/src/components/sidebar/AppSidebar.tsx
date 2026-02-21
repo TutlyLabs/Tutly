@@ -42,8 +42,8 @@ export interface SidebarItem {
 interface AppSidebarProps {
   user: SessionUser;
   className?: string;
-  isIntegrationsEnabled: boolean | undefined;
-  isAIAssistantEnabled: boolean | undefined;
+  isIntegrationsEnabled?: boolean | undefined;
+  isAIAssistantEnabled?: boolean | undefined;
 }
 
 export function AppSidebar({
@@ -53,18 +53,16 @@ export function AppSidebar({
   isAIAssistantEnabled,
 }: AppSidebarProps) {
   const { forceClose, hideSidebar } = useLayout();
-  const organizationName = "Tutly";
-
-  if (hideSidebar) return null;
-
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(() => !forceClose);
+  const isMobile = useIsMobile();
+
   const sidebarItems = getDefaultSidebarItems({
     role: user.role,
     isAdmin: user.isAdmin,
     isIntegrationsEnabled: isIntegrationsEnabled ?? false,
     isAIAssistantEnabled: isAIAssistantEnabled ?? false,
   });
-  const [isOpen, setIsOpen] = useState(() => !forceClose);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -75,13 +73,17 @@ export function AppSidebar({
     }
   }, [forceClose]);
 
+  const organizationName =
+    user.role === "SUPER_ADMIN"
+      ? "Tutly Admin"
+      : user.organization?.name || "Tutly";
+  const organizationLogo = user.organization?.logo || "/logo-with-bg.png";
+
   const handleOpenChange = (open: boolean) => {
     if (forceClose) return;
     setIsOpen(open);
     localStorage.setItem("sidebarOpen", String(open));
   };
-
-  const isMobile = useIsMobile();
 
   const mobileTabs = useMemo(() => {
     if (!pathname) return [];
@@ -127,6 +129,8 @@ export function AppSidebar({
     return tabs.slice(0, 5);
   }, [sidebarItems, pathname]);
 
+  if (hideSidebar) return null;
+
   return (
     <div
       className={cn(
@@ -160,13 +164,13 @@ export function AppSidebar({
                   )}
                 >
                   <SidebarMenuButton size="lg" className="mx-auto">
-                    <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                      <Image
-                        src="/logo-with-bg.png"
+                    <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg">
+                      <img
+                        src={organizationLogo}
                         alt="Logo"
                         width={32}
                         height={32}
-                        className="rounded-md"
+                        className="h-full w-full rounded-md object-cover"
                       />
                     </div>
                     {!forceClose && isOpen && (

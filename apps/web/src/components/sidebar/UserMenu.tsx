@@ -18,8 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { authClient } from "@/server/auth/client";
-import { useRouter } from "next/navigation";
+import { logoutAction } from "./actions";
 
 interface UserMenuProps {
   user: SessionUser;
@@ -27,7 +26,6 @@ interface UserMenuProps {
 
 export function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
 
   return (
     <div className="relative">
@@ -132,13 +130,8 @@ export function UserMenu({ user }: UserMenuProps) {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={async () => {
-              const { data, error } = await authClient.signOut();
-              if (error) {
-                toast.error(error.message);
-              } else {
-                toast.success("You have been logged out");
-                router.push("/sign-in");
-              }
+              toast.info("Logging out...");
+              await logoutAction();
             }}
             className="flex cursor-pointer items-center gap-2 text-red-600"
           >

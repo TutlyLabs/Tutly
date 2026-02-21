@@ -27,10 +27,12 @@ import { searchRouter } from "./routers/search";
 import { statisticsRouter } from "./routers/statistics";
 import { submissionRouter } from "./routers/submission";
 import { usersRouter } from "./routers/users";
+import { superAdminRouter } from "./routers/superAdmin";
 
 import { createCallerFactory, createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
+  superAdmin: superAdminRouter,
   aiQuery: aiQueryRouter,
   assignments: assignmentsRouter,
   attachments: attachmentsRouter,
