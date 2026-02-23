@@ -15,6 +15,14 @@ export const classesRouter = createTRPCRouter({
         createdAt: z.string().optional(),
         folderId: z.string().optional(),
         folderName: z.string().optional(),
+        // Live class fields
+        classType: z.enum(["RECORDED", "LIVE"]).optional().default("RECORDED"),
+        liveProvider: z.enum(["ZOOM", "GOOGLE_MEET"]).optional().nullable(),
+        startTime: z.string().optional().nullable(),
+        endTime: z.string().optional().nullable(),
+        meetingUrl: z.string().optional().nullable(),
+        meetingId: z.string().optional().nullable(),
+        meetingPasscode: z.string().optional().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -33,6 +41,14 @@ export const classesRouter = createTRPCRouter({
               id: input.courseId,
             },
           },
+          // Live class fields
+          classType: input.classType,
+          liveProvider: input.liveProvider ?? null,
+          startTime: input.startTime ? new Date(input.startTime) : null,
+          endTime: input.endTime ? new Date(input.endTime) : null,
+          meetingUrl: input.meetingUrl ?? null,
+          meetingId: input.meetingId ?? null,
+          meetingPasscode: input.meetingPasscode ?? null,
         };
 
         if (input.folderId) {
@@ -82,6 +98,14 @@ export const classesRouter = createTRPCRouter({
         folderId: z.string().optional(),
         folderName: z.string().optional(),
         createdAt: z.string().optional(),
+        // Live class fields
+        classType: z.enum(["RECORDED", "LIVE"]).optional().default("RECORDED"),
+        liveProvider: z.enum(["ZOOM", "GOOGLE_MEET"]).optional().nullable(),
+        startTime: z.string().optional().nullable(),
+        endTime: z.string().optional().nullable(),
+        meetingUrl: z.string().optional().nullable(),
+        meetingId: z.string().optional().nullable(),
+        meetingPasscode: z.string().optional().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -138,6 +162,14 @@ export const classesRouter = createTRPCRouter({
             title: input.classTitle,
             createdAt: new Date(input.createdAt ?? new Date()),
             folderId: finalFolderId,
+            // Live class fields
+            classType: input.classType,
+            liveProvider: input.liveProvider ?? null,
+            startTime: input.startTime ? new Date(input.startTime) : null,
+            endTime: input.endTime ? new Date(input.endTime) : null,
+            meetingUrl: input.meetingUrl ?? null,
+            meetingId: input.meetingId ?? null,
+            meetingPasscode: input.meetingPasscode ?? null,
           },
           include: {
             video: true,

@@ -6,6 +6,7 @@ import { FaFolder, FaFolderOpen } from "react-icons/fa6";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { MdOndemandVideo } from "react-icons/md";
 import { IoStatsChart } from "react-icons/io5";
+import { Clock } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -73,23 +74,53 @@ function ClassSidebar({
     },
   );
 
-  const renderClassButton = (classItem: Class) => (
-    <Button
-      key={classItem.id}
-      variant={
-        pathname === `/courses/${courseId}/classes/${classItem.id}`
-          ? "secondary"
-          : "ghost"
-      }
-      asChild
-      className="w-full justify-start gap-2"
-    >
-      <Link href={`/courses/${courseId}/classes/${classItem.id}`}>
-        <MdOndemandVideo className="h-4 w-4" />
-        {classItem.title}
-      </Link>
-    </Button>
-  );
+  const getLiveStatus = (classItem: Class) => {
+    const ct = (classItem as any).classType;
+    if (ct !== "LIVE") return null;
+    const now = new Date();
+    const start = (classItem as any).startTime
+      ? new Date((classItem as any).startTime)
+      : null;
+    const end = (classItem as any).endTime
+      ? new Date((classItem as any).endTime)
+      : null;
+    if (start && end && now >= start && now <= end) return "live";
+    if (start && now < start) return "upcoming";
+    return null;
+  };
+
+  const renderClassButton = (classItem: Class) => {
+    const liveStatus = getLiveStatus(classItem);
+    return (
+      <div key={classItem.id} className="relative flex items-center gap-1">
+        <Button
+          variant={
+            pathname === `/courses/${courseId}/classes/${classItem.id}`
+              ? "secondary"
+              : "ghost"
+          }
+          asChild
+          className="w-full justify-start gap-2"
+        >
+          <Link href={`/courses/${courseId}/classes/${classItem.id}`}>
+            <MdOndemandVideo className="h-4 w-4" />
+            <span className="flex-1 truncate text-left">{classItem.title}</span>
+            {liveStatus === "live" && (
+              <span className="ml-auto flex items-center gap-1 rounded-full bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold text-red-400">
+                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
+                LIVE
+              </span>
+            )}
+            {liveStatus === "upcoming" && (
+              <span className="text-muted-foreground ml-auto">
+                <Clock className="h-3 w-3" />
+              </span>
+            )}
+          </Link>
+        </Button>
+      </div>
+    );
+  };
 
   return (
     <div className="relative z-10">

@@ -189,6 +189,8 @@ export const scheduleRouter = createTRPCRouter({
           "YOUTUBE_LIVE",
           "GMEET",
           "JIOMEET",
+          "ZOOM",
+          "ZOOM_LIVE",
           "TEXT",
           "VIMEO",
           "VIDEOCRYPT",

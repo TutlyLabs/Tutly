@@ -25,6 +25,7 @@ import { useDebounce } from "use-debounce";
 import { useRouter } from "next/navigation";
 
 import VideoPlayer from "./videoEmbeds/VideoPlayer";
+import LiveClassBanner from "./LiveClassBanner";
 import RichTextEditor from "@/components/editor/RichTextEditor";
 import {
   AlertDialog,
@@ -278,9 +279,22 @@ export default function Class({
     );
   }
 
-  const { video, title, createdAt, attachments } = classDetails.data;
+  const {
+    video,
+    title,
+    createdAt,
+    attachments,
+    classType,
+    liveProvider,
+    startTime,
+    endTime,
+    meetingUrl,
+    meetingId,
+    meetingPasscode,
+  } = classDetails.data;
   const { videoLink, videoType } = video ?? {};
   const isBookmarked = !!bookmarkData?.data;
+  const isLiveClass = classType === "LIVE";
 
   const isCourseAdmin = currentUser?.adminForCourses?.some(
     (course: { id: string }) => course.id === courseId,
@@ -306,6 +320,10 @@ export default function Class({
   const videoId = getVideoId();
 
   const openVideoInNewTab = () => {
+    if (isLiveClass && meetingUrl) {
+      window.open(meetingUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
     if (!videoId || !videoType) return;
     const url =
       videoType === "DRIVE"
@@ -439,7 +457,7 @@ export default function Class({
   return (
     <div className="flex flex-col gap-2 md:mx-5">
       <div className="flex flex-wrap gap-6">
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <div className="h-full w-full rounded-xl p-2">
             <div>
               <div className="mb-2 flex w-full items-center justify-between">
@@ -447,15 +465,17 @@ export default function Class({
                   <div className="flex items-center gap-3">
                     <p className="text-xl font-semibold">{title}</p>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={openVideoInNewTab}
-                      className="flex cursor-pointer items-center gap-2 hover:bg-blue-500/10"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      <span className="text-xs">Open Video</span>
-                    </Button>
+                    {!isLiveClass && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={openVideoInNewTab}
+                        className="flex cursor-pointer items-center gap-2 hover:bg-blue-500/10"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        <span className="text-xs">Open Video</span>
+                      </Button>
+                    )}
 
                     {haveAdminAccess &&
                       attendanceData?.data?.attendance?.length === 0 && (
@@ -557,7 +577,20 @@ export default function Class({
                 </div>
               )}
               <div className="text-secondary-100 aspect-video w-full flex-1 rounded-xl bg-gray-500/10 object-cover">
-                {renderVideo()}
+                {isLiveClass ? (
+                  <LiveClassBanner
+                    title={title}
+                    liveProvider={liveProvider ?? null}
+                    startTime={startTime ?? null}
+                    endTime={endTime ?? null}
+                    meetingUrl={meetingUrl ?? null}
+                    meetingId={meetingId ?? null}
+                    meetingPasscode={meetingPasscode ?? null}
+                    isAdmin={haveAdminAccess}
+                  />
+                ) : (
+                  renderVideo()
+                )}
               </div>
             </div>
           </div>

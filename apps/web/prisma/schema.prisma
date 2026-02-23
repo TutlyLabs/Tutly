@@ -321,6 +321,16 @@ model EnrolledUsers {
   @@unique([username, courseId, mentorUsername])
 }
 
+enum ClassType {
+  RECORDED
+  LIVE
+}
+
+enum LiveProvider {
+  ZOOM
+  GOOGLE_MEET
+}
+
 model Class {
   id          String       @id @default(uuid())
   title       String       @default("class")
@@ -331,8 +341,18 @@ model Class {
   videoId     String
   Attendence  Attendance[]
 
-  folderId  String?
-  Folder    Folder?  @relation(fields: [folderId], references: [id])
+  folderId String?
+  Folder   Folder? @relation(fields: [folderId], references: [id])
+
+  // Live class fields
+  classType       ClassType     @default(RECORDED)
+  liveProvider    LiveProvider?
+  startTime       DateTime?
+  endTime         DateTime?
+  meetingUrl      String?
+  meetingId       String?
+  meetingPasscode String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -599,6 +619,8 @@ enum EventAttachmentType {
   YOUTUBE_LIVE
   GMEET
   JIOMEET
+  ZOOM
+  ZOOM_LIVE
   TEXT
   VIMEO
   VIDEOCRYPT
