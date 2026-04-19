@@ -47,9 +47,11 @@ export const auth = betterAuth({
     },
   },
   session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // refresh session every 24 hours
     cookieCache: {
       enabled: true,
-      maxAge: 60 * 5, // 5 min
+      maxAge: 60 * 30, // 30 min cache before re-validating from DB
     },
   },
   user: {
@@ -173,45 +175,50 @@ export const auth = betterAuth({
       },
     }),
     customSession(async ({ user, session }) => {
-      const prismaUser = await db.user.findUnique({
-        where: { id: user.id },
-        include: {
-          organization: true,
-          adminForCourses: true,
-        },
-      });
+      try {
+        const prismaUser = await db.user.findUnique({
+          where: { id: user.id },
+          include: {
+            organization: true,
+            adminForCourses: true,
+          },
+        });
 
-      if (!prismaUser) return { user: null, session: null };
+        if (!prismaUser) return { user, session };
 
-      if (prismaUser.disabledAt) {
-        await db.session.deleteMany({ where: { userId: user.id } });
-        return { session: null, user: null };
+        if (prismaUser.disabledAt) {
+          await db.session.deleteMany({ where: { userId: user.id } });
+          return { session: null, user: null };
+        }
+
+        const now = new Date();
+        const lastSeenThreshold = 60 * 1000; // 1 min
+
+        if (
+          !prismaUser.lastSeen ||
+          now.getTime() - prismaUser.lastSeen.getTime() > lastSeenThreshold
+        ) {
+          db.user
+            .update({
+              where: { id: user.id },
+              data: { lastSeen: now },
+            })
+            .catch(console.error);
+        }
+
+        return {
+          user: {
+            ...prismaUser,
+            username: prismaUser.username,
+            password: undefined,
+            oneTimePassword: undefined,
+          },
+          session,
+        };
+      } catch (error) {
+        console.error("customSession error:", error);
+        return { user, session };
       }
-
-      const now = new Date();
-      const lastSeenThreshold = 60 * 1000; // 1 min
-
-      if (
-        !prismaUser.lastSeen ||
-        now.getTime() - prismaUser.lastSeen.getTime() > lastSeenThreshold
-      ) {
-        db.user
-          .update({
-            where: { id: user.id },
-            data: { lastSeen: now },
-          })
-          .catch(console.error);
-      }
-
-      return {
-        user: {
-          ...prismaUser,
-          username: prismaUser.username,
-          password: undefined,
-          oneTimePassword: undefined,
-        },
-        session,
-      };
     }),
   ],
   trustedOrigins: (request) => {
