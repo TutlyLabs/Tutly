@@ -1,0 +1,179 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Release type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      prerelease:
+        description: "Pre-release tag (e.g. beta, rc). Leave empty for stable release."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current version
+        id: current
+        run: |
+          CURRENT=$(jq -r '.version // "0.0.0"' package.json)
+          echo "version=$CURRENT" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT"
+
+      - name: Calculate next version
+        id: next
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          TYPE="${{ inputs.version_type }}"
+          PRERELEASE="${{ inputs.prerelease }}"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${CURRENT%%-*}"
+
+          case "$TYPE" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          VERSION="$MAJOR.$MINOR.$PATCH"
+          if [ -n "$PRERELEASE" ]; then
+            VERSION="$VERSION-$PRERELEASE"
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Next version: $VERSION"
+
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          PREV=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "tag=$PREV" >> $GITHUB_OUTPUT
+          echo "Previous tag: ${PREV:-none}"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG="${{ steps.prev_tag.outputs.tag }}"
+          VERSION="${{ steps.next.outputs.version }}"
+
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          echo "## What's Changed in v${VERSION}" > /tmp/changelog.md
+          echo "" >> /tmp/changelog.md
+
+          # Features
+          FEATURES=$(git log $RANGE --pretty=format:"- %s (%h)" --grep="^feat" --no-merges 2>/dev/null || true)
+          if [ -n "$FEATURES" ]; then
+            echo "### New Features" >> /tmp/changelog.md
+            echo "$FEATURES" >> /tmp/changelog.md
+            echo "" >> /tmp/changelog.md
+          fi
+
+          # Fixes
+          FIXES=$(git log $RANGE --pretty=format:"- %s (%h)" --grep="^fix" --no-merges 2>/dev/null || true)
+          if [ -n "$FIXES" ]; then
+            echo "### Bug Fixes" >> /tmp/changelog.md
+            echo "$FIXES" >> /tmp/changelog.md
+            echo "" >> /tmp/changelog.md
+          fi
+
+          # Chores / Refactors / Docs
+          CHORES=$(git log $RANGE --pretty=format:"- %s (%h)" --grep="^chore\|^refactor\|^docs\|^style\|^perf\|^ci" --no-merges 2>/dev/null || true)
+          if [ -n "$CHORES" ]; then
+            echo "### Other Changes" >> /tmp/changelog.md
+            echo "$CHORES" >> /tmp/changelog.md
+            echo "" >> /tmp/changelog.md
+          fi
+
+          # Other commits not matching conventional patterns
+          ALL_CATEGORIZED=$(git log $RANGE --pretty=format:"%h" --grep="^feat\|^fix\|^chore\|^refactor\|^docs\|^style\|^perf\|^ci" --no-merges 2>/dev/null || true)
+          ALL_COMMITS=$(git log $RANGE --pretty=format:"%h" --no-merges 2>/dev/null || true)
+
+          UNCATEGORIZED=""
+          for hash in $ALL_COMMITS; do
+            if ! echo "$ALL_CATEGORIZED" | grep -q "$hash"; then
+              MSG=$(git log -1 --pretty=format:"- %s (%h)" "$hash")
+              UNCATEGORIZED="${UNCATEGORIZED}${MSG}\n"
+            fi
+          done
+
+          if [ -n "$UNCATEGORIZED" ]; then
+            echo "### Uncategorized" >> /tmp/changelog.md
+            echo -e "$UNCATEGORIZED" >> /tmp/changelog.md
+            echo "" >> /tmp/changelog.md
+          fi
+
+          # Contributors
+          echo "### Contributors" >> /tmp/changelog.md
+          CONTRIBUTORS=$(git log $RANGE --pretty=format:"%an" --no-merges 2>/dev/null | sort -u)
+          while IFS= read -r name; do
+            if [ -n "$name" ]; then
+              echo "- $name" >> /tmp/changelog.md
+            fi
+          done <<< "$CONTRIBUTORS"
+          echo "" >> /tmp/changelog.md
+
+          # Stats
+          COMMIT_COUNT=$(git rev-list --count $RANGE --no-merges 2>/dev/null || echo "0")
+          FILE_COUNT=$(git diff --name-only $RANGE 2>/dev/null | wc -l | tr -d ' ')
+          if [ -n "$PREV_TAG" ]; then
+            echo "---" >> /tmp/changelog.md
+            echo "**${COMMIT_COUNT} commits** | **${FILE_COUNT} files changed**" >> /tmp/changelog.md
+            echo "" >> /tmp/changelog.md
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${VERSION}" >> /tmp/changelog.md
+          fi
+
+          cat /tmp/changelog.md
+
+      - name: Update package.json version
+        run: |
+          VERSION="${{ steps.next.outputs.version }}"
+          jq --arg v "$VERSION" '.version = $v' package.json > package.tmp.json
+          mv package.tmp.json package.json
+          echo "Updated package.json to v${VERSION}"
+
+      - name: Commit version bump
+        run: |
+          VERSION="${{ steps.next.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "release: v${VERSION}" || echo "No changes to commit"
+          git push
+
+      - name: Create tag
+        run: |
+          VERSION="${{ steps.next.outputs.version }}"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.next.outputs.version }}
+          name: v${{ steps.next.outputs.version }}
+          body_path: /tmp/changelog.md
+          prerelease: ${{ inputs.prerelease != '' }}
+          generate_release_notes: false
