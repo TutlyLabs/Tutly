@@ -1,7 +1,10 @@
 import { compare, hash } from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { customSession, bearer, username, admin } from "better-auth/plugins";
+import { customSession } from "better-auth/plugins/custom-session";
+import { bearer } from "better-auth/plugins/bearer";
+import { username } from "better-auth/plugins/username";
+import { admin } from "better-auth/plugins/admin";
 import {
   RESEND_API_KEY,
   GOOGLE_CLIENT_ID,
@@ -34,10 +37,6 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   advanced: {
-    crossSubDomainCookies: {
-      enabled: process.env.NODE_ENV === "production",
-      domain: process.env.NODE_ENV === "production" ? "tutly.in" : undefined,
-    },
     useSecureCookies: process.env.NODE_ENV === "production",
     database: {
       generateId: () => randomUUID(),
@@ -215,17 +214,5 @@ export const auth = betterAuth({
       };
     }),
   ],
-  trustedOrigins: async () => {
-    // TODO: Restrict this to specific origins in production
-    return ["*"];
-
-    // const origins = ["http://localhost:3000", "*.tutly.in"];
-    // if (FRONTEND_URL) {
-    //   origins.push(FRONTEND_URL);
-    // }
-    // if (process.env.VERCEL_URL) {
-    //   origins.push(`https://${process.env.VERCEL_URL}`);
-    // }
-    // return origins;
-  },
+  trustedOrigins: ["https://learn.tutly.in", "http://localhost:3000"],
 });

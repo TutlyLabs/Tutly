@@ -19,10 +19,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/server/auth/client";
 import { SocialSignin } from "./SocialSignin";
 import { useFeatureFlags } from "./FeatureFlagsProvider";
-import { loginRedirectAction } from "./actions";
 
 const signInSchema = z.object({
   email: z.string().min(1, "Username or email is required"),
@@ -31,15 +31,11 @@ const signInSchema = z.object({
 
 type SignInInput = z.infer<typeof signInSchema>;
 
-interface SignInProps {
-  orgName?: string | null;
-  orgLogo?: string | null;
-}
-
-export function SignIn({ orgName, orgLogo }: SignInProps) {
+export function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { isGoogleSignInEnabled, isGithubSignInEnabled } = useFeatureFlags();
+  const router = useRouter();
 
   const form = useForm<SignInInput>({
     resolver: zodResolver(signInSchema),
@@ -101,9 +97,7 @@ export function SignIn({ orgName, orgLogo }: SignInProps) {
             },
           );
       if (result?.data?.user) {
-        const token = (result.data as any).token || "";
-        const redirectUrl = await loginRedirectAction(token, result.data.user);
-        window.location.href = redirectUrl;
+        router.push("/dashboard");
         return;
       }
       toast.error(result?.error?.message || "Failed to sign in", {
@@ -125,19 +119,8 @@ export function SignIn({ orgName, orgLogo }: SignInProps) {
     <div className="flex min-h-screen items-center justify-center p-2">
       <Card className="w-full max-w-[400px] border-white/30 bg-white/20 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-900/20">
         <CardHeader>
-          {orgLogo && (
-            <div className="bg-sidebar-primary mx-auto mb-2 flex aspect-square size-16 items-center justify-center overflow-hidden rounded-xl shadow-sm">
-              <img
-                src={orgLogo}
-                alt={orgName || "Organization Logo"}
-                width={64}
-                height={64}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          )}
           <CardTitle className="text-center text-2xl font-bold">
-            Sign In {orgName ? `to ${orgName}` : ""}
+            Sign In
           </CardTitle>
         </CardHeader>
         <CardContent>

@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
 
   experimental: {
     serverActions: {
-      allowedOrigins: ["*.tutly.in", "localhost:3000", "*.localhost:3000"],
+      allowedOrigins: ["learn.tutly.in", "localhost:3000"],
     },
   },
 

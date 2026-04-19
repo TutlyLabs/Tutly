@@ -5,13 +5,8 @@ import { AppSidebar } from "@/components/sidebar/AppSidebar";
 import { AppHeader } from "@/components/sidebar/AppHeader";
 import { LayoutProvider } from "@/providers/layout-provider";
 import { LayoutContent } from "@/components/LayoutContent";
-import {
-  getServerSessionOrRedirect,
-  getBaseDomain,
-  getProtocol,
-} from "@/lib/auth";
+import { getServerSessionOrRedirect } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 
 export default async function SuperAdminLayout({
   children,
@@ -25,18 +20,6 @@ export default async function SuperAdminLayout({
     redirect("/dashboard");
   }
 
-  const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
-  const [baseDomain, protocol] = await Promise.all([
-    getBaseDomain(),
-    getProtocol(),
-  ]);
-  const expectedAdminHost = `admin.${baseDomain}`;
-  const isLocal = process.env.NODE_ENV !== "production";
-
-  if (isLocal ? !host.startsWith("admin.") : host !== expectedAdminHost) {
-    redirect(`${protocol}://${expectedAdminHost}/super-admin`);
-  }
   return (
     <LayoutProvider>
       <div className="flex h-screen w-full overflow-hidden">
