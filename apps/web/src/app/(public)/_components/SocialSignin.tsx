@@ -27,7 +27,7 @@ export function SocialSignin({
       setIsGoogleLoading(true);
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
+        callbackURL: "/auth/post-login",
       });
     } catch (error) {
       toast.error("Failed to initiate Google sign in", {
@@ -45,7 +45,7 @@ export function SocialSignin({
       setIsGithubLoading(true);
       await authClient.signIn.social({
         provider: "github",
-        callbackURL: "/dashboard",
+        callbackURL: "/auth/post-login",
       });
     } catch (error) {
       toast.error("Failed to initiate GitHub sign in", {

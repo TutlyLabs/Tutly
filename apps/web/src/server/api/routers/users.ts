@@ -706,16 +706,17 @@ export const usersRouter = createTRPCRouter({
     try {
       const currentUser = ctx.session.user;
 
-      const userWithPassword = await ctx.db.account.findUnique({
+      const credentialAccount = await ctx.db.account.findFirst({
         where: {
-          id: currentUser.id,
+          userId: currentUser.id,
           providerId: "credential",
         },
         select: {
           password: true,
         },
       });
-      const isPasswordExists = userWithPassword?.password !== null;
+      const isPasswordExists =
+        credentialAccount !== null && credentialAccount.password !== null;
 
       return {
         success: true,
