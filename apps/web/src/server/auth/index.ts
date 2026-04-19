@@ -219,9 +219,9 @@ export const auth = betterAuth({
       "https://learn.tutly.in",
       "http://localhost:3000",
     ];
-    const host = request.headers.get("origin") || request.headers.get("host");
-    if (host?.endsWith(".vercel.app")) {
-      origins.push(`https://${host}`);
+    const origin = request.headers.get("origin");
+    if (origin?.endsWith(".vercel.app")) {
+      origins.push(origin);
     }
     return origins;
   },
