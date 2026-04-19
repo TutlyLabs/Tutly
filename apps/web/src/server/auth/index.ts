@@ -214,5 +214,15 @@ export const auth = betterAuth({
       };
     }),
   ],
-  trustedOrigins: ["https://learn.tutly.in", "http://localhost:3000"],
+  trustedOrigins: (request) => {
+    const origins = [
+      "https://learn.tutly.in",
+      "http://localhost:3000",
+    ];
+    const host = request.headers.get("origin") || request.headers.get("host");
+    if (host?.endsWith(".vercel.app")) {
+      origins.push(`https://${host}`);
+    }
+    return origins;
+  },
 });
