@@ -34,13 +34,6 @@ ENV SKIP_ENV_VALIDATION=1
 
 ENV NODE_ENV=production
 
-# Configure Turbo remote caching
-ARG TURBO_TEAM
-ENV TURBO_TEAM=$TURBO_TEAM
-
-ARG TURBO_TOKEN
-ENV TURBO_TOKEN=$TURBO_TOKEN
-
 WORKDIR /app/apps/web
 RUN pnpm prisma generate
 

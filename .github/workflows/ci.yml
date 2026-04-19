@@ -11,12 +11,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-# You can leverage Vercel Remote Caching with Turbo to speed up your builds
-# @link https://turborepo.org/docs/core-concepts/remote-caching#remote-caching-on-vercel-builds
 env:
   FORCE_COLOR: 3
-  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   NODE_OPTIONS: "--max-old-space-size=8192"
   TURBO_FORCE: ${{ contains(github.event.pull_request.labels.*.name, 'disable cache') && 'true' || '' }}
 
@@ -28,6 +24,14 @@ jobs:
 
       - name: Setup
         uses: ./tooling/github/setup
+
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-build-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-build-
 
       - name: Build api types
         run: pnpm --filter @tutly/api trpc-api-export
@@ -55,6 +59,14 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
 
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-lint-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-lint-
+
       - name: Copy env
         shell: bash
         run: cp .env.example .env
@@ -74,6 +86,14 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
 
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-format-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-format-
+
       - name: Format
         run: pnpm format
 
@@ -91,6 +111,14 @@ jobs:
 
       - name: Setup
         uses: ./tooling/github/setup
+
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-typecheck-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-typecheck-
 
       - name: Typecheck
         run: pnpm typecheck
