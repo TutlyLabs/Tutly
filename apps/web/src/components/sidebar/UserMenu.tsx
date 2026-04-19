@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { logoutAction } from "./actions";
+import { useLogout } from "@/hooks/use-logout";
 
 interface UserMenuProps {
   user: SessionUser;
@@ -26,6 +26,7 @@ interface UserMenuProps {
 
 export function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const logout = useLogout();
 
   return (
     <div className="relative">
@@ -131,7 +132,7 @@ export function UserMenu({ user }: UserMenuProps) {
           <DropdownMenuItem
             onClick={async () => {
               toast.info("Logging out...");
-              await logoutAction();
+              await logout();
             }}
             className="flex cursor-pointer items-center gap-2 text-red-600"
           >

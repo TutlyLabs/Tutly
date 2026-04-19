@@ -4,11 +4,7 @@ import "@/styles/globals.css";
 import { getVersion } from "@/lib/version";
 import ThemeToggle from "@/components/ThemeToggle";
 import { isFeatureEnabled } from "@/lib/featureFlags";
-import {
-  getServerSession,
-  getPostLoginRedirectUrl,
-  getSyncRedirectUrl,
-} from "@/lib/auth";
+import { getServerSession } from "@/lib/auth";
 import { FeatureFlagsProvider } from "./_components/FeatureFlagsProvider";
 import { redirect } from "next/navigation";
 
@@ -22,9 +18,7 @@ export default async function AuthLayout({ children }: Props) {
   const currentUser = session?.user;
 
   if (currentUser) {
-    const redirectUrl = await getPostLoginRedirectUrl(currentUser);
-    const syncUrl = await getSyncRedirectUrl(redirectUrl);
-    redirect(syncUrl);
+    redirect("/dashboard");
   }
 
   const isGoogleSignInEnabled = await isFeatureEnabled(

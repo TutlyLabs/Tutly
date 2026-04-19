@@ -7,7 +7,6 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/server/auth/client";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 
 interface SocialSigninProps {
   isGoogleSignInEnabled: boolean;
@@ -22,37 +21,13 @@ export function SocialSignin({
 }: SocialSigninProps) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isGithubLoading, setIsGithubLoading] = useState(false);
-  const router = useRouter();
 
   const handleGoogleSignIn = async () => {
     try {
       setIsGoogleLoading(true);
-
-      const currentUrl = new URL(window.location.href);
-      const error = currentUrl.searchParams.get("error");
-
-      if (error) {
-        throw new Error(decodeURIComponent(error).replace(/\+/g, " "));
-      }
-
-      const result = await authClient.signIn.social({
+      await authClient.signIn.social({
         provider: "google",
         callbackURL: "/dashboard",
-      });
-
-      if (result?.data && "user" in result.data) {
-        router.push("/dashboard");
-        return;
-      }
-
-      if (result?.data && "url" in result.data && result.data.url) {
-        router.push(result.data.url);
-        return;
-      }
-
-      toast.error(result?.error?.message || "Failed to sign in with Google", {
-        position: "top-center",
-        duration: 3000,
       });
     } catch (error) {
       toast.error("Failed to initiate Google sign in", {
@@ -68,32 +43,9 @@ export function SocialSignin({
   const handleGithubSignIn = async () => {
     try {
       setIsGithubLoading(true);
-
-      const currentUrl = new URL(window.location.href);
-      const error = currentUrl.searchParams.get("error");
-
-      if (error) {
-        throw new Error(decodeURIComponent(error).replace(/\+/g, " "));
-      }
-
-      const result = await authClient.signIn.social({
+      await authClient.signIn.social({
         provider: "github",
         callbackURL: "/dashboard",
-      });
-
-      if (result?.data && "user" in result.data) {
-        router.push("/dashboard");
-        return;
-      }
-
-      if (result?.data && "url" in result.data && result.data.url) {
-        router.push(result.data.url);
-        return;
-      }
-
-      toast.error(result?.error?.message || "Failed to sign in with GitHub", {
-        position: "top-center",
-        duration: 3000,
       });
     } catch (error) {
       toast.error("Failed to initiate GitHub sign in", {

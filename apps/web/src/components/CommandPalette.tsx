@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import type { SessionUser } from "@/lib/auth";
+import { useLogout } from "@/hooks/use-logout";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,7 @@ export function CommandPalette({
   onOpenChange,
 }: CommandPaletteProps) {
   const router = useRouter();
+  const logout = useLogout();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedCategories, setSelectedCategories] = React.useState<
     CategoryFilter[]
@@ -545,7 +547,7 @@ export function CommandPalette({
       {
         icon: LogOutIcon,
         label: "Sign Out",
-        action: () => router.push("/api/auth/sign-out"),
+        action: () => logout(),
         keywords: ["logout", "sign out", "exit"],
       },
     ];
