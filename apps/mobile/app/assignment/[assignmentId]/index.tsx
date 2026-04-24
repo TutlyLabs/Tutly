@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import {
   Bookmark,
@@ -25,7 +25,6 @@ import {
   useObjectNote,
 } from "~/lib/api/hooks";
 import { unwrapData } from "~/lib/api/normalizers";
-import { spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 import { openWebPath } from "~/lib/web-handoff";
 
@@ -55,13 +54,16 @@ export default function AssignmentDetailScreen() {
       <Stack.Screen options={{ title: assignment?.title || "Assignment" }} />
       <PageHeader showBack title={assignment?.title || "Assignment"} />
 
-      <Card elevated style={styles.card}>
-        <View style={[styles.icon, { backgroundColor: `${colors.primary}10` }]}>
+      <Card elevated className="gap-lg">
+        <View
+          className="items-center rounded-[20px] h-[68px] justify-center w-[68px]"
+          style={{ backgroundColor: `${colors.primary}10` }}
+        >
           <FileText color={colors.primary} size={26} strokeWidth={2} />
         </View>
         <Chip tone="amber">View only</Chip>
         <AppText variant="title">{assignment?.title || "Assignment"}</AppText>
-        <View style={styles.meta}>
+        <View className="flex-row items-center gap-sm">
           <CalendarClock color={colors.inkMuted} size={17} />
           <AppText muted>
             {assignment?.dueDate
@@ -147,21 +149,3 @@ export default function AssignmentDetailScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    gap: spacing.lg,
-  },
-  icon: {
-    alignItems: "center",
-    borderRadius: 20,
-    height: 68,
-    justifyContent: "center",
-    width: 68,
-  },
-  meta: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-});

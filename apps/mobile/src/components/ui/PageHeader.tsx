@@ -1,11 +1,10 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { router, usePathname } from "expo-router";
 import { ArrowLeft, Bell } from "lucide-react-native";
 
 import { useNotifications } from "~/lib/api/hooks";
 import { selectNotifications } from "~/lib/api/mobile-selectors";
 import { useAuth } from "~/lib/auth/auth-provider";
-import { spacing } from "~/lib/theme/tokens";
 import { AppText } from "./AppText";
 import { IconButton } from "./IconButton";
 
@@ -29,12 +28,12 @@ export function PageHeader({
   const hideBell = pathname === "/notifications";
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.leading}>
+    <View className="flex-row items-center gap-md justify-between py-xs">
+      <View className="flex-row items-center flex-1 gap-sm">
         {showBack ? (
           <IconButton icon={ArrowLeft} onPress={() => router.back()} />
         ) : null}
-        <View style={styles.copy}>
+        <View className="flex-1 gap-[2px]">
           {eyebrow ? (
             <AppText muted variant="caption">
               {eyebrow}
@@ -43,16 +42,16 @@ export function PageHeader({
           <AppText variant="title">{title}</AppText>
         </View>
       </View>
-      <View style={styles.actions}>
+      <View className="flex-row gap-sm">
         {!hideBell ? (
-          <View style={styles.bellWrap}>
+          <View className="relative">
             <IconButton
               icon={Bell}
               onPress={() => router.push("/notifications")}
             />
             {unreadCount ? (
-              <View style={styles.badge}>
-                <AppText style={styles.badgeLabel} variant="caption">
+              <View className="absolute -right-[3px] -top-[3px] items-center rounded-pill min-w-[18px] px-[4px] py-[1px]" style={{ backgroundColor: "#EF4444" }}>
+                <AppText style={{ color: "#FFFFFF", fontSize: 9, lineHeight: 12, textAlign: "center" }} variant="caption">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </AppText>
               </View>
@@ -63,47 +62,3 @@ export function PageHeader({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.md,
-    justifyContent: "space-between",
-    paddingVertical: spacing.xs,
-  },
-  leading: {
-    alignItems: "center",
-    flex: 1,
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  copy: {
-    flex: 1,
-    gap: 2,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  bellWrap: {
-    position: "relative",
-  },
-  badge: {
-    alignItems: "center",
-    backgroundColor: "#EF4444",
-    borderRadius: 999,
-    minWidth: 18,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    position: "absolute",
-    right: -3,
-    top: -3,
-  },
-  badgeLabel: {
-    color: "#FFFFFF",
-    fontSize: 9,
-    lineHeight: 12,
-    textAlign: "center",
-  },
-});

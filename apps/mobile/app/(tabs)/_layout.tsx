@@ -152,7 +152,7 @@ export default function TabsLayout() {
 
   if (isLoading) {
     return (
-      <View style={styles.center}>
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -175,11 +175,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  center: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-  },
-});

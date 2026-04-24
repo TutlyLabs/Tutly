@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
@@ -36,7 +36,7 @@ import {
 } from "~/lib/api/mobile-selectors";
 import { queryKeys } from "~/lib/api/query-keys";
 import { useAuth } from "~/lib/auth/auth-provider";
-import { radius, shadows, spacing } from "~/lib/theme/tokens";
+import { shadows } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 
 export default function HomeScreen() {
@@ -103,30 +103,33 @@ export default function HomeScreen() {
         title={`Hi, ${user?.name?.split(" ")[0] || "there"}`}
       />
 
-      {/* ── Summary Banner (Gradient) ── */}
+      {/* Summary Banner (Gradient) */}
       <LinearGradient
         colors={isDark ? ["#4F46E5", "#7C3AED"] : ["#8B5CF6", "#6366F1"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.summaryCard, !isDark && shadows.lifted]}
+        style={[
+          { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 24, padding: 24, borderRadius: 24 },
+          !isDark ? shadows.lifted : undefined
+        ]}
       >
-        <View style={styles.summaryLeft}>
+        <View className="flex-1 gap-md">
           <AppText variant="subtitle" style={{ color: "#FFFFFF" }}>How are you progressing?</AppText>
-          <View style={styles.summaryChips}>
-            <View style={[styles.glassChip, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
+          <View className="flex-row gap-sm">
+            <View className="px-[8px] py-[4px] rounded-md" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
               <AppText variant="caption" style={{ color: "#FFFFFF", fontWeight: "600" }}>{dashboardCourses.length} courses</AppText>
             </View>
-            <View style={[styles.glassChip, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
+            <View className="px-[8px] py-[4px] rounded-md" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
               <AppText variant="caption" style={{ color: "#FFFFFF", fontWeight: "600" }}>{submittedAssignments}/{assignments.length} done</AppText>
             </View>
           </View>
-          <View style={styles.summaryStats}>
-            <View style={styles.statItem}>
+          <View className="flex-row gap-lg mt-xs">
+            <View className="flex-row items-center gap-[6px]">
               <Trophy color="#FBBF24" size={14} />
               <AppText variant="caption" style={{ fontWeight: "600", color: "#FFFFFF" }}>{totalPoints}</AppText>
               <AppText variant="caption" style={{ color: "rgba(255,255,255,0.8)" }}>points</AppText>
             </View>
-            <View style={styles.statItem}>
+            <View className="flex-row items-center gap-[6px]">
               <Clock3 color="#38BDF8" size={14} />
               <AppText variant="caption" style={{ fontWeight: "600", color: "#FFFFFF" }}>{upcomingEvents.length}</AppText>
               <AppText variant="caption" style={{ color: "rgba(255,255,255,0.8)" }}>upcoming</AppText>
@@ -142,13 +145,13 @@ export default function HomeScreen() {
         />
       </LinearGradient>
 
-      {/* ── Quick Actions (Horizontal) ── */}
-      <View style={styles.section}>
+      {/* Quick Actions (Horizontal) */}
+      <View className="gap-sm mt-sm">
         <SectionHeader title="Quick actions" />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollList}
+          contentContainerStyle={{ gap: 16, paddingRight: 24 }}
         >
           {quickActions.map((action) => (
             <ActionTile
@@ -163,8 +166,8 @@ export default function HomeScreen() {
         </ScrollView>
       </View>
 
-      {/* ── Metrics ── */}
-      <View style={styles.metricGrid}>
+      {/* Metrics */}
+      <View className="flex-row gap-sm">
         <MetricCard
           helper="enrolled"
           icon={BookOpen}
@@ -181,8 +184,8 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* ── Continue Learning (Horizontal) ── */}
-      <View style={styles.section}>
+      {/* Continue Learning (Horizontal) */}
+      <View className="gap-sm mt-sm">
         <SectionHeader
           action={dashboardCourses.length > 3 ? "See all" : undefined}
           onAction={() => router.push("/(tabs)/learn")}
@@ -192,7 +195,7 @@ export default function HomeScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.scrollList}
+            contentContainerStyle={{ gap: 16, paddingRight: 24 }}
           >
             {dashboardCourses.slice(0, 5).map((course, i) => (
               <CourseCard
@@ -210,15 +213,15 @@ export default function HomeScreen() {
             ))}
           </ScrollView>
         ) : (
-          <Card style={styles.emptyRow}>
+          <Card className="flex-row items-center gap-sm">
             <BookOpen color={colors.inkSoft} size={18} />
             <AppText muted>No courses yet</AppText>
           </Card>
         )}
       </View>
 
-      {/* ── Today ── */}
-      <View style={styles.section}>
+      {/* Today */}
+      <View className="gap-sm mt-sm">
         <SectionHeader 
           title="Today" 
           action={upcomingEvents.length > 2 ? "Schedule" : undefined}
@@ -229,15 +232,15 @@ export default function HomeScreen() {
             <EventCard event={event} key={`${event.type}-${event.name}-${i}`} />
           ))
         ) : (
-          <Card style={styles.emptyRow}>
+          <Card className="flex-row items-center gap-sm">
             <Clock3 color={colors.inkSoft} size={18} />
             <AppText muted>No upcoming events</AppText>
           </Card>
         )}
       </View>
 
-      {/* ── Assignments (Horizontal) ── */}
-      <View style={styles.section}>
+      {/* Assignments (Horizontal) */}
+      <View className="gap-sm mt-sm">
         <SectionHeader
           action={assignments.length > 3 ? "See all" : undefined}
           onAction={() => router.push("/assignments")}
@@ -247,73 +250,21 @@ export default function HomeScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.scrollList}
+            contentContainerStyle={{ gap: 16, paddingRight: 24 }}
           >
             {assignments.slice(0, 5).map((assignment, i) => (
               <AssignmentCard assignment={assignment} key={assignment.id || `assignment-${i}`} />
             ))}
           </ScrollView>
         ) : (
-          <Card style={styles.emptyRow}>
+          <Card className="flex-row items-center gap-sm">
             <FileText color={colors.inkSoft} size={18} />
             <AppText muted>No assignments yet</AppText>
           </Card>
         )}
       </View>
 
-      {/* Add bottom padding so last row isn't hidden behind the floating nav bar */}
-      <View style={{ height: 96 }} />
+      <View className="h-[96px]" />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  summaryCard: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.lg,
-    justifyContent: "space-between",
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-  },
-  summaryLeft: {
-    flex: 1,
-    gap: spacing.md,
-  },
-  summaryChips: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  glassChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: radius.md,
-  },
-  summaryStats: {
-    flexDirection: "row",
-    gap: spacing.lg,
-    marginTop: spacing.xs,
-  },
-  statItem: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 6,
-  },
-  metricGrid: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  scrollList: {
-    gap: spacing.md,
-    paddingRight: spacing.lg,
-  },
-  section: {
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  emptyRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-});

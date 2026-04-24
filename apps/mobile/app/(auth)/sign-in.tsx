@@ -15,7 +15,6 @@ import { AppText } from "~/components/ui/AppText";
 import { Button } from "~/components/ui/Button";
 import { Screen } from "~/components/ui/Screen";
 import { useAuth } from "~/lib/auth/auth-provider";
-import { radius, spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 import { openWebPath } from "~/lib/web-handoff";
 
@@ -44,19 +43,19 @@ export default function SignInScreen() {
   return (
     <Screen
       scroll={false}
-      contentContainerStyle={styles.screenContent}
+      contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
       keyboardShouldPersistTaps="handled"
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
-        style={styles.keyboard}
+        className="flex-1"
       >
-        <View style={styles.stack}>
-          <View style={styles.brand}>
+        <View className="flex-1 gap-xxl justify-center px-xl">
+          <View className="items-center gap-sm">
             <Image
               source={require("../../assets/logo.png")}
-              style={styles.logo}
+              className="h-[48px] mb-sm w-[48px]"
               resizeMode="contain"
             />
             <AppText variant="title">Sign in to Tutly</AppText>
@@ -65,17 +64,12 @@ export default function SignInScreen() {
             </AppText>
           </View>
 
-          <View style={styles.form}>
-            <View style={styles.fieldGroup}>
+          <View className="gap-lg">
+            <View className="gap-xs">
               <AppText variant="caption" style={{ fontWeight: "600" }}>Username or email</AppText>
               <View
-                style={[
-                  styles.inputShell,
-                  {
-                    backgroundColor: colors.canvasElevated,
-                    borderColor: colors.border,
-                  },
-                ]}
+                className="flex-row items-center rounded-md gap-sm min-h-[46px] px-md"
+                style={{ borderWidth: StyleSheet.hairlineWidth, backgroundColor: colors.canvasElevated, borderColor: colors.border }}
               >
                 <Mail color={colors.inkSoft} size={16} />
                 <TextInput
@@ -85,22 +79,17 @@ export default function SignInScreen() {
                   onChangeText={setLogin}
                   placeholder="you@college.edu"
                   placeholderTextColor={colors.inkSoft}
-                  style={[styles.input, { color: colors.ink }]}
+                  className="flex-1 text-[14px] font-medium" style={{ color: colors.ink }}
                   value={login}
                 />
               </View>
             </View>
 
-            <View style={styles.fieldGroup}>
+            <View className="gap-xs">
               <AppText variant="caption" style={{ fontWeight: "600" }}>Password</AppText>
               <View
-                style={[
-                  styles.inputShell,
-                  {
-                    backgroundColor: colors.canvasElevated,
-                    borderColor: colors.border,
-                  },
-                ]}
+                className="flex-row items-center rounded-md gap-sm min-h-[46px] px-md"
+                style={{ borderWidth: StyleSheet.hairlineWidth, backgroundColor: colors.canvasElevated, borderColor: colors.border }}
               >
                 <LockKeyhole color={colors.inkSoft} size={16} />
                 <TextInput
@@ -111,7 +100,7 @@ export default function SignInScreen() {
                   placeholder="Your password"
                   placeholderTextColor={colors.inkSoft}
                   secureTextEntry
-                  style={[styles.input, { color: colors.ink }]}
+                  className="flex-1 text-[14px] font-medium" style={{ color: colors.ink }}
                   value={password}
                 />
               </View>
@@ -119,13 +108,12 @@ export default function SignInScreen() {
 
             {error ? (
               <View
-                style={[
-                  styles.errorBox,
-                  {
-                    backgroundColor: "#FEE2E2",
-                    borderColor: "#FECACA",
-                  },
-                ]}
+                className="rounded-sm px-md py-sm"
+                style={{
+                  backgroundColor: "#FEE2E2",
+                  borderColor: "#FECACA",
+                  borderWidth: StyleSheet.hairlineWidth,
+                }}
               >
                 <AppText style={{ color: "#DC2626" }} variant="caption">
                   {error}
@@ -137,14 +125,14 @@ export default function SignInScreen() {
               disabled={!login.trim() || !password || isLoading}
               loading={submitting}
               onPress={handleSignIn}
-              style={styles.signInButton}
+              style={{ width: "100%", minHeight: 46 }}
             >
               Sign in
             </Button>
 
             <Pressable
               onPress={() => openWebPath("/reset-password")}
-              style={styles.forgotLink}
+              className="self-center py-xs"
             >
               <AppText muted variant="caption">
                 Forgot password?
@@ -156,62 +144,3 @@ export default function SignInScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  screenContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-  },
-  keyboard: {
-    flex: 1,
-  },
-  stack: {
-    flex: 1,
-    gap: spacing.xxl,
-    justifyContent: "center",
-    paddingHorizontal: spacing.xl,
-  },
-  brand: {
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  logo: {
-    height: 48,
-    marginBottom: spacing.sm,
-    width: 48,
-  },
-  form: {
-    gap: spacing.lg,
-  },
-  fieldGroup: {
-    gap: spacing.xs,
-  },
-  inputShell: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: spacing.sm,
-    minHeight: 46,
-    paddingHorizontal: spacing.md,
-  },
-  input: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  errorBox: {
-    borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  signInButton: {
-    width: "100%",
-    minHeight: 46,
-  },
-  forgotLink: {
-    alignSelf: "center",
-    paddingVertical: spacing.xs,
-  },
-});

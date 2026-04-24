@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Stack } from "expo-router";
 import { Bell, Circle, ExternalLink, MailCheck } from "lucide-react-native";
 
@@ -11,7 +11,6 @@ import { PageHeader } from "~/components/ui/PageHeader";
 import { Screen } from "~/components/ui/Screen";
 import { useNotificationActions, useNotifications } from "~/lib/api/hooks";
 import { selectNotifications } from "~/lib/api/mobile-selectors";
-import { spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 import { openWebPath } from "~/lib/web-handoff";
 
@@ -38,20 +37,20 @@ export default function NotificationsScreen() {
           Mark all as read
         </Button>
       ) : null}
-      <View style={styles.list}>
+      <View className="gap-sm">
         {notifications.map((item) => (
           <Pressable
             key={item.id}
             onPress={() => notificationActions.toggleRead.mutate(item.id)}
           >
             {({ pressed }) => (
-              <Card style={[styles.card, pressed && { opacity: 0.7 }]}>
+              <Card className="flex-row items-start gap-sm" style={pressed ? { opacity: 0.7 } : undefined}>
                 <Circle
                   color={item.readAt ? colors.inkSoft : colors.coral}
                   fill={item.readAt ? "transparent" : colors.coral}
                   size={8}
                 />
-                <View style={styles.copy}>
+                <View className="flex-1 gap-xs">
                   <Chip tone={item.readAt ? "neutral" : "coral"}>
                     {item.eventType.replaceAll("_", " ")}
                   </Chip>
@@ -88,18 +87,3 @@ export default function NotificationsScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  list: {
-    gap: spacing.sm,
-  },
-  card: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  copy: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-});

@@ -1,8 +1,8 @@
 import type { PropsWithChildren } from "react";
 import type { ViewProps } from "react-native";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
-import { radius, shadows, spacing } from "~/lib/theme/tokens";
+import { shadows } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 
 type CardProps = PropsWithChildren<
@@ -15,6 +15,7 @@ type CardProps = PropsWithChildren<
 export function Card({
   children,
   style,
+  className,
   padded = true,
   elevated = false,
   ...props
@@ -24,14 +25,13 @@ export function Card({
   return (
     <View
       {...props}
+      className={`rounded-lg overflow-hidden ${padded ? "p-lg" : ""} ${className || ""}`}
       style={[
-        styles.base,
         {
           backgroundColor: colors.canvasElevated,
-          borderColor: isDark ? colors.border : colors.line,
           borderWidth: 1,
+          borderColor: colors.line,
         },
-        padded && styles.padded,
         elevated && (isDark ? {} : shadows.lifted),
         !elevated && !isDark && shadows.card,
         style,
@@ -41,13 +41,3 @@ export function Card({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: radius.lg,
-    overflow: "hidden",
-  },
-  padded: {
-    padding: spacing.lg,
-  },
-});

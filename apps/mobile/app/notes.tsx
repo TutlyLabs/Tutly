@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { router, Stack } from "expo-router";
 import {
   ChevronDown,
@@ -30,7 +30,7 @@ import {
   formatSavedCategory,
   resolveSavedItem,
 } from "~/lib/navigation/saved-items";
-import { spacing } from "~/lib/theme/tokens";
+
 import { openWebPath } from "~/lib/web-handoff";
 
 type NoteItem = {
@@ -85,13 +85,13 @@ export default function NotesScreen() {
     >
       <Stack.Screen options={{ title: "Notes" }} />
       <PageHeader showBack title="Notes" />
-      <View style={styles.list}>
+      <View className="gap-sm">
         {notes.map((note) => {
           const resolved = resolveSavedItem(note, catalog);
           const href = resolved.href;
 
           return (
-            <Card key={note.id} style={styles.card}>
+            <Card key={note.id} className="gap-sm">
               <Pressable
                 onPress={() =>
                   setExpandedId((current) =>
@@ -100,9 +100,9 @@ export default function NotesScreen() {
                 }
               >
                 {({ pressed }) => (
-                  <View style={[styles.summary, pressed && { opacity: 0.7 }]}>
-                    <View style={styles.copy}>
-                      <View style={styles.tags}>
+                  <View className="flex-row items-start gap-sm justify-between" style={pressed ? { opacity: 0.7 } : undefined}>
+                    <View className="flex-1 gap-sm">
+                      <View className="flex-row flex-wrap gap-xs">
                         <Chip tone="amber">
                           {formatSavedCategory(note.category)}
                         </Chip>
@@ -138,7 +138,7 @@ export default function NotesScreen() {
               </Pressable>
               {expandedId === note.id ? (
                 <>
-                  <View style={styles.actions}>
+                  <View className="flex-row gap-sm">
                     {href ? (
                       <Button
                         icon={ExternalLink}
@@ -206,31 +206,3 @@ export default function NotesScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  list: {
-    gap: spacing.sm,
-  },
-  card: {
-    gap: spacing.sm,
-  },
-  summary: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: spacing.sm,
-    justifyContent: "space-between",
-  },
-  copy: {
-    flex: 1,
-    gap: spacing.sm,
-  },
-  tags: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-});

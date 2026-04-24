@@ -10,6 +10,6 @@
     },
     "types": ["react", "react-native"]
   },
-  "include": ["app", "src"],
+  "include": ["app", "src", "nativewind-env.d.ts"],
   "exclude": ["node_modules"]
 }

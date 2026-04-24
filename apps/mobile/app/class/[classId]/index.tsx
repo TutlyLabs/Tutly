@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import {
   Bookmark,
@@ -28,7 +28,6 @@ import { selectClass } from "~/lib/api/mobile-selectors";
 import { unwrapData } from "~/lib/api/normalizers";
 import { isCacheableMediaUrl } from "~/lib/media/media-cache";
 import { useMediaCache } from "~/lib/media/use-media-cache";
-import { spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 import { openWebPath } from "~/lib/web-handoff";
 
@@ -62,11 +61,14 @@ export default function ClassDetailScreen() {
       <Stack.Screen options={{ title: classItem?.title || "Class" }} />
       <PageHeader showBack title={classItem?.title || "Class"} />
 
-      <Card elevated style={styles.videoCard}>
-        <View style={[styles.videoIcon, { backgroundColor: `${colors.primary}10` }]}>
+      <Card elevated className="gap-md">
+        <View
+          className="items-center rounded-[16px] h-[64px] justify-center w-[64px]"
+          style={{ backgroundColor: `${colors.primary}10` }}
+        >
           <FileVideo color={colors.primary} size={28} strokeWidth={2} />
         </View>
-        <View style={styles.videoCopy}>
+        <View className="gap-xs">
           <Chip tone={classItem?.classType === "LIVE" ? "coral" : "primary"}>
             {classItem?.classType === "LIVE" ? "Live class" : "Recording"}
           </Chip>
@@ -74,7 +76,7 @@ export default function ClassDetailScreen() {
             {classItem?.video?.videoType || "Class media"}
           </AppText>
         </View>
-        <View style={styles.actions}>
+        <View className="gap-sm">
           {videoLink ? (
             <Button
               icon={ExternalLink}
@@ -127,7 +129,7 @@ export default function ClassDetailScreen() {
       </Card>
 
       {mediaCache.cached ? (
-        <Card style={styles.downloaded}>
+        <Card className="flex-row items-center gap-sm">
           <Download color={colors.success} size={17} />
           <AppText variant="body">Downloaded</AppText>
         </Card>
@@ -163,7 +165,7 @@ export default function ClassDetailScreen() {
         saving={notesActions.saveNote.isPending}
       />
 
-      <View style={styles.section}>
+      <View className="gap-sm">
         <SectionHeader
           action={`${classItem?.attachments?.length ?? 0}`}
           title="Assignments"
@@ -175,30 +177,3 @@ export default function ClassDetailScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  videoCard: {
-    gap: spacing.md,
-  },
-  videoIcon: {
-    alignItems: "center",
-    borderRadius: 16,
-    height: 64,
-    justifyContent: "center",
-    width: 64,
-  },
-  videoCopy: {
-    gap: spacing.xs,
-  },
-  actions: {
-    gap: spacing.sm,
-  },
-  downloaded: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-});

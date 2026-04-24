@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { BookOpenCheck, FileText } from "lucide-react-native";
 
@@ -10,7 +10,6 @@ import { AssignmentCard } from "~/features/assignments/AssignmentCard";
 import { ClassCard } from "~/features/courses/ClassCard";
 import { useAssignments, useCourseClasses } from "~/lib/api/hooks";
 import { selectAssignments, selectClasses } from "~/lib/api/mobile-selectors";
-import { spacing } from "~/lib/theme/tokens";
 
 export default function CourseDetailScreen() {
   const { courseId } = useLocalSearchParams<{ courseId: string }>();
@@ -32,7 +31,7 @@ export default function CourseDetailScreen() {
       <Stack.Screen options={{ title: "Course" }} />
       <PageHeader showBack title="Course" />
 
-      <View style={styles.section}>
+      <View className="gap-sm">
         <SectionHeader action={`${classes.length}`} title="Classes" />
         {classes.map((classItem) => (
           <ClassCard item={classItem} key={classItem.id} />
@@ -46,7 +45,7 @@ export default function CourseDetailScreen() {
         ) : null}
       </View>
 
-      <View style={styles.section}>
+      <View className="gap-sm">
         <SectionHeader title="Assignments" />
         {assignments.map((assignment) => (
           <AssignmentCard assignment={assignment} key={assignment.id} />
@@ -62,9 +61,3 @@ export default function CourseDetailScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  section: {
-    gap: spacing.sm,
-  },
-});

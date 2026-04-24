@@ -1,8 +1,8 @@
 import type { LucideIcon } from "lucide-react-native";
 import type { PressableProps } from "react-native";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 
-import { radius, shadows, spacing } from "~/lib/theme/tokens";
+import { shadows } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 import { AppText } from "./AppText";
 
@@ -48,24 +48,22 @@ export function ActionTile({
   return (
     <Pressable {...props} style={style}>
       {({ pressed }) => (
-        <View style={styles.container}>
+        <View className="items-center gap-[6px] w-[76px]">
           <View
+            className="items-center rounded-pill h-[60px] justify-center w-[60px] border"
             style={[
-              styles.iconWrap,
-              {
-                backgroundColor: isDark ? colors.canvasElevated : colors.canvasElevated,
-                borderColor: isDark ? colors.border : colors.line,
-                borderWidth: isDark ? 1 : 1,
-                opacity: pressed ? 0.75 : 1,
-              },
+              { opacity: pressed ? 0.75 : 1, backgroundColor: colors.canvasElevated, borderColor: colors.line },
               !isDark && shadows.card,
             ]}
           >
-            <View style={[styles.iconInner, { backgroundColor: tc.bg }]}>
+            <View
+              className="items-center rounded-pill h-[44px] justify-center w-[44px]"
+              style={{ backgroundColor: tc.bg }}
+            >
               <Icon color={tc.fg} size={22} strokeWidth={2.5} />
             </View>
           </View>
-          <View style={styles.copy}>
+          <View className="items-center">
             <AppText variant="caption" numberOfLines={1} adjustsFontSizeToFit style={{ fontWeight: "600", textAlign: "center" }}>
               {title}
             </AppText>
@@ -75,28 +73,3 @@ export function ActionTile({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    gap: 6,
-    width: 76,
-  },
-  iconWrap: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    height: 60,
-    justifyContent: "center",
-    width: 60,
-  },
-  iconInner: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
-  },
-  copy: {
-    alignItems: "center",
-  },
-});

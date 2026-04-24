@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import {
@@ -25,7 +25,6 @@ import { PageHeader } from "~/components/ui/PageHeader";
 import { Screen } from "~/components/ui/Screen";
 import { useAuth } from "~/lib/auth/auth-provider";
 import { env } from "~/lib/env";
-import { spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 
 const menuItems = [
@@ -53,13 +52,16 @@ export default function MenuScreen() {
   return (
     <Screen>
       <PageHeader title="More" />
-      <Card elevated style={styles.profile}>
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+      <Card elevated className="flex-row items-center gap-md">
+        <View
+          className="items-center rounded-[20px] h-[56px] justify-center w-[56px]"
+          style={{ backgroundColor: colors.primary }}
+        >
           <AppText style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "700" }}>
             {user?.name?.[0]?.toUpperCase() || "T"}
           </AppText>
         </View>
-        <View style={styles.profileCopy}>
+        <View className="flex-1 gap-[2px]">
           <Chip tone="primary">{user?.role || "Tutly"}</Chip>
           <AppText variant="subtitle">{user?.name || user?.username}</AppText>
           <AppText muted variant="caption">
@@ -68,12 +70,12 @@ export default function MenuScreen() {
         </View>
       </Card>
 
-      <View style={styles.list}>
+      <View className="gap-sm">
         {visibleItems.map((item) => (
           <Pressable key={item.title} onPress={() => router.push(item.href)}>
             {({ pressed }) => (
-              <Card style={[styles.row, pressed && { opacity: 0.7 }]}>
-                <View style={styles.rowLeft}>
+              <Card className="flex-row items-center justify-between" style={pressed ? { opacity: 0.7 } : undefined}>
+                <View className="flex-row items-center flex-1 gap-md">
                   <item.icon color={colors.inkMuted} size={19} strokeWidth={2} />
                   <AppText>{item.title}</AppText>
                 </View>
@@ -84,8 +86,8 @@ export default function MenuScreen() {
         ))}
       </View>
 
-      <Card style={styles.webCard}>
-        <View style={styles.rowLeft}>
+      <Card className="gap-md">
+        <View className="flex-row items-center flex-1 gap-md">
           <Globe2 color={colors.sky} size={19} strokeWidth={2} />
           <View>
             <AppText variant="body">Tutly Web</AppText>
@@ -102,25 +104,28 @@ export default function MenuScreen() {
         </Button>
       </Card>
 
-      <View style={styles.section}>
-        <AppText variant="subtitle" style={styles.sectionTitle}>Appearance</AppText>
-        <Card style={styles.themeRow}>
+      <View className="gap-sm">
+        <AppText variant="subtitle" className="px-sm">Appearance</AppText>
+        <Card className="flex-row gap-xs p-xs">
           <Pressable
-            style={[styles.themeOption, mode === "light" && { backgroundColor: colors.primaryLight }]}
+            className="flex-row items-center flex-1 justify-center gap-sm py-sm rounded-sm"
+            style={mode === "light" ? { backgroundColor: colors.primaryLight } : undefined}
             onPress={() => setMode("light")}
           >
             <Sun color={mode === "light" ? colors.primaryDark : colors.inkSoft} size={20} />
             <AppText style={mode === "light" ? { color: colors.primaryDark, fontWeight: "600" } : { color: colors.inkSoft }}>Light</AppText>
           </Pressable>
           <Pressable
-            style={[styles.themeOption, mode === "dark" && { backgroundColor: colors.primaryLight }]}
+            className="flex-row items-center flex-1 justify-center gap-sm py-sm rounded-sm"
+            style={mode === "dark" ? { backgroundColor: colors.primaryLight } : undefined}
             onPress={() => setMode("dark")}
           >
             <Moon color={mode === "dark" ? colors.primaryDark : colors.inkSoft} size={20} />
             <AppText style={mode === "dark" ? { color: colors.primaryDark, fontWeight: "600" } : { color: colors.inkSoft }}>Dark</AppText>
           </Pressable>
           <Pressable
-            style={[styles.themeOption, mode === "system" && { backgroundColor: colors.primaryLight }]}
+            className="flex-row items-center flex-1 justify-center gap-sm py-sm rounded-sm"
+            style={mode === "system" ? { backgroundColor: colors.primaryLight } : undefined}
             onPress={() => setMode("system")}
           >
             <AppText style={mode === "system" ? { color: colors.primaryDark, fontWeight: "600" } : { color: colors.inkSoft }}>System</AppText>
@@ -134,59 +139,3 @@ export default function MenuScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  profile: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  avatar: {
-    alignItems: "center",
-    borderRadius: 20,
-    height: 56,
-    justifyContent: "center",
-    width: 56,
-  },
-  profileCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  list: {
-    gap: spacing.sm,
-  },
-  row: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  rowLeft: {
-    alignItems: "center",
-    flex: 1,
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  webCard: {
-    gap: spacing.md,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    paddingHorizontal: spacing.sm,
-  },
-  themeRow: {
-    flexDirection: "row",
-    gap: spacing.xs,
-    padding: spacing.xs,
-  },
-  themeOption: {
-    alignItems: "center",
-    borderRadius: spacing.sm,
-    flex: 1,
-    flexDirection: "row",
-    gap: spacing.sm,
-    justifyContent: "center",
-    paddingVertical: spacing.sm,
-  },
-});

@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { AppText } from "./AppText";
 
@@ -10,7 +10,7 @@ type SectionHeaderProps = {
 
 export function SectionHeader({ title, action, onAction }: SectionHeaderProps) {
   return (
-    <View style={styles.row}>
+    <View className="flex-row items-center justify-between">
       <AppText variant="subtitle">{title}</AppText>
       {action ? (
         <Pressable onPress={onAction}>
@@ -28,11 +28,3 @@ export function SectionHeader({ title, action, onAction }: SectionHeaderProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-});

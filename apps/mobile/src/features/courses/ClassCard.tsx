@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { router } from "expo-router";
 import { Clock3, PlayCircle, Radio } from "lucide-react-native";
 
@@ -6,7 +6,6 @@ import type { ClassSummary } from "~/types/tutly";
 import { AppText } from "~/components/ui/AppText";
 import { Card } from "~/components/ui/Card";
 import { Chip } from "~/components/ui/Chip";
-import { spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 
 type ClassCardProps = {
@@ -20,15 +19,13 @@ export function ClassCard({ item }: ClassCardProps) {
   return (
     <Pressable onPress={() => router.push(`/class/${item.id}`)}>
       {({ pressed }) => (
-        <Card style={[styles.card, pressed && { opacity: 0.74 }]}>
+        <Card className="flex-row gap-md overflow-hidden" style={pressed ? { opacity: 0.74 } : undefined}>
           <View
-            style={[
-              styles.marker,
-              { backgroundColor: isLive ? colors.coral : colors.primary },
-            ]}
+            className="rounded-pill w-[6px]"
+            style={{ backgroundColor: isLive ? colors.coral : colors.primary }}
           />
-          <View style={styles.copy}>
-            <View style={styles.top}>
+          <View className="flex-1 gap-sm">
+            <View className="flex-row flex-wrap gap-sm">
               <Chip
                 icon={isLive ? Radio : PlayCircle}
                 tone={isLive ? "coral" : "primary"}
@@ -40,7 +37,7 @@ export function ClassCard({ item }: ClassCardProps) {
               ) : null}
             </View>
             <AppText variant="subtitle">{item.title}</AppText>
-            <View style={styles.meta}>
+            <View className="flex-row items-center gap-xs">
               <Clock3 color={colors.inkMuted} size={15} />
               <AppText muted variant="caption">
                 {new Date(
@@ -54,29 +51,3 @@ export function ClassCard({ item }: ClassCardProps) {
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    gap: spacing.md,
-    overflow: "hidden",
-  },
-  marker: {
-    borderRadius: 999,
-    width: 6,
-  },
-  copy: {
-    flex: 1,
-    gap: spacing.sm,
-  },
-  top: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  meta: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.xs,
-  },
-});

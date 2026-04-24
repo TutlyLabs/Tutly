@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { router, Stack } from "expo-router";
 import { BookMarked, ExternalLink, Trash2 } from "lucide-react-native";
 
@@ -24,7 +24,7 @@ import {
   formatSavedCategory,
   resolveSavedItem,
 } from "~/lib/navigation/saved-items";
-import { spacing } from "~/lib/theme/tokens";
+
 import { openWebPath } from "~/lib/web-handoff";
 
 type AttendanceCourse = {
@@ -74,16 +74,16 @@ export default function BookmarksScreen() {
     >
       <Stack.Screen options={{ title: "Bookmarks" }} />
       <PageHeader showBack title="Bookmarks" />
-      <View style={styles.list}>
+      <View className="gap-sm">
         {bookmarks.map((item) => (
-          <Card key={item.id} style={styles.card}>
+          <Card key={item.id} className="gap-sm">
             {(() => {
               const resolved = resolveSavedItem(item, catalog);
               const href = resolved.href;
 
               return (
                 <>
-                  <View style={styles.top}>
+                  <View className="flex-row items-center justify-between">
                     <Chip tone="plum">
                       {formatSavedCategory(item.category)}
                     </Chip>
@@ -95,7 +95,7 @@ export default function BookmarksScreen() {
                   </View>
                   <AppText variant="subtitle">{resolved.title}</AppText>
                   <AppText muted>{resolved.subtitle}</AppText>
-                  <View style={styles.actions}>
+                  <View className="flex-row flex-wrap gap-sm">
                     {href ? (
                       <Button
                         icon={ExternalLink}
@@ -150,22 +150,3 @@ export default function BookmarksScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  list: {
-    gap: spacing.sm,
-  },
-  card: {
-    gap: spacing.sm,
-  },
-  top: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  actions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-});

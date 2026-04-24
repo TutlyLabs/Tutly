@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { Redirect } from "expo-router";
 
 import { AppText } from "~/components/ui/AppText";
@@ -11,7 +11,7 @@ export default function Index() {
 
   if (isLoading) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.canvas }]}>
+      <View className="flex-1 items-center justify-center gap-[12px]" style={{ backgroundColor: colors.canvas }}>
         <ActivityIndicator color={colors.primary} />
         <AppText muted variant="caption">
           Loading Tutly
@@ -22,12 +22,3 @@ export default function Index() {
 
   return <Redirect href={isAuthenticated ? "/(tabs)" : "/(auth)/sign-in"} />;
 }
-
-const styles = StyleSheet.create({
-  center: {
-    alignItems: "center",
-    flex: 1,
-    gap: 12,
-    justifyContent: "center",
-  },
-});

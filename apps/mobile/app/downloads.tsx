@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import * as Linking from "expo-linking";
 import { Stack, useFocusEffect } from "expo-router";
 import { Download, ExternalLink, FileVideo, Trash2 } from "lucide-react-native";
@@ -12,7 +12,6 @@ import { EmptyState } from "~/components/ui/EmptyState";
 import { PageHeader } from "~/components/ui/PageHeader";
 import { Screen } from "~/components/ui/Screen";
 import { getMediaManifest, removeCachedMedia } from "~/lib/media/media-cache";
-import { spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 
 export default function DownloadsScreen() {
@@ -39,13 +38,16 @@ export default function DownloadsScreen() {
     <Screen onRefresh={refresh}>
       <Stack.Screen options={{ title: "Downloads" }} />
       <PageHeader showBack title="Downloads" />
-      <View style={styles.list}>
+      <View className="gap-sm">
         {items.map((item) => (
-          <Card key={item.key} style={styles.card}>
-            <View style={[styles.icon, { backgroundColor: `${colors.primary}10` }]}>
+          <Card key={item.key} className="flex-row items-center gap-sm">
+            <View
+              className="items-center rounded-[10px] h-[42px] justify-center w-[42px]"
+              style={{ backgroundColor: `${colors.primary}10` }}
+            >
               <FileVideo color={colors.primary} size={20} strokeWidth={2} />
             </View>
-            <View style={styles.copy}>
+            <View className="flex-1 gap-[2px]">
               <AppText variant="subtitle">{item.title}</AppText>
               <AppText muted variant="caption">
                 {item.bytes
@@ -56,7 +58,7 @@ export default function DownloadsScreen() {
                 {new Date(item.downloadedAt).toLocaleString()}
               </AppText>
             </View>
-            <View style={styles.actions}>
+            <View className="gap-xs">
               <Button
                 icon={ExternalLink}
                 onPress={() => Linking.openURL(item.localUri)}
@@ -85,28 +87,3 @@ export default function DownloadsScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  list: {
-    gap: spacing.sm,
-  },
-  card: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  icon: {
-    alignItems: "center",
-    borderRadius: 10,
-    height: 42,
-    justifyContent: "center",
-    width: 42,
-  },
-  copy: {
-    flex: 1,
-    gap: 2,
-  },
-  actions: {
-    gap: spacing.xs,
-  },
-});

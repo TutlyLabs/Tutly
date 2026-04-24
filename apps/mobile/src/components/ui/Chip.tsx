@@ -1,9 +1,8 @@
 import type { LucideIcon } from "lucide-react-native";
 import type { PropsWithChildren } from "react";
 import type { ViewProps } from "react-native";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
-import { radius, spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 import { AppText } from "./AppText";
 
@@ -17,6 +16,7 @@ type ChipProps = PropsWithChildren<
 export function Chip({
   children,
   style,
+  className,
   icon: Icon,
   tone = "neutral",
   ...props
@@ -50,11 +50,8 @@ export function Chip({
   return (
     <View
       {...props}
-      style={[
-        styles.base,
-        { backgroundColor: bg },
-        style,
-      ]}
+      className={`flex-row items-center self-start rounded-sm gap-[4px] px-sm py-[3px] ${className || ""}`}
+      style={[{ backgroundColor: bg }, style]}
     >
       {Icon ? <Icon color={fg} size={12} strokeWidth={2.4} /> : null}
       <AppText variant="caption" style={{ color: fg, fontWeight: "600" }}>
@@ -63,15 +60,3 @@ export function Chip({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    borderRadius: radius.sm,
-    flexDirection: "row",
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-  },
-});

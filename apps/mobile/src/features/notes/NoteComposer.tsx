@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { NotebookPen, Trash2 } from "lucide-react-native";
 
@@ -7,7 +7,6 @@ import { AppText } from "~/components/ui/AppText";
 import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
 import { InputField } from "~/components/ui/InputField";
-import { radius, spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 
 type NoteComposerProps = {
@@ -67,8 +66,8 @@ export function NoteComposer({
 
   const body = (
     <>
-      <View style={styles.header}>
-        <View style={styles.copy}>
+      <View className="flex-row items-center justify-between">
+        <View className="flex-row items-center gap-sm">
           <NotebookPen size={18} />
           <AppText variant="subtitle">{title}</AppText>
         </View>
@@ -92,7 +91,7 @@ export function NoteComposer({
         placeholder="attendance, revision, follow-up"
         value={tagsInput}
       />
-      <View style={styles.actions}>
+      <View className="gap-md">
         <Button loading={saving} onPress={handleSave}>
           Save note
         </Button>
@@ -113,14 +112,11 @@ export function NoteComposer({
   if (embedded) {
     return (
       <View
-        style={[
-          styles.card,
-          styles.embedded,
-          {
-            backgroundColor: colors.canvas,
-            borderColor: colors.border,
-          },
-        ]}
+        className="gap-lg rounded-lg border p-lg"
+        style={{
+          backgroundColor: colors.canvas,
+          borderColor: colors.border,
+        }}
       >
         {body}
       </View>
@@ -128,32 +124,8 @@ export function NoteComposer({
   }
 
   return (
-    <Card elevated style={styles.card}>
+    <Card elevated className="gap-lg">
       {body}
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    gap: spacing.lg,
-  },
-  embedded: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.lg,
-  },
-  header: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  copy: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  actions: {
-    gap: spacing.md,
-  },
-});

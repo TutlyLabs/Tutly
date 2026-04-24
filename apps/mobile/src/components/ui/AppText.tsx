@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react";
 import type { TextProps } from "react-native";
-import { StyleSheet, Text } from "react-native";
+import { Text } from "react-native";
 
 import { font } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
@@ -21,73 +21,39 @@ type AppTextProps = PropsWithChildren<
   }
 >;
 
+const variantClasses: Record<Variant, string> = {
+  hero: "text-[30px] font-extrabold leading-[36px]",
+  title: "text-[22px] font-bold leading-[28px]",
+  subtitle: "text-[16px] font-semibold leading-[22px]",
+  body: "text-[14px] font-normal leading-[20px]",
+  caption: "text-[12px] font-medium leading-[16px]",
+  label: "text-[11px] font-semibold leading-[14px] uppercase tracking-[0.5px]",
+  mono: "text-[13px] font-medium leading-[18px]",
+};
+
 export function AppText({
   children,
   style,
+  className,
   variant = "body",
   muted = false,
   ...props
 }: AppTextProps) {
   const { colors } = useTheme();
+  const fontFamily =
+    variant === "hero" || variant === "title"
+      ? font.display
+      : variant === "mono"
+        ? font.mono
+        : font.body;
 
   return (
     <Text
       {...props}
-      style={[
-        styles.base,
-        styles[variant],
-        { color: muted ? colors.inkMuted : colors.ink },
-        style,
-      ]}
+      className={`tracking-[0px] ${variantClasses[variant]} ${className || ""}`}
+      style={[{ fontFamily, color: muted ? colors.inkMuted : colors.ink }, style]}
     >
       {children}
     </Text>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    fontFamily: font.body,
-    letterSpacing: 0,
-  },
-  hero: {
-    fontFamily: font.display,
-    fontSize: 30,
-    fontWeight: "800",
-    lineHeight: 36,
-  },
-  title: {
-    fontFamily: font.display,
-    fontSize: 22,
-    fontWeight: "700",
-    lineHeight: 28,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    lineHeight: 22,
-  },
-  body: {
-    fontSize: 14,
-    fontWeight: "400",
-    lineHeight: 20,
-  },
-  caption: {
-    fontSize: 12,
-    fontWeight: "500",
-    lineHeight: 16,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: "600",
-    lineHeight: 14,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  mono: {
-    fontFamily: font.mono,
-    fontSize: 13,
-    fontWeight: "500",
-    lineHeight: 18,
-  },
-});

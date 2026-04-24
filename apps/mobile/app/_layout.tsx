@@ -1,3 +1,4 @@
+import "../global.css";
 import { StatusBar } from "react-native";
 import { Stack } from "expo-router";
 

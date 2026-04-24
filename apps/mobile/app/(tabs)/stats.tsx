@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { Activity, BarChart3, BookOpen, FileCheck2 } from "lucide-react-native";
 
@@ -16,7 +16,6 @@ import {
   selectDashboardCourses,
 } from "~/lib/api/mobile-selectors";
 import { queryKeys } from "~/lib/api/query-keys";
-import { spacing } from "~/lib/theme/tokens";
 
 export default function StatsScreen() {
   const queryClient = useQueryClient();
@@ -61,7 +60,7 @@ export default function StatsScreen() {
     >
       <PageHeader title="Stats" />
 
-      <View style={styles.metricGrid}>
+      <View className="flex-row gap-sm">
         <MetricCard
           helper="progress"
           icon={FileCheck2}
@@ -78,7 +77,7 @@ export default function StatsScreen() {
         />
       </View>
 
-      <Card style={styles.chartCard}>
+      <Card className="gap-md">
         <SectionHeader title="Course overview" />
         {bars.length ? (
           <SimpleBars items={bars} />
@@ -93,13 +92,3 @@ export default function StatsScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  metricGrid: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  chartCard: {
-    gap: spacing.md,
-  },
-});

@@ -1,9 +1,8 @@
 import type { PropsWithChildren } from "react";
 import type { ScrollViewProps } from "react-native";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 import { OfflineBanner } from "./OfflineBanner";
 
@@ -28,15 +27,11 @@ export function Screen({
 
   if (!scroll) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.canvas }]}>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: colors.canvas }}>
         <OfflineBanner />
         <View
-          style={[
-            styles.contentBase,
-            styles.staticContent,
-            contentContainerStyle,
-            style,
-          ]}
+          className="flex-1 gap-md px-lg pt-sm pb-xxl"
+          style={[contentContainerStyle, style]}
         >
           {children}
         </View>
@@ -45,15 +40,15 @@ export function Screen({
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.canvas }]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.canvas }}>
       <OfflineBanner />
       <ScrollView
         {...props}
         showsVerticalScrollIndicator={false}
-        style={[styles.scroll, style]}
+        className="flex-1"
+        style={style}
         contentContainerStyle={[
-          styles.contentBase,
-          styles.scrollContent,
+          { gap: 16, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 120 },
           contentContainerStyle,
         ]}
         refreshControl={
@@ -67,24 +62,3 @@ export function Screen({
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
-  contentBase: {
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  scrollContent: {
-    paddingBottom: spacing.xxl + 80,
-  },
-  staticContent: {
-    flex: 1,
-    paddingBottom: spacing.xxl,
-  },
-});

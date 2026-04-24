@@ -20,7 +20,7 @@ export default function AssignmentsScreen() {
     >
       <Stack.Screen options={{ title: "Assignments" }} />
       <PageHeader showBack title="Assignments" />
-      <View style={{ gap: 10 }}>
+      <View className="gap-[10px]">
         {assignments.map((assignment) => (
           <AssignmentCard assignment={assignment} key={assignment.id} />
         ))}

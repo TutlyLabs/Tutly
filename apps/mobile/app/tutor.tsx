@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Stack } from "expo-router";
 import { Activity, ClipboardList, UsersRound } from "lucide-react-native";
 
@@ -22,7 +22,6 @@ import {
 } from "~/lib/api/mobile-selectors";
 import { unwrapData } from "~/lib/api/normalizers";
 import { useAuth } from "~/lib/auth/auth-provider";
-import { spacing } from "~/lib/theme/tokens";
 
 type TutorUser = {
   id: string;
@@ -78,46 +77,22 @@ export default function TutorScreen() {
         />
       ) : (
         <>
-          <View style={styles.metrics}>
-            <MetricCard
-              helper="active"
-              icon={ClipboardList}
-              label="Courses"
-              value={courses.length}
-              tone="primary"
-            />
-            <MetricCard
-              helper="total"
-              icon={Activity}
-              label="Assignments"
-              value={assignments.length}
-              tone="amber"
-            />
+          <View className="flex-row gap-sm">
+            <MetricCard helper="active" icon={ClipboardList} label="Courses" value={courses.length} tone="primary" />
+            <MetricCard helper="total" icon={Activity} label="Assignments" value={assignments.length} tone="amber" />
           </View>
-          <View style={styles.metrics}>
-            <MetricCard
-              helper="online"
-              icon={UsersRound}
-              label="Active"
-              value={activityData?.activeCount ?? 0}
-              tone="sky"
-            />
-            <MetricCard
-              helper="managed"
-              icon={UsersRound}
-              label="Users"
-              value={manageData?.totalItems ?? activityData?.totalItems ?? 0}
-              tone="plum"
-            />
+          <View className="flex-row gap-sm">
+            <MetricCard helper="online" icon={UsersRound} label="Active" value={activityData?.activeCount ?? 0} tone="sky" />
+            <MetricCard helper="managed" icon={UsersRound} label="Users" value={manageData?.totalItems ?? activityData?.totalItems ?? 0} tone="plum" />
           </View>
 
-          <View style={styles.section}>
+          <View className="gap-sm">
             <SectionHeader title="Recent learners" />
             {(activityData?.users ?? manageData?.users ?? [])
               .slice(0, 6)
               .map((item) => (
-                <Card key={item.id} style={styles.userCard}>
-                  <View style={styles.userCopy}>
+                <Card key={item.id} className="gap-xs">
+                  <View className="gap-xs">
                     <Chip tone={item.role === "MENTOR" ? "plum" : "primary"}>
                       {item.role || "USER"}
                     </Chip>
@@ -138,19 +113,3 @@ export default function TutorScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  metrics: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  userCard: {
-    gap: spacing.xs,
-  },
-  userCopy: {
-    gap: spacing.xs,
-  },
-});

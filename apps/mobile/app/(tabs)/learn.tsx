@@ -22,7 +22,7 @@ export default function LearnScreen() {
   return (
     <Screen onRefresh={refresh} refreshing={coursesQuery.isFetching}>
       <PageHeader title="Courses" />
-      <View style={{ gap: 10 }}>
+      <View className="gap-[10px]">
         {courses.map((course) => (
           <CourseCard course={course} key={course.id} />
         ))}

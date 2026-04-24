@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
-import { radius, shadows, spacing } from "~/lib/theme/tokens";
+import { shadows } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 import { AppText } from "./AppText";
 
@@ -44,18 +44,14 @@ export function MetricCard({
 
   return (
     <View
-      style={[
-        styles.card,
-        !isDark && shadows.card,
-        {
-          backgroundColor: colors.canvasElevated,
-          borderColor: isDark ? colors.border : colors.line,
-          borderWidth: 1,
-        },
-      ]}
+      className="rounded-lg flex-1 gap-sm p-md border"
+      style={[!isDark ? shadows.card : undefined, { backgroundColor: colors.canvasElevated, borderColor: colors.line }]}
     >
-      <View style={styles.top}>
-        <View style={[styles.iconWrap, { backgroundColor: tc.bg }]}>
+      <View className="flex-row items-center gap-sm">
+        <View
+          className="items-center rounded-sm h-[28px] justify-center w-[28px]"
+          style={{ backgroundColor: tc.bg }}
+        >
           <Icon color={tc.fg} size={18} strokeWidth={2.2} />
         </View>
         <AppText muted variant="caption">
@@ -73,24 +69,3 @@ export function MetricCard({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: radius.lg,
-    flex: 1,
-    gap: spacing.sm,
-    padding: spacing.md,
-  },
-  top: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  iconWrap: {
-    alignItems: "center",
-    borderRadius: radius.sm,
-    height: 28,
-    justifyContent: "center",
-    width: 28,
-  },
-});

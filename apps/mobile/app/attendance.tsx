@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Stack } from "expo-router";
 import { ClipboardCheck, PlayCircle } from "lucide-react-native";
 
@@ -12,7 +12,6 @@ import { Screen } from "~/components/ui/Screen";
 import { SectionHeader } from "~/components/ui/SectionHeader";
 import { useAttendanceOverview } from "~/lib/api/hooks";
 import { unwrapData } from "~/lib/api/normalizers";
-import { spacing } from "~/lib/theme/tokens";
 
 type AttendanceCourse = {
   id: string;
@@ -41,7 +40,7 @@ export default function AttendanceScreen() {
     >
       <Stack.Screen options={{ title: "Attendance" }} />
       <PageHeader showBack title="Attendance" />
-      <View style={styles.metrics}>
+      <View className="flex-row gap-sm">
         <MetricCard
           helper="enrolled"
           icon={ClipboardCheck}
@@ -58,10 +57,10 @@ export default function AttendanceScreen() {
         />
       </View>
 
-      <View style={styles.section}>
+      <View className="gap-sm">
         <SectionHeader title="Course attendance" />
         {courses.map((course) => (
-          <Card key={course.id} style={styles.courseCard}>
+          <Card key={course.id} className="gap-sm">
             <Chip tone="primary">
               {course._count?.classes ?? course.classes?.length ?? 0} classes
             </Chip>
@@ -80,16 +79,3 @@ export default function AttendanceScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  metrics: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  courseCard: {
-    gap: spacing.sm,
-  },
-});

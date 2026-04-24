@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import {
   CalendarDays,
   CalendarOff,
@@ -10,7 +10,6 @@ import type { ScheduleEvent } from "~/types/tutly";
 import { AppText } from "~/components/ui/AppText";
 import { Card } from "~/components/ui/Card";
 import { Chip } from "~/components/ui/Chip";
-import { spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 
 type EventCardProps = {
@@ -33,11 +32,14 @@ export function EventCard({ event }: EventCardProps) {
         : "primary";
 
   return (
-    <Card style={styles.card}>
-      <View style={[styles.icon, { backgroundColor: `${colors.primary}08` }]}>
+    <Card className="flex-row gap-md">
+      <View
+        className="items-center rounded-[10px] h-[38px] justify-center w-[38px]"
+        style={{ backgroundColor: `${colors.primary}08` }}
+      >
         <Icon color={colors.primary} size={19} strokeWidth={2} />
       </View>
-      <View style={styles.copy}>
+      <View className="flex-1 gap-xs">
         <Chip tone={tone}>{event.type}</Chip>
         <AppText variant="subtitle">{event.name}</AppText>
         {event.description ? (
@@ -45,7 +47,7 @@ export function EventCard({ event }: EventCardProps) {
             {event.description}
           </AppText>
         ) : null}
-        <View style={styles.time}>
+        <View className="flex-row items-center gap-xs">
           <CalendarDays color={colors.inkSoft} size={13} />
           <AppText muted variant="caption">
             {new Date(event.startDate).toLocaleString()}
@@ -55,26 +57,3 @@ export function EventCard({ event }: EventCardProps) {
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  icon: {
-    alignItems: "center",
-    borderRadius: 10,
-    height: 38,
-    justifyContent: "center",
-    width: 38,
-  },
-  copy: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  time: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.xs,
-  },
-});

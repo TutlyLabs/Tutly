@@ -1,9 +1,8 @@
 import type { LucideIcon } from "lucide-react-native";
 import type { PropsWithChildren } from "react";
 import type { PressableProps } from "react-native";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
-import { radius, spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 import { AppText } from "./AppText";
 
@@ -45,45 +44,34 @@ export function Button({
     tone === "ghost" ? colors.border : tone === "secondary" ? colors.primaryLight : backgroundColor;
 
   return (
-    <Pressable
-      {...props}
-      disabled={isDisabled}
-      style={({ pressed }) => [
-        styles.base,
-        {
-          backgroundColor,
-          borderColor,
-          opacity: isDisabled ? 0.5 : pressed ? 0.8 : 1,
-        },
-        style as object,
-      ]}
-    >
-      {loading ? (
-        <ActivityIndicator color={textColor} size="small" />
-      ) : (
-        <View style={styles.content}>
-          {Icon ? <Icon color={textColor} size={16} strokeWidth={2.2} /> : null}
-          <AppText variant="caption" style={{ color: textColor, fontWeight: "600" }}>
-            {children}
-          </AppText>
+    <Pressable {...props} disabled={isDisabled} style={style}>
+      {({ pressed }) => (
+        <View
+          style={{
+            alignItems: "center",
+            borderRadius: 12,
+            borderStyle: "solid",
+            borderWidth: 1,
+            justifyContent: "center",
+            minHeight: 42,
+            paddingHorizontal: 24,
+            backgroundColor,
+            borderColor,
+            opacity: isDisabled ? 0.5 : pressed ? 0.8 : 1,
+          }}
+        >
+          {loading ? (
+            <ActivityIndicator color={textColor} size="small" />
+          ) : (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              {Icon ? <Icon color={textColor} size={16} strokeWidth={2.2} /> : null}
+              <AppText variant="caption" style={{ color: textColor, fontWeight: "600" }}>
+                {children}
+              </AppText>
+            </View>
+          )}
         </View>
       )}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 42,
-    paddingHorizontal: spacing.lg,
-  },
-  content: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-});

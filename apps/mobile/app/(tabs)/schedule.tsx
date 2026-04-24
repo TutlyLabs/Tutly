@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarClock, Clock3 } from "lucide-react-native";
 
@@ -12,7 +12,6 @@ import { EventCard } from "~/features/schedule/EventCard";
 import { useSchedule } from "~/lib/api/hooks";
 import { selectScheduleEvents } from "~/lib/api/mobile-selectors";
 import { queryKeys } from "~/lib/api/query-keys";
-import { spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 
 export default function ScheduleScreen() {
@@ -41,7 +40,7 @@ export default function ScheduleScreen() {
   return (
     <Screen onRefresh={refresh} refreshing={scheduleQuery.isFetching}>
       <PageHeader title="Schedule" />
-      <View style={styles.section}>
+      <View className="gap-sm">
         <SectionHeader action={`${todayEvents.length}`} title="Today" />
         {todayEvents.length ? (
           todayEvents.map((event, index) => (
@@ -51,13 +50,13 @@ export default function ScheduleScreen() {
             />
           ))
         ) : (
-          <Card style={styles.quietCard}>
+          <Card className="flex-row items-center gap-sm">
             <Clock3 color={colors.inkSoft} size={16} />
             <AppText muted>No events today</AppText>
           </Card>
         )}
       </View>
-      <View style={styles.section}>
+      <View className="gap-sm">
         <SectionHeader
           action={`${upcomingEvents.length}`}
           title="Upcoming"
@@ -79,14 +78,3 @@ export default function ScheduleScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  section: {
-    gap: spacing.sm,
-  },
-  quietCard: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-});

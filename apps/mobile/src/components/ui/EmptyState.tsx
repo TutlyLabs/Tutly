@@ -1,7 +1,6 @@
 import type { LucideIcon } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
-import { spacing } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 import { AppText } from "./AppText";
 import { Card } from "./Card";
@@ -16,34 +15,19 @@ export function EmptyState({ icon: Icon, title, body }: EmptyStateProps) {
   const { colors } = useTheme();
 
   return (
-    <Card style={styles.card}>
-      <View style={[styles.icon, { backgroundColor: `${colors.primary}10` }]}>
+    <Card className="items-center gap-sm py-xl">
+      <View
+        className="items-center rounded-pill h-[48px] justify-center w-[48px]"
+        style={{ backgroundColor: `${colors.primary}10` }}
+      >
         <Icon color={colors.primary} size={22} strokeWidth={2} />
       </View>
       <AppText variant="subtitle">{title}</AppText>
       {body ? (
-        <AppText muted style={styles.body}>
+        <AppText muted style={{ textAlign: "center" }}>
           {body}
         </AppText>
       ) : null}
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.xl,
-  },
-  icon: {
-    alignItems: "center",
-    borderRadius: 999,
-    height: 48,
-    justifyContent: "center",
-    width: 48,
-  },
-  body: {
-    textAlign: "center",
-  },
-});
