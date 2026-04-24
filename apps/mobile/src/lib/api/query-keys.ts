@@ -1,0 +1,21 @@
+export const queryKeys = {
+  currentUser: ["current-user"] as const,
+  dashboard: (role?: string) => ["dashboard", role] as const,
+  courses: ["courses"] as const,
+  courseClasses: (courseId: string) => ["course-classes", courseId] as const,
+  classDetails: (classId: string) => ["class-details", classId] as const,
+  note: (objectId: string) => ["note", objectId] as const,
+  bookmark: (objectId: string) => ["bookmark", objectId] as const,
+  assignments: (role?: string) => ["assignments", role] as const,
+  assignmentDetails: (assignmentId: string) =>
+    ["assignment-details", assignmentId] as const,
+  schedule: ["schedule"] as const,
+  stats: (courseId?: string) => ["stats", courseId] as const,
+  notifications: ["notifications"] as const,
+  bookmarks: ["bookmarks"] as const,
+  notes: ["notes"] as const,
+  attendance: ["attendance"] as const,
+  tutorActivity: ["tutor-activity"] as const,
+  tutorUsers: ["tutor-users"] as const,
+  profile: ["profile"] as const,
+};

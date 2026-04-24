@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Tutly",
+    "slug": "tutly-mobile",
+    "scheme": "tutly",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "in.tutly.mobile"
+    },
+    "android": {
+      "package": "in.tutly.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F2E8"
+      }
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {},
+    "extra": {
+      "apiUrl": "https://learn.tutly.in",
+      "webUrl": "https://learn.tutly.in",
+      "router": {}
+    }
+  }
+}

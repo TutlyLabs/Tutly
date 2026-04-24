@@ -1,0 +1,9 @@
+.expo/
+.expo-test-dist/
+dist/
+node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+!README.md
+*.md
