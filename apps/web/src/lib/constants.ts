@@ -11,6 +11,7 @@ export const BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET || "topsecret";
 export const BETTER_AUTH_URL =
   process.env.BETTER_AUTH_URL ||
   process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.FRONTEND_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
   "http://localhost:3000";
 
@@ -42,7 +43,11 @@ export const VERCEL_URL = process.env.VERCEL_URL;
 
 export const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
 
-export const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+export const FRONTEND_URL =
+  process.env.FRONTEND_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.BETTER_AUTH_URL ||
+  "http://localhost:3000";
 
 export const getPreviewUrl = () => {
   if (typeof window === "undefined") {

@@ -1,4 +1,5 @@
 import { compare, hash } from "bcryptjs";
+import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { customSession } from "better-auth/plugins/custom-session";
@@ -142,6 +143,7 @@ export const auth = betterAuth({
       }),
   },
   plugins: [
+    expo(),
     username({
       usernameNormalization: (username) => username.toUpperCase(),
       displayUsernameNormalization: false,
@@ -225,7 +227,15 @@ export const auth = betterAuth({
     const origins = [
       "https://learn.tutly.in",
       "http://localhost:3000",
+      "tutly://",
+      "tutly://*",
     ];
+    if (process.env.NODE_ENV === "development") {
+      origins.push("exp://", "exp://**");
+    }
+    if (!request) {
+      return origins;
+    }
     const origin = request.headers.get("origin");
     if (origin?.endsWith(".vercel.app")) {
       origins.push(origin);
