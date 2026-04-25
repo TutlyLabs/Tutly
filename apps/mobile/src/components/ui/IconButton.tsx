@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react-native";
 import type { PressableProps } from "react-native";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { BlurView } from "expo-blur";
 
 import { useTheme } from "~/lib/theme/use-theme";
 
@@ -11,11 +12,11 @@ type IconButtonProps = PressableProps & {
 
 export function IconButton({
   icon: Icon,
-  size = 44,
+  size = 38,
   style,
   ...props
 }: IconButtonProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   return (
     <Pressable {...props} style={style}>
@@ -24,17 +25,24 @@ export function IconButton({
           style={{
             alignItems: "center",
             borderRadius: 999,
-            borderStyle: "solid",
             borderWidth: 1,
             justifyContent: "center",
             backgroundColor: colors.canvasElevated,
-            borderColor: colors.border,
+            borderColor: colors.line,
             height: size,
             opacity: pressed ? 0.72 : 1,
             width: size,
+            overflow: "hidden",
           }}
         >
-          <Icon color={colors.ink} size={20} strokeWidth={2.4} />
+          {isDark && (
+            <BlurView
+              intensity={20}
+              tint="dark"
+              style={StyleSheet.absoluteFill}
+            />
+          )}
+          <Icon color={colors.inkMuted} size={18} strokeWidth={1.7} />
         </View>
       )}
     </Pressable>

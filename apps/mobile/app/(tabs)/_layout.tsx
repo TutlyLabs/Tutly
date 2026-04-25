@@ -5,7 +5,7 @@ import {
   BarChart3,
   CalendarDays,
   GraduationCap,
-  LayoutGrid,
+  Home,
   Menu,
 } from "lucide-react-native";
 
@@ -17,6 +17,14 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
+const TABS = [
+  { name: "index", label: "Home", Icon: Home },
+  { name: "learn", label: "Learn", Icon: GraduationCap },
+  { name: "schedule", label: "Schedule", Icon: CalendarDays },
+  { name: "stats", label: "Stats", Icon: BarChart3 },
+  { name: "menu", label: "More", Icon: Menu },
+];
+
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const { colors, isDark } = useTheme();
 
@@ -24,24 +32,24 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     <View
       style={{
         position: "absolute",
-        bottom: 24,
+        bottom: 18,
         alignSelf: "center",
-        width: 328,
-        height: 60,
-        borderRadius: 30, 
-        backgroundColor: isDark ? "rgba(24, 24, 27, 0.85)" : "rgba(255, 255, 255, 0.9)",
+        height: 54,
+        borderRadius: 999,
+        backgroundColor: isDark ? "rgba(18,18,22,0.62)" : "rgba(255,255,255,0.72)",
         borderWidth: 1,
-        borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)",
+        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(10,10,18,0.05)",
+        shadowColor: isDark ? "#000000" : "#0A0A12",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: isDark ? 0.45 : 0.08,
+        shadowRadius: 30,
         elevation: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 20,
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 8, 
+        paddingHorizontal: 5,
+        gap: 2,
         overflow: "hidden",
+        zIndex: 60,
       }}
     >
       <BlurView
@@ -49,24 +57,12 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         tint={isDark ? "dark" : "light"}
         style={StyleSheet.absoluteFill}
       />
-      
-      {/* Sliding Background Bubble */}
-      <View
-        style={{
-          position: "absolute",
-          top: 8, 
-          left: 8 + state.index * 52,
-          width: 104, 
-          height: 44,
-          borderRadius: 22,
-          backgroundColor: isDark ? "rgba(255, 255, 255, 0.15)" : colors.primaryLight || "rgba(99, 102, 241, 0.15)",
-        }}
-      />
 
       {state.routes.map((route: any, index: number) => {
-        const { options } = descriptors[route.key];
         const isFocused = state.index === index;
-        const label = options.title !== undefined ? options.title : route.name;
+        const tab = TABS.find((t) => t.name === route.name) ?? TABS[index]!;
+        const IconComponent = tab!.Icon;
+        const label = tab!.label;
 
         const onPress = () => {
           const event = navigation.emit({
@@ -78,67 +74,47 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
           if (!isFocused && !event.defaultPrevented) {
             LayoutAnimation.configureNext({
               duration: 250,
-              update: {
-                type: LayoutAnimation.Types.easeInEaseOut,
-              },
+              update: { type: LayoutAnimation.Types.easeInEaseOut },
             });
             navigation.navigate(route.name);
           }
         };
-
-        const IconComponent =
-          route.name === "index"
-            ? LayoutGrid
-            : route.name === "learn"
-              ? GraduationCap
-              : route.name === "schedule"
-                ? CalendarDays
-                : route.name === "stats"
-                  ? BarChart3
-                  : Menu;
 
         return (
           <Pressable
             key={route.key}
             onPress={onPress}
             style={{
-              flex: isFocused ? 2 : 1, 
+              height: 42,
+              borderRadius: 999,
+              flexDirection: "row",
               alignItems: "center",
               justifyContent: "center",
-              height: "100%",
+              paddingHorizontal: isFocused ? 15 : 13,
+              gap: isFocused ? 8 : 0,
+              backgroundColor: isFocused
+                ? (isDark ? "rgba(255,255,255,0.09)" : "rgba(11,11,18,0.06)")
+                : "transparent",
             }}
           >
-            <View
-              style={{
-                flexDirection: "row", 
-                alignItems: "center",
-                justifyContent: "center",
-                height: 44,
-                width: isFocused ? 104 : 44, 
-                borderRadius: 22, 
-                backgroundColor: "transparent",
-                gap: isFocused ? 8 : 0, 
-                overflow: "hidden", 
-              }}
-            >
-              <IconComponent
-                color={isFocused ? (isDark ? "#FFFFFF" : colors.primary) : colors.inkSoft}
-                size={20} 
-                strokeWidth={2} 
-              />
-              {isFocused && (
-                <AppText
-                  numberOfLines={1}
-                  style={{
-                    fontSize: 12, 
-                    fontWeight: "600",
-                    color: isDark ? "#FFFFFF" : colors.primary,
-                  }}
-                >
-                  {label}
-                </AppText>
-              )}
-            </View>
+            <IconComponent
+              color={isFocused ? colors.ink : colors.inkFaint}
+              size={18}
+              strokeWidth={1.7}
+            />
+            {isFocused && (
+              <AppText
+                numberOfLines={1}
+                style={{
+                  fontSize: 13,
+                  fontWeight: "600",
+                  letterSpacing: -0.1,
+                  color: colors.ink,
+                }}
+              >
+                {label}
+              </AppText>
+            )}
           </Pressable>
         );
       })}

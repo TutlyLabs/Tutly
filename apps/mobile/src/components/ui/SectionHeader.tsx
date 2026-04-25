@@ -1,5 +1,7 @@
 import { Pressable, View } from "react-native";
+import { ChevronRight } from "lucide-react-native";
 
+import { useTheme } from "~/lib/theme/use-theme";
 import { AppText } from "./AppText";
 
 type SectionHeaderProps = {
@@ -9,19 +11,21 @@ type SectionHeaderProps = {
 };
 
 export function SectionHeader({ title, action, onAction }: SectionHeaderProps) {
+  const { colors } = useTheme();
   return (
-    <View className="flex-row items-center justify-between">
-      <AppText variant="subtitle">{title}</AppText>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+      <AppText style={{ fontSize: 14, fontWeight: "600", letterSpacing: -0.1, color: colors.ink }}>
+        {title}
+      </AppText>
       {action ? (
         <Pressable onPress={onAction}>
           {({ pressed }) => (
-            <AppText
-              muted
-              variant="caption"
-              style={pressed ? { opacity: 0.7 } : undefined}
-            >
-              {action}
-            </AppText>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, opacity: pressed ? 0.7 : 1 }}>
+              <AppText style={{ fontSize: 12, color: colors.inkSoft }}>
+                {action}
+              </AppText>
+              <ChevronRight color={colors.inkSoft} size={14} />
+            </View>
           )}
         </Pressable>
       ) : null}

@@ -1,32 +1,24 @@
 import { useMemo } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import {
-  Bookmark,
+  Bell,
   BookOpen,
-  CheckCircle2,
+  ChevronRight,
   Clock3,
-  Download,
   FileText,
-  NotebookPen,
-  ShieldCheck,
-  Trophy,
-  UserRound,
+  Flame,
+  Play,
 } from "lucide-react-native";
+import Svg, { Circle } from "react-native-svg";
 
-import { ActionTile } from "~/components/ui/ActionTile";
 import { AppText } from "~/components/ui/AppText";
-import { Card } from "~/components/ui/Card";
-import { Chip } from "~/components/ui/Chip";
-import { MetricCard } from "~/components/ui/MetricCard";
-import { PageHeader } from "~/components/ui/PageHeader";
-import { ProgressRing } from "~/components/ui/ProgressRing";
+import { GlassView } from "~/components/ui/GlassView";
+import { IconButton } from "~/components/ui/IconButton";
 import { Screen } from "~/components/ui/Screen";
 import { SectionHeader } from "~/components/ui/SectionHeader";
-import { AssignmentCard } from "~/features/assignments/AssignmentCard";
-import { CourseCard } from "~/features/courses/CourseCard";
 import { EventCard } from "~/features/schedule/EventCard";
 import { useAssignments, useDashboard, useSchedule } from "~/lib/api/hooks";
 import {
@@ -36,8 +28,9 @@ import {
 } from "~/lib/api/mobile-selectors";
 import { queryKeys } from "~/lib/api/query-keys";
 import { useAuth } from "~/lib/auth/auth-provider";
-import { shadows } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
+
+const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
 export default function HomeScreen() {
   const { colors, isDark } = useTheme();
@@ -53,37 +46,24 @@ export default function HomeScreen() {
     const now = Date.now();
     return [...events]
       .filter((event) => new Date(event.startDate).getTime() >= now)
-      .sort(
-        (a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-      );
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   }, [events]);
 
-  const submittedAssignments = assignments.filter(
-    (assignment) => assignment.submissions?.length,
-  ).length;
-  const totalPoints = dashboardCourses.reduce((sum, course) => {
-    const points = Number(course.totalPoints ?? 0);
-    return sum + points;
-  }, 0);
-  const completionPct = assignments.length
-    ? Math.round((submittedAssignments / assignments.length) * 100)
-    : 0;
-  const isTutor =
-    user?.role === "MENTOR" ||
-    user?.role === "INSTRUCTOR" ||
-    user?.role === "ADMIN";
+  const submittedAssignments = assignments.filter((a) => a.submissions?.length).length;
+  const totalLessons = dashboardCourses.reduce(
+    (sum, c) => sum + Number(c.classCount ?? c.totalClasses ?? 0), 0,
+  );
+  const completedLessons = dashboardCourses.reduce(
+    (sum, c) => sum + Number(c.evaluatedAssignments ?? c.totalPoints ?? 0), 0,
+  );
+  const completionPct = totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  const safeCompletionPct = Math.min(completionPct, 100);
 
-  const quickActions = [
-    { title: "Notes", helper: "Your notes", icon: NotebookPen, href: "/notes", tone: "primary" as const },
-    { title: "Attendance", helper: "Class records", icon: ShieldCheck, href: "/attendance", tone: "primary" as const },
-    { title: "Assignments", helper: `${assignments.length} total`, icon: FileText, href: "/assignments", tone: "primary" as const },
-    { title: "Downloads", helper: "Saved media", icon: Download, href: "/downloads", tone: "primary" as const },
-    { title: "Bookmarks", helper: "Saved items", icon: Bookmark, href: "/bookmarks", tone: "primary" as const },
-    isTutor
-      ? { title: "Instructor", helper: "Monitor learners", icon: UserRound, href: "/tutor", tone: "primary" as const }
-      : { title: "Profile", helper: "Your account", icon: UserRound, href: "/profile", tone: "primary" as const },
-  ];
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=Sun
+  const todayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Mon=0
+
+  const pendingAssignments = assignments.filter((a) => !a.submissions?.length);
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(user?.role) });
@@ -91,180 +71,310 @@ export default function HomeScreen() {
     void queryClient.invalidateQueries({ queryKey: queryKeys.schedule });
   };
 
+  // Progress ring measurements
+  const ringSize = 76;
+  const ringStroke = 5;
+  const ringRadius = 32;
+  const ringCircumference = 2 * Math.PI * ringRadius;
+  const ringDashOffset = ringCircumference - (ringCircumference * safeCompletionPct) / 100;
+
+  const dateStr = today.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+
   return (
     <Screen
       onRefresh={refresh}
-      refreshing={
-        dashboard.isFetching || assignmentsQuery.isFetching || scheduleQuery.isFetching
-      }
+      refreshing={dashboard.isFetching || assignmentsQuery.isFetching || scheduleQuery.isFetching}
     >
-      <PageHeader
-        eyebrow={user?.username || user?.email || undefined}
-        title={`Hi, ${user?.name?.split(" ")[0] || "there"}`}
-      />
+      {/* Header */}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 4 }}>
+        <View>
+          <AppText style={{ fontSize: 11, color: colors.inkSoft, fontWeight: "500", marginBottom: 4 }}>
+            {dateStr}
+          </AppText>
+          <AppText style={{ fontSize: 24, fontWeight: "700", letterSpacing: -0.7, lineHeight: 28 }}>
+            Hi, {user?.name?.split(" ")[0] || "there"} 👋
+          </AppText>
+        </View>
+        <IconButton icon={Bell} onPress={() => router.push("/notifications")} />
+      </View>
 
-      {/* Summary Banner (Gradient) */}
-      <LinearGradient
-        colors={isDark ? ["#4F46E5", "#7C3AED"] : ["#8B5CF6", "#6366F1"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[
-          { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 24, padding: 24, borderRadius: 24 },
-          !isDark ? shadows.lifted : undefined
-        ]}
+      {/* Hero Card — glassmorphic */}
+      <GlassView
+        borderRadius={22}
+        intensity={isDark ? 40 : 0}
+        style={{
+          ...(isDark ? {} : { shadowColor: "#0A0A12", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 2 }),
+        }}
       >
-        <View className="flex-1 gap-md">
-          <AppText variant="subtitle" style={{ color: "#FFFFFF" }}>How are you progressing?</AppText>
-          <View className="flex-row gap-sm">
-            <View className="px-[8px] py-[4px] rounded-md" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
-              <AppText variant="caption" style={{ color: "#FFFFFF", fontWeight: "600" }}>{dashboardCourses.length} courses</AppText>
-            </View>
-            <View className="px-[8px] py-[4px] rounded-md" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
-              <AppText variant="caption" style={{ color: "#FFFFFF", fontWeight: "600" }}>{submittedAssignments}/{assignments.length} done</AppText>
+        {/* Subtle inner gradient for depth */}
+        <LinearGradient
+          colors={isDark
+            ? ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.01)"]
+            : ["#FFFFFF", "#F5F5F8"]
+          }
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        />
+        {/* Faint accent glow behind ring — clipped circle */}
+        <View
+          style={{
+            position: "absolute",
+            right: -40,
+            top: -40,
+            width: 200,
+            height: 200,
+            borderRadius: 100,
+            overflow: "hidden",
+          }}
+          pointerEvents="none"
+        >
+          <LinearGradient
+            colors={[
+              isDark ? `${colors.primary}30` : `${colors.primary}18`,
+              "transparent",
+            ]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={{ flex: 1 }}
+          />
+        </View>
+
+        {/* Top section: Ring + text */}
+        <View style={{ padding: 18, paddingBottom: 16, flexDirection: "row", alignItems: "center", gap: 16 }}>
+          {/* Progress Ring */}
+          <View style={{ position: "relative", width: ringSize, height: ringSize }}>
+            <Svg width={ringSize} height={ringSize}>
+              <Circle
+                cx={ringSize / 2}
+                cy={ringSize / 2}
+                r={ringRadius}
+                stroke={isDark ? "rgba(255,255,255,0.08)" : "rgba(10,10,18,0.08)"}
+                strokeWidth={ringStroke}
+                fill="none"
+              />
+              <Circle
+                cx={ringSize / 2}
+                cy={ringSize / 2}
+                r={ringRadius}
+                stroke={colors.primary}
+                strokeWidth={ringStroke}
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={`${ringCircumference} ${ringCircumference}`}
+                strokeDashoffset={ringDashOffset}
+                transform={`rotate(-90 ${ringSize / 2} ${ringSize / 2})`}
+              />
+            </Svg>
+            <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
+              <AppText style={{ fontSize: 18, fontWeight: "700", letterSpacing: -0.5, color: colors.ink }}>
+                {safeCompletionPct}
+                <AppText style={{ fontSize: 11, opacity: 0.6 }}>%</AppText>
+              </AppText>
+              <AppText style={{ fontSize: 8, color: colors.inkFaint, textTransform: "uppercase", letterSpacing: 1, fontWeight: "700", marginTop: 3 }}>
+                done
+              </AppText>
             </View>
           </View>
-          <View className="flex-row gap-lg mt-xs">
-            <View className="flex-row items-center gap-[6px]">
-              <Trophy color="#FBBF24" size={14} />
-              <AppText variant="caption" style={{ fontWeight: "600", color: "#FFFFFF" }}>{totalPoints}</AppText>
-              <AppText variant="caption" style={{ color: "rgba(255,255,255,0.8)" }}>points</AppText>
-            </View>
-            <View className="flex-row items-center gap-[6px]">
-              <Clock3 color="#38BDF8" size={14} />
-              <AppText variant="caption" style={{ fontWeight: "600", color: "#FFFFFF" }}>{upcomingEvents.length}</AppText>
-              <AppText variant="caption" style={{ color: "rgba(255,255,255,0.8)" }}>upcoming</AppText>
+
+          {/* Headline + sub */}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <AppText style={{ fontSize: 16, fontWeight: "700", letterSpacing: -0.3, lineHeight: 20 }}>
+              You're on track this week
+            </AppText>
+            <AppText style={{ fontSize: 12, color: colors.inkSoft, marginTop: 4, lineHeight: 17 }}>
+              {completedLessons} of {totalLessons} lessons · {dashboardCourses.length} courses
+            </AppText>
+            {/* Streak line */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 }}>
+              <Flame color={colors.amber} size={14} strokeWidth={1.7} />
+              <AppText style={{ fontSize: 11, fontWeight: "600", color: colors.ink }}>
+                Learning streak
+              </AppText>
             </View>
           </View>
         </View>
-        <ProgressRing 
-          value={completionPct} 
-          size={76} 
-          strokeWidth={8} 
-          ringColor="#FFFFFF" 
-          trackColor="rgba(255,255,255,0.2)" 
-        />
-      </LinearGradient>
 
-      {/* Quick Actions (Horizontal) */}
-      <View className="gap-sm mt-sm">
-        <SectionHeader title="Quick actions" />
+        {/* Divider */}
+        <View style={{ height: 1, backgroundColor: colors.line }} />
+
+        {/* Weekly bars */}
+        <View style={{ padding: 14, paddingHorizontal: 20, paddingBottom: 16 }}>
+          <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: 8, height: 42 }}>
+            {DAYS.map((d, i) => {
+              const isToday = i === todayIdx;
+              const hasPast = i <= todayIdx;
+              const barHeights = [55, 80, 30, 95, 40, 20, 60];
+              const barHeight = hasPast ? Math.max(14, barHeights[i] ?? 50) : 14;
+              return (
+                <View key={i} style={{ flex: 1, alignItems: "center", gap: 6 }}>
+                  <View style={{ width: "100%", height: 28, justifyContent: "flex-end" }}>
+                    <View
+                      style={{
+                        width: "100%",
+                        height: `${barHeight}%`,
+                        borderRadius: 4,
+                        backgroundColor: hasPast
+                          ? isToday
+                            ? colors.primary
+                            : isDark
+                              ? "rgba(139,147,248,0.55)"
+                              : "rgba(91,99,230,0.45)"
+                          : isDark
+                            ? "rgba(255,255,255,0.06)"
+                            : "rgba(10,10,18,0.06)",
+                      }}
+                    />
+                  </View>
+                  <AppText style={{ fontSize: 10, fontWeight: isToday ? "600" : "400", color: isToday ? colors.ink : colors.inkFaint, letterSpacing: 0.2 }}>
+                    {d}
+                  </AppText>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      </GlassView>
+
+      {/* Continue Learning */}
+      <SectionHeader
+        title="Continue learning"
+        action={dashboardCourses.length > 3 ? "See all" : undefined}
+        onAction={() => router.push("/(tabs)/learn")}
+      />
+      {dashboardCourses.length ? (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 16, paddingRight: 24 }}
+          contentContainerStyle={{ gap: 12, paddingRight: 20 }}
+          style={{ marginHorizontal: -20, paddingLeft: 20 }}
         >
-          {quickActions.map((action) => (
-            <ActionTile
-              helper={action.helper}
-              icon={action.icon}
-              key={action.title}
-              onPress={() => router.push(action.href)}
-              title={action.title}
-              tone={action.tone}
-            />
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Metrics */}
-      <View className="flex-row gap-sm">
-        <MetricCard
-          helper="enrolled"
-          icon={BookOpen}
-          label="Courses"
-          value={dashboardCourses.length}
-          tone="primary"
-        />
-        <MetricCard
-          helper="submitted"
-          icon={CheckCircle2}
-          label="Done"
-          value={`${submittedAssignments}/${assignments.length}`}
-          tone="amber"
-        />
-      </View>
-
-      {/* Continue Learning (Horizontal) */}
-      <View className="gap-sm mt-sm">
-        <SectionHeader
-          action={dashboardCourses.length > 3 ? "See all" : undefined}
-          onAction={() => router.push("/(tabs)/learn")}
-          title="Continue learning"
-        />
-        {dashboardCourses.length ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 16, paddingRight: 24 }}
-          >
-            {dashboardCourses.slice(0, 5).map((course, i) => (
-              <CourseCard
-                course={{
-                  _count: {
-                    classes: Number(course.classCount ?? course.totalClasses ?? 0),
-                    enrolledUsers: Number(course.totalStudents ?? 0),
-                  },
-                  id: String(course.id || `course-${i}`),
-                  isPublished: true,
-                  title: String(course.courseTitle || course.title || "Course"),
-                }}
+          {dashboardCourses.slice(0, 5).map((course, i) => {
+            const courseTitle = String(course.courseTitle || course.title || "Course");
+            const classCount = Number(course.classCount ?? course.totalClasses ?? 0);
+            const tints = [colors.tintReact, colors.tintBackend, colors.tintHtml, colors.tintTest] as string[];
+            const tint = tints[i % tints.length]!;
+            const pct = classCount > 0 ? Math.round((Number(course.evaluatedAssignments ?? 0) / classCount) * 100) : 0;
+            return (
+              <Pressable
                 key={String(course.id || `course-${i}`)}
-              />
-            ))}
-          </ScrollView>
-        ) : (
-          <Card className="flex-row items-center gap-sm">
-            <BookOpen color={colors.inkSoft} size={18} />
-            <AppText muted>No courses yet</AppText>
-          </Card>
-        )}
-      </View>
+                onPress={() => router.push(`/course/${course.id}`)}
+              >
+                <GlassView borderRadius={18} style={{ width: 240 }}>
+                  {/* Gradient banner */}
+                  <View style={{ position: "relative", height: 110, overflow: "hidden" }}>
+                    <LinearGradient
+                      colors={[tint, `${tint}88`]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                    />
+                    <LinearGradient
+                      colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.5)"]}
+                      style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                    />
+                    {/* Resume pill */}
+                    <View style={{
+                      position: "absolute", top: 12, left: 12,
+                      flexDirection: "row", alignItems: "center", gap: 5,
+                      backgroundColor: "rgba(0,0,0,0.32)",
+                      borderWidth: 1, borderColor: "rgba(255,255,255,0.24)",
+                      paddingHorizontal: 9, paddingVertical: 5, borderRadius: 999,
+                    }}>
+                      <Play color="#FFFFFF" size={10} fill="#FFFFFF" />
+                      <AppText style={{ fontSize: 10, fontWeight: "700", color: "#FFFFFF" }}>Resume</AppText>
+                    </View>
+                  </View>
+                  {/* Card body */}
+                  <View style={{ padding: 14, paddingTop: 12 }}>
+                    <AppText numberOfLines={1} style={{ fontSize: 14, fontWeight: "600", letterSpacing: -0.1, marginBottom: 2 }}>
+                      {courseTitle}
+                    </AppText>
+                    <AppText numberOfLines={1} style={{ fontSize: 11, color: colors.inkSoft, marginBottom: 10 }}>
+                      {classCount} lessons
+                    </AppText>
+                    <View style={{ height: 3, borderRadius: 2, backgroundColor: colors.line, overflow: "hidden", marginBottom: 7 }}>
+                      <View style={{ width: `${Math.min(pct, 100)}%`, height: "100%", backgroundColor: tint, borderRadius: 2 }} />
+                    </View>
+                    <AppText style={{ fontSize: 10, color: colors.inkFaint }}>{pct}% complete</AppText>
+                  </View>
+                </GlassView>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      ) : (
+        <GlassView style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 16 }}>
+          <BookOpen color={colors.inkSoft} size={18} strokeWidth={1.7} />
+          <AppText style={{ color: colors.inkSoft }}>No courses yet</AppText>
+        </GlassView>
+      )}
 
       {/* Today */}
-      <View className="gap-sm mt-sm">
-        <SectionHeader 
-          title="Today" 
-          action={upcomingEvents.length > 2 ? "Schedule" : undefined}
-          onAction={() => router.push("/(tabs)/schedule")}
-        />
-        {upcomingEvents.length ? (
-          upcomingEvents.slice(0, 2).map((event, i) => (
+      <SectionHeader
+        title="Today"
+        action={upcomingEvents.length > 2 ? "Schedule" : undefined}
+        onAction={() => router.push("/(tabs)/schedule")}
+      />
+      {upcomingEvents.length ? (
+        <View style={{ gap: 10 }}>
+          {upcomingEvents.slice(0, 2).map((event, i) => (
             <EventCard event={event} key={`${event.type}-${event.name}-${i}`} />
-          ))
-        ) : (
-          <Card className="flex-row items-center gap-sm">
-            <Clock3 color={colors.inkSoft} size={18} />
-            <AppText muted>No upcoming events</AppText>
-          </Card>
-        )}
-      </View>
+          ))}
+        </View>
+      ) : (
+        <GlassView style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 16 }}>
+          <Clock3 color={colors.inkSoft} size={18} strokeWidth={1.7} />
+          <AppText style={{ color: colors.inkSoft }}>No upcoming events</AppText>
+        </GlassView>
+      )}
 
-      {/* Assignments (Horizontal) */}
-      <View className="gap-sm mt-sm">
-        <SectionHeader
-          action={assignments.length > 3 ? "See all" : undefined}
-          onAction={() => router.push("/assignments")}
-          title="Assignments"
-        />
-        {assignments.length ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 16, paddingRight: 24 }}
-          >
-            {assignments.slice(0, 5).map((assignment, i) => (
-              <AssignmentCard assignment={assignment} key={assignment.id || `assignment-${i}`} />
-            ))}
-          </ScrollView>
-        ) : (
-          <Card className="flex-row items-center gap-sm">
-            <FileText color={colors.inkSoft} size={18} />
-            <AppText muted>No assignments yet</AppText>
-          </Card>
-        )}
-      </View>
+      {/* Assignments */}
+      <SectionHeader
+        title="Assignments"
+        action={assignments.length > 3 ? "See all" : undefined}
+        onAction={() => router.push("/assignments")}
+      />
+      {pendingAssignments.length ? (
+        <View style={{ gap: 10 }}>
+          {pendingAssignments.slice(0, 3).map((assignment) => (
+            <Pressable
+              key={assignment.id}
+              onPress={() => router.push(`/assignment/${assignment.id}`)}
+            >
+              <GlassView style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14 }}>
+                <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.surface2, alignItems: "center", justifyContent: "center" }}>
+                  <FileText color={colors.inkMuted} size={18} strokeWidth={1.7} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <AppText numberOfLines={1} style={{ fontSize: 14, fontWeight: "600", letterSpacing: -0.1, marginBottom: 2 }}>
+                    {assignment.title}
+                  </AppText>
+                  <AppText numberOfLines={1} style={{ fontSize: 11, color: colors.inkSoft }}>
+                    {assignment.dueDate
+                      ? `Due ${new Date(assignment.dueDate).toLocaleDateString()}`
+                      : "No due date"}
+                  </AppText>
+                </View>
+                {assignment.dueDate && new Date(assignment.dueDate).getTime() - Date.now() < 86400000 * 2 ? (
+                  <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, backgroundColor: colors.amberLight }}>
+                    <AppText style={{ fontSize: 10, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", color: colors.amber }}>
+                      Due soon
+                    </AppText>
+                  </View>
+                ) : (
+                  <ChevronRight color={colors.inkFaint} size={14} />
+                )}
+              </GlassView>
+            </Pressable>
+          ))}
+        </View>
+      ) : (
+        <GlassView style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 16 }}>
+          <FileText color={colors.inkSoft} size={18} strokeWidth={1.7} />
+          <AppText style={{ color: colors.inkSoft }}>No pending assignments</AppText>
+        </GlassView>
+      )}
 
-      <View className="h-[96px]" />
+      <View style={{ height: 40 }} />
     </Screen>
   );
 }

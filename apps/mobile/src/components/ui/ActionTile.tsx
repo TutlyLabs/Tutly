@@ -16,21 +16,21 @@ type ActionTileProps = PressableProps & {
 };
 
 const lightToneColors: Record<ActionTileTone, { bg: string; fg: string }> = {
-  primary: { bg: "#EEF2FF", fg: "#4F46E5" },
-  green: { bg: "#D1FAE5", fg: "#10B981" },
-  amber: { bg: "#FEF3C7", fg: "#F59E0B" },
-  coral: { bg: "#FEE2E2", fg: "#EF4444" },
-  sky: { bg: "#E0F2FE", fg: "#0EA5E9" },
-  plum: { bg: "#EDE9FE", fg: "#8B5CF6" },
+  primary: { bg: "rgba(91,99,230,0.09)", fg: "#5B63E6" },
+  green: { bg: "rgba(16,185,129,0.10)", fg: "#0F9B6E" },
+  amber: { bg: "rgba(180,83,9,0.10)", fg: "#B45309" },
+  coral: { bg: "rgba(224,82,82,0.10)", fg: "#E05252" },
+  sky: { bg: "rgba(14,165,233,0.10)", fg: "#0EA5E9" },
+  plum: { bg: "rgba(139,92,246,0.10)", fg: "#8B5CF6" },
 };
 
 const darkToneColors: Record<ActionTileTone, { bg: string; fg: string }> = {
-  primary: { bg: "#312E81", fg: "#818CF8" },
-  green: { bg: "#064E3B", fg: "#34D399" },
-  amber: { bg: "#78350F", fg: "#FBBF24" },
-  coral: { bg: "#7F1D1D", fg: "#F87171" },
-  sky: { bg: "#0C4A6E", fg: "#38BDF8" },
-  plum: { bg: "#4C1D95", fg: "#A78BFA" },
+  primary: { bg: "rgba(139,147,248,0.12)", fg: "#8B93F8" },
+  green: { bg: "rgba(52,211,153,0.14)", fg: "#34D399" },
+  amber: { bg: "rgba(245,158,11,0.14)", fg: "#F59E0B" },
+  coral: { bg: "rgba(248,113,113,0.14)", fg: "#F87171" },
+  sky: { bg: "rgba(56,189,248,0.14)", fg: "#38BDF8" },
+  plum: { bg: "rgba(167,139,250,0.14)", fg: "#A78BFA" },
 };
 
 export function ActionTile({

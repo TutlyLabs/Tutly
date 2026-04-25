@@ -3,46 +3,50 @@ import type { ViewProps } from "react-native";
 import { StyleSheet, View } from "react-native";
 import { BlurView } from "expo-blur";
 
-import { shadows } from "~/lib/theme/tokens";
 import { useTheme } from "~/lib/theme/use-theme";
 
-type CardProps = PropsWithChildren<
+type GlassViewProps = PropsWithChildren<
   ViewProps & {
-    padded?: boolean;
-    elevated?: boolean;
+    intensity?: number;
+    borderRadius?: number;
   }
 >;
 
-export function Card({
+/**
+ * Glassmorphic container.
+ * Dark mode: semi-transparent surface (rgba(255,255,255,0.035)) + BlurView backdrop + top highlight.
+ * Light mode: plain opaque white surface, no blur needed.
+ */
+export function GlassView({
   children,
   style,
-  className,
-  padded = true,
-  elevated = false,
+  intensity = 20,
+  borderRadius = 14,
   ...props
-}: CardProps) {
+}: GlassViewProps) {
   const { colors, isDark } = useTheme();
 
   return (
     <View
       {...props}
-      className={`overflow-hidden ${padded ? "p-lg" : ""} ${className || ""}`}
       style={[
         {
-          backgroundColor: colors.canvasElevated,
+          backgroundColor: isDark ? colors.canvasElevated : colors.canvasElevated,
           borderWidth: 1,
           borderColor: colors.line,
-          borderRadius: 14,
+          borderRadius,
           overflow: "hidden",
         },
-        elevated && (isDark ? {} : shadows.lifted),
-        !elevated && !isDark && shadows.card,
+        // Subtle top inner highlight in dark mode (simulates inset shadow)
+        isDark && {
+          borderTopColor: "rgba(255,255,255,0.06)",
+        },
         style,
       ]}
     >
       {isDark && (
         <BlurView
-          intensity={20}
+          intensity={intensity}
           tint="dark"
           style={StyleSheet.absoluteFill}
         />

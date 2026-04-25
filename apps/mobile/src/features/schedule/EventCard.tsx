@@ -1,15 +1,9 @@
 import { View } from "react-native";
-import {
-  CalendarDays,
-  CalendarOff,
-  FileText,
-  PlayCircle,
-} from "lucide-react-native";
+import { ChevronRight } from "lucide-react-native";
 
 import type { ScheduleEvent } from "~/types/tutly";
 import { AppText } from "~/components/ui/AppText";
-import { Card } from "~/components/ui/Card";
-import { Chip } from "~/components/ui/Chip";
+import { GlassView } from "~/components/ui/GlassView";
 import { useTheme } from "~/lib/theme/use-theme";
 
 type EventCardProps = {
@@ -18,42 +12,57 @@ type EventCardProps = {
 
 export function EventCard({ event }: EventCardProps) {
   const { colors } = useTheme();
-  const Icon =
-    event.type === "Assignment"
-      ? FileText
-      : event.type === "Holiday"
-        ? CalendarOff
-        : PlayCircle;
-  const tone =
-    event.type === "Assignment"
-      ? "amber"
-      : event.type === "Holiday"
-        ? "coral"
-        : "primary";
+  const isLive = event.type === "Class" || event.type === "Live class";
+  const startDate = new Date(event.startDate);
+  const timeStr = startDate.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 
   return (
-    <Card className="flex-row gap-md">
-      <View
-        className="items-center rounded-[10px] h-[38px] justify-center w-[38px]"
-        style={{ backgroundColor: `${colors.primary}08` }}
-      >
-        <Icon color={colors.primary} size={19} strokeWidth={2} />
+    <GlassView
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 14,
+        padding: 14,
+      }}
+    >
+      {/* Time */}
+      <View style={{ alignItems: "center", minWidth: 42 }}>
+        <AppText style={{ fontSize: 14, fontWeight: "600", letterSpacing: -0.1 }}>
+          {timeStr}
+        </AppText>
+        <AppText style={{ fontSize: 10, color: colors.inkFaint, marginTop: 2 }}>
+          {event.type}
+        </AppText>
       </View>
-      <View className="flex-1 gap-xs">
-        <Chip tone={tone}>{event.type}</Chip>
-        <AppText variant="subtitle">{event.name}</AppText>
-        {event.description ? (
-          <AppText muted numberOfLines={2}>
-            {event.description}
-          </AppText>
-        ) : null}
-        <View className="flex-row items-center gap-xs">
-          <CalendarDays color={colors.inkSoft} size={13} />
-          <AppText muted variant="caption">
-            {new Date(event.startDate).toLocaleString()}
-          </AppText>
+
+      {/* Separator */}
+      <View style={{ width: 1, height: 34, backgroundColor: colors.line }} />
+
+      {/* Content */}
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <AppText
+          numberOfLines={1}
+          style={{ fontSize: 14, fontWeight: "600", letterSpacing: -0.1, marginBottom: 2 }}
+        >
+          {event.name}
+        </AppText>
+        <AppText numberOfLines={1} style={{ fontSize: 11, color: colors.inkSoft }}>
+          {event.description || event.type}
+        </AppText>
+      </View>
+
+      {isLive ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 3 }}>
+          <View style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: colors.success }} />
+          <AppText style={{ fontSize: 10, fontWeight: "600", color: colors.success }}>Live</AppText>
         </View>
-      </View>
-    </Card>
+      ) : (
+        <ChevronRight color={colors.inkFaint} size={14} />
+      )}
+    </GlassView>
   );
 }
