@@ -36,6 +36,9 @@
     "prettier": "3.5.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["prisma"]
+    "onlyBuiltDependencies": ["prisma"],
+    "overrides": {
+      "react-native-worklets": "0.7.4"
+    }
   }
 }
