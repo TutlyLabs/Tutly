@@ -7,7 +7,9 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "in.tutly.mobile"
@@ -18,12 +20,19 @@
         "backgroundColor": "#F7F2E8"
       }
     },
-    "plugins": ["expo-router", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
     "experiments": {},
     "extra": {
       "apiUrl": "https://learn.tutly.in",
       "webUrl": "https://learn.tutly.in",
-      "router": {}
-    }
+      "router": {},
+      "eas": {
+        "projectId": "d5d44a32-0c0e-4ad9-8d1b-77758d3764e2"
+      }
+    },
+    "owner": "udaysagar_expo"
   }
 }
