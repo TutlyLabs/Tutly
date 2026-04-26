@@ -79,6 +79,7 @@
     "@tutly/api-client": "workspace:*",
     "@tutly/fsrelay": "workspace:*",
     "@tutly/hooks": "workspace:*",
+    "@tutly/ui": "workspace:*",
     "@tutly/utils": "workspace:*",
     "@uiw/react-md-editor": "^4.0.11",
     "adm-zip": "^0.5.16",

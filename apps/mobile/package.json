@@ -35,6 +35,7 @@
     "@tutly/api-client": "workspace:*",
     "@tutly/hooks": "workspace:*",
     "@tutly/types": "workspace:*",
+    "@tutly/ui": "workspace:*",
     "@tutly/utils": "workspace:*",
     "better-auth": "^1.4.7",
     "react": "^19.2.3",
