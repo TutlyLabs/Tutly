@@ -82,3 +82,54 @@ Then in Xcode: Product → Clean Build Folder (`Shift+Cmd+K`) → Run (`Cmd+R`).
 pnpm build         # production build (standalone)
 pnpm build:cap     # static export for capacitor
 ```
+
+## Android APK release
+
+Push to `main` triggers `.github/workflows/release-android.yml`. It uses Changesets for version management:
+
+1. In your PR, run `pnpm changeset` from repo root and pick `web` + bump type. Commit the generated file.
+2. When the PR merges, the workflow opens a "Version Packages" PR that bumps `apps/web/package.json` and updates `apps/web/CHANGELOG.md`.
+3. **Merging the Version Packages PR** triggers an APK build. The signed APK is attached to a GitHub Release tagged `tutly-mobile-vX.Y.Z`.
+
+`versionName` comes from `package.json`. `versionCode` is computed as `MAJOR*10000 + MINOR*100 + PATCH` (e.g. `3.4.1` → `30401`).
+
+### Keystore (one-time setup)
+
+Generate the release keystore (do this once, store the file securely — losing it means losing the ability to push updates to existing installs):
+
+```bash
+keytool -genkey -v \
+  -keystore tutly-release.jks \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -alias tutly-release
+```
+
+Encode it to base64 for GitHub Secrets:
+
+```bash
+base64 -i tutly-release.jks | pbcopy   # macOS
+```
+
+In repo settings → Secrets and variables → Actions, add:
+
+| Secret | Value |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | base64 of the `.jks` file (paste from clipboard) |
+| `ANDROID_KEYSTORE_PASSWORD` | the keystore password you set during `keytool` |
+| `ANDROID_KEY_ALIAS` | `tutly-release` |
+| `ANDROID_KEY_PASSWORD` | the key password (often same as keystore password) |
+
+### Local release build
+
+To build a signed APK locally (skip the workflow):
+
+```bash
+export ANDROID_KEYSTORE_BASE64=$(base64 -i path/to/tutly-release.jks)
+export ANDROID_KEYSTORE_PASSWORD=...
+export ANDROID_KEY_ALIAS=tutly-release
+export ANDROID_KEY_PASSWORD=...
+pnpm release:android
+# → apps/web/tutly-X.Y.Z.apk
+```
+
+Local debug builds (no keystore needed) still work via `pnpm cap:android` → run from Android Studio.

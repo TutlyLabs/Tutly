@@ -19,6 +19,7 @@
     "cap:run:ios": "cap run ios",
     "cap:run:android": "cap run android",
     "cap:sync": "cap sync",
+    "release:android": "node scripts/release-android.mjs",
     "check": "next lint && tsc --noEmit",
     "clean": "git clean -xdf .cache .next .turbo out ios android node_modules",
     "db:generate": "pnpm -F @tutly/db db:generate",

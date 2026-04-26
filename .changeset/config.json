@@ -1,0 +1,33 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": [
+    "@changesets/changelog-github",
+    { "repo": "TutlyLabs/Tutly" }
+  ],
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@tutly/api",
+    "@tutly/auth",
+    "@tutly/db",
+    "@tutly/eslint-config",
+    "@tutly/fsrelay",
+    "@tutly/github",
+    "@tutly/hooks",
+    "@tutly/jest-presets",
+    "@tutly/logger",
+    "@tutly/playgrounds",
+    "@tutly/prettier-config",
+    "@tutly/typescript-config",
+    "@tutly/ui",
+    "@tutly/utils",
+    "api",
+    "docs",
+    "landing",
+    "tutly"
+  ]
+}

@@ -19,12 +19,16 @@
     "lint": "turbo run lint --continue",
     "lint:fix": "turbo run lint --continue -- --fix",
     "lint:ws": "pnpm dlx sherif@latest",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
     "postinstall": "rm -rf node_modules/wrap-ansi/node_modules/string-width 2>/dev/null; pnpm lint:ws",
     "typecheck": "turbo run typecheck",
     "ui-add": "turbo run ui-add",
     "update:deps": "pnpm dlx npm-check-updates --deep --target latest -u && pnpm install"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.31.0",
     "@turbo/gen": "^2.6.3",
     "@tutly/prettier-config": "workspace:*",
     "prettier": "catalog:",
@@ -36,7 +40,9 @@
     "prettier": "3.5.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["prisma"],
+    "onlyBuiltDependencies": [
+      "prisma"
+    ],
     "overrides": {
       "@types/minimatch": "5.1.2"
     }
