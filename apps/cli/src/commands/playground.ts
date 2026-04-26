@@ -150,20 +150,42 @@ export default class Playground extends Command {
       legacyHeaders: false,
     });
 
-    const ALLOWED_TEST_COMMAND_PREFIXES = [
-      "npm test",
-      "pnpm test",
-      "yarn test",
-      "npx jest",
-      "npx mocha",
-      "npx vitest",
-      "jest",
-      "mocha",
-      "vitest",
-    ];
-    const isAllowedTestCommand = (cmd: unknown): cmd is string =>
-      typeof cmd === "string" &&
-      ALLOWED_TEST_COMMAND_PREFIXES.some((p) => cmd.startsWith(p));
+    const ALLOWED_RUNNERS: Record<string, { bin: string; baseArgs: string[] }> =
+      {
+        "npm test": { bin: "npm", baseArgs: ["test"] },
+        "pnpm test": { bin: "pnpm", baseArgs: ["test"] },
+        "yarn test": { bin: "yarn", baseArgs: ["test"] },
+        "npx jest": { bin: "npx", baseArgs: ["jest"] },
+        "npx mocha": { bin: "npx", baseArgs: ["mocha"] },
+        "npx vitest": { bin: "npx", baseArgs: ["vitest"] },
+        jest: { bin: "jest", baseArgs: [] },
+        mocha: { bin: "mocha", baseArgs: [] },
+        vitest: { bin: "vitest", baseArgs: [] },
+      };
+    const ALLOWED_EXTRA_ARG_PATTERN = /^[\w\-./@:=,]+$/;
+
+    const resolveTestCommand = (raw: unknown):
+      | { bin: string; argv: string[] }
+      | { error: string } => {
+      if (typeof raw !== "string") return { error: "command must be a string" };
+      const matchedKey = Object.keys(ALLOWED_RUNNERS)
+        .sort((a, b) => b.length - a.length)
+        .find((k) => raw === k || raw.startsWith(k + " "));
+      if (!matchedKey) {
+        return {
+          error: "Command not allowed",
+        };
+      }
+      const { bin, baseArgs } = ALLOWED_RUNNERS[matchedKey]!;
+      const trailing = raw.slice(matchedKey.length).trim();
+      const extras = trailing.length === 0 ? [] : trailing.split(/\s+/);
+      for (const arg of extras) {
+        if (!ALLOWED_EXTRA_ARG_PATTERN.test(arg)) {
+          return { error: `Invalid argument: ${arg}` };
+        }
+      }
+      return { bin, argv: [...baseArgs, ...extras] };
+    };
 
     this.app.get("/api/health", (req, res) => {
       res.json({
@@ -307,21 +329,19 @@ export default class Playground extends Command {
         const { promisify } = require("util");
         const execFileAsync = promisify(execFile);
 
-        const command: string =
+        const raw: string =
           req.body?.command || "npm test --silent -- --reporter json";
-
-        if (!isAllowedTestCommand(command)) {
+        const resolved = resolveTestCommand(raw);
+        if ("error" in resolved) {
           return res.status(400).json({
-            error: "Command not allowed",
-            allowedPrefixes: ALLOWED_TEST_COMMAND_PREFIXES,
+            error: resolved.error,
+            allowedRunners: Object.keys(ALLOWED_RUNNERS),
           });
         }
-
-        const [cmd, ...argv] = command.split(/\s+/).filter(Boolean);
-        this.log(`Running test command: ${command}`);
+        this.log(`Running test command: ${raw}`);
 
         try {
-          const { stdout, stderr } = await execFileAsync(cmd, argv, {
+          const { stdout, stderr } = await execFileAsync(resolved.bin, resolved.argv, {
             cwd: baseDir,
             timeout: 120000, // 2 minute timeout
             maxBuffer: 10 * 1024 * 1024, // 10MB buffer
@@ -374,22 +394,20 @@ export default class Playground extends Command {
         const { promisify } = require("util");
         const execFileAsync = promisify(execFile);
 
-        const command: string =
+        const raw: string =
           (req.query?.command as string) ||
           "npm test --silent -- --reporter json --dry-run";
-
-        if (!isAllowedTestCommand(command)) {
+        const resolved = resolveTestCommand(raw);
+        if ("error" in resolved) {
           return res.status(400).json({
-            error: "Command not allowed",
-            allowedPrefixes: ALLOWED_TEST_COMMAND_PREFIXES,
+            error: resolved.error,
+            allowedRunners: Object.keys(ALLOWED_RUNNERS),
           });
         }
-
-        const [cmd, ...argv] = command.split(/\s+/).filter(Boolean);
-        this.log(`Discovering tests with: ${command}`);
+        this.log(`Discovering tests with: ${raw}`);
 
         try {
-          const { stdout } = await execFileAsync(cmd, argv, {
+          const { stdout } = await execFileAsync(resolved.bin, resolved.argv, {
             cwd: baseDir,
             timeout: 30000,
             maxBuffer: 10 * 1024 * 1024,
