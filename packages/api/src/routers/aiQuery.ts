@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { PRISMA_SCHEMA, SCHEMA_CONTEXT } from "@/lib/prismaSchema";
+import { PRISMA_SCHEMA, SCHEMA_CONTEXT } from "../lib/prismaSchema";
 
 export const aiQueryRouter = createTRPCRouter({
   getAvailableModels: protectedProcedure.query(async ({ ctx }) => {

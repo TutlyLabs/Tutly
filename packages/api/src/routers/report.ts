@@ -1,4 +1,4 @@
-import { Role } from "@/lib/prisma";
+import { Role } from "@tutly/db/browser";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

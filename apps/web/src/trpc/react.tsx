@@ -9,7 +9,7 @@ import {
   localStorageBearerStorage,
 } from "@tutly/api-client";
 
-import { type AppRouter } from "@/server/api/root";
+import { type AppRouter } from "@tutly/api";
 import { createQueryClient } from "./query-client";
 import { getPreviewUrl, NODE_ENV } from "@/lib/constants";
 

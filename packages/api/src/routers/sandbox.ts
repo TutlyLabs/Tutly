@@ -2,7 +2,7 @@ import { CodeSandbox } from "@codesandbox/sdk";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 
 async function createTestSandbox(apiKey: string) {
   const sdk = new CodeSandbox(apiKey);
@@ -13,10 +13,14 @@ async function createTestSandbox(apiKey: string) {
 async function cleanupSandbox(sdk: any, sandboxId: string) {
   try {
     await sdk.sandboxes.hibernate(sandboxId);
-  } catch {}
+  } catch {
+    /* best-effort cleanup */
+  }
   try {
     await sdk.sandboxes.shutdown(sandboxId);
-  } catch {}
+  } catch {
+    /* best-effort cleanup */
+  }
 }
 
 export const sandboxRouter = createTRPCRouter({

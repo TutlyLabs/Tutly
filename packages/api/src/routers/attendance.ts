@@ -1,8 +1,8 @@
 // todo: fix overall attendance for mentor exceeding 100%
-import type { Prisma, Role } from "@/lib/prisma";
+import type { Prisma, Role } from "@tutly/db/browser";
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 type StudentData = {

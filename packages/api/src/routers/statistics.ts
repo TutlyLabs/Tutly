@@ -1,4 +1,4 @@
-import type { Attendance, submission, User } from "@/lib/prisma";
+import type { Attendance, submission, User } from "@tutly/db/browser";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

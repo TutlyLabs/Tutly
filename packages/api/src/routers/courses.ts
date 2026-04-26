@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export async function getEnrolledCourseIds(username: string) {

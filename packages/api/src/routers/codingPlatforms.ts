@@ -4,7 +4,7 @@ import {
   getPlatformScores,
   validatePlatformHandles,
   type PlatformScores,
-} from "@/lib/coding-platforms";
+} from "../lib/coding-platforms";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const codingPlatformsRouter = createTRPCRouter({

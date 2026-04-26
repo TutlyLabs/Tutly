@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 
 export const geminiRouter = createTRPCRouter({
   validateApiKey: publicProcedure

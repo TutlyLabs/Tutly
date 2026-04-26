@@ -7,7 +7,7 @@ import {
   verifyCustomDomain,
   getCnameTarget,
   getCustomDomainInstructions,
-} from "@/lib/cloudflare";
+} from "../lib/cloudflare";
 
 /**
  * Middleware that ensures the user has SUPER_ADMIN role

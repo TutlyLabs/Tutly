@@ -1,8 +1,8 @@
-import { NoteCategory } from "@/lib/prisma";
+import { NoteCategory } from "@tutly/db/browser";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 
 export const notesRouter = createTRPCRouter({
   updateNote: protectedProcedure

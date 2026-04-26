@@ -1,4 +1,4 @@
-import type { EventAttachmentType } from "@/lib/prisma";
+import type { EventAttachmentType } from "@tutly/db/browser";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

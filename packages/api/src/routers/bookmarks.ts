@@ -1,4 +1,4 @@
-import { BookMarkCategory } from "@/lib/prisma";
+import { BookMarkCategory } from "@tutly/db/browser";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

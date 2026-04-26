@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 
 export const oauthRouter = createTRPCRouter({
   unlinkAccount: protectedProcedure

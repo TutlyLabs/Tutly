@@ -74,6 +74,7 @@
     "@trpc/client": "11.8.0",
     "@trpc/react-query": "11.8.0",
     "@trpc/server": "11.8.0",
+    "@tutly/api": "workspace:*",
     "@tutly/api-client": "workspace:*",
     "@tutly/auth": "workspace:*",
     "@tutly/db": "workspace:*",

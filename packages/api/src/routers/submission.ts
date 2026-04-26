@@ -4,8 +4,8 @@ import type {
   Point,
   submission,
   User,
-} from "@/lib/prisma";
-import type { InputJsonValue } from "@/lib/prisma";
+} from "@tutly/db/browser";
+import type { InputJsonValue } from "@tutly/db/browser";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

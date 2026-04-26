@@ -1,4 +1,4 @@
-import type { pointCategory } from "@/lib/prisma";
+import type { pointCategory } from "@tutly/db/browser";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

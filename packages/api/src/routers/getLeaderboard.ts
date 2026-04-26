@@ -1,7 +1,7 @@
-import type { Course, submission, User } from "@/lib/prisma";
+import type { Course, submission, User } from "@tutly/db/browser";
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export type LeaderboardSubmission = {

@@ -1,7 +1,7 @@
-import { NotificationEvent, NotificationMedium } from "@/lib/prisma";
+import { NotificationEvent, NotificationMedium } from "@tutly/db/browser";
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const notificationsRouter = createTRPCRouter({

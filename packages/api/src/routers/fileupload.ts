@@ -7,15 +7,15 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
 
-import {
-  AWS_ACCESS_KEY,
-  AWS_BUCKET_NAME,
-  AWS_BUCKET_REGION,
-  AWS_ENDPOINT,
-  AWS_S3_URL,
-  AWS_SECRET_KEY,
-} from "@/lib/constants";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const AWS_BUCKET_NAME = process.env.AWS_BUCKET_NAME ?? "tutly-local";
+const AWS_BUCKET_REGION = process.env.AWS_BUCKET_REGION ?? "us-east-1";
+const AWS_ACCESS_KEY = process.env.AWS_ACCESS_KEY ?? "test";
+const AWS_SECRET_KEY = process.env.AWS_SECRET_KEY ?? "test";
+const AWS_ENDPOINT = process.env.AWS_ENDPOINT ?? "http://localhost:4566";
+const AWS_S3_URL =
+  process.env.AWS_S3_URL ?? "http://localhost:4566/tutly-local";
 
 export const allowedMimeTypes = [
   // Images
