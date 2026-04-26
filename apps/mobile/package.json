@@ -33,6 +33,7 @@
     "@trpc/react-query": "11.8.0",
     "@trpc/server": "11.8.0",
     "@tutly/api-client": "workspace:*",
+    "@tutly/hooks": "workspace:*",
     "@tutly/types": "workspace:*",
     "@tutly/utils": "workspace:*",
     "better-auth": "^1.4.7",
