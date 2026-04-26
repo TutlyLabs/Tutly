@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 
 export type FeatureUser = {
   id: string | number;

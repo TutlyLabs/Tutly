@@ -1,56 +1,26 @@
-import VSCodeEditor from "./vscode-editor";
-import { db } from "@/lib/db";
-import { getServerSessionOrRedirect } from "@/lib/auth";
-import { jwtVerify } from "jose";
+"use client";
+
+import { useSearchParams } from "next/navigation";
 import { ShieldAlert } from "lucide-react";
 
-export default async function VSCodePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const { user } = await getServerSessionOrRedirect();
+import { useAuthSession } from "@/components/auth/ProtectedShell";
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
+import VSCodeEditor from "./vscode-editor";
 
-  const resolvedParams = await searchParams;
-  const params = new URLSearchParams();
+export default function VSCodePage() {
+  const { user } = useAuthSession();
+  const searchParams = useSearchParams();
+  const config = searchParams.get("config");
+  const initialAssignmentId = searchParams.get("assignmentId");
 
-  Object.entries(resolvedParams).forEach(([key, value]) => {
-    if (value) {
-      if (Array.isArray(value)) {
-        value.forEach((v) => params.append(key, v));
-      } else {
-        params.append(key, value);
-      }
-    }
-  });
+  const cfg = api.vscode.resolveConfig.useQuery(
+    { config, assignmentId: initialAssignmentId },
+    { enabled: Boolean(user) },
+  );
 
-  let assignment = null;
-  let assignmentId = resolvedParams.assignmentId as string | undefined;
-
-  const configParam = resolvedParams.config as string | undefined;
-  let hasRunCommand = false;
-
-  let isAuthorized = true;
-
-  if (configParam) {
-    try {
-      const secret = new TextEncoder().encode(process.env.TUTLY_VSCODE_SECRET);
-      const { payload } = await jwtVerify(configParam, secret);
-      const decoded = payload as any;
-
-      if (decoded.assignmentId && !assignmentId) {
-        assignmentId = decoded.assignmentId;
-      }
-      if (decoded.tutlyConfig?.run?.command) {
-        hasRunCommand = true;
-      }
-    } catch (error) {
-      console.error("Failed to verify config param:", error);
-      isAuthorized = false;
-    }
-  }
-
-  if (!isAuthorized) {
+  if (!user || cfg.isLoading) return <PageLoader />;
+  if (!cfg.data?.isAuthorized) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-zinc-950 text-white">
         <div className="flex flex-col items-center gap-4 text-center">
@@ -66,29 +36,8 @@ export default async function VSCodePage({
     );
   }
 
-  if (assignmentId) {
-    try {
-      assignment = await db.attachment.findUnique({
-        where: { id: assignmentId },
-        select: {
-          id: true,
-          title: true,
-          class: {
-            select: {
-              course: {
-                select: {
-                  title: true,
-                },
-              },
-            },
-          },
-        },
-      });
-    } catch (error) {
-      console.error("Failed to fetch assignment:", error);
-    }
-  }
-
+  const params = new URLSearchParams();
+  searchParams.forEach((v, k) => params.append(k, v));
   const queryString = params.toString();
   const iframeSrc = queryString
     ? `/vscode/index.html?${queryString}`
@@ -97,12 +46,12 @@ export default async function VSCodePage({
   return (
     <VSCodeEditor
       iframeSrc={iframeSrc}
-      assignmentId={assignmentId}
-      assignmentName={assignment?.title}
-      courseName={assignment?.class?.course?.title}
+      assignmentId={cfg.data.assignmentId ?? undefined}
+      assignmentName={cfg.data.assignment?.title}
+      courseName={cfg.data.assignment?.class?.course?.title}
       userName={user.name || user.username}
       userId={user.id}
-      hasRunCommand={hasRunCommand}
+      hasRunCommand={cfg.data.hasRunCommand}
     />
   );
 }

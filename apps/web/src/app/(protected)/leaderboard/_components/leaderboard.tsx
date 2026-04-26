@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FaCrown } from "react-icons/fa6";
 import Image from "next/image";
-import type { User, Course } from "@/lib/prisma";
+import type { User, Course } from "@tutly/db/browser";
 
 import NoDataFound from "@/components/NoDataFound";
 

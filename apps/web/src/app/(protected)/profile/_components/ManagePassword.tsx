@@ -5,9 +5,9 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@tutly/ui/button";
+import { Input } from "@tutly/ui/input";
+import { Label } from "@tutly/ui/label";
 import { authClient } from "@/server/auth/client";
 
 const ManagePassword = ({

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { giteaClient } from "@/lib/gitea";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import yaml from "js-yaml";
 import { SignJWT } from "jose";
 import { auth } from "@/server/auth";

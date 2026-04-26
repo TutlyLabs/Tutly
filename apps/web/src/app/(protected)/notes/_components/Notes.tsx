@@ -1,6 +1,6 @@
 "use client";
 
-import type { NoteCategory, Notes } from "@/lib/prisma";
+import type { NoteCategory, Notes } from "@tutly/db/browser";
 import { formatDistanceToNow } from "date-fns";
 import { BookOpen, FileQuestion, ScrollText } from "lucide-react";
 import { useState } from "react";
@@ -13,9 +13,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@tutly/ui/card";
+import { Input } from "@tutly/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 
 interface CausedObjects {
   courseId: string;
@@ -30,13 +30,13 @@ const getNoteDetails = (
   const config = {
     ASSIGNMENT: {
       icon: ScrollText,
-      href: `/assignments/${objectId}`,
+      href: `/assignments/detail?id=${objectId}`,
       style: "text-yellow-500",
       label: "Assignment",
     },
     CLASS: {
       icon: BookOpen,
-      href: `/courses/${causedObjects?.courseId}/classes/${objectId}`,
+      href: `/courses/class?id=${causedObjects?.courseId}&classId=${objectId}`,
       style: "text-blue-500",
       label: "Class",
     },

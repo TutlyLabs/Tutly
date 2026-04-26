@@ -8,7 +8,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import type { SessionUser } from "@/lib/auth";
 
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@tutly/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "@tutly/ui/dropdown-menu";
 import { useLogout } from "@/hooks/use-logout";
 
 interface UserMenuProps {

@@ -1,128 +1,63 @@
-import { redirect } from "next/navigation";
-import { getServerSessionOrRedirect } from "@/lib/auth";
-import { isFeatureEnabled } from "@/lib/featureFlags";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
+import { Navigate } from "@/components/auth/Navigate";
+import { useAuthSession } from "@/components/auth/ProtectedShell";
+import PageLoader from "@/components/loader/PageLoader";
+import { PageLayout } from "@/components/PageLayout";
+import { api } from "@/trpc/react";
 import { SandboxWrapper } from "./_components/SandboxWrapper";
 import { SANDBOX_TEMPLATES } from "./_components/templetes";
-import { db } from "@/lib/db";
-import { Buffer } from "node:buffer";
 import PlaygroundPage from "../../assignments/_components/PlaygroundPage";
-import { PageLayout } from "@/components/PageLayout";
 
-export default async function SandboxPage({
-  searchParams: searchParamsPromise,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const session = await getServerSessionOrRedirect();
-  const currentUser = session.user;
+export default function SandboxPage() {
+  const { user } = useAuthSession();
+  const sp = useSearchParams();
+  const template = sp.get("template") ?? "static";
+  const templateName = sp.get("name") ?? "Starter Template";
+  const assignmentId = sp.get("assignmentId") ?? "";
+  const submissionId = sp.get("submissionId") ?? "";
+  const editTemplate = sp.get("editTemplate");
 
-  const searchParams = await searchParamsPromise;
-
-  const template = (searchParams.template as string) || "static";
-  const templateName = (searchParams.name as string) || "Starter Template";
-  const assignmentId = (searchParams.assignmentId as string) || "";
-  const submissionId = (searchParams.submissionId as string) || "";
-  const editTemplate = searchParams.editTemplate as string;
-
-  const isSandboxEnabled = await isFeatureEnabled(
-    "sandbox_templates",
-    currentUser,
+  const flagQ = api.featureFlags.isEnabled.useQuery({
+    key: "sandbox_templates",
+  });
+  const dataQ = api.sandbox.getSandboxPageData.useQuery(
+    { assignmentId: assignmentId || null, submissionId: submissionId || null },
+    { enabled: Boolean(user) },
   );
 
-  if (!isSandboxEnabled) {
-    redirect("/playgrounds");
-  }
+  if (!user || flagQ.isLoading || dataQ.isLoading) return <PageLoader />;
+  if (!flagQ.data) return <Navigate to="/playgrounds" />;
+  if (dataQ.data && dataQ.data.allowed === false) return <Navigate to="/404" />;
 
-  const submission = submissionId
-    ? await db.submission.findUnique({
-        where: { id: submissionId, status: "SUBMITTED" },
-        include: {
-          enrolledUser: {
-            include: {
-              user: true,
-            },
-          },
-          points: true,
-          assignment: true,
-        },
-      })
-    : null;
-
-  const studentAccess =
-    currentUser.role === "STUDENT" &&
-    submission?.enrolledUser.username === currentUser.username;
-  const mentorAccess =
-    currentUser.role === "MENTOR" &&
-    submission?.enrolledUser.mentorUsername === currentUser.username;
-  const instrctorAccess = currentUser.role === "INSTRUCTOR";
-
-  if (!studentAccess && !mentorAccess && !instrctorAccess && submissionId) {
-    redirect("/404");
-  }
-
-  const showActions = instrctorAccess || mentorAccess;
-
-  const assignment = assignmentId
-    ? await db.attachment.findUnique({
-        where: {
-          id: assignmentId,
-          attachmentType: "ASSIGNMENT",
-        },
-      })
-    : null;
-
-  let decodedSandboxTemplate = null;
-  if (assignment?.sandboxTemplate) {
-    try {
-      const decodedString = Buffer.from(
-        assignment.sandboxTemplate as string,
-        "base64",
-      ).toString("utf-8");
-      decodedSandboxTemplate = JSON.parse(decodedString);
-    } catch (error) {
-      decodedSandboxTemplate = assignment.sandboxTemplate;
-    }
-  }
-
-  const assignmentWithDecodedTemplate = assignment
-    ? {
-        ...assignment,
-        sandboxTemplate: decodedSandboxTemplate,
-      }
-    : null;
+  const { submission, assignment, showActions, canEditTemplate } = dataQ.data!;
 
   const validTemplates = Object.keys(SANDBOX_TEMPLATES);
   if (!validTemplates.includes(template) && !assignmentId) {
-    redirect("/playgrounds");
+    return <Navigate to="/playgrounds" />;
   }
 
-  const canEditTemplate =
-    currentUser.role === "INSTRUCTOR" || currentUser.role === "ADMIN";
-
   return (
-    <PageLayout
-      forceClose={true}
-      className="!p-0"
-      hideHeader={true}
-      hideCrisp={true}
-    >
+    <PageLayout forceClose className="!p-0" hideHeader hideCrisp>
       <div className="bg-background flex h-screen w-full flex-col overflow-hidden">
         {submissionId && submission ? (
           <PlaygroundPage
             submission={submission}
             submissionMode={submission.assignment.submissionMode}
             showActions={showActions}
-            showAssignment={true}
+            showAssignment
           />
         ) : (
           <SandboxWrapper
-            assignmentId={assignmentId ?? null}
+            assignmentId={assignmentId || null}
             template={template}
             templateName={templateName}
             canEditTemplate={canEditTemplate}
             isEditingTemplate={editTemplate === "true"}
-            assignment={assignmentWithDecodedTemplate}
-            currentUser={currentUser}
+            assignment={assignment}
+            currentUser={user}
           />
         )}
       </div>

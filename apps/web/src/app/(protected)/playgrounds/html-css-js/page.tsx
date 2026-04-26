@@ -1,5 +1,10 @@
-import { api } from "@/trpc/server";
-import { getServerSessionOrRedirect } from "@/lib/auth";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
+import { useAuthSession } from "@/components/auth/ProtectedShell";
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 import Playground from "../_components/Playground";
 
 type SandpackFile = {
@@ -8,46 +13,35 @@ type SandpackFile = {
   active?: boolean;
   readOnly?: boolean;
 };
+type SandpackFiles = { [key: string]: SandpackFile };
 
-type SandpackFiles = {
-  [key: string]: SandpackFile;
-};
+export default function HtmlCssJsPlaygroundPage() {
+  const { user } = useAuthSession();
+  const sp = useSearchParams();
+  const assignmentId = sp.get("assignmentId") ?? "";
+  const submissionId = sp.get("submissionId") ?? "";
 
-interface HtmlCssJsPlaygroundPageProps {
-  searchParams: Promise<{
-    assignmentId?: string;
-    submissionId?: string;
-  }>;
-}
+  const submissionQ = api.submissions.getSubmissionForPlayground.useQuery(
+    { submissionId },
+    { enabled: Boolean(submissionId) },
+  );
 
-export default async function HtmlCssJsPlaygroundPage({
-  searchParams,
-}: HtmlCssJsPlaygroundPageProps) {
-  const session = await getServerSessionOrRedirect();
-  const currentUser = session.user;
-  const { assignmentId, submissionId } = await searchParams;
-
-  let submissionData;
-  if (submissionId) {
-    submissionData = await api.submissions.getSubmissionForPlayground({
-      submissionId,
-    });
-  }
-
-  if (submissionId && (!submissionData?.success || !submissionData.data)) {
+  if (!user) return <PageLoader />;
+  if (submissionId && submissionQ.isLoading) return <PageLoader />;
+  if (submissionId && (!submissionQ.data?.success || !submissionQ.data.data)) {
     return <div>Access Denied or submission not found</div>;
   }
 
-  const initialFiles = submissionData?.data?.initialFiles as
+  const initialFiles = submissionQ.data?.data?.initialFiles as
     | SandpackFiles
     | undefined;
 
   return (
     <Playground
-      assignmentId={assignmentId || ""}
+      assignmentId={assignmentId}
       initialFiles={initialFiles}
       template="static"
-      currentUser={currentUser}
+      currentUser={user}
     />
   );
 }

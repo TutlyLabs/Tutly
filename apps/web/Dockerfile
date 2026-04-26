@@ -22,7 +22,8 @@ RUN npm install -g pnpm
 
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
-COPY --from=builder /app/out/full/apps/web/prisma ./apps/web/prisma
+COPY --from=builder /app/out/full/packages/db/prisma ./packages/db/prisma
+COPY --from=builder /app/out/full/packages/db/prisma.config.ts ./packages/db/prisma.config.ts
 COPY --from=builder /app/out/full/apps/web/scripts ./apps/web/scripts
 RUN pnpm install
 
@@ -34,7 +35,7 @@ ENV SKIP_ENV_VALIDATION=1
 
 ENV NODE_ENV=production
 
-WORKDIR /app/apps/web
+WORKDIR /app/packages/db
 RUN pnpm prisma generate
 
 WORKDIR /app

@@ -1,16 +1,17 @@
-import { api } from "@/trpc/server";
+"use client";
+
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 import { Calendar } from "./_components/calendar";
 import { EventsSidebar } from "./_components/events";
 
-export default async function SchedulePage() {
-  const scheduleData = await api.schedule.getScheduleData();
-
-  if (!scheduleData?.success || !scheduleData.data) {
+export default function SchedulePage() {
+  const q = api.schedule.getScheduleData.useQuery();
+  if (q.isLoading) return <PageLoader />;
+  if (!q.data?.success || !q.data.data) {
     return <div>Failed to load schedule data.</div>;
   }
-
-  const { events, isAuthorized, holidays } = scheduleData.data;
-
+  const { events, isAuthorized, holidays } = q.data.data;
   return (
     <div className="flex h-screen gap-4">
       <div className="flex-shrink-0">

@@ -89,12 +89,7 @@ export default function PageLoader() {
 
         if (targetUrl.origin !== currentUrl.origin) return;
 
-        if (
-          href.startsWith("tel:") ||
-          href.startsWith("mailto:") ||
-          href.startsWith("blob:") ||
-          href.startsWith("javascript:")
-        ) {
+        if (/^(tel|mailto|blob|javascript|data|vbscript|file):/i.test(href)) {
           return;
         }
 
@@ -113,10 +108,7 @@ export default function PageLoader() {
           anchor.getAttribute("data-disable-page-loader") === "true";
         const isNotSpecialProtocol =
           href &&
-          !href.startsWith("tel:") &&
-          !href.startsWith("mailto:") &&
-          !href.startsWith("blob:") &&
-          !href.startsWith("javascript:");
+          !/^(tel|mailto|blob|javascript|data|vbscript|file):/i.test(href);
 
         return (
           !isPageLoaderDisabled &&

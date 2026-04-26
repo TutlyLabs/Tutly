@@ -50,14 +50,13 @@ export const FRONTEND_URL =
   "http://localhost:3000";
 
 export const getPreviewUrl = () => {
-  if (typeof window === "undefined") {
-    if (VERCEL_URL) {
-      return `https://${VERCEL_URL}`;
-    }
-    return FRONTEND_URL;
+  if (typeof window !== "undefined") {
+    const explicit = process.env.NEXT_PUBLIC_API_URL;
+    if (explicit) return explicit.replace(/\/$/, "");
+    return window.location.origin;
   }
-
-  return window.location.origin;
+  if (VERCEL_URL) return `https://${VERCEL_URL}`;
+  return FRONTEND_URL;
 };
 
 export const PREVIEW_URL = getPreviewUrl();

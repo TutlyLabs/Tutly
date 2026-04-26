@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@tutly/ui/card";
+import { Button } from "@tutly/ui/button";
+import { Badge } from "@tutly/ui/badge";
+import { ScrollArea } from "@tutly/ui/scroll-area";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Trophy,
@@ -254,8 +254,8 @@ export default function MobileResponsiveStudentAssignments({
                         <Button
                           onClick={() => {
                             const url = userId
-                              ? `/assignments/${assignment.id}?username=${userId}`
-                              : `/assignments/${assignment.id}`;
+                              ? `/assignments/detail?id=${assignment.id}&username=${userId}`
+                              : `/assignments/detail?id=${assignment.id}`;
                             router.push(url);
                           }}
                           className="text-md w-24 p-4 max-sm:p-3 max-sm:text-sm"

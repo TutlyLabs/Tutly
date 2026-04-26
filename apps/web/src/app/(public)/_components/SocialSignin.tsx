@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import { authClient } from "@/server/auth/client";
 import Image from "next/image";
 

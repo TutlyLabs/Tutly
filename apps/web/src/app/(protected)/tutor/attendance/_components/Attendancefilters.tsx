@@ -6,15 +6,15 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useSearchParams } from "next/navigation";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@tutly/ui/badge";
+import { Button } from "@tutly/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+} from "@tutly/ui/dialog";
+import { Input } from "@tutly/ui/input";
 import {
   Table,
   TableBody,
@@ -22,8 +22,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@tutly/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 import { api } from "@/trpc/react";
 
 import AttendanceHeader from "./AttendanceHeader";

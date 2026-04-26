@@ -27,62 +27,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm install --frozen-lockfile --filter=landing
+      - name: Setup
+        uses: ./tooling/github/setup
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Verify Next.js installation
-        run: |
-          echo "Checking Next.js installation..."
-          pnpm list next
-          pnpm exec next --version
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Build Landing App with Turbo
-        run: |
-          pnpm turbo build --filter=landing
-
-      - name: Verify Build Output
-        run: |
-          if [ ! -d "apps/landing/.next" ]; then
-            echo "❌ Build failed: .next directory not found"
-            exit 1
-          fi
-          echo "✅ Build successful"
+      - name: Build with Vercel
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel Preview
         id: deploy
         run: |
-          echo "🚀 Deploying to Vercel..."
-          cd apps/landing
-          # Pull Vercel settings for this app
-          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          # Build for Vercel deployment
-          vercel build --token=${{ secrets.VERCEL_TOKEN }}
-          # Deploy the built output
           DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-
-          if [ $? -eq 0 ]; then
-            echo "✅ Deployment successful: $DEPLOYMENT_URL"
-            echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Deployment failed"
-            exit 1
-          fi
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING }}
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
 
       - name: Comment on PR
         if: github.event_name == 'pull_request'

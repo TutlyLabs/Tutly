@@ -3,6 +3,9 @@
 @import './_variables.scss';
 @import './_keyframe-animations.scss';
 
+/* Scan workspace packages so Tailwind generates the utilities they use. */
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {

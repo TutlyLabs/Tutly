@@ -5,48 +5,34 @@ import {
   usernameClient,
   adminClient,
 } from "better-auth/client/plugins";
+import { ac, ROLES } from "@tutly/auth/client";
+
 import type { auth } from "@/server/auth";
 import { getPreviewUrl } from "@/lib/constants";
-import {
-  ac,
-  adminRole,
-  instructorRole,
-  mentorRole,
-  studentRole,
-} from "./permissions";
+
+const BEARER_TOKEN_KEY = "bearer_token";
 
 export const authClient = createAuthClient({
   baseURL: getPreviewUrl(),
   fetchOptions: {
-    onSuccess: (ctx) => {
-      const authToken = ctx.response.headers.get("set-auth-token");
-      if (authToken && typeof window !== "undefined") {
-        localStorage.setItem("bearer_token", authToken);
+    onSuccess: async (ctx: { response: Response }) => {
+      const t = ctx.response.headers.get("set-auth-token");
+      if (t && typeof window !== "undefined") {
+        window.localStorage.setItem(BEARER_TOKEN_KEY, t);
       }
     },
     auth: {
-      type: "Bearer",
-      token: () => {
-        if (typeof window !== "undefined") {
-          return localStorage.getItem("bearer_token") || "";
-        }
-        return "";
-      },
+      type: "Bearer" as const,
+      token: () =>
+        typeof window === "undefined"
+          ? ""
+          : (window.localStorage.getItem(BEARER_TOKEN_KEY) ?? ""),
     },
   },
   plugins: [
     customSessionClient<typeof auth>(),
     inferAdditionalFields<typeof auth>(),
     usernameClient(),
-    adminClient({
-      ac,
-      roles: {
-        ADMIN: adminRole,
-        INSTRUCTOR: instructorRole,
-        MENTOR: mentorRole,
-        STUDENT: studentRole,
-        SUPER_ADMIN: adminRole,
-      },
-    }),
+    adminClient({ ac, roles: ROLES }),
   ],
 });

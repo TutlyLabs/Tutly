@@ -4,7 +4,7 @@ import {
   SandpackCodeEditor,
   SandpackPreview,
 } from "@codesandbox/sandpack-react";
-import type { Attachment } from "@/lib/prisma";
+import type { Attachment } from "@tutly/db/browser";
 // @ts-expect-error - sandpack-file-explorer package has incorrect type definitions
 import { SandpackFileExplorer } from "sandpack-file-explorer";
 
@@ -12,7 +12,7 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/ui/resizable";
+} from "@tutly/ui/resizable";
 
 import { AssignmentPreview } from "./AssignmentPreview";
 import { BottomTabs } from "./BottomTabs";

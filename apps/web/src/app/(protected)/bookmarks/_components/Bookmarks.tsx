@@ -1,6 +1,6 @@
 "use client";
 
-import type { BookMarkCategory, BookMarks } from "@/lib/prisma";
+import type { BookMarkCategory, BookMarks } from "@tutly/db/browser";
 import { formatDistanceToNow } from "date-fns";
 import { Bell, BookOpen, FileQuestion, ScrollText } from "lucide-react";
 import Link from "next/link";
@@ -11,8 +11,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@tutly/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 
 interface CausedObjects {
   courseId: string;
@@ -27,13 +27,13 @@ const getBookmarkDetails = (
   const config = {
     ASSIGNMENT: {
       icon: ScrollText,
-      href: `/assignments/${objectId}`,
+      href: `/assignments/detail?id=${objectId}`,
       style: "text-yellow-500",
       label: "Assignment",
     },
     CLASS: {
       icon: BookOpen,
-      href: `/courses/${causedObjects?.courseId}/classes/${objectId}`,
+      href: `/courses/class?id=${causedObjects?.courseId}&classId=${objectId}`,
       style: "text-blue-500",
       label: "Class",
     },

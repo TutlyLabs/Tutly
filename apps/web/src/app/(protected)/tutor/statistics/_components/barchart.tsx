@@ -2,13 +2,13 @@
 
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts";
 import { api } from "@/trpc/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { ChartConfig } from "@/components/ui/chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@tutly/ui/card";
+import type { ChartConfig } from "@tutly/ui/chart";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from "@tutly/ui/chart";
 import { InboxIcon } from "lucide-react";
 
 const chartConfig = {

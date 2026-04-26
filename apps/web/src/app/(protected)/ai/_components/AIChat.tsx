@@ -19,16 +19,16 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import MarkdownPreview from "@/components/MarkdownPreview";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@tutly/ui/button";
+import { ScrollArea } from "@tutly/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from "@tutly/ui/select";
+import { Textarea } from "@tutly/ui/textarea";
 import type { SessionUser } from "@/lib/auth";
 import { api } from "@/trpc/react";
 

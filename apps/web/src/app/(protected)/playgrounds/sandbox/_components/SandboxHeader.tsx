@@ -15,14 +15,14 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@tutly/ui/select";
 import SubmitAssignment from "@/app/(protected)/playgrounds/_components/SubmitAssignment";
 import { templates } from "@/app/(protected)/playgrounds/templetes";
 import { api } from "@/trpc/react";

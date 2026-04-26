@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Course } from "@/lib/prisma";
+import type { Course } from "@tutly/db/browser";
 import NoDataFound from "@/components/NoDataFound";
 
 type SimpleCourse = {
@@ -138,7 +138,7 @@ const SingleAssignmentBoard = ({
                       <button
                         title="Details"
                         onClick={() =>
-                          router.push(`/assignments/${assignment.id}`)
+                          router.push(`/assignments/detail?id=${assignment.id}`)
                         }
                         className="rounded bg-blue-500 p-2.5"
                       >

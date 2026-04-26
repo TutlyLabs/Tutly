@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-import day from "@/lib/dayjs";
+import day from "@tutly/utils/dayjs";
 import { api } from "@/trpc/react";
 
 const EvaluateSubmission = ({

@@ -1,11 +1,11 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-import { getServerSessionOrRedirect } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { Navigate } from "@/components/auth/Navigate";
+import { useAuthSession } from "@/components/auth/ProtectedShell";
+import PageLoader from "@/components/loader/PageLoader";
 
-const Page = async () => {
-  await getServerSessionOrRedirect();
-  redirect("/dashboard");
-};
-
-export default Page;
+export default function Page() {
+  const { user, isPending } = useAuthSession();
+  if (isPending) return <PageLoader />;
+  return <Navigate to={user ? "/dashboard" : "/sign-in"} />;
+}

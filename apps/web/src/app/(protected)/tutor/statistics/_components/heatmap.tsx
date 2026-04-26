@@ -11,13 +11,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Button } from "@tutly/ui/button";
+import { Card } from "@tutly/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@tutly/ui/popover";
 
 interface CalendarHeatmapProps {
   classes: string[];
@@ -207,7 +203,7 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({
                         <span>class:</span>
 
                         <Link
-                          href={`/courses/${courseId}/classes/${classInfo.classId}`}
+                          href={`/courses/class?id=${courseId}&classId=${classInfo.classId}`}
                           target="_blank"
                           className="block truncate text-[11px] text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
                         >

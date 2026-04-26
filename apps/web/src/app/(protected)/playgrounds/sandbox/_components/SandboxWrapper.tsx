@@ -5,7 +5,7 @@ import {
   type SandpackProps,
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
-import type { Attachment } from "@/lib/prisma";
+import type { Attachment } from "@tutly/db/browser";
 import { useMemo, useState } from "react";
 import { useBundlerUrl } from "@/hooks/use-bundler-url";
 

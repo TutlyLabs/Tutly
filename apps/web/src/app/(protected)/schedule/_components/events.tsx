@@ -8,13 +8,13 @@ import { CiStreamOn } from "react-icons/ci";
 import { MdEventRepeat } from "react-icons/md";
 import { PiTagChevronBold } from "react-icons/pi";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@tutly/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@tutly/ui/collapsible";
+import { ScrollArea } from "@tutly/ui/scroll-area";
 
 import { EventDetails } from "./event-details";
 

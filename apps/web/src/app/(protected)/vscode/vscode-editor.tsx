@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import { Play, Send, Save } from "lucide-react";
 import { LocalPlaygroundSetupScreen } from "./local-playground-screen";
 import { PageLayout } from "@/components/PageLayout";

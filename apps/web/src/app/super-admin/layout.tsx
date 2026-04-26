@@ -1,33 +1,41 @@
-export const dynamic = "force-dynamic";
+"use client";
 
 import "@/styles/globals.css";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
 import { AppHeader } from "@/components/sidebar/AppHeader";
 import { LayoutProvider } from "@/providers/layout-provider";
 import { LayoutContent } from "@/components/LayoutContent";
-import { getServerSessionOrRedirect } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { Navigate } from "@/components/auth/Navigate";
+import {
+  ProtectedShell,
+  useAuthSession,
+} from "@/components/auth/ProtectedShell";
 
-export default async function SuperAdminLayout({
+export default function SuperAdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSessionOrRedirect();
+  return (
+    <ProtectedShell>
+      <SuperAdminContent>{children}</SuperAdminContent>
+    </ProtectedShell>
+  );
+}
 
-  // Only SUPER_ADMIN role can access
-  if (session.user.role !== "SUPER_ADMIN") {
-    redirect("/dashboard");
-  }
+function SuperAdminContent({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthSession();
+  if (!user) return null;
+  if (user.role !== "SUPER_ADMIN") return <Navigate to="/dashboard" />;
 
   return (
     <LayoutProvider>
       <div className="flex h-screen w-full overflow-hidden">
         <div>
-          <AppSidebar user={session.user} />
+          <AppSidebar user={user} />
         </div>
         <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 ease-in-out">
-          <AppHeader user={session.user} />
+          <AppHeader user={user} />
           <LayoutContent>{children}</LayoutContent>
         </div>
       </div>

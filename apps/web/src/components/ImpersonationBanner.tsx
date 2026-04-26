@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, User, Shield, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import { authClient } from "@/server/auth/client";
 import { toast } from "sonner";
 import type { SessionUser } from "@/lib/auth";

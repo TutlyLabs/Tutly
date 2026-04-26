@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { Editor } from "@tiptap/react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Badge } from "@tutly/ui/badge";
+import { cn } from "@tutly/utils";
 
 // Icons
 import {

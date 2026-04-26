@@ -10,7 +10,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@tutly/ui/select";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import NoDataFound from "@/components/NoDataFound";

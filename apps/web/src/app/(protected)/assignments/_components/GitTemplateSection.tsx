@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { FiRefreshCw, FiTerminal } from "react-icons/fi";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 
 export const GitTemplateSection = ({ assignment }: { assignment: any }) => {
   const [isCreating, setIsCreating] = useState(false);

@@ -21,7 +21,7 @@ import {
   LogOutIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useDebounce } from "@/hooks/use-debounce";
+import { useDebounce } from "@tutly/hooks";
 
 import {
   CommandDialog,
@@ -31,12 +31,12 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
+} from "@tutly/ui/command";
+import { Badge } from "@tutly/ui/badge";
 import type { SessionUser } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
 import { api } from "@/trpc/react";
-import { cn } from "@/lib/utils";
+import { cn } from "@tutly/utils";
 
 type CategoryFilter =
   | "all"
@@ -662,17 +662,19 @@ export function CommandPalette({
                       onSelect={() => {
                         if (creationMode === "class") {
                           handleSelect(
-                            () => router.push(`/courses/${course.id}/classes`),
+                            () =>
+                              router.push(`/courses/classes?id=${course.id}`),
                             true,
                           );
                         } else if (creationMode === "assignment") {
                           handleSelect(
-                            () => router.push(`/courses/${course.id}/classes`),
+                            () =>
+                              router.push(`/courses/classes?id=${course.id}`),
                             true,
                           );
                         } else {
                           handleSelect(() =>
-                            router.push(`/courses/${course.id}`),
+                            router.push(`/courses/detail?id=${course.id}`),
                           );
                         }
                       }}
@@ -712,7 +714,7 @@ export function CommandPalette({
                       onSelect={() =>
                         handleSelect(() =>
                           router.push(
-                            `/courses/${cls.courseId}/classes/${cls.id}`,
+                            `/courses/class?id=${cls.courseId}&classId=${cls.id}`,
                           ),
                         )
                       }
@@ -740,7 +742,9 @@ export function CommandPalette({
                       key={assignment.id}
                       onSelect={() =>
                         handleSelect(() =>
-                          router.push(`/assignments/${assignment.id}`),
+                          router.push(
+                            `/assignments/detail?id=${assignment.id}`,
+                          ),
                         )
                       }
                     >
@@ -820,7 +824,7 @@ export function CommandPalette({
                         key={u.id}
                         onSelect={() =>
                           handleSelect(() =>
-                            router.push(`/profile/${u.username}`),
+                            router.push(`/profile/view?u=${u.username}`),
                           )
                         }
                       >
@@ -921,7 +925,7 @@ export function CommandPalette({
                             handleSelect(
                               () =>
                                 router.push(
-                                  `/courses/${course.id}/classes?modal=newClass`,
+                                  `/courses/classes?id=${course.id}&modal=newClass`,
                                 ),
                               false,
                             );
@@ -929,7 +933,7 @@ export function CommandPalette({
                             handleSelect(
                               () =>
                                 router.push(
-                                  `/courses/${course.id}/classes?modal=newAssignment`,
+                                  `/courses/classes?id=${course.id}&modal=newAssignment`,
                                 ),
                               false,
                             );
@@ -1021,7 +1025,7 @@ export function CommandPalette({
                                     handleSelect(
                                       () =>
                                         router.push(
-                                          `/courses/${course.id}/classes?modal=newClass`,
+                                          `/courses/classes?id=${course.id}&modal=newClass`,
                                         ),
                                       false,
                                     );
@@ -1029,13 +1033,15 @@ export function CommandPalette({
                                     handleSelect(
                                       () =>
                                         router.push(
-                                          `/courses/${course.id}/classes?modal=newAssignment`,
+                                          `/courses/classes?id=${course.id}&modal=newAssignment`,
                                         ),
                                       false,
                                     );
                                   } else {
                                     handleSelect(() =>
-                                      router.push(`/courses/${course.id}`),
+                                      router.push(
+                                        `/courses/detail?id=${course.id}`,
+                                      ),
                                     );
                                   }
                                 }}
@@ -1092,7 +1098,7 @@ export function CommandPalette({
                                 onSelect={() =>
                                   handleSelect(() =>
                                     router.push(
-                                      `/courses/${cls.courseId}/classes/${cls.id}`,
+                                      `/courses/class?id=${cls.courseId}&classId=${cls.id}`,
                                     ),
                                   )
                                 }
@@ -1121,7 +1127,7 @@ export function CommandPalette({
                                   onSelect={() =>
                                     handleSelect(() =>
                                       router.push(
-                                        `/assignments/${assignment.id}`,
+                                        `/assignments/detail?id=${assignment.id}`,
                                       ),
                                     )
                                   }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Tabs } from "@/components/ui/tabs";
+import { Tabs } from "@tutly/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,9 +14,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+} from "@tutly/ui/alert-dialog";
+import { Button } from "@tutly/ui/button";
+import { Textarea } from "@tutly/ui/textarea";
 import { api } from "@/trpc/react";
 import { useClientSession } from "@/lib/auth/client";
 

@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@tutly/ui/table";
 import { ArrowUpDown, Edit2, Eye, MoreVertical, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -14,8 +14,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+} from "@tutly/ui/dropdown-menu";
+import { Button } from "@tutly/ui/button";
 import type { Column, IAction } from "./DisplayTable";
 
 interface TableListProps {

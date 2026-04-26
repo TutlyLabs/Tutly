@@ -1,9 +1,11 @@
-import { api } from "@/trpc/server";
+"use client";
+
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 import ProfilePage from "./_components/ProfilePage";
-import type { Profile } from "@/lib/prisma";
 
-export default async function Profile() {
-  const userProfile = await api.users.getUserProfile();
-
-  return <ProfilePage userProfile={userProfile} />;
+export default function Profile() {
+  const q = api.users.getUserProfile.useQuery();
+  if (q.isLoading) return <PageLoader />;
+  return <ProfilePage userProfile={q.data} />;
 }

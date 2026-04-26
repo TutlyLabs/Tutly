@@ -1,4 +1,4 @@
-import { type FileType } from "@/lib/prisma";
+import { type FileType } from "@tutly/db/browser";
 import {
   $isListNode,
   INSERT_CHECK_LIST_COMMAND,
@@ -53,8 +53,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@tutly/ui/button";
+import { Input } from "@tutly/ui/input";
 import { useFileUpload } from "@/components/useFileUpload";
 
 import { INSERT_IMAGE_COMMAND } from "./ImagePlugin";

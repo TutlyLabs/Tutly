@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@tutly/ui/select";
 import { useSearchParams, useRouter } from "next/navigation";
 
 const SortBy = () => {

@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@tutly/ui/accordion";
 import { authClient } from "@/server/auth/client";
-import type { Account } from "@/lib/prisma";
+import type { Account } from "@tutly/db/browser";
 import Image from "next/image";
 
 export const GithubIntegration = ({

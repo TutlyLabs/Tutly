@@ -1,29 +1,24 @@
-import { api } from "@/trpc/server";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 import Leaderboard from "./_components/leaderBoard";
 
-interface TutorLeaderboardPageProps {
-  searchParams: Promise<{
-    course?: string;
-    mentor?: string;
-  }>;
-}
+export default function TutorLeaderboardPage() {
+  const sp = useSearchParams();
+  const course = sp.get("course") ?? undefined;
+  const mentor = sp.get("mentor") ?? undefined;
 
-export default async function TutorLeaderboardPage({
-  searchParams,
-}: TutorLeaderboardPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const course = resolvedSearchParams.course || undefined;
-  const mentor = resolvedSearchParams.mentor || undefined;
-
-  const leaderboardData = await api.leaderboard.getTutorLeaderboardData({
+  const q = api.leaderboard.getTutorLeaderboardData.useQuery({
     course,
     mentor,
   });
-
-  if (!leaderboardData?.success || !leaderboardData.data) {
+  if (q.isLoading) return <PageLoader />;
+  if (!q.data?.success || !q.data.data) {
     return <div>Failed to load leaderboard data.</div>;
   }
-
   const {
     submissions,
     courses,
@@ -31,8 +26,7 @@ export default async function TutorLeaderboardPage({
     mentors,
     selectedCourse,
     selectedMentor,
-  } = leaderboardData.data;
-
+  } = q.data.data;
   return (
     <Leaderboard
       submissions={submissions}

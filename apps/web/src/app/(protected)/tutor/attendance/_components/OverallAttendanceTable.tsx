@@ -4,8 +4,8 @@ import { ArrowUpDown, Search } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@tutly/ui/button";
+import { Input } from "@tutly/ui/input";
 import {
   Table,
   TableBody,
@@ -13,8 +13,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+} from "@tutly/ui/table";
+import { cn } from "@tutly/utils";
 
 interface StudentAttendance {
   name: string;

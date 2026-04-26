@@ -1,8 +1,17 @@
 const express = require('express');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = 8080;
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 600,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+});
+app.use(limiter);
 
 app.use('/vscode', express.static(path.join(__dirname, 'vscode/assets')));
 app.use('/vscode', express.static(path.join(__dirname, 'vscode')));
@@ -11,11 +20,11 @@ app.use('/pages', express.static(path.join(__dirname, 'pages')));
 app.use('/scripts', express.static(path.join(__dirname, 'scripts')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-app.get('/playground', (req, res) => {
+app.get('/playground', limiter, (req, res) => {
   res.sendFile(path.join(__dirname, 'pages/playground.html'));
 });
 
-app.get('/preflight', (req, res) => {
+app.get('/preflight', limiter, (req, res) => {
   res.sendFile(path.join(__dirname, 'pages/preflight.html'));
 });
 

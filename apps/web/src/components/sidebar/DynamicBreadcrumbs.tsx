@@ -7,8 +7,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { useIsMobile } from "@/hooks/use-mobile";
+} from "@tutly/ui/breadcrumb";
+import { useIsMobile } from "@tutly/hooks";
 
 const truncateText = (text: string, maxLength = 7): string => {
   return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;

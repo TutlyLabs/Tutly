@@ -1,15 +1,17 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { type NextRequest } from "next/server";
 
-import { appRouter } from "@/server/api/root";
-import { createTRPCContext } from "@/server/api/trpc";
+import { appRouter, createTRPCContext } from "@tutly/api";
+import { auth } from "@/server/auth";
 
-const handler = (req: NextRequest) =>
-  fetchRequestHandler({
+const handler = async (req: NextRequest) => {
+  const session = await auth.api.getSession({ headers: req.headers });
+
+  return fetchRequestHandler({
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext: () => createTRPCContext({ req }),
+    createContext: () => createTRPCContext({ headers: req.headers, session }),
     onError:
       process.env.NODE_ENV === "development"
         ? ({ path, error }) => {
@@ -19,5 +21,6 @@ const handler = (req: NextRequest) =>
           }
         : undefined,
   });
+};
 
 export { handler as GET, handler as POST };

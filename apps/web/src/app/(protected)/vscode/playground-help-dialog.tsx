@@ -6,8 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "@tutly/ui/dialog";
+import { Button } from "@tutly/ui/button";
 import {
   Info,
   Chrome,
@@ -16,8 +16,8 @@ import {
   Globe,
   ExternalLink,
 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
+import { ScrollArea } from "@tutly/ui/scroll-area";
 
 export function PlaygroundHelpDialog() {
   return (

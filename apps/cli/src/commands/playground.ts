@@ -1,11 +1,13 @@
 import { promises as fs } from "fs";
 import { createServer, IncomingMessage } from "http";
 import * as path from "path";
+import type { FSWatcher } from "chokidar";
 import type { IPty } from "node-pty";
 import { Command, flags } from "@oclif/command";
-import chokidar from "chokidar";
+import { watch as chokidarWatch } from "chokidar";
 import cors from "cors";
 import express from "express";
+import rateLimit from "express-rate-limit";
 import * as WebSocket from "ws";
 import { WebSocketServer } from "ws";
 
@@ -48,7 +50,7 @@ export default class Playground extends Command {
   private app!: express.Application;
   private server!: ReturnType<typeof createServer>;
   private wss!: WebSocketServer;
-  private fileWatcher?: chokidar.FSWatcher;
+  private fileWatcher?: FSWatcher;
   private watcherClients: Set<WebSocket.WebSocket> = new Set();
   private terminals: Map<string, TerminalSession> = new Map();
 
@@ -104,9 +106,20 @@ export default class Playground extends Command {
     });
 
     // Middleware
+    const ALLOWED_ORIGINS = [
+      /^https?:\/\/localhost(:\d+)?$/,
+      /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
+      /^https:\/\/learn\.tutly\.in$/,
+    ];
     this.app.use(
       cors({
-        origin: true,
+        origin: (origin, cb) => {
+          if (!origin) return cb(null, true);
+          cb(
+            null,
+            ALLOWED_ORIGINS.some((re) => re.test(origin)),
+          );
+        },
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "x-api-key"],
@@ -130,7 +143,50 @@ export default class Playground extends Command {
   private async setupRoutes(flags: any) {
     const baseDir = path.resolve(flags.directory);
 
-    // Health check
+    const fileLimiter = rateLimit({
+      windowMs: 60 * 1000,
+      limit: 600,
+      standardHeaders: "draft-7",
+      legacyHeaders: false,
+    });
+
+    const ALLOWED_RUNNERS: Record<string, { bin: string; baseArgs: string[] }> =
+      {
+        "npm test": { bin: "npm", baseArgs: ["test"] },
+        "pnpm test": { bin: "pnpm", baseArgs: ["test"] },
+        "yarn test": { bin: "yarn", baseArgs: ["test"] },
+        "npx jest": { bin: "npx", baseArgs: ["jest"] },
+        "npx mocha": { bin: "npx", baseArgs: ["mocha"] },
+        "npx vitest": { bin: "npx", baseArgs: ["vitest"] },
+        jest: { bin: "jest", baseArgs: [] },
+        mocha: { bin: "mocha", baseArgs: [] },
+        vitest: { bin: "vitest", baseArgs: [] },
+      };
+    const ALLOWED_EXTRA_ARG_PATTERN = /^[\w\-./@:=,]+$/;
+
+    const resolveTestCommand = (raw: unknown):
+      | { bin: string; argv: string[] }
+      | { error: string } => {
+      if (typeof raw !== "string") return { error: "command must be a string" };
+      const matchedKey = Object.keys(ALLOWED_RUNNERS)
+        .sort((a, b) => b.length - a.length)
+        .find((k) => raw === k || raw.startsWith(k + " "));
+      if (!matchedKey) {
+        return {
+          error: "Command not allowed",
+        };
+      }
+      const { bin, baseArgs } = ALLOWED_RUNNERS[matchedKey]!;
+      const trailing = raw.slice(matchedKey.length).trim();
+      const extras = trailing.length === 0 ? [] : trailing.split(/\s+/);
+      for (const arg of extras) {
+        if (!ALLOWED_EXTRA_ARG_PATTERN.test(arg)) {
+          return { error: `Invalid argument: ${arg}` };
+        }
+      }
+      return { bin, argv: [...baseArgs, ...extras] };
+    };
+
     this.app.get("/api/health", (req, res) => {
       res.json({
         status: "ok",
@@ -141,7 +197,7 @@ export default class Playground extends Command {
     });
 
     // List root directory or get file/directory content
-    this.app.get("/api/files", async (req, res) => {
+    this.app.get("/api/files", fileLimiter, async (req, res) => {
       try {
         const entries = await this.listDirectory(baseDir);
         res.json({ entries, path: "/" });
@@ -151,7 +207,7 @@ export default class Playground extends Command {
     });
 
     // Get file content or directory listing
-    this.app.get("/api/files/*", async (req, res) => {
+    this.app.get("/api/files/*", fileLimiter, async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
@@ -197,7 +253,7 @@ export default class Playground extends Command {
     });
 
     // Create file or directory
-    this.app.post("/api/files/*", async (req, res) => {
+    this.app.post("/api/files/*", fileLimiter, async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
@@ -224,7 +280,7 @@ export default class Playground extends Command {
     });
 
     // Update file content
-    this.app.put("/api/files/*", async (req, res) => {
+    this.app.put("/api/files/*", fileLimiter, async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
@@ -244,7 +300,7 @@ export default class Playground extends Command {
     });
 
     // Delete file or directory
-    this.app.delete("/api/files/*", async (req, res) => {
+    this.app.delete("/api/files/*", fileLimiter, async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
@@ -252,7 +308,7 @@ export default class Playground extends Command {
         const stats = await fs.stat(fullPath);
 
         if (stats.isDirectory()) {
-          await fs.rmdir(fullPath, { recursive: true });
+          await fs.rm(fullPath, { recursive: true });
           res.json({ success: true, message: "Directory deleted" });
         } else {
           await fs.unlink(fullPath);
@@ -267,19 +323,25 @@ export default class Playground extends Command {
       }
     });
 
-    this.app.post("/api/test", async (req, res) => {
+    this.app.post("/api/test", fileLimiter, async (req, res) => {
       try {
-        const { exec } = require("child_process");
+        const { execFile } = require("child_process");
         const { promisify } = require("util");
-        const execAsync = promisify(exec);
+        const execFileAsync = promisify(execFile);
 
-        const command =
+        const raw: string =
           req.body?.command || "npm test --silent -- --reporter json";
-
-        this.log(`Running test command: ${command}`);
+        const resolved = resolveTestCommand(raw);
+        if ("error" in resolved) {
+          return res.status(400).json({
+            error: resolved.error,
+            allowedRunners: Object.keys(ALLOWED_RUNNERS),
+          });
+        }
+        this.log(`Running test command: ${raw}`);
 
         try {
-          const { stdout, stderr } = await execAsync(command, {
+          const { stdout, stderr } = await execFileAsync(resolved.bin, resolved.argv, {
             cwd: baseDir,
             timeout: 120000, // 2 minute timeout
             maxBuffer: 10 * 1024 * 1024, // 10MB buffer
@@ -326,21 +388,26 @@ export default class Playground extends Command {
       }
     });
 
-    this.app.get("/api/test/discover", async (req, res) => {
+    this.app.get("/api/test/discover", fileLimiter, async (req, res) => {
       try {
-        const { exec } = require("child_process");
+        const { execFile } = require("child_process");
         const { promisify } = require("util");
-        const execAsync = promisify(exec);
+        const execFileAsync = promisify(execFile);
 
-        // Run tests with --dry-run to list all tests without executing
-        const command =
-          req.query?.command ||
+        const raw: string =
+          (req.query?.command as string) ||
           "npm test --silent -- --reporter json --dry-run";
-
-        this.log(`Discovering tests with: ${command}`);
+        const resolved = resolveTestCommand(raw);
+        if ("error" in resolved) {
+          return res.status(400).json({
+            error: resolved.error,
+            allowedRunners: Object.keys(ALLOWED_RUNNERS),
+          });
+        }
+        this.log(`Discovering tests with: ${raw}`);
 
         try {
-          const { stdout } = await execAsync(command, {
+          const { stdout } = await execFileAsync(resolved.bin, resolved.argv, {
             cwd: baseDir,
             timeout: 30000,
             maxBuffer: 10 * 1024 * 1024,
@@ -562,7 +629,7 @@ export default class Playground extends Command {
   }
 
   private async setupFileWatcher(directory: string) {
-    this.fileWatcher = chokidar.watch(directory, {
+    this.fileWatcher = chokidarWatch(directory, {
       ignored: /(^|[\/\\])\.(?!tutly)[^/\\\\]+/, // ignore dotfiles except .tutly
       persistent: true,
       ignoreInitial: true,

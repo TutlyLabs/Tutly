@@ -18,10 +18,10 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
-import { type FileType } from "@/lib/prisma";
+import { type FileType } from "@tutly/db/browser";
 import { $createTextNode, type LexicalNode, type TextNode } from "lexical";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@tutly/utils";
 
 import { EditorErrorBoundary } from "./ErrorBoundary";
 import { $createImageNode, ImageNode } from "./nodes/ImageNode";

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { MdOutlineSportsScore } from "react-icons/md";
 import { useRouter } from "next/navigation";
-import type { Course } from "@/lib/prisma";
+import type { Course } from "@tutly/db/browser";
 
 type SimpleCourse = {
   id: string;
@@ -221,10 +221,12 @@ export default function StudentWiseAssignments({
                           onClick={() => {
                             if (userId) {
                               router.push(
-                                `/assignments/${assignment.id}?username=${userId}`,
+                                `/assignments/detail?id=${assignment.id}&username=${userId}`,
                               );
                             } else {
-                              router.push(`/assignments/${assignment.id}`);
+                              router.push(
+                                `/assignments/detail?id=${assignment.id}`,
+                              );
                             }
                           }}
                           className="rounded bg-blue-500 p-2.5"

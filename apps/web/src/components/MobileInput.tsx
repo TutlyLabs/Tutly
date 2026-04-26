@@ -3,8 +3,8 @@ import React, { forwardRef } from "react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Input } from "@tutly/ui/input";
+import { cn } from "@tutly/utils";
 
 export const MobileInput = ({
   value,

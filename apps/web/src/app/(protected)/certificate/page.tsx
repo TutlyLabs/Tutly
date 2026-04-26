@@ -1,15 +1,16 @@
-import { api } from "@/trpc/server";
+"use client";
+
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 import StudentCertificate from "./_components/StudentCertificate";
 
-export default async function CertificatePage() {
-  const certificateData = await api.certificates.getStudentCertificateData();
-
-  if (!certificateData?.success || !certificateData.data) {
+export default function CertificatePage() {
+  const q = api.certificates.getStudentCertificateData.useQuery();
+  if (q.isLoading) return <PageLoader />;
+  if (!q.data?.success || !q.data.data) {
     return <div>Failed to load certificate data or access denied.</div>;
   }
-
-  const { courses, currentUser } = certificateData.data;
-
+  const { courses, currentUser } = q.data.data;
   return (
     <div>
       <StudentCertificate user={currentUser} data={{ courses, currentUser }} />

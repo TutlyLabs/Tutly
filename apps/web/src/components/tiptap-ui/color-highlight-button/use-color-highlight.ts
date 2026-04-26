@@ -6,7 +6,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 // --- Hooks ---
 import { useTiptapEditor } from "@/hooks/use-tiptap-editor";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@tutly/hooks";
 
 // --- Lib ---
 import { isMarkInSchema, isNodeTypeSelected } from "@/lib/tiptap-utils";

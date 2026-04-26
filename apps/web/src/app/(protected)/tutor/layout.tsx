@@ -1,21 +1,19 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-import { getServerSessionOrRedirect } from "@/lib/auth";
-import { notFound } from "next/navigation";
-import type { Role } from "@/lib/prisma";
+import { useAuthSession } from "@/components/auth/ProtectedShell";
+import NoDataFound from "@/components/NoDataFound";
+import PageLoader from "@/components/loader/PageLoader";
 
-export default async function ProtectedLayout({
+const ALLOWED_ROLES = ["INSTRUCTOR", "MENTOR"];
+
+export default function TutorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSessionOrRedirect();
-
-  const allowedRoles: Role[] = ["INSTRUCTOR", "MENTOR"];
-
-  if (!allowedRoles.includes(session.user.role)) {
-    return notFound();
-  }
-
+  const { user, isPending } = useAuthSession();
+  if (isPending || !user) return <PageLoader />;
+  if (!ALLOWED_ROLES.includes(user.role))
+    return <NoDataFound message="Not found" />;
   return <div>{children}</div>;
 }

@@ -11,7 +11,7 @@ import Editor from "@monaco-editor/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@tutly/ui/dialog";
 
 import { SANDBOX_TEMPLATES } from "./templetes";
 

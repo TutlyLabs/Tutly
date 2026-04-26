@@ -18,8 +18,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+} from "@tutly/ui/alert-dialog";
+import { Button } from "@tutly/ui/button";
 
 const Submit = ({
   user,

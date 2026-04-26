@@ -4,7 +4,7 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/ui/resizable";
+} from "@tutly/ui/resizable";
 
 import PlaygroundPage from "./PlaygroundPage";
 import { SubmissionList } from "./submissionList";

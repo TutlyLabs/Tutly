@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 
 import Playground from "../_components/Playground";
 import FolderUpload from "./FileUpload";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 
 const ReactPlayground = ({ currentUser }: { currentUser: any }) => {
   const [filesObj, setFilesObj] = useState<Record<string, string> | undefined>(

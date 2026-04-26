@@ -1,20 +1,17 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-import { getServerSessionOrRedirect } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { redirect } from "next/navigation";
+import { Navigate } from "@/components/auth/Navigate";
+import { useAuthSession } from "@/components/auth/ProtectedShell";
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 
-export default async function PostLoginPage() {
-  const session = await getServerSessionOrRedirect();
-
-  const credentialAccount = await db.account.findFirst({
-    where: { userId: session.user.id, providerId: "credential" },
-    select: { id: true },
+export default function PostLoginPage() {
+  const { user, isPending } = useAuthSession();
+  const credQ = api.users.hasCredentialAccount.useQuery(undefined, {
+    enabled: Boolean(user),
   });
 
-  if (!credentialAccount) {
-    redirect("/change-password");
-  }
-
-  redirect("/dashboard");
+  if (isPending || (user && credQ.isLoading)) return <PageLoader />;
+  if (!user) return <Navigate to="/sign-in" />;
+  return <Navigate to={credQ.data ? "/dashboard" : "/change-password"} />;
 }

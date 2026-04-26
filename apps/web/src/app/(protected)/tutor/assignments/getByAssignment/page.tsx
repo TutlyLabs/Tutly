@@ -1,25 +1,21 @@
-import { redirect } from "next/navigation";
-import { api } from "@/trpc/server";
+"use client";
+
+import { Navigate } from "@/components/auth/Navigate";
+import PageLoader from "@/components/loader/PageLoader";
 import NoDataFound from "@/components/NoDataFound";
+import { api } from "@/trpc/react";
 import SingleAssignmentBoard from "../_components/assignmentBoard";
 
-export default async function GetByAssignmentPage() {
-  const assignmentData = await api.assignments.getByAssignmentPageData();
-
-  if (assignmentData?.success === false) {
-    if (assignmentData.redirectTo) {
-      redirect(assignmentData.redirectTo);
-    } else {
-      redirect("/assignments");
-    }
+export default function GetByAssignmentPage() {
+  const q = api.assignments.getByAssignmentPageData.useQuery();
+  if (q.isLoading) return <PageLoader />;
+  if (q.data?.success === false) {
+    return <Navigate to={q.data.redirectTo ?? "/assignments"} />;
   }
-
-  if (!assignmentData?.success || !assignmentData.data) {
+  if (!q.data?.success || !q.data.data) {
     return <div>No assignment data found!</div>;
   }
-
-  const { courses, sortedAssignments } = assignmentData.data;
-
+  const { courses, sortedAssignments } = q.data.data;
   return (
     <div className="flex flex-col gap-4 py-2 md:mx-14 md:px-8">
       <div>

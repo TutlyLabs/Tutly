@@ -1,16 +1,14 @@
-import { redirect } from "next/navigation";
-import { api } from "@/trpc/server";
+"use client";
 
-export default async function ReportPage() {
-  const coursesData = await api.courses.checkUserEnrolledCourses();
+import { Navigate } from "@/components/auth/Navigate";
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 
-  if (!coursesData.success) {
-    redirect("/instructor/no-courses");
+export default function ReportPage() {
+  const q = api.courses.checkUserEnrolledCourses.useQuery();
+  if (q.isLoading) return <PageLoader />;
+  if (!q.data.success || !q.data.data?.hasEnrolledCourses) {
+    return <Navigate to="/instructor/no-courses" />;
   }
-
-  if (!coursesData.data?.hasEnrolledCourses) {
-    redirect("/instructor/no-courses");
-  }
-
-  redirect("/tutor/report/all");
+  return <Navigate to="/tutor/report/detail?id=all" />;
 }

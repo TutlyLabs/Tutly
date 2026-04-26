@@ -14,23 +14,19 @@ import { useQueryState } from "nuqs";
 import { useDebounce } from "use-debounce";
 import { useRouter } from "next/navigation";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@tutly/ui/badge";
+import { Button } from "@tutly/ui/button";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Input } from "@tutly/ui/input";
+import { Label } from "@tutly/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@tutly/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@tutly/ui/select";
 
 import { AdvancedCrudDialog } from "./AdvancedCrudDialog";
 import BulkImport from "./BulkImport";

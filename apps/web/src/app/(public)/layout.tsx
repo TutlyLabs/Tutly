@@ -1,47 +1,39 @@
-export const dynamic = "force-dynamic";
+"use client";
 
 import "@/styles/globals.css";
-import { getVersion } from "@/lib/version";
 import ThemeToggle from "@/components/ThemeToggle";
-import { isFeatureEnabled } from "@/lib/featureFlags";
-import { getServerSession } from "@/lib/auth";
+import { Navigate } from "@/components/auth/Navigate";
+import { useAuthSession } from "@/components/auth/ProtectedShell";
 import { FeatureFlagsProvider } from "./_components/FeatureFlagsProvider";
-import { redirect } from "next/navigation";
+import { api } from "@/trpc/react";
+import { getVersion } from "@/lib/version";
 
-type Props = {
+export default function AuthLayout({
+  children,
+}: {
   children: React.ReactNode;
-};
+}) {
+  const { user, isPending } = useAuthSession();
+  const googleQ = api.featureFlags.isEnabled.useQuery({
+    key: "google_sign_in",
+  });
+  const githubQ = api.featureFlags.isEnabled.useQuery({
+    key: "github_sign_in",
+  });
 
-export default async function AuthLayout({ children }: Props) {
-  const version = getVersion();
-  const session = await getServerSession();
-  const currentUser = session?.user;
-
-  if (currentUser) {
-    redirect("/dashboard");
-  }
-
-  const isGoogleSignInEnabled = await isFeatureEnabled(
-    "google_sign_in",
-    currentUser || { id: "unauthenticated", role: "STUDENT" },
-  );
-
-  const isGithubSignInEnabled = await isFeatureEnabled(
-    "github_sign_in",
-    currentUser || { id: "unauthenticated", role: "STUDENT" },
-  );
+  if (!isPending && user) return <Navigate to="/dashboard" />;
 
   return (
     <>
       <div className="text-muted-foreground fixed bottom-2 left-2 flex items-center gap-1.5 px-2 text-xs">
-        <span>{version}</span>
+        <span>{getVersion()}</span>
       </div>
       <div className="fixed top-4 right-4">
         <ThemeToggle />
       </div>
       <FeatureFlagsProvider
-        isGoogleSignInEnabled={isGoogleSignInEnabled || false}
-        isGithubSignInEnabled={isGithubSignInEnabled || false}
+        isGoogleSignInEnabled={googleQ.data ?? false}
+        isGithubSignInEnabled={githubQ.data ?? false}
       >
         {children}
       </FeatureFlagsProvider>

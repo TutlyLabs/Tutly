@@ -1,88 +1,34 @@
-import { redirect } from "next/navigation";
-import { getServerSessionOrRedirect } from "@/lib/auth";
-import { isFeatureEnabled, getFeatureFlagPayload } from "@/lib/featureFlags";
+"use client";
+
+import { Navigate } from "@/components/auth/Navigate";
+import { useAuthSession } from "@/components/auth/ProtectedShell";
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 import { SandboxIntegration } from "./_components/Sandbox";
 import { ZoomIntegration } from "./_components/Zoom";
 import { GithubIntegration } from "./_components/Github";
 import { GoogleIntegration } from "./_components/Google";
 import { GeminiIntegration } from "./_components/Gemini";
-import { db } from "@/lib/db";
 
-export default async function IntegrationsPage() {
-  const session = await getServerSessionOrRedirect();
-  const currentUser = session.user;
-
-  const isIntegrationsEnabled = await isFeatureEnabled(
-    "integrations_tab",
-    currentUser,
-  );
-  if (!isIntegrationsEnabled) {
-    redirect("/");
-  }
-
-  const features = (await getFeatureFlagPayload(
-    "integrations_tab",
-    currentUser,
-  )) as Record<string, boolean>;
-
-  const isAIAssistantEnabled = await isFeatureEnabled(
-    "ai_assistant",
-    currentUser,
-  );
-
-  const sandbox = await db.account.findFirst({
-    where: {
-      userId: currentUser.id,
-      providerId: "codesandbox",
-    },
+export default function IntegrationsPage() {
+  const { user } = useAuthSession();
+  const integrationsEnabledQ = api.featureFlags.isEnabled.useQuery({
+    key: "integrations_tab",
   });
-
-  if (sandbox?.accessToken) {
-    const token = sandbox.accessToken;
-    if (token.length > 6) {
-      sandbox.accessToken =
-        token.slice(0, 7) + "*".repeat(25) + token.slice(-3);
-    } else {
-      sandbox.accessToken = "*".repeat(token.length);
-    }
-  }
-
-  const github = await db.account.findFirst({
-    where: {
-      userId: currentUser.id,
-      providerId: "github",
-    },
+  const aiEnabledQ = api.featureFlags.isEnabled.useQuery({
+    key: "ai_assistant",
   });
-
-  const google = await db.account.findFirst({
-    where: {
-      userId: currentUser.id,
-      providerId: "google",
-    },
+  const featuresQ = api.oauth.getFlagPayload.useQuery({
+    key: "integrations_tab",
   });
+  const accountsQ = api.oauth.getAccounts.useQuery();
 
-  const zoom = await db.account.findFirst({
-    where: {
-      userId: currentUser.id,
-      providerId: "zoom",
-    },
-  });
+  if (!user || integrationsEnabledQ.isLoading) return <PageLoader />;
+  if (!integrationsEnabledQ.data) return <Navigate to="/" />;
+  if (featuresQ.isLoading || accountsQ.isLoading) return <PageLoader />;
 
-  const gemini = await db.account.findFirst({
-    where: {
-      userId: currentUser.id,
-      providerId: "gemini",
-    },
-  });
-
-  if (gemini?.accessToken) {
-    const token = gemini.accessToken;
-    if (token.length > 6) {
-      gemini.accessToken = token.slice(0, 7) + "*".repeat(25) + token.slice(-3);
-    } else {
-      gemini.accessToken = "*".repeat(token.length);
-    }
-  }
+  const features = featuresQ.data ?? {};
+  const accounts = accountsQ.data;
 
   return (
     <div className="container mx-auto space-y-6 py-6">
@@ -94,14 +40,14 @@ export default async function IntegrationsPage() {
         </p>
       </div>
 
-      {features?.codesandbox && (
-        <SandboxIntegration sandbox={sandbox ?? undefined} />
+      {features.codesandbox && (
+        <SandboxIntegration sandbox={accounts?.sandbox} />
       )}
-      {features?.zoom && <ZoomIntegration zoom={zoom ?? undefined} />}
-      {features?.github && <GithubIntegration github={github ?? undefined} />}
-      {features?.google && <GoogleIntegration google={google ?? undefined} />}
-      {features?.gemini && isAIAssistantEnabled && (
-        <GeminiIntegration gemini={gemini ?? undefined} />
+      {features.zoom && <ZoomIntegration zoom={accounts?.zoom} />}
+      {features.github && <GithubIntegration github={accounts?.github} />}
+      {features.google && <GoogleIntegration google={accounts?.google} />}
+      {features.gemini && aiEnabledQ.data && (
+        <GeminiIntegration gemini={accounts?.gemini} />
       )}
     </div>
   );

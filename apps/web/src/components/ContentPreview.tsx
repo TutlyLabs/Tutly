@@ -2,7 +2,7 @@
 
 import MarkdownPreview from "./MarkdownPreview";
 import RichTextEditor from "./editor/RichTextEditor";
-import { cn } from "@/lib/utils";
+import { cn } from "@tutly/utils";
 import React, { useState, useEffect } from "react";
 
 interface ContentPreviewProps {

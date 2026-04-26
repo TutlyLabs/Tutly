@@ -1,11 +1,11 @@
 "use client";
 
-import type { Profile, User } from "@/lib/prisma";
+import type { Profile, User } from "@tutly/db/browser";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@tutly/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 import { api } from "@/trpc/react";
 
 import AcademicDetails from "./AcademicDetails";

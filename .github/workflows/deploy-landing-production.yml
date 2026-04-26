@@ -19,6 +19,9 @@ on:
       - "turbo.json"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   Deploy-Landing-Production:
     name: Deploy Landing App to Production
@@ -27,53 +30,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm install --frozen-lockfile --filter=landing
+      - name: Setup
+        uses: ./tooling/github/setup
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Build Landing App with Turbo
-        run: |
-          pnpm turbo build --filter=landing
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Verify Build Output
-        run: |
-          if [ ! -d "apps/landing/.next" ]; then
-            echo "❌ Build failed: .next directory not found"
-            exit 1
-          fi
-          echo "✅ Build successful"
+      - name: Build with Vercel
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel Production
         id: deploy
         run: |
-          echo "🚀 Deploying to Vercel Production..."
-          cd apps/landing
-          # Pull Vercel settings for this app
-          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          # Build for Vercel deployment
-          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-          # Deploy the built output to production
           DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-
-          if [ $? -eq 0 ]; then
-            echo "✅ Production deployment successful: $DEPLOYMENT_URL"
-            echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Production deployment failed"
-            exit 1
-          fi
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING }}
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT

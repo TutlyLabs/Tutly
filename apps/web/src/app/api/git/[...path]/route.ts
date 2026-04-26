@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "process";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { auth } from "@/server/auth";
 
 export const dynamic = "force-dynamic";
@@ -143,6 +143,18 @@ async function handleGitRequest(
     giteaUrl = `${GITEA_API_URL}/${targetRepoPath}/${gitPathParts.join("/")}${queryString}`;
   } else {
     giteaUrl = `${GITEA_API_URL}/${targetRepoPath}.git/${gitPathParts.join("/")}${queryString}`;
+  }
+
+  // Hard-pin the upstream host so a crafted gitPathParts cannot redirect
+  // the proxy to a different origin.
+  try {
+    const requested = new URL(giteaUrl);
+    const allowed = new URL(GITEA_API_URL);
+    if (requested.origin !== allowed.origin) {
+      return new NextResponse("Forbidden: invalid upstream", { status: 403 });
+    }
+  } catch {
+    return new NextResponse("Bad request", { status: 400 });
   }
 
   // Verify that the user is enrolled in the course and has the necessary permissions.

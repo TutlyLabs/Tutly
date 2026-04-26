@@ -1,18 +1,12 @@
-import { redirect } from "next/navigation";
+"use client";
+
 import Dashboard from "./_components/dashboard";
-import { getServerSession } from "@/lib/auth";
+import { Navigate } from "@/components/auth/Navigate";
+import { useAuthSession } from "@/components/auth/ProtectedShell";
 
-export default async function DashboardPage() {
-  const session = await getServerSession();
-  if (!session?.user) {
-    redirect("/sign-in");
-  }
-
-  if (session.user.role === "SUPER_ADMIN") {
-    redirect("/super-admin");
-  }
-
-  const currentUser = session.user;
-
-  return <Dashboard name={currentUser.name} currentUser={currentUser} />;
+export default function DashboardPage() {
+  const { user } = useAuthSession();
+  if (!user) return null;
+  if (user.role === "SUPER_ADMIN") return <Navigate to="/super-admin" />;
+  return <Dashboard name={user.name} currentUser={user} />;
 }

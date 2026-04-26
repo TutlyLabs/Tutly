@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Check, Loader2, Terminal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "@tutly/ui/button";
+import { cn } from "@tutly/utils";
 
 interface LoadingStep {
   id: string;

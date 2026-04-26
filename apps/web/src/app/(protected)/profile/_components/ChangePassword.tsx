@@ -6,9 +6,9 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@tutly/ui/button";
+import { Input } from "@tutly/ui/input";
+import { Label } from "@tutly/ui/label";
 import { api } from "@/trpc/react";
 
 const ChangePassword = ({

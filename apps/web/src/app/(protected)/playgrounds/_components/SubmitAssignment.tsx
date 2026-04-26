@@ -3,7 +3,7 @@
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import Submit from "./Submit";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 
 const SubmitAssignment = ({
   currentUser,

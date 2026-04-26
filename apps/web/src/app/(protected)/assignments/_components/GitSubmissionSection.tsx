@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { FiRefreshCw, FiTerminal } from "react-icons/fi";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@tutly/ui/tooltip";
 
 export const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
   const [isCreating, setIsCreating] = useState(false);
