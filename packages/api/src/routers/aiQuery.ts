@@ -41,7 +41,7 @@ export const aiQueryRouter = createTRPCRouter({
         throw new Error(`Gemini API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       const models = data.models || [];
 
       // Filter for text generation models and extract relevant info
@@ -260,7 +260,7 @@ Query:`;
           0.2,
         );
 
-        const queryData = await queryResponse.json();
+        const queryData = await queryResponse.json() as any;
         let generatedQuery =
           queryData.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
@@ -427,7 +427,7 @@ CORRECTED QUERY (return ONLY the corrected Prisma query, nothing else):`;
                 1024,
                 0.1,
               );
-              const correctionData = await correctionResponse.json();
+              const correctionData = await correctionResponse.json() as any;
 
               let correctedQuery =
                 correctionData.candidates?.[0]?.content?.parts?.[0]?.text || "";
@@ -545,7 +545,7 @@ Based on the query results, provide a helpful, conversational response to the us
           0.7,
         );
 
-        const interpretationData = await interpretationResponse.json();
+        const interpretationData = await interpretationResponse.json() as any;
         const assistantResponse =
           interpretationData.candidates?.[0]?.content?.parts?.[0]?.text ||
           "I couldn't generate a response.";

@@ -16,6 +16,10 @@
       "types": "./prisma/generated/browser.ts",
       "default": "./prisma/generated/browser.ts"
     },
+    "./internal/*": {
+      "types": "./prisma/generated/internal/*.ts",
+      "default": "./prisma/generated/internal/*.ts"
+    },
     "./schema": "./prisma/schema.prisma"
   },
   "scripts": {

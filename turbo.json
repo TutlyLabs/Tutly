@@ -77,7 +77,10 @@
     "CLOUDFLARE_ZONE_ID",
     "APP_SERVER_IP",
     "VITE_API_URL",
-    "MODE"
+    "MODE",
+    "TUTLY_VSCODE_SECRET",
+    "NEXT_PUBLIC_BUILD_TARGET",
+    "NEXT_PUBLIC_API_URL"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

@@ -29,7 +29,7 @@ export const geminiRouter = createTRPCRouter({
           };
         }
 
-        const data = await response.json();
+        const data = await response.json() as any;
 
         if (!data.models || !Array.isArray(data.models)) {
           return {
