@@ -2,6 +2,7 @@ import { NotificationEvent, NotificationMedium } from "@tutly/db/browser";
 import { z } from "zod";
 
 import { db } from "@tutly/db";
+import { sendPushToUser } from "../lib/push";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const notificationsRouter = createTRPCRouter({
@@ -125,6 +126,11 @@ export const notificationsRouter = createTRPCRouter({
         },
       });
 
+      void sendPushToUser(ctx.db, input.userId, {
+        title: "Tutly",
+        body: input.message,
+      }).catch((err) => console.error("push send failed:", err));
+
       return notification;
     }),
 
@@ -170,6 +176,16 @@ export const notificationsRouter = createTRPCRouter({
               customLink: input.customLink ?? null,
             },
           }),
+        ),
+      );
+
+      await Promise.all(
+        enrolledUsers.map((enrolled) =>
+          sendPushToUser(ctx.db, enrolled.user.id, {
+            title: "Tutly",
+            body: input.message,
+            url: input.customLink ?? undefined,
+          }).catch((err) => console.error("push send failed:", err)),
         ),
       );
 

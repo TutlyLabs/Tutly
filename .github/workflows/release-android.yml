@@ -50,14 +50,23 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Create GitHub Release with APK
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.hasChangesets == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=$(node -p "require('./apps/web/package.json').version")
           TAG="tutly-mobile-v${VERSION}"
+          APK="apps/web/tutly-${VERSION}.apk"
+          if [ ! -f "$APK" ]; then
+            echo "No APK at $APK — publish step did not produce one. Skipping release."
+            exit 0
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists. Uploading APK as a new asset (clobber)."
+            gh release upload "$TAG" "$APK" --clobber
+            exit 0
+          fi
           NOTES="$(awk '/^## /{n++} n==1{print} n>1{exit}' apps/web/CHANGELOG.md 2>/dev/null || echo "Tutly Android v${VERSION}")"
-          gh release create "$TAG" \
-            "apps/web/tutly-${VERSION}.apk" \
+          gh release create "$TAG" "$APK" \
             --title "Tutly Android v${VERSION}" \
             --notes "$NOTES"

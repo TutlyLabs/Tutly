@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { IoMdDownload } from "react-icons/io";
 
+import { saveDataUrl } from "@/lib/native-files";
+
 import {
   AlertDialog,
   AlertDialogContent,
@@ -55,10 +57,7 @@ export default function StudentCertificate({
     try {
       const canvas = await html2canvas(certificateElement);
       const imgData = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = imgData;
-      link.download = `${user.name}_${courseTitle}_Certificate.png`;
-      link.click();
+      await saveDataUrl(imgData, `${user.name}_${courseTitle}_Certificate.png`);
     } catch (error) {
       console.error("Failed to generate certificate:", error);
     } finally {

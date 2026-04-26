@@ -133,3 +133,30 @@ pnpm release:android
 ```
 
 Local debug builds (no keystore needed) still work via `pnpm cap:android` → run from Android Studio.
+
+## Deep links (universal / app links)
+
+Tapping `https://learn.tutly.in/<path>` outside the app routes into the app instead of the browser, once the AASA + assetlinks files below are populated and the app is signed with the release keystore.
+
+### iOS — fill in your Team ID
+
+1. Apple Developer portal → Membership → copy the 10-character Team ID.
+2. Edit `apps/web/public/.well-known/apple-app-site-association` and replace `REPLACE_WITH_TEAM_ID` with it (so `appID` becomes e.g. `ABC1234567.in.tutly.app`).
+3. Deploy `learn.tutly.in`.
+4. In Xcode: Signing & Capabilities → "+" → Associated Domains is already wired via `App.entitlements`, but you must select your Team in the Signing dropdown so provisioning includes the entitlement.
+
+### Android — fill in the keystore SHA256
+
+```bash
+keytool -list -v -keystore tutly-release.jks -alias tutly-release | grep "SHA256:"
+```
+
+Paste the colon-separated hex into `apps/web/public/.well-known/assetlinks.json` (`sha256_cert_fingerprints`). For Play App Signing, also paste the upload + app signing SHA256 from Play Console.
+
+Verify after deploy:
+
+```bash
+# AASA
+curl -I https://learn.tutly.in/.well-known/apple-app-site-association
+# expects Content-Type: application/json
+```

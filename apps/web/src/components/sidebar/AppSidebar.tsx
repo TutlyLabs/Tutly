@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { haptics } from "@/lib/haptics";
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -320,13 +322,14 @@ export function AppSidebar({
 
         {isMobile && !forceClose && mobileTabs.length > 0 && (
           <nav className="bg-background/80 supports-[backdrop-filter]:bg-background/60 fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur">
-            <ul className="flex items-stretch justify-between px-1 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+            <ul className="flex items-stretch justify-between pt-1 pr-[max(0.25rem,env(safe-area-inset-right))] pb-[max(0.5rem,env(safe-area-inset-bottom))] pl-[max(0.25rem,env(safe-area-inset-left))]">
               {mobileTabs.map((tab) => {
                 const TabIcon = tab.icon;
                 return (
                   <li key={tab.title} className="flex-1">
                     <Link
                       href={tab.url}
+                      onClick={() => void haptics.light()}
                       aria-current={tab.active ? "page" : undefined}
                       className={cn(
                         "group flex flex-col items-center justify-center gap-0.5 py-2 text-xs",

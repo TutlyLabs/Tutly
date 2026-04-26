@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
 
-import { type Metadata } from "next";
+import { type Metadata, type Viewport } from "next";
 import { Geist } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
@@ -11,11 +11,25 @@ import { LayoutProvider } from "@/providers/layout-provider";
 import { Toaster } from "sonner";
 import Crisp from "@/components/Crisp";
 import PageLoader from "@/components/loader/PageLoader";
+import AppLifecycle from "@/components/native/AppLifecycle";
+import BadgeSync from "@/components/native/BadgeSync";
+import BiometricLock from "@/components/native/BiometricLock";
+import HapticsToastBridge from "@/components/native/HapticsToastBridge";
+import KeyboardHandler from "@/components/native/KeyboardHandler";
+import OfflineBanner from "@/components/native/OfflineBanner";
+import PushNotifications from "@/components/native/PushNotifications";
+import StatusBarThemeSync from "@/components/native/StatusBarThemeSync";
 
 export const metadata: Metadata = {
   title: "Tutly",
   description:
     "Empowering students with state-of-the-art tools and resources for academic success.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 const geist = Geist({
@@ -36,7 +50,14 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <StatusBarThemeSync />
+          <KeyboardHandler />
+          <HapticsToastBridge />
+          <OfflineBanner />
           <TRPCReactProvider>
+            <AppLifecycle />
+            <PushNotifications />
+            <BadgeSync />
             <LayoutProvider>
               <NuqsAdapter>
                 <Suspense fallback={null}>
@@ -45,6 +66,7 @@ export default async function RootLayout({
                 <Toaster />
                 <Crisp />
                 <Suspense fallback={null}>{children}</Suspense>
+                <BiometricLock />
               </NuqsAdapter>
             </LayoutProvider>
           </TRPCReactProvider>

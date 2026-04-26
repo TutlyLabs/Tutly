@@ -4,6 +4,8 @@ import html2canvas from "html2canvas";
 import Image from "next/image";
 import { useState } from "react";
 
+import { saveDataUrl } from "@/lib/native-files";
+
 type GenerateProps = {
   user: { username: string; name: string };
 };
@@ -19,10 +21,7 @@ export default function Generate({ user }: GenerateProps) {
     try {
       const canvas = await html2canvas(certificateElement);
       const imgData = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = imgData;
-      link.download = `${user?.name}_Certificate.png`;
-      link.click();
+      await saveDataUrl(imgData, `${user?.name}_Certificate.png`);
     } catch (error) {
       console.error("Failed to generate certificate:", error);
     } finally {
