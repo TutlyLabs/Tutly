@@ -4,7 +4,9 @@
     "target": {
       "namespace": "android_app",
       "package_name": "in.tutly.app",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_RELEASE_KEYSTORE_SHA256"]
+      "sha256_cert_fingerprints": [
+        "99:26:B0:26:97:05:6C:47:C7:40:AF:1C:D3:AF:59:3A:2B:11:C6:2B:7A:F9:8A:FB:48:63:67:2E:93:37:FA:83"
+      ]
     }
   }
 ]

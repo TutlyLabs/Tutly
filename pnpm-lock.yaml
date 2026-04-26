@@ -345,17 +345,17 @@ importers:
         specifier: ^6.0.2
         version: 6.0.3(@capacitor/core@6.2.1)
       '@capacitor/browser':
-        specifier: ^8.0.3
-        version: 8.0.3(@capacitor/core@6.2.1)
+        specifier: ^6.0.6
+        version: 6.0.6(@capacitor/core@6.2.1)
       '@capacitor/core':
         specifier: ^6.2.0
         version: 6.2.1
       '@capacitor/filesystem':
-        specifier: ^8.1.2
-        version: 8.1.2(@capacitor/core@6.2.1)
+        specifier: ^6.0.4
+        version: 6.0.4(@capacitor/core@6.2.1)
       '@capacitor/haptics':
-        specifier: ^8.0.2
-        version: 8.0.2(@capacitor/core@6.2.1)
+        specifier: ^6.0.3
+        version: 6.0.3(@capacitor/core@6.2.1)
       '@capacitor/ios':
         specifier: ^6.2.0
         version: 6.2.1(@capacitor/core@6.2.1)
@@ -372,8 +372,8 @@ importers:
         specifier: ^6.0.4
         version: 6.0.5(@capacitor/core@6.2.1)
       '@capacitor/share':
-        specifier: ^8.0.1
-        version: 8.0.1(@capacitor/core@6.2.1)
+        specifier: ^6.0.4
+        version: 6.0.4(@capacitor/core@6.2.1)
       '@capacitor/splash-screen':
         specifier: ^6.0.3
         version: 6.0.4(@capacitor/core@6.2.1)
@@ -381,8 +381,8 @@ importers:
         specifier: ^6.0.2
         version: 6.0.3(@capacitor/core@6.2.1)
       '@capawesome/capacitor-badge':
-        specifier: ^8.0.2
-        version: 8.0.2(@capacitor/core@6.2.1)
+        specifier: ^6.0.0
+        version: 6.0.0(@capacitor/core@6.2.1)
       '@codesandbox/sandpack-react':
         specifier: ^2.20.0
         version: 2.20.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -2176,10 +2176,10 @@ packages:
     engines: {node: '>=10.3.0'}
     hasBin: true
 
-  '@capacitor/browser@8.0.3':
-    resolution: {integrity: sha512-WJWPHEPbweiFoHYmVlCbZf5yrqJ2Rchx2Xvbmd+3Lf+Zkpq3nXBThThY2CF69lYEg1NINGF9BcHThIOEU1gZlQ==}
+  '@capacitor/browser@6.0.6':
+    resolution: {integrity: sha512-VHOPkMR+JqKz2mf5YncnnOWvFdVYFTTLnPW+JRcsP1LobXmA0gtchER35PQ7XXqXU16eeacrehX+XF+rC6wmQw==}
     peerDependencies:
-      '@capacitor/core': '>=8.0.0'
+      '@capacitor/core': ^6.0.0
 
   '@capacitor/cli@5.7.8':
     resolution: {integrity: sha512-qN8LDlREMhrYhOvVXahoJVNkP8LP55/YPRJrzTAFrMqlNJC18L3CzgWYIblFPnuwfbH/RxbfoZT/ydkwgVpMrw==}
@@ -2197,15 +2197,15 @@ packages:
   '@capacitor/core@8.3.1':
     resolution: {integrity: sha512-UF8ItlHguU1Z6GXfPTeT2gakf+ctNI8pAS1kwSBQlsJMlfD4OPoto/SmKnOxKCQvnF4WRcdWeg6C0zREUNaAQg==}
 
-  '@capacitor/filesystem@8.1.2':
-    resolution: {integrity: sha512-doaaMfGoFR2hWU6aV6u83I+5ZsGyJVq+Gz4r9lMpJzUKMm1eMu0hLnFdV1aXZlU9FlK/RndFrVD8oRZfNOqWgQ==}
+  '@capacitor/filesystem@6.0.4':
+    resolution: {integrity: sha512-eFlg/ZrwYA4Y6ClLRRikudVu2XvuZxfX/XC0ky9MgfbC9dyqTnVkkEoWM6vr1xR89YNY4mB0EeVTet1m1Jcumw==}
     peerDependencies:
-      '@capacitor/core': '>=8.0.0'
+      '@capacitor/core': ^6.0.0
 
-  '@capacitor/haptics@8.0.2':
-    resolution: {integrity: sha512-c2hZzRR5Fk1tbTvhG1jhh2XBAf3EhnIerMIb2sl7Mt41Gxx1fhBJFDa0/BI1IbY4loVepyyuqNC9820/GZuoWQ==}
+  '@capacitor/haptics@6.0.3':
+    resolution: {integrity: sha512-6yKF0+lRUZEEx1GDFWgnKHia974np7o1OgmRl/btL9cSMZh0TSDZTyDMH/qcy4AM39CfuIeLs4N4h5lwixXLuQ==}
     peerDependencies:
-      '@capacitor/core': '>=8.0.0'
+      '@capacitor/core': ^6.0.0
 
   '@capacitor/ios@6.2.1':
     resolution: {integrity: sha512-tbMlQdQjxe1wyaBvYVU1yTojKJjgluZQsJkALuJxv/6F8QTw5b6vd7X785O/O7cMpIAZfUWo/vtAHzFkRV+kXw==}
@@ -2237,10 +2237,10 @@ packages:
     peerDependencies:
       '@capacitor/core': ^6.0.0
 
-  '@capacitor/share@8.0.1':
-    resolution: {integrity: sha512-3cSBKBCJVon54rKDROP2rqGyeGks4pBh9TbaEk9S375Kbek/ZHe72N50zIa0Vn9Eac/SuhwgehO/mmA4CsUOiw==}
+  '@capacitor/share@6.0.4':
+    resolution: {integrity: sha512-Ij8C3as4n6L+SUj3M1ko+DGIsrDw2VTkn5Y/pQnFRI9dRk6YoSpGKLN54yOyN7ew3N9bVa8Rko+dFwdcNg7ESA==}
     peerDependencies:
-      '@capacitor/core': '>=8.0.0'
+      '@capacitor/core': ^6.0.0
 
   '@capacitor/splash-screen@6.0.4':
     resolution: {integrity: sha512-uJXR+28cdaie7zIIUBvgkWgHim6Gr1itJym9voIMTmrjXkOaPtejwxYJsdQWPJz9zgGnSbXuC1mNNibLgv3OpQ==}
@@ -2252,13 +2252,10 @@ packages:
     peerDependencies:
       '@capacitor/core': ^6.0.0
 
-  '@capacitor/synapse@1.0.4':
-    resolution: {integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==}
-
-  '@capawesome/capacitor-badge@8.0.2':
-    resolution: {integrity: sha512-4ZnRyFvViaokupdrOi3OkoBurH+23hnxni+PYq5C1ObNLYbhty/WK8BzMtndCv0S47XjGBLjQ9DJsYj3JDVxGQ==}
+  '@capawesome/capacitor-badge@6.0.0':
+    resolution: {integrity: sha512-HaRmS1apdlP51SKXKWr0bwhCJy9gSfP+e8UZuhrIxv6EtRujxkYPTTqDv883uwl4gidzedeUHI7YrGNJkKbdbw==}
     peerDependencies:
-      '@capacitor/core': '>=8.0.0'
+      '@capacitor/core': ^6.0.0
 
   '@changesets/apply-release-plan@7.1.1':
     resolution: {integrity: sha512-9qPCm/rLx/xoOFXIHGB229+4GOL76S4MC+7tyOuTsR6+1jYlfFDQORdvwR5hDA6y4FL2BPt3qpbcQIS+dW85LA==}
@@ -15256,7 +15253,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@capacitor/browser@8.0.3(@capacitor/core@6.2.1)':
+  '@capacitor/browser@6.0.6(@capacitor/core@6.2.1)':
     dependencies:
       '@capacitor/core': 6.2.1
 
@@ -15312,12 +15309,11 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@capacitor/filesystem@8.1.2(@capacitor/core@6.2.1)':
+  '@capacitor/filesystem@6.0.4(@capacitor/core@6.2.1)':
     dependencies:
       '@capacitor/core': 6.2.1
-      '@capacitor/synapse': 1.0.4
 
-  '@capacitor/haptics@8.0.2(@capacitor/core@6.2.1)':
+  '@capacitor/haptics@6.0.3(@capacitor/core@6.2.1)':
     dependencies:
       '@capacitor/core': 6.2.1
 
@@ -15345,7 +15341,7 @@ snapshots:
     dependencies:
       '@capacitor/core': 6.2.1
 
-  '@capacitor/share@8.0.1(@capacitor/core@6.2.1)':
+  '@capacitor/share@6.0.4(@capacitor/core@6.2.1)':
     dependencies:
       '@capacitor/core': 6.2.1
 
@@ -15357,9 +15353,7 @@ snapshots:
     dependencies:
       '@capacitor/core': 6.2.1
 
-  '@capacitor/synapse@1.0.4': {}
-
-  '@capawesome/capacitor-badge@8.0.2(@capacitor/core@6.2.1)':
+  '@capawesome/capacitor-badge@6.0.0(@capacitor/core@6.2.1)':
     dependencies:
       '@capacitor/core': 6.2.1
 
