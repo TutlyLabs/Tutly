@@ -1158,6 +1158,9 @@ importers:
       '@trpc/server':
         specifier: 11.8.0
         version: 11.8.0(typescript@5.9.3)
+      '@tutly/api':
+        specifier: workspace:*
+        version: link:../api
     devDependencies:
       '@tutly/eslint-config':
         specifier: workspace:*

@@ -557,7 +557,7 @@ export const assignmentsRouter = createTRPCRouter({
             }) ?? [];
 
           const isCourseAdmin = currentUser.adminForCourses.some(
-            (course) => course.id === assignment?.courseId,
+            (course: { id: string }) => course.id === assignment?.courseId,
           );
 
           return {
@@ -650,7 +650,7 @@ export const assignmentsRouter = createTRPCRouter({
             }) ?? [];
 
           const isCourseAdmin = currentUser.adminForCourses.some(
-            (course) => course.id === assignment?.courseId,
+            (course: { id: string }) => course.id === assignment?.courseId,
           );
 
           return {

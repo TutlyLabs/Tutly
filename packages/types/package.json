@@ -19,7 +19,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@trpc/server": "11.8.0"
+    "@trpc/server": "11.8.0",
+    "@tutly/api": "workspace:*"
   },
   "devDependencies": {
     "@tutly/eslint-config": "workspace:*",

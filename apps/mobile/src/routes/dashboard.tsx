@@ -6,10 +6,7 @@ import { nativeBearerStorage } from "@/native/storage";
 
 export function DashboardScreen() {
   const session = authClient.useSession();
-  const coursesQuery = trpc.courses.getEnrolledCourses.useQuery<{
-    success: boolean;
-    data: Array<{ id: string; title: string }>;
-  }>();
+  const coursesQuery = trpc.courses.getEnrolledCourses.useQuery();
   const courseList = coursesQuery.data?.data ?? [];
 
   async function onSignOut() {

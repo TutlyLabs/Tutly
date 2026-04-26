@@ -3,10 +3,7 @@ import { Link } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 
 export function CoursesScreen() {
-  const coursesQuery = trpc.courses.getEnrolledCourses.useQuery<{
-    success: boolean;
-    data: Array<{ id: string; title: string }>;
-  }>();
+  const coursesQuery = trpc.courses.getEnrolledCourses.useQuery();
   const courseList = coursesQuery.data?.data ?? [];
 
   return (

@@ -5,7 +5,7 @@ import type {
   submission,
   User,
 } from "@tutly/db/browser";
-import type { InputJsonValue } from "@tutly/db/browser";
+
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -85,7 +85,10 @@ export const submissionRouter = createTRPCRouter({
         data: {
           attachmentId: input.assignmentDetails.id,
           enrolledUserId: enrolledUser.id,
-          data: input.files as unknown as InputJsonValue,
+          // Prisma's NullableJsonNullValueInput | InputJsonValue union
+          // for json columns isn't surfaced by the browser bundle, so we
+          // cast loosely here.
+          data: input.files as never,
           status: "SUBMITTED",
         },
       });
