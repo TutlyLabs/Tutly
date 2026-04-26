@@ -5,9 +5,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import DisplayTable, { type Column } from "@/components/table/DisplayTable";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@tutly/ui/avatar";
+import { Badge } from "@tutly/ui/badge";
+import { Button } from "@tutly/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,15 +15,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+} from "@tutly/ui/dialog";
+import { Textarea } from "@tutly/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import day from "@/lib/dayjs";
+} from "@tutly/ui/tooltip";
+import day from "@tutly/utils/dayjs";
 import { api } from "@/trpc/react";
 
 interface UserCardsProps {

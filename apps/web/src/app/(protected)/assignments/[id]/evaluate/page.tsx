@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSessionOrRedirect } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import ResizablePanelLayout from "../../_components/ResizablePanelLayout";
 import { Buffer } from "node:buffer";
 import { PageLayout } from "@/components/PageLayout";

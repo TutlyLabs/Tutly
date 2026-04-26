@@ -6,7 +6,7 @@ import type { SessionUser } from "@/lib/auth";
 import Link from "next/link";
 
 import ClassSidebar from "../classes/_components/classSidebar";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 import { api } from "@/trpc/react";
 
 export default function CourseDetailsClient({

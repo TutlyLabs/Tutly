@@ -1,5 +1,5 @@
 import VSCodeEditor from "./vscode-editor";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { getServerSessionOrRedirect } from "@/lib/auth";
 import { jwtVerify } from "jose";
 import { ShieldAlert } from "lucide-react";

@@ -3,7 +3,7 @@
 import type { SessionUser } from "@/lib/auth";
 import AssignmentPage from "../../_components/AssignmentPage";
 import { api } from "@/trpc/react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 
 interface Props {
   assignmentId: string;

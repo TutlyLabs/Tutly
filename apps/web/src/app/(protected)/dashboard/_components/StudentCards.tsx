@@ -8,31 +8,31 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@tutly/ui/badge";
+import { Button } from "@tutly/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+} from "@tutly/ui/card";
+import { ChartContainer, ChartTooltipContent } from "@tutly/ui/chart";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@tutly/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@tutly/ui/dropdown-menu";
+import { Input } from "@tutly/ui/input";
+import { ScrollArea } from "@tutly/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -40,12 +40,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@tutly/ui/table";
 import ProfessionalProfiles from "@/app/(protected)/profile/_components/ProfessionalProfiles";
 import { api } from "@/trpc/react";
 
 import Component from "./charts";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 
 interface Assignment {
   id: string;

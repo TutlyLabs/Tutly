@@ -20,16 +20,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+} from "@tutly/ui/alert-dialog";
+import { Button } from "@tutly/ui/button";
+import { Card } from "@tutly/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+} from "@tutly/ui/dropdown-menu";
+import { Input } from "@tutly/ui/input";
 import { api } from "@/trpc/react";
 import { useClientSession } from "@/lib/auth/client";
 

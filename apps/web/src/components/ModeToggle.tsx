@@ -2,8 +2,8 @@ import { Sun } from "lucide-react";
 import { Moon } from "lucide-react";
 import * as React from "react";
 
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Label } from "@tutly/ui/label";
+import { Switch } from "@tutly/ui/switch";
 
 export function ModeToggle() {
   const [isDark, setIsDark] = React.useState(() => {

@@ -27,9 +27,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+} from "@tutly/ui/alert-dialog";
+import { Button } from "@tutly/ui/button";
+import { Calendar as CalendarPicker } from "@tutly/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -38,9 +38,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@tutly/ui/dialog";
+import { Input } from "@tutly/ui/input";
+import { ScrollArea } from "@tutly/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -48,9 +48,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+} from "@tutly/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@tutly/ui/tabs";
+import { Textarea } from "@tutly/ui/textarea";
 import { api } from "@/trpc/react";
 import AddHolidayDialog from "@/app/(protected)/dashboard/_components/Holidays";
 

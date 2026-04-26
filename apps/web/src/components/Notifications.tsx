@@ -1,6 +1,6 @@
 "use client";
 
-import type { Notification, NotificationEvent } from "@/lib/prisma";
+import type { Notification, NotificationEvent } from "@tutly/db/browser";
 import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import {
@@ -19,7 +19,7 @@ import {
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -27,22 +27,22 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@tutly/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@tutly/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@tutly/ui/tooltip";
 import type { SessionUser } from "@/lib/auth";
-import day from "@/lib/dayjs";
-import { cn } from "@/lib/utils";
+import day from "@tutly/utils/dayjs";
+import { cn } from "@tutly/utils";
 
 interface NotificationLink {
   href: string;

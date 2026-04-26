@@ -6,8 +6,8 @@ import { IoMdBookmarks } from "react-icons/io";
 import { MdOutlineEdit } from "react-icons/md";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@tutly/ui/button";
+import { Card } from "@tutly/ui/card";
 
 import CourseFormModal from "./CourseFormModal";
 import Image from "next/image";

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Account } from "@/lib/prisma";
+import type { Account } from "@tutly/db/browser";
 import { CheckCircle2, Loader2, SkipForward, XCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -14,8 +14,8 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
+} from "@tutly/ui/accordion";
+import { Button } from "@tutly/ui/button";
 import {
   Form,
   FormControl,
@@ -23,8 +23,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@tutly/ui/form";
+import { Input } from "@tutly/ui/input";
 import { api } from "@/trpc/react";
 import Image from "next/image";
 

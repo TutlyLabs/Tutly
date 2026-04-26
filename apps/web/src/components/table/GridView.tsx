@@ -3,14 +3,14 @@
 import { Edit2, Eye, MoreHorizontal, Trash2 } from "lucide-react";
 import React from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@tutly/ui/dropdown-menu";
 
 import type { Column, IAction } from "./DisplayTable";
 

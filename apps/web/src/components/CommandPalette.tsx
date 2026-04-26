@@ -21,7 +21,7 @@ import {
   LogOutIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useDebounce } from "@/hooks/use-debounce";
+import { useDebounce } from "@tutly/hooks";
 
 import {
   CommandDialog,
@@ -31,12 +31,12 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
+} from "@tutly/ui/command";
+import { Badge } from "@tutly/ui/badge";
 import type { SessionUser } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
 import { api } from "@/trpc/react";
-import { cn } from "@/lib/utils";
+import { cn } from "@tutly/utils";
 
 type CategoryFilter =
   | "all"

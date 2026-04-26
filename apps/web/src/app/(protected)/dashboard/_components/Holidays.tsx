@@ -1,28 +1,28 @@
 "use client";
 
-import day from "@/lib/dayjs";
+import day from "@tutly/utils/dayjs";
 import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@tutly/ui/button";
+import { Calendar } from "@tutly/ui/calendar";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@tutly/ui/dialog";
+import { Input } from "@tutly/ui/input";
+import { Label } from "@tutly/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
+} from "@tutly/ui/popover";
+import { Textarea } from "@tutly/ui/textarea";
 import { api } from "@/trpc/react";
 
 export default function AddHolidayDialog() {

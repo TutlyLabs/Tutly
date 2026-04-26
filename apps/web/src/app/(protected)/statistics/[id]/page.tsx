@@ -3,7 +3,7 @@ import { api } from "@/trpc/server";
 import Link from "next/link";
 import StudentStats from "../../tutor/statistics/_components/studentStats";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 
 interface StatisticsDetailPageProps {
   params: Promise<{ id: string }>;

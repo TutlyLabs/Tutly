@@ -7,9 +7,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@tutly/ui/select";
 import { api } from "@/trpc/react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 
 interface Props {
   selectedCourse: string;

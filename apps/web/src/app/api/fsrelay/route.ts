@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/server/auth";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { giteaClient } from "@/lib/gitea";
 
 /**

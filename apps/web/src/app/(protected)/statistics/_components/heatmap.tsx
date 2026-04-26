@@ -10,8 +10,8 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@tutly/ui/button";
+import { Card } from "@tutly/ui/card";
 
 interface CalendarHeatmapProps {
   classes: string[];

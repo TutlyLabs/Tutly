@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@tutly/ui/badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@tutly/ui/tooltip";
 import { FaCheckCircle, FaTimesCircle, FaClock } from "react-icons/fa";
 
 interface StudentAttendanceIndicatorProps {

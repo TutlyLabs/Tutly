@@ -14,7 +14,7 @@ import {
   BETTER_AUTH_SECRET,
   BETTER_AUTH_URL,
 } from "@/lib/constants";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import ResetPasswordEmailTemplate from "@/components/email/ResetPasswordEmailTemplate";
 
 const resend = new Resend(RESEND_API_KEY);

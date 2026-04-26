@@ -4,12 +4,12 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import { api } from "@/trpc/react";
-import type { User } from "@/lib/prisma";
+import type { User } from "@tutly/db/browser";
 import Link from "next/link";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@tutly/ui/card";
+import { Input } from "@tutly/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 
 type UserWithMentor = User & {
   mentorUsername?: string;

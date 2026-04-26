@@ -1,6 +1,6 @@
 "use client";
 
-import { FileType } from "@/lib/prisma";
+import { FileType } from "@tutly/db/browser";
 import axios from "axios";
 import imageCompression from "browser-image-compression";
 import { useState } from "react";

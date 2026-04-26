@@ -1,6 +1,6 @@
 import MDEditor from "@uiw/react-md-editor";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@tutly/utils";
 
 interface MarkdownPreviewProps {
   content: string;

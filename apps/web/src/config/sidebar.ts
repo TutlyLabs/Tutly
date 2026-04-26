@@ -1,4 +1,4 @@
-import type { Role } from "@/lib/prisma";
+import type { Role } from "@tutly/db/browser";
 import {
   BarChart,
   Bookmark,

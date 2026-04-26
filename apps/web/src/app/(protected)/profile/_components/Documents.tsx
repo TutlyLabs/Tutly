@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@/lib/prisma";
-import { FileType } from "@/lib/prisma";
+import type { Profile } from "@tutly/db/browser";
+import { FileType } from "@tutly/db/browser";
 import { Loader2, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -11,7 +11,7 @@ import * as z from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   Form,
   FormControl,
@@ -19,8 +19,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@tutly/ui/form";
+import { Input } from "@tutly/ui/input";
 import { useFileUpload } from "@/components/useFileUpload";
 import { api } from "@/trpc/react";
 

@@ -1,6 +1,6 @@
 import { getServerSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 
 export default async function ClassesPage({
   params,

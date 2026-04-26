@@ -1,15 +1,15 @@
 "use client";
 
-import type { File } from "@/lib/prisma";
+import type { File } from "@tutly/db/browser";
 import { formatDistanceToNow } from "date-fns";
 import { Download, FileText, Plus, Trash2 } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@tutly/ui/button";
+import { Card } from "@tutly/ui/card";
+import { Input } from "@tutly/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 import { useFileUpload } from "@/components/useFileUpload";
 import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";

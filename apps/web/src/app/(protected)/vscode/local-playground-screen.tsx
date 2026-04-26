@@ -18,8 +18,8 @@ import {
   RefreshCw,
   Download,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "@tutly/ui/button";
+import { cn } from "@tutly/utils";
 import { toast } from "sonner";
 import { PlaygroundHelpDialog } from "./playground-help-dialog";
 

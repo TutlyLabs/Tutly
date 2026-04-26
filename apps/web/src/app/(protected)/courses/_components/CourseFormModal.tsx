@@ -14,17 +14,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+} from "@tutly/ui/alert-dialog";
+import { Button } from "@tutly/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+} from "@tutly/ui/dialog";
+import { Input } from "@tutly/ui/input";
+import { Label } from "@tutly/ui/label";
+import { RadioGroup, RadioGroupItem } from "@tutly/ui/radio-group";
 
 interface CourseFormModalProps {
   open: boolean;

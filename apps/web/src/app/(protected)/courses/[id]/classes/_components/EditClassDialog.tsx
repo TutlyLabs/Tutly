@@ -5,23 +5,23 @@ import { toast } from "sonner";
 import { Plus, Video, Phone, Radio } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+} from "@tutly/ui/dialog";
+import { Input } from "@tutly/ui/input";
+import { Label } from "@tutly/ui/label";
+import { RadioGroup, RadioGroupItem } from "@tutly/ui/radio-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@tutly/ui/select";
 import { api } from "@/trpc/react";
 
 interface Folder {

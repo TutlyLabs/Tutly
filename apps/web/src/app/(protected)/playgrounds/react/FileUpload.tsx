@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 
 interface FileData {
   path: string;

@@ -17,28 +17,28 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@tutly/ui/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { useDebounce } from "@/hooks/use-debounce";
+} from "@tutly/ui/tooltip";
+import { Badge } from "@tutly/ui/badge";
+import { Button } from "@tutly/ui/button";
+import { ScrollArea } from "@tutly/ui/scroll-area";
+import { Separator } from "@tutly/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@tutly/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
+import { Input } from "@tutly/ui/input";
+import { useDebounce } from "@tutly/hooks";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@tutly/ui/select";
 
 interface AttendanceData {
   username: string;

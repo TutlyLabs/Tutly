@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "process";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { auth } from "@/server/auth";
 
 export const dynamic = "force-dynamic";

@@ -10,7 +10,7 @@ import { isFeatureEnabled } from "@/lib/featureFlags";
 import { LayoutProvider } from "@/providers/layout-provider";
 import { LayoutContent } from "@/components/LayoutContent";
 import Crisp from "@/components/Crisp";
-import { cn } from "@/lib/utils";
+import { cn } from "@tutly/utils";
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;

@@ -1,15 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@/lib/prisma";
+import type { Profile } from "@tutly/db/browser";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { DatePicker } from "@/components/ui/date-picker";
+import { Button } from "@tutly/ui/button";
+import { Card, CardContent } from "@tutly/ui/card";
+import { DatePicker } from "@tutly/ui/date-picker";
 import {
   Form,
   FormControl,
@@ -17,8 +17,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@tutly/ui/form";
+import { Input } from "@tutly/ui/input";
 
 const experienceSchema = z.object({
   company: z.string().min(1, "Company name is required"),

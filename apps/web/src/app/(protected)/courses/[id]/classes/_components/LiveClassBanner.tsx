@@ -10,7 +10,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 
 interface LiveClassBannerProps {
   title: string;

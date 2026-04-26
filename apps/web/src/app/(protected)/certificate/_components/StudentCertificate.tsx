@@ -10,10 +10,10 @@ import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@tutly/ui/alert-dialog";
+import { Button } from "@tutly/ui/button";
+import { ScrollArea, ScrollBar } from "@tutly/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 
 interface Course {
   courseId: string;

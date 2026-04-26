@@ -11,13 +11,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@tutly/ui/button";
+import { Card } from "@tutly/ui/card";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@tutly/ui/popover";
 
 interface CalendarHeatmapProps {
   classes: string[];

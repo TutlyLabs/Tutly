@@ -13,7 +13,7 @@ import Link from "next/link";
 
 import ContentPreview from "@/components/ContentPreview";
 import { Pagination } from "@/components/table/Pagination";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -22,16 +22,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@tutly/ui/dialog";
+import { Input } from "@tutly/ui/input";
+import { Label } from "@tutly/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@tutly/ui/select";
 import {
   Table,
   TableBody,
@@ -39,7 +39,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@tutly/ui/table";
 import { useRouter, useSearchParams } from "next/navigation";
 import NewAttachmentPage from "@/app/(protected)/courses/[id]/classes/_components/NewAssignments";
 import { api } from "@/trpc/react";

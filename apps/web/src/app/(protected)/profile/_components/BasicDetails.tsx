@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Profile } from "@/lib/prisma";
-import { FileType } from "@/lib/prisma";
+import type { Profile } from "@tutly/db/browser";
+import { FileType } from "@tutly/db/browser";
 import { type ChangeEvent, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import * as z from "zod";
 import MobileInput from "@/components/MobileInput";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   Form,
   FormControl,
@@ -18,15 +18,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@tutly/ui/form";
+import { Input } from "@tutly/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@tutly/ui/select";
 import { useFileUpload } from "@/components/useFileUpload";
 import { api } from "@/trpc/react";
 import Image from "next/image";

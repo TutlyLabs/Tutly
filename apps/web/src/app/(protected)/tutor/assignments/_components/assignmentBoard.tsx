@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Course } from "@/lib/prisma";
+import type { Course } from "@tutly/db/browser";
 import NoDataFound from "@/components/NoDataFound";
 
 type SimpleCourse = {

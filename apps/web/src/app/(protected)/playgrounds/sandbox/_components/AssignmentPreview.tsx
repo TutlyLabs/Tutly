@@ -1,11 +1,11 @@
 "use client";
 
-import type { Attachment } from "@/lib/prisma";
+import type { Attachment } from "@tutly/db/browser";
 import { Calendar, RefreshCw } from "lucide-react";
 
 import MarkdownPreview from "@/components/MarkdownPreview";
-import { Badge } from "@/components/ui/badge";
-import day from "@/lib/dayjs";
+import { Badge } from "@tutly/ui/badge";
+import day from "@tutly/utils/dayjs";
 
 interface AssignmentPreviewProps {
   assignment: Attachment;

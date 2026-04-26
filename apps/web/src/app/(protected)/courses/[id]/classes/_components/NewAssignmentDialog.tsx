@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MdAssignment } from "react-icons/md";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@tutly/ui/dialog";
 import { api } from "@/trpc/react";
 import NewAttachmentPage from "./NewAssignments";
 

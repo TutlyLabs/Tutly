@@ -1,7 +1,7 @@
 "use client";
 
-import type { Attachment } from "@/lib/prisma";
-import { FileType } from "@/lib/prisma";
+import type { Attachment } from "@tutly/db/browser";
+import { FileType } from "@tutly/db/browser";
 import dayjs from "dayjs";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
@@ -36,9 +36,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@tutly/ui/alert-dialog";
+import { Badge } from "@tutly/ui/badge";
+import { Button } from "@tutly/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -46,17 +46,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@tutly/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@tutly/ui/dropdown-menu";
+import { Input } from "@tutly/ui/input";
+import { ScrollArea } from "@tutly/ui/scroll-area";
 import { api } from "@/trpc/react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 
 import EditClassDialog from "./EditClassDialog";
 import NewAttachmentPage from "./NewAssignments";

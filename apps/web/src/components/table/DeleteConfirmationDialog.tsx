@@ -3,8 +3,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "@tutly/ui/dialog";
+import { Button } from "@tutly/ui/button";
 import type { Column } from "./DisplayTable";
 import { toast } from "sonner";
 

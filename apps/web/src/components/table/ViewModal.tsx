@@ -4,9 +4,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+} from "@tutly/ui/dialog";
+import { Button } from "@tutly/ui/button";
+import { Label } from "@tutly/ui/label";
 import { toast } from "sonner";
 import { CopyIcon } from "lucide-react";
 import type { Column } from "./DisplayTable";

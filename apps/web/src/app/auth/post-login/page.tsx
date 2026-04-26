@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { getServerSessionOrRedirect } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { redirect } from "next/navigation";
 
 export default async function PostLoginPage() {

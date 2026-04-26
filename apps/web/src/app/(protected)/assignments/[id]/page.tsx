@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { getServerSessionOrRedirect } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import AssignmentPage from "../_components/AssignmentPage";
-import type { Attachment, submission as Submission } from "@/lib/prisma";
+import type { Attachment, submission as Submission } from "@tutly/db/browser";
 import { isFeatureEnabled } from "@/lib/featureFlags";
 
 interface AssignmentPageProps {

@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { Course, User } from "@/lib/prisma";
+import type { Course, User } from "@tutly/db/browser";
 
 import NoDataFound from "@/components/NoDataFound";
-import { Input } from "@/components/ui/input";
+import { Input } from "@tutly/ui/input";
 
 type StudentWithRelations = User & {
   course: Course[];

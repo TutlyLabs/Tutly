@@ -1,16 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Attachment } from "@/lib/prisma";
-import type { attachmentType, submissionMode } from "@/lib/prisma";
-import { FileType } from "@/lib/prisma";
+import type { Attachment } from "@tutly/db/browser";
+import type { attachmentType, submissionMode } from "@tutly/db/browser";
+import { FileType } from "@tutly/db/browser";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 
 import RichTextEditor from "@/components/editor/RichTextEditor";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tutly/ui/button";
 import {
   Form,
   FormControl,
@@ -18,15 +18,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@tutly/ui/form";
+import { Input } from "@tutly/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@tutly/ui/select";
 import { api } from "@/trpc/react";
 
 const formSchema = z.object({

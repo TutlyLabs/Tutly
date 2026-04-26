@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/server/auth";
 import { headers } from "next/headers";
 import { cache } from "react";
-import type { Course, Organization, Role, User } from "@/lib/prisma";
+import type { Course, Organization, Role, User } from "@tutly/db/browser";
 import type { Session } from "better-auth";
 
 export type SessionUser = Omit<User, "password" | "oneTimePassword"> & {

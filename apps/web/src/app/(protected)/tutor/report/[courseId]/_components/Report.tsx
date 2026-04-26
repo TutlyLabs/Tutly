@@ -12,10 +12,10 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import day from "@/lib/dayjs";
+} from "@tutly/ui/dropdown-menu";
+import day from "@tutly/utils/dayjs";
 
-import type { Course } from "@/lib/prisma";
+import type { Course } from "@tutly/db/browser";
 import NoDataFound from "@/components/NoDataFound";
 
 declare module "jspdf" {

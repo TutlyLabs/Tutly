@@ -5,7 +5,7 @@ import { PiStudentBold } from "react-icons/pi";
 import { SiGoogleclassroom } from "react-icons/si";
 
 import { api } from "@/trpc/react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 
 interface Props {
   selectedCourse: string;

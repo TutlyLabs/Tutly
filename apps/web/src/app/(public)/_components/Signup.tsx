@@ -8,8 +8,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@tutly/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@tutly/ui/card";
 import {
   Form,
   FormControl,
@@ -17,8 +17,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@tutly/ui/form";
+import { Input } from "@tutly/ui/input";
 import { authClient } from "@/server/auth/client";
 import { SocialSignin } from "./SocialSignin";
 import { useFeatureFlags } from "./FeatureFlagsProvider";

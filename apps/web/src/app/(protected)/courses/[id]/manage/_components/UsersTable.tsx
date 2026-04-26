@@ -12,17 +12,17 @@ import {
 import { FaUserXmark } from "react-icons/fa6";
 import { MdOutlineBlock } from "react-icons/md";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@tutly/ui/badge";
+import { Button } from "@tutly/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@tutly/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+} from "@tutly/ui/dialog";
+import { Input } from "@tutly/ui/input";
 import {
   Table,
   TableBody,
@@ -30,8 +30,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@tutly/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";

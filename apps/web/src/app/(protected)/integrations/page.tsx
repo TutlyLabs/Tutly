@@ -6,7 +6,7 @@ import { ZoomIntegration } from "./_components/Zoom";
 import { GithubIntegration } from "./_components/Github";
 import { GoogleIntegration } from "./_components/Google";
 import { GeminiIntegration } from "./_components/Gemini";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 
 export default async function IntegrationsPage() {
   const session = await getServerSessionOrRedirect();

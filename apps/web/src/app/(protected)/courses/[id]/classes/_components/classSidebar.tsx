@@ -1,6 +1,6 @@
 "use client";
 
-import type { Class, Folder } from "@/lib/prisma";
+import type { Class, Folder } from "@tutly/db/browser";
 import { useEffect, useState } from "react";
 import { FaFolder, FaFolderOpen } from "react-icons/fa6";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
@@ -9,16 +9,16 @@ import { IoStatsChart } from "react-icons/io5";
 import { Clock } from "lucide-react";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@tutly/ui/button";
+import { ScrollArea } from "@tutly/ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@tutly/ui/tooltip";
 import type { SessionUser } from "@/lib/auth";
-import { cn } from "@/lib/utils";
+import { cn } from "@tutly/utils";
 
 import ManageFolders from "./ManageFolders";
 import NewClassDialog from "./newClass";

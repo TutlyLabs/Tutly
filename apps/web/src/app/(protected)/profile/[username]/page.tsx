@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;

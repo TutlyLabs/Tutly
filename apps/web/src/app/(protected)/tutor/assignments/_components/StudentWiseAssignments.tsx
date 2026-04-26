@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { MdOutlineSportsScore } from "react-icons/md";
 import { useRouter } from "next/navigation";
-import type { Course } from "@/lib/prisma";
+import type { Course } from "@tutly/db/browser";
 
 type SimpleCourse = {
   id: string;

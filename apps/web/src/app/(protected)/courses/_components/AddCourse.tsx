@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@tutly/ui/card";
 
 import CourseFormModal from "./CourseFormModal";
 import { useSearchParams } from "next/navigation";

@@ -1,12 +1,12 @@
 "use client";
 
-import type { Account, Session } from "@/lib/prisma";
+import type { Account, Session } from "@tutly/db/browser";
 import { HardDrive, Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@tutly/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 import { api } from "@/trpc/react";
 import { extractDeviceLabel } from "@/utils/device";
 

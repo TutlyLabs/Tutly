@@ -16,8 +16,8 @@ import { MdLockReset } from "react-icons/md";
 import { useRouter } from "next/navigation";
 
 import DisplayTable, { type Column } from "@/components/table/DisplayTable";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@tutly/ui/button";
+import { Badge } from "@tutly/ui/badge";
 
 import {
   Dialog,
@@ -26,9 +26,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@tutly/ui/dialog";
+import { Input } from "@tutly/ui/input";
+import { Label } from "@tutly/ui/label";
 import { api } from "@/trpc/react";
 import { authClient } from "@/server/auth/client";
 

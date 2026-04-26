@@ -9,8 +9,8 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+} from "@tutly/ui/collapsible";
+import { SidebarProvider, SidebarTrigger } from "@tutly/ui/sidebar";
 import {
   Sidebar,
   SidebarContent,
@@ -22,11 +22,11 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar";
+} from "@tutly/ui/sidebar";
 import { getDefaultSidebarItems } from "@/config/sidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@tutly/hooks";
 import type { SessionUser } from "@/lib/auth";
-import { cn } from "@/lib/utils";
+import { cn } from "@tutly/utils";
 import { usePathname } from "next/navigation";
 import { useLayout } from "@/providers/layout-provider";
 

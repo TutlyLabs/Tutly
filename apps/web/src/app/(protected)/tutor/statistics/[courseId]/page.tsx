@@ -4,12 +4,12 @@ import { Barchart } from "../_components/barchart";
 import { Linechart } from "../_components/linechart";
 import { Piechart } from "../_components/piechart";
 import Header from "../_components/header";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@tutly/ui/card";
 import StudentStats from "../_components/studentStats";
 import TabView from "../_components/TabView";
 import { EvaluationStats } from "../_components/evaluationStats";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 import MenteeCount from "../_components/MenteeCount";
 
 interface StatisticsDetailPageProps {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayout } from "@/providers/layout-provider";
-import { cn } from "@/lib/utils";
+import { cn } from "@tutly/utils";
 
 interface LayoutContentProps {
   children: React.ReactNode;

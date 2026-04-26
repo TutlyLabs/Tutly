@@ -3,7 +3,7 @@ import { getServerSessionOrRedirect } from "@/lib/auth";
 import { isFeatureEnabled } from "@/lib/featureFlags";
 import { SandboxWrapper } from "./_components/SandboxWrapper";
 import { SANDBOX_TEMPLATES } from "./_components/templetes";
-import { db } from "@/lib/db";
+import { db } from "@tutly/db";
 import { Buffer } from "node:buffer";
 import PlaygroundPage from "../../assignments/_components/PlaygroundPage";
 import { PageLayout } from "@/components/PageLayout";

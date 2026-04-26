@@ -7,13 +7,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import type { ChartConfig } from "@/components/ui/chart";
+} from "@tutly/ui/card";
+import type { ChartConfig } from "@tutly/ui/chart";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from "@tutly/ui/chart";
 import { InboxIcon } from "lucide-react";
 
 const chartConfig = {

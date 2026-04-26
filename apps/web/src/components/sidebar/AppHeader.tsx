@@ -1,7 +1,7 @@
 "use client";
 
-import { Separator } from "@/components/ui/separator";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Separator } from "@tutly/ui/separator";
+import { useIsMobile } from "@tutly/hooks";
 import type { SessionUser } from "@/lib/auth";
 import { useLayout } from "@/providers/layout-provider";
 import { useState, useEffect } from "react";

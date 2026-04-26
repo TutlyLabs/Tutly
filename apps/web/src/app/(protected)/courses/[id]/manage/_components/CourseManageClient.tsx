@@ -3,7 +3,7 @@
 import type { SessionUser } from "@/lib/auth";
 import UsersTable from "./UsersTable";
 import { api } from "@/trpc/react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@tutly/ui/skeleton";
 
 interface Props {
   courseId: string;
