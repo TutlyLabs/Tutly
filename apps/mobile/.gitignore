@@ -1,0 +1,21 @@
+node_modules
+dist
+.turbo
+.cache
+*.tsbuildinfo
+
+# Capacitor native projects (added later via `cap add ios|android`)
+ios/App/App/public
+ios/App/Pods
+ios/App/output
+ios/App/build
+ios/DerivedData
+android/.gradle
+android/app/build
+android/build
+android/captures
+android/local.properties
+
+# Env
+.env.local
+.env.*.local

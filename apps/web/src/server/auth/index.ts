@@ -229,6 +229,9 @@ export const auth = betterAuth({
       "http://localhost:3000",
       "tutly://",
       "tutly://*",
+      // Capacitor WebView origins (iOS uses capacitor://, Android uses http://localhost)
+      "capacitor://localhost",
+      "http://localhost",
     ];
     if (process.env.NODE_ENV === "development") {
       origins.push("exp://", "exp://**");

@@ -1,11 +1,13 @@
 "use client";
 
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
-import { httpBatchStreamLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import { useState } from "react";
-import SuperJSON from "superjson";
+import {
+  createTrpcClientConfig,
+  localStorageBearerStorage,
+} from "@tutly/api-client";
 
 import { type AppRouter } from "@/server/api/root";
 import { createQueryClient } from "./query-client";
@@ -44,30 +46,14 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
   const [trpcClient] = useState(() =>
-    api.createClient({
-      links: [
-        loggerLink({
-          enabled: (op) =>
-            NODE_ENV === "development" ||
-            (op.direction === "down" && op.result instanceof Error),
-        }),
-        httpBatchStreamLink({
-          transformer: SuperJSON,
-          url: `${getPreviewUrl()}/api/trpc`,
-          headers: () => {
-            const headers = new Headers();
-            headers.set("x-trpc-source", "nextjs-react");
-
-            const token = localStorage.getItem("bearer_token");
-            if (token) {
-              headers.set("authorization", `Bearer ${token}`);
-            }
-
-            return headers;
-          },
-        }),
-      ],
-    }),
+    api.createClient(
+      createTrpcClientConfig({
+        baseUrl: getPreviewUrl(),
+        getToken: () => localStorageBearerStorage.getToken(),
+        source: "nextjs-react",
+        isDev: NODE_ENV === "development",
+      }),
+    ),
   );
 
   return (
