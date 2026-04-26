@@ -17,6 +17,7 @@
     "chokidar": "^5.0.0",
     "cors": "^2.8.5",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.4.1",
     "fast-glob": "^3.3.3",
     "ignore": "^7.0.5",
     "keytar": "^7.9.0",

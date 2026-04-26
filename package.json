@@ -19,7 +19,7 @@
     "lint": "turbo run lint --continue",
     "lint:fix": "turbo run lint --continue -- --fix",
     "lint:ws": "pnpm dlx sherif@latest",
-    "postinstall": "pnpm lint:ws",
+    "postinstall": "rm -rf node_modules/wrap-ansi/node_modules/string-width 2>/dev/null; pnpm lint:ws",
     "typecheck": "turbo run typecheck",
     "ui-add": "turbo run ui-add",
     "update:deps": "pnpm dlx npm-check-updates --deep --target latest -u && pnpm install"

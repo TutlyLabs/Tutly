@@ -12,6 +12,8 @@
     "cap": "pnpm build:cap && cap sync",
     "cap:add:ios": "cap add ios",
     "cap:add:android": "cap add android",
+    "cap:ios": "pnpm build:cap && cap copy ios && cap open ios",
+    "cap:android": "pnpm build:cap && cap copy android && cap open android",
     "cap:open:ios": "cap open ios",
     "cap:open:android": "cap open android",
     "cap:run:ios": "cap run ios",

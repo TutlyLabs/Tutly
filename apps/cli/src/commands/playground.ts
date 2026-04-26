@@ -6,6 +6,7 @@ import { Command, flags } from "@oclif/command";
 import { watch as chokidarWatch, type FSWatcher } from "chokidar";
 import cors from "cors";
 import express from "express";
+import rateLimit from "express-rate-limit";
 import * as WebSocket from "ws";
 import { WebSocketServer } from "ws";
 
@@ -130,7 +131,15 @@ export default class Playground extends Command {
   private async setupRoutes(flags: any) {
     const baseDir = path.resolve(flags.directory);
 
-    // Health check
+    const fileLimiter = rateLimit({
+      windowMs: 60 * 1000,
+      limit: 600,
+      standardHeaders: "draft-7",
+      legacyHeaders: false,
+    });
+    this.app.use("/api/files", fileLimiter);
+    this.app.use("/api/test", fileLimiter);
+
     this.app.get("/api/health", (req, res) => {
       res.json({
         status: "ok",
