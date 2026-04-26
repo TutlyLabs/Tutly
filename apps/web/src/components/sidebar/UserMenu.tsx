@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@tutly/ui/dropdown-menu";
 import { useLogout } from "@/hooks/use-logout";
+import BiometricToggle from "@/components/native/BiometricToggle";
 
 interface UserMenuProps {
   user: SessionUser;
@@ -129,6 +130,7 @@ export function UserMenu({ user }: UserMenuProps) {
             )} */}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
+          <BiometricToggle />
           <DropdownMenuItem
             onClick={async () => {
               toast.info("Logging out...");

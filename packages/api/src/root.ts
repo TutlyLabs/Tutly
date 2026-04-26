@@ -8,6 +8,7 @@ import { classesRouter } from "./routers/classes";
 import { codingPlatformsRouter } from "./routers/codingPlatforms";
 import { coursesRouter } from "./routers/courses";
 import { dashboardRouter } from "./routers/dashboard";
+import { deviceTokensRouter } from "./routers/deviceTokens";
 import { doubtsRouter } from "./routers/doubts";
 import { driveRouter } from "./routers/drive";
 import { fileUploadRouter } from "./routers/fileupload";
@@ -45,6 +46,7 @@ export const appRouter = createTRPCRouter({
   codingPlatforms: codingPlatformsRouter,
   courses: coursesRouter,
   dashboard: dashboardRouter,
+  deviceTokens: deviceTokensRouter,
   doubts: doubtsRouter,
   drive: driveRouter,
   featureFlags: featureFlagsRouter,

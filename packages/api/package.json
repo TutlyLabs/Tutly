@@ -23,6 +23,7 @@
     "@tutly/db": "workspace:*",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.1.2",
+    "firebase-admin": "^13.8.0",
     "superjson": "2.2.6",
     "zod": "^4.1.13"
   },

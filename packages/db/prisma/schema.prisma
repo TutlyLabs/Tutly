@@ -107,6 +107,7 @@ model User {
   oneTimePassword String @default(dbgenerated("substring(md5(random()::text), 1, 8)"))
 
   pushSubscriptions PushSubscription[]
+  deviceTokens      DeviceToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -230,6 +231,26 @@ model PushSubscription {
   user   User   @relation(fields: [userId], references: [id])
   userId String
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum DevicePlatform {
+  IOS
+  ANDROID
+}
+
+model DeviceToken {
+  id       String         @id @default(uuid())
+  token    String         @unique
+  platform DevicePlatform
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  lastSeen  DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

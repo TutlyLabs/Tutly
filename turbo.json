@@ -80,7 +80,8 @@
     "MODE",
     "TUTLY_VSCODE_SECRET",
     "NEXT_PUBLIC_BUILD_TARGET",
-    "NEXT_PUBLIC_API_URL"
+    "NEXT_PUBLIC_API_URL",
+    "FIREBASE_SERVICE_ACCOUNT_JSON"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

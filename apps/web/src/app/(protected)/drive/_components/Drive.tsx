@@ -11,6 +11,7 @@ import { Card } from "@tutly/ui/card";
 import { Input } from "@tutly/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 import { useFileUpload } from "@/components/useFileUpload";
+import { openExternalUrl } from "@/lib/native-files";
 import { api } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 
@@ -40,11 +41,8 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
 
   const { mutate: downloadFile } = api.fileupload.getDownloadUrl.useMutation({
     onSuccess: (data) => {
-      if (typeof data === "string") {
-        window.open(data, "_blank");
-      } else if (data?.signedUrl) {
-        window.open(data.signedUrl, "_blank");
-      }
+      const url = typeof data === "string" ? data : data?.signedUrl;
+      if (url) void openExternalUrl(url);
     },
     onError: () => {
       toast.error("Failed to download file");

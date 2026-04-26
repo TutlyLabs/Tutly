@@ -1,6 +1,8 @@
 "use client";
 
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { httpBatchStreamLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
@@ -10,6 +12,8 @@ import SuperJSON from "superjson";
 import { type AppRouter } from "@tutly/api";
 import { createQueryClient } from "./query-client";
 import { getPreviewUrl, NODE_ENV } from "@/lib/constants";
+import { isCapacitorBuild } from "@/lib/native";
+import { capacitorAsyncStorage } from "@/lib/persist-storage";
 
 const BEARER_TOKEN_KEY = "bearer_token";
 
@@ -54,6 +58,31 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
       ],
     }),
   );
+
+  if (isCapacitorBuild) {
+    return (
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister: createAsyncStoragePersister({
+            storage: capacitorAsyncStorage,
+            key: "tutly:rq-cache",
+            serialize: (data) => SuperJSON.stringify(data),
+            deserialize: (data) => SuperJSON.parse(data),
+            throttleTime: 1000,
+          }),
+          maxAge: 1000 * 60 * 60 * 24 * 7,
+        }}
+        onSuccess={() => {
+          void queryClient.resumePausedMutations();
+        }}
+      >
+        <api.Provider client={trpcClient} queryClient={queryClient}>
+          {props.children}
+        </api.Provider>
+      </PersistQueryClientProvider>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
