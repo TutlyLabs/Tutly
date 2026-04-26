@@ -7,10 +7,26 @@ const config: CapacitorConfig = {
   webDir: "out",
   server: { androidScheme: "https" },
   ios: { contentInset: "always" },
+  android: { allowMixedContent: false },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1000,
+      launchShowDuration: 1500,
+      launchAutoHide: true,
+      launchFadeOutDuration: 300,
       backgroundColor: "#000000",
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP",
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+    StatusBar: {
+      style: "DARK",
+      backgroundColor: "#000000",
+    },
+    Keyboard: {
+      resize: "body",
+      resizeOnFullScreen: true,
     },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"],

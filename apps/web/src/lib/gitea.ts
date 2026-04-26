@@ -224,7 +224,11 @@ export const giteaClient = {
     if (check.ok) return;
 
     // Create the user if they do not exist. A random password is generated as it is not used for auth.
-    const password = Math.random().toString(36).slice(-8) + "A1!";
+    const password =
+      (await import("crypto"))
+        .randomBytes(12)
+        .toString("base64url")
+        .slice(0, 8) + "A1!";
     const create = await fetch(`${GITEA_API_URL}/api/v1/admin/users`, {
       method: "POST",
       headers: {
@@ -438,12 +442,10 @@ export const giteaClient = {
 
             if (!response.ok) {
               const error = await response.text();
-              console.error(
-                `Failed to ${sha ? "update" : "create"} ${file.path}:`,
-                error,
-              );
+              const action = sha ? "update" : "create";
+              console.error("Failed to %s %s:", action, file.path, error);
               throw new Error(
-                `Failed to ${sha ? "update" : "create"} ${file.path}: ${error}`,
+                `Failed to ${action} ${JSON.stringify(file.path)}: ${error}`,
               );
             }
           }

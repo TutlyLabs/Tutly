@@ -160,6 +160,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.2.0",
     "@eslint/eslintrc": "^3.3.3",
     "@simplewebauthn/server": "^13.2.2",
@@ -183,6 +184,7 @@
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "sass": "^1.96.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4.1.18",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.49.0"

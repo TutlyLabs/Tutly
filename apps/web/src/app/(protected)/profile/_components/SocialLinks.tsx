@@ -49,7 +49,9 @@ const formSchema = z.object({
   twitter: z
     .string()
     .refine(
-      (val) => !val.includes("/") && !val.includes("twitter.com"),
+      (val) =>
+        !val.includes("/") &&
+        !/(^|[/.@])(twitter\.com|x\.com)(?:[/.]|$)/i.test(val),
       "Please enter only username",
     )
     .optional()
@@ -57,7 +59,8 @@ const formSchema = z.object({
   quora: z
     .string()
     .refine(
-      (val) => !val.includes("/") && !val.includes("quora.com"),
+      (val) =>
+        !val.includes("/") && !/(^|[/.@])quora\.com(?:[/.]|$)/i.test(val),
       "Please enter only username",
     )
     .optional()

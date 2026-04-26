@@ -19,6 +19,9 @@ on:
       - "turbo.json"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   Deploy-Landing-Production:
     name: Deploy Landing App to Production

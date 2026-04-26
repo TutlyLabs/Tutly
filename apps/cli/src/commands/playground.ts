@@ -1,9 +1,10 @@
 import { promises as fs } from "fs";
 import { createServer, IncomingMessage } from "http";
 import * as path from "path";
+import type { FSWatcher } from "chokidar";
 import type { IPty } from "node-pty";
 import { Command, flags } from "@oclif/command";
-import { watch as chokidarWatch, type FSWatcher } from "chokidar";
+import { watch as chokidarWatch } from "chokidar";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
@@ -105,9 +106,20 @@ export default class Playground extends Command {
     });
 
     // Middleware
+    const ALLOWED_ORIGINS = [
+      /^https?:\/\/localhost(:\d+)?$/,
+      /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
+      /^https:\/\/learn\.tutly\.in$/,
+    ];
     this.app.use(
       cors({
-        origin: true,
+        origin: (origin, cb) => {
+          if (!origin) return cb(null, true);
+          cb(
+            null,
+            ALLOWED_ORIGINS.some((re) => re.test(origin)),
+          );
+        },
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "x-api-key"],
@@ -137,8 +149,21 @@ export default class Playground extends Command {
       standardHeaders: "draft-7",
       legacyHeaders: false,
     });
-    this.app.use("/api/files", fileLimiter);
-    this.app.use("/api/test", fileLimiter);
+
+    const ALLOWED_TEST_COMMAND_PREFIXES = [
+      "npm test",
+      "pnpm test",
+      "yarn test",
+      "npx jest",
+      "npx mocha",
+      "npx vitest",
+      "jest",
+      "mocha",
+      "vitest",
+    ];
+    const isAllowedTestCommand = (cmd: unknown): cmd is string =>
+      typeof cmd === "string" &&
+      ALLOWED_TEST_COMMAND_PREFIXES.some((p) => cmd.startsWith(p));
 
     this.app.get("/api/health", (req, res) => {
       res.json({
@@ -150,7 +175,7 @@ export default class Playground extends Command {
     });
 
     // List root directory or get file/directory content
-    this.app.get("/api/files", async (req, res) => {
+    this.app.get("/api/files", fileLimiter, async (req, res) => {
       try {
         const entries = await this.listDirectory(baseDir);
         res.json({ entries, path: "/" });
@@ -160,7 +185,7 @@ export default class Playground extends Command {
     });
 
     // Get file content or directory listing
-    this.app.get("/api/files/*", async (req, res) => {
+    this.app.get("/api/files/*", fileLimiter, async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
@@ -206,7 +231,7 @@ export default class Playground extends Command {
     });
 
     // Create file or directory
-    this.app.post("/api/files/*", async (req, res) => {
+    this.app.post("/api/files/*", fileLimiter, async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
@@ -233,7 +258,7 @@ export default class Playground extends Command {
     });
 
     // Update file content
-    this.app.put("/api/files/*", async (req, res) => {
+    this.app.put("/api/files/*", fileLimiter, async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
@@ -253,7 +278,7 @@ export default class Playground extends Command {
     });
 
     // Delete file or directory
-    this.app.delete("/api/files/*", async (req, res) => {
+    this.app.delete("/api/files/*", fileLimiter, async (req, res) => {
       try {
         const relativePath = (req.params as any)[0];
         const fullPath = this.safePath(baseDir, relativePath);
@@ -276,19 +301,27 @@ export default class Playground extends Command {
       }
     });
 
-    this.app.post("/api/test", async (req, res) => {
+    this.app.post("/api/test", fileLimiter, async (req, res) => {
       try {
-        const { exec } = require("child_process");
+        const { execFile } = require("child_process");
         const { promisify } = require("util");
-        const execAsync = promisify(exec);
+        const execFileAsync = promisify(execFile);
 
-        const command =
+        const command: string =
           req.body?.command || "npm test --silent -- --reporter json";
 
+        if (!isAllowedTestCommand(command)) {
+          return res.status(400).json({
+            error: "Command not allowed",
+            allowedPrefixes: ALLOWED_TEST_COMMAND_PREFIXES,
+          });
+        }
+
+        const [cmd, ...argv] = command.split(/\s+/).filter(Boolean);
         this.log(`Running test command: ${command}`);
 
         try {
-          const { stdout, stderr } = await execAsync(command, {
+          const { stdout, stderr } = await execFileAsync(cmd, argv, {
             cwd: baseDir,
             timeout: 120000, // 2 minute timeout
             maxBuffer: 10 * 1024 * 1024, // 10MB buffer
@@ -335,21 +368,28 @@ export default class Playground extends Command {
       }
     });
 
-    this.app.get("/api/test/discover", async (req, res) => {
+    this.app.get("/api/test/discover", fileLimiter, async (req, res) => {
       try {
-        const { exec } = require("child_process");
+        const { execFile } = require("child_process");
         const { promisify } = require("util");
-        const execAsync = promisify(exec);
+        const execFileAsync = promisify(execFile);
 
-        // Run tests with --dry-run to list all tests without executing
-        const command =
-          req.query?.command ||
+        const command: string =
+          (req.query?.command as string) ||
           "npm test --silent -- --reporter json --dry-run";
 
+        if (!isAllowedTestCommand(command)) {
+          return res.status(400).json({
+            error: "Command not allowed",
+            allowedPrefixes: ALLOWED_TEST_COMMAND_PREFIXES,
+          });
+        }
+
+        const [cmd, ...argv] = command.split(/\s+/).filter(Boolean);
         this.log(`Discovering tests with: ${command}`);
 
         try {
-          const { stdout } = await execAsync(command, {
+          const { stdout } = await execFileAsync(cmd, argv, {
             cwd: baseDir,
             timeout: 30000,
             maxBuffer: 10 * 1024 * 1024,

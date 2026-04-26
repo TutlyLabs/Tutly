@@ -13,6 +13,7 @@
   "dependencies": {
     "@tutly/fsrelay": "workspace:*",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.4.1",
     "serve-static": "^2.2.0",
     "vscode-web": "^1.91.1"
   }
