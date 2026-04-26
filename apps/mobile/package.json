@@ -34,6 +34,7 @@
     "@trpc/server": "11.8.0",
     "@tutly/api-client": "workspace:*",
     "@tutly/types": "workspace:*",
+    "@tutly/utils": "workspace:*",
     "better-auth": "^1.4.7",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
