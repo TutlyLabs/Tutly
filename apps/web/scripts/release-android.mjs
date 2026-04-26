@@ -49,7 +49,7 @@ execSync("pnpm build:cap", {
   env: { ...process.env, NEXT_PUBLIC_API_URL: apiUrl },
 });
 
-execSync("pnpm exec cap copy android", { cwd: webRoot, stdio: "inherit" });
+execSync("pnpm exec cap sync android", { cwd: webRoot, stdio: "inherit" });
 
 const gradleArgs = [
   ":app:assembleRelease",
