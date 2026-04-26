@@ -3,6 +3,17 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const classesRouter = createTRPCRouter({
+  getLatestForCourse: protectedProcedure
+    .input(z.object({ courseId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const cls = await ctx.db.class.findFirst({
+        where: { courseId: input.courseId },
+        orderBy: { createdAt: "desc" },
+        select: { id: true },
+      });
+      return cls;
+    }),
+
   createClass: protectedProcedure
     .input(
       z.object({

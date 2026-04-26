@@ -1,63 +1,64 @@
-export const dynamic = "force-dynamic";
+"use client";
+
+import { Suspense } from "react";
 
 import "@/styles/globals.css";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
 import { AppHeader } from "@/components/sidebar/AppHeader";
 import { ImpersonationBanner } from "@/components/ImpersonationBanner";
-import posthog from "posthog-js";
-import { getServerSessionOrRedirect } from "@/lib/auth";
-import { isFeatureEnabled } from "@/lib/featureFlags";
 import { LayoutProvider } from "@/providers/layout-provider";
 import { LayoutContent } from "@/components/LayoutContent";
 import Crisp from "@/components/Crisp";
-import { cn } from "@tutly/utils";
+import PageLoader from "@/components/loader/PageLoader";
+import { ProtectedShell } from "@/components/auth/ProtectedShell";
+import { authClient } from "@/server/auth/client";
+import { api } from "@/trpc/react";
 
-interface ProtectedLayoutProps {
+export default function ProtectedLayout({
+  children,
+}: {
   children: React.ReactNode;
-  title?: string;
+}) {
+  return (
+    <ProtectedShell>
+      <ProtectedLayoutContent>{children}</ProtectedLayoutContent>
+    </ProtectedShell>
+  );
 }
 
-export default async function ProtectedLayout({
-  children,
-}: ProtectedLayoutProps) {
-  const session = await getServerSessionOrRedirect();
+function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
+  const { data } = authClient.useSession();
+  const integrationsQ = api.featureFlags.isEnabled.useQuery({
+    key: "integrations_tab",
+  });
+  const aiAssistantQ = api.featureFlags.isEnabled.useQuery({
+    key: "ai_assistant",
+  });
 
-  if (typeof window !== "undefined") {
-    posthog.init("phc_fkSt1fQ3v4zrEcSB1TWZMHGA5B0Q0hAB70JlZcINrMU", {
-      api_host: "https://us.i.posthog.com",
-      person_profiles: "identified_only",
-    });
-  }
-
-  const isIntegrationsEnabled = await isFeatureEnabled(
-    "integrations_tab",
-    session.user,
-  );
-
-  const isAIAssistantEnabled = await isFeatureEnabled(
-    "ai_assistant",
-    session.user,
-  );
-
-  const isImpersonating = (session.session as any)?.impersonatedBy;
+  if (!data?.user) return <PageLoader />;
+  const user = data.user;
+  const isImpersonating = (data.session as { impersonatedBy?: string } | null)
+    ?.impersonatedBy;
 
   return (
     <LayoutProvider>
       <div className="flex h-screen w-full overflow-hidden">
         <div>
           <AppSidebar
-            user={session.user}
-            isIntegrationsEnabled={isIntegrationsEnabled}
-            isAIAssistantEnabled={isAIAssistantEnabled}
+            user={user}
+            isIntegrationsEnabled={integrationsQ.data ?? false}
+            isAIAssistantEnabled={aiAssistantQ.data ?? false}
           />
         </div>
         <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 ease-in-out">
-          {isImpersonating && <ImpersonationBanner user={session.user} />}
-          <AppHeader user={session.user} />
-          <LayoutContent>{children}</LayoutContent>
+          {isImpersonating && <ImpersonationBanner user={user} />}
+          <AppHeader user={user} />
+          <LayoutContent>
+            <Suspense fallback={<PageLoader />}>{children}</Suspense>
+          </LayoutContent>
         </div>
       </div>
-      <Crisp user={session.user} organization={session.user.organization} />
+      <Crisp user={user} organization={user.organization} />
     </LayoutProvider>
   );
 }

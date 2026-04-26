@@ -41,7 +41,7 @@ import {
   TableRow,
 } from "@tutly/ui/table";
 import { useRouter, useSearchParams } from "next/navigation";
-import NewAttachmentPage from "@/app/(protected)/courses/[id]/classes/_components/NewAssignments";
+import NewAttachmentPage from "@/app/(protected)/courses/class/_components/NewAssignments";
 import { api } from "@/trpc/react";
 import { GitTemplateSection } from "./GitTemplateSection";
 import { GitSubmissionSection } from "./GitSubmissionSection";
@@ -267,7 +267,7 @@ export default function AssignmentPage({
           </p>
           {assignment?.class?.course && (
             <Link
-              href={`/courses/${assignment.class.course.id}/classes/${assignment.class.id}`}
+              href={`/courses/class?id=${assignment.class.course.id}&classId=${assignment.class.id}`}
               className="rounded bg-blue-500 p-1 px-2 text-white transition hover:bg-blue-600"
               target="_blank"
               rel="noopener noreferrer"
@@ -834,10 +834,10 @@ const AdminAssignmentTable = ({
             onClick={() => {
               if (username) {
                 router.push(
-                  `/assignments/${assignmentId}/evaluate?username=${username}`,
+                  `/assignments/evaluate?id=${assignmentId}&username=${username}`,
                 );
               } else {
-                router.push(`/assignments/${assignmentId}/evaluate`);
+                router.push(`/assignments/evaluate?id=${assignmentId}`);
               }
             }}
             variant={"link"}
@@ -1095,7 +1095,7 @@ const AdminAssignmentTable = ({
                         <TableCell>
                           <Button variant="link" asChild>
                             <Link
-                              href={`/assignments/${assignmentId}/evaluate?submissionId=${submission.id}`}
+                              href={`/assignments/evaluate?id=${assignmentId}&submissionId=${submission.id}`}
                             >
                               Evaluate
                             </Link>

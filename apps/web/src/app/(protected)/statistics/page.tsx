@@ -1,14 +1,15 @@
-import { redirect } from "next/navigation";
-import { api } from "@/trpc/server";
+"use client";
+
+import { Navigate } from "@/components/auth/Navigate";
 import NoDataFound from "@/components/NoDataFound";
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 
-export default async function StatisticsPage() {
-  const { data: courses } = await api.courses.getAllCourses();
-
-  if (courses && courses.length > 0) {
-    redirect(`/statistics/${courses[0]?.id}`);
-  }
-
+export default function StatisticsPage() {
+  const q = api.courses.getAllCourses.useQuery();
+  if (q.isLoading) return <PageLoader />;
+  const first = q.data?.data?.[0];
+  if (first) return <Navigate to={`/statistics/detail?id=${first.id}`} />;
   return (
     <div className="flex h-screen items-center justify-center">
       <NoDataFound message="Oops! No enrolled courses found" />

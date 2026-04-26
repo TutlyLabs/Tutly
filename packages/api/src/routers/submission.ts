@@ -85,9 +85,7 @@ export const submissionRouter = createTRPCRouter({
         data: {
           attachmentId: input.assignmentDetails.id,
           enrolledUserId: enrolledUser.id,
-          // Prisma's NullableJsonNullValueInput | InputJsonValue union
-          // for json columns isn't surfaced by the browser bundle, so we
-          // cast loosely here.
+          // Prisma JSON input type isn't on the browser bundle.
           data: input.files as never,
           status: "SUBMITTED",
         },

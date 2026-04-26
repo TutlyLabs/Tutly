@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@tutly/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@tutly/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@tutly/ui/dialog";
 import { Input } from "@tutly/ui/input";
 import { Label } from "@tutly/ui/label";
 

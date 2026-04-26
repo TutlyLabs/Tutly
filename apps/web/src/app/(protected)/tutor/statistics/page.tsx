@@ -1,34 +1,22 @@
-import { redirect } from "next/navigation";
-import { api } from "@/trpc/server";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
+import { Navigate } from "@/components/auth/Navigate";
 import NoDataFound from "@/components/NoDataFound";
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 
-interface StatisticsPageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-export default async function StatisticsPage({
-  searchParams,
-}: StatisticsPageProps) {
-  const { data: courses } = await api.courses.getAllCourses();
-  const resolvedSearchParams = await searchParams;
-
-  if (courses && courses.length > 0) {
-    const params = new URLSearchParams();
-    Object.entries(resolvedSearchParams).forEach(([key, value]) => {
-      if (value !== undefined) {
-        if (Array.isArray(value)) {
-          value.forEach((v) => params.append(key, v));
-        } else {
-          params.set(key, value);
-        }
-      }
-    });
-
-    const queryString = params.toString();
-    const redirectUrl = `/tutor/statistics/${courses[0]?.id}${queryString ? `?${queryString}` : ""}`;
-    redirect(redirectUrl);
+export default function StatisticsPage() {
+  const sp = useSearchParams();
+  const q = api.courses.getAllCourses.useQuery();
+  if (q.isLoading) return <PageLoader />;
+  const first = q.data?.data?.[0];
+  if (first) {
+    const params = new URLSearchParams(sp);
+    params.set("id", first.id);
+    return <Navigate to={`/tutor/statistics/detail?${params.toString()}`} />;
   }
-
   return (
     <div className="flex h-screen items-center justify-center">
       <NoDataFound message="No enrolled courses found" />

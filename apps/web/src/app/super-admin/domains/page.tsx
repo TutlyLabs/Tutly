@@ -102,7 +102,7 @@ export default function DomainsPage() {
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <Link
-                      href={`/super-admin/organizations/${domain.organization.id}`}
+                      href={`/super-admin/organizations/detail?id=${domain.organization.id}`}
                       className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
                     >
                       {domain.organization.name}

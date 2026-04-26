@@ -197,7 +197,9 @@ const MentorAssignmentBoard = ({
                 {student?.role === "STUDENT" && (
                   <div
                     onClick={() =>
-                      router.push(`/tutor/assignments/${student.username}`)
+                      router.push(
+                        `/tutor/assignments/student?id=${student.username}`,
+                      )
                     }
                     className="cursor-pointer rounded-lg bg-blue-600 p-2 text-sm font-medium text-white"
                   >

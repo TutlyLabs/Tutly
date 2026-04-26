@@ -30,7 +30,7 @@ export default function CourseCard({ course, currentUser }: any) {
         onClick={
           expired()
             ? () => router.push("/courses")
-            : () => router.push(`/courses/${course.id}`)
+            : () => router.push(`/courses/detail?id=${course.id}`)
         }
       >
         <div className="relative h-full w-full">
@@ -68,7 +68,7 @@ export default function CourseCard({ course, currentUser }: any) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.push(`/courses/${course.id}/manage`)}
+              onClick={() => router.push(`/courses/manage?id=${course.id}`)}
             >
               <FaUsersGear className="h-5 w-5" />
             </Button>

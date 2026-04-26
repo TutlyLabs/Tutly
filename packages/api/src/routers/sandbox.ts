@@ -24,6 +24,70 @@ async function cleanupSandbox(sdk: any, sandboxId: string) {
 }
 
 export const sandboxRouter = createTRPCRouter({
+  getSandboxPageData: protectedProcedure
+    .input(
+      z.object({
+        assignmentId: z.string().nullable(),
+        submissionId: z.string().nullable(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const currentUser = ctx.session.user;
+
+      const submission = input.submissionId
+        ? await ctx.db.submission.findUnique({
+            where: { id: input.submissionId, status: "SUBMITTED" },
+            include: {
+              enrolledUser: { include: { user: true } },
+              points: true,
+              assignment: true,
+            },
+          })
+        : null;
+
+      const studentAccess =
+        currentUser.role === "STUDENT" &&
+        submission?.enrolledUser.username === currentUser.username;
+      const mentorAccess =
+        currentUser.role === "MENTOR" &&
+        submission?.enrolledUser.mentorUsername === currentUser.username;
+      const instructorAccess = currentUser.role === "INSTRUCTOR";
+
+      if (input.submissionId && !studentAccess && !mentorAccess && !instructorAccess) {
+        return { allowed: false as const };
+      }
+
+      const assignment = input.assignmentId
+        ? await ctx.db.attachment.findUnique({
+            where: { id: input.assignmentId, attachmentType: "ASSIGNMENT" },
+          })
+        : null;
+
+      let decodedSandboxTemplate: unknown = null;
+      if (assignment?.sandboxTemplate) {
+        try {
+          const decoded = Buffer.from(
+            assignment.sandboxTemplate as string,
+            "base64",
+          ).toString("utf-8");
+          decodedSandboxTemplate = JSON.parse(decoded);
+        } catch {
+          decodedSandboxTemplate = assignment.sandboxTemplate;
+        }
+      }
+
+      return {
+        allowed: true as const,
+        submission,
+        assignment: assignment
+          ? { ...assignment, sandboxTemplate: decodedSandboxTemplate }
+          : null,
+        showActions: instructorAccess || mentorAccess,
+        canEditTemplate:
+          currentUser.role === "INSTRUCTOR" || currentUser.role === "ADMIN",
+      };
+    }),
+
   createSandbox: publicProcedure
     .input(z.object({ apiKey: z.string() }))
     .mutation(async ({ input }) => {

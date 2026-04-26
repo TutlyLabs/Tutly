@@ -142,7 +142,7 @@ export default function UsersPage() {
                     <td className="px-6 py-4 text-sm">
                       {user.organization ? (
                         <Link
-                          href={`/super-admin/organizations/${user.organization.id}`}
+                          href={`/super-admin/organizations/detail?id=${user.organization.id}`}
                           className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
                         >
                           {user.organization.name}

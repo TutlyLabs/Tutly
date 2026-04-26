@@ -113,7 +113,7 @@ export default function OrganizationsPage() {
                   >
                     <td className="px-6 py-4">
                       <Link
-                        href={`/super-admin/organizations/${org.id}`}
+                        href={`/super-admin/organizations/detail?id=${org.id}`}
                         className="font-medium text-gray-900 hover:text-indigo-600 dark:text-white dark:hover:text-indigo-400"
                       >
                         {org.name}

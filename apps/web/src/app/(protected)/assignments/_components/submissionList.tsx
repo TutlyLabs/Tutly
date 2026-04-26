@@ -64,16 +64,16 @@ export const SubmissionList = ({
           submissions.map((singleSubmission: any, index) => {
             if (!singleSubmission) return null;
             let hrefLink = username
-              ? `/assignments/${assignmentId}/evaluate?username=${singleSubmission.enrolledUser.username}&submissionId=${singleSubmission.id}`
-              : `/assignments/${assignmentId}/evaluate?submissionId=${singleSubmission.id}`;
+              ? `/assignments/evaluate?id=${assignmentId}&username=${singleSubmission.enrolledUser.username}&submissionId=${singleSubmission.id}`
+              : `/assignments/evaluate?id=${assignmentId}&submissionId=${singleSubmission.id}`;
 
             const sortBy = searchParams?.sortBy;
 
             if (sortBy) {
               if (username) {
-                hrefLink = `/assignments/${assignmentId}/evaluate?username=${singleSubmission.enrolledUser.username}&submissionId=${singleSubmission.id}&sortBy=${sortBy}`;
+                hrefLink = `/assignments/evaluate?id=${assignmentId}&username=${singleSubmission.enrolledUser.username}&submissionId=${singleSubmission.id}&sortBy=${sortBy}`;
               } else {
-                hrefLink = `/assignments/${assignmentId}/evaluate?submissionId=${singleSubmission.id}&sortBy=${sortBy}`;
+                hrefLink = `/assignments/evaluate?id=${assignmentId}&submissionId=${singleSubmission.id}&sortBy=${sortBy}`;
               }
             }
 

@@ -28,11 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@tutly/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@tutly/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@tutly/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 import {
   Tooltip,
@@ -64,9 +60,9 @@ export const NOTIFICATION_HREF_MAP: Record<
 > = {
   CLASS_CREATED: (obj: causedObjects) => `/classes/${obj.classId}`,
   ASSIGNMENT_CREATED: (obj: causedObjects) =>
-    `/assignments/${obj.assignmentId}`,
+    `/assignments/detail?id=${obj.assignmentId}`,
   ASSIGNMENT_REVIEWED: (obj: causedObjects) =>
-    `/assignments/${obj.assignmentId}`,
+    `/assignments/detail?id=${obj.assignmentId}`,
   LEADERBOARD_UPDATED: (_obj: causedObjects) => `/leaderboard`,
   DOUBT_RESPONDED: (obj: causedObjects) => `/doubts/${obj.doubtId}`,
   ATTENDANCE_MISSED: (_obj: causedObjects) => `/attendance`,

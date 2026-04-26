@@ -11,6 +11,7 @@ import { dashboardRouter } from "./routers/dashboard";
 import { doubtsRouter } from "./routers/doubts";
 import { driveRouter } from "./routers/drive";
 import { fileUploadRouter } from "./routers/fileupload";
+import { featureFlagsRouter } from "./routers/featureFlags";
 import { foldersRouter } from "./routers/folders";
 import { geminiRouter } from "./routers/gemini";
 import { leaderboardRouter } from "./routers/getLeaderboard";
@@ -27,6 +28,7 @@ import { searchRouter } from "./routers/search";
 import { statisticsRouter } from "./routers/statistics";
 import { submissionRouter } from "./routers/submission";
 import { usersRouter } from "./routers/users";
+import { vscodeRouter } from "./routers/vscode";
 import { superAdminRouter } from "./routers/superAdmin";
 
 import { createCallerFactory, createTRPCRouter } from "./trpc";
@@ -45,6 +47,7 @@ export const appRouter = createTRPCRouter({
   dashboard: dashboardRouter,
   doubts: doubtsRouter,
   drive: driveRouter,
+  featureFlags: featureFlagsRouter,
   fileupload: fileUploadRouter,
   folders: foldersRouter,
   gemini: geminiRouter,
@@ -62,6 +65,7 @@ export const appRouter = createTRPCRouter({
   statistics: statisticsRouter,
   submissions: submissionRouter,
   users: usersRouter,
+  vscode: vscodeRouter,
 });
 
 // export type definition of API

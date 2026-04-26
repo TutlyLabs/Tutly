@@ -138,7 +138,7 @@ const SingleAssignmentBoard = ({
                       <button
                         title="Details"
                         onClick={() =>
-                          router.push(`/assignments/${assignment.id}`)
+                          router.push(`/assignments/detail?id=${assignment.id}`)
                         }
                         className="rounded bg-blue-500 p-2.5"
                       >

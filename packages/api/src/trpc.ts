@@ -4,14 +4,8 @@ import { ZodError } from "zod";
 
 import { db, type Db } from "@tutly/db";
 
-/**
- * Session shape that procedures see on `ctx.session`. Apps build this from
- * Better Auth's `auth.api.getSession({ headers })` and pass it in via
- * `createTRPCContext({ headers, session })`.
- */
-// The customSession plugin shapes `user` to whatever the app returns; typed
-// loosely so this package doesn't import from any specific app. apps/web
-// passes its richer SessionUser at the call site.
+// Loosely typed so this package doesn't import the app's SessionUser shape;
+// apps narrow at the call site.
 export interface SessionContext {
   user: any | null;
   session: any;
@@ -24,13 +18,7 @@ export interface TRPCContext {
   source: string;
 }
 
-/**
- * Build a tRPC context from a request's headers + a pre-loaded session.
- * Apps (specifically apps/web's API route handler) construct the context as:
- *
- *   const session = await auth.api.getSession({ headers });
- *   const ctx = await createTRPCContext({ headers, session });
- */
+// Apps load the session from auth.api.getSession({ headers }) and pass it in.
 export const createTRPCContext = async (opts: {
   headers: Headers;
   session: SessionContext | null;

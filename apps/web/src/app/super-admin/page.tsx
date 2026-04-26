@@ -91,7 +91,7 @@ export default function SuperAdminDashboard() {
           {stats?.recentOrgs?.map((org) => (
             <Link
               key={org.id}
-              href={`/super-admin/organizations/${org.id}`}
+              href={`/super-admin/organizations/detail?id=${org.id}`}
               className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
             >
               <div className="flex items-center gap-4">

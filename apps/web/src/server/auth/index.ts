@@ -107,6 +107,8 @@ export const auth = createServerAuth({
   trustedOrigins: () => [
     "https://learn.tutly.in",
     "http://localhost:3000",
-    ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**"] : []),
+    ...(process.env.NODE_ENV === "development"
+      ? ["exp://", "exp://**", "http://localhost:*"]
+      : []),
   ],
 });

@@ -254,8 +254,8 @@ export default function MobileResponsiveStudentAssignments({
                         <Button
                           onClick={() => {
                             const url = userId
-                              ? `/assignments/${assignment.id}?username=${userId}`
-                              : `/assignments/${assignment.id}`;
+                              ? `/assignments/detail?id=${assignment.id}&username=${userId}`
+                              : `/assignments/detail?id=${assignment.id}`;
                             router.push(url);
                           }}
                           className="text-md w-24 p-4 max-sm:p-3 max-sm:text-sm"

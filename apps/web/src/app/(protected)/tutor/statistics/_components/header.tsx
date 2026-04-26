@@ -23,16 +23,14 @@ const Header = ({
     <div className="mx-4 mb-4 flex justify-between md:mx-8">
       <div className="flex flex-wrap items-center gap-2">
         {courses?.data?.map((course) => {
-          const params = new URLSearchParams();
+          const params = new URLSearchParams({ id: course.id });
           if (userRole === "MENTOR" && mentorParam) {
             params.set("mentor", mentorParam);
           }
           if (studentParam) {
             params.set("student", studentParam);
           }
-
-          const queryString = params.toString();
-          const href = `/tutor/statistics/${course.id}${queryString ? `?${queryString}` : ""}`;
+          const href = `/tutor/statistics/detail?${params.toString()}`;
 
           return (
             <Link

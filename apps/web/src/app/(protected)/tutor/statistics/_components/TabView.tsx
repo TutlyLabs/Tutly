@@ -63,22 +63,14 @@ export default function TabView({
   ) as UserWithMentor[];
 
   const getHref = (type: "mentor" | "student", username: string) => {
-    const baseUrl = `/tutor/statistics/${courseId}`;
+    const params = new URLSearchParams({ id: courseId });
     if (type === "mentor") {
-      return username === mentorName
-        ? baseUrl
-        : `${baseUrl}?mentor=${username}`;
+      if (username !== mentorName) params.set("mentor", username);
     } else {
-      const params = new URLSearchParams();
-      if (userRole === "MENTOR") {
-        params.set("mentor", mentorName);
-      } else if (mentorName) {
-        params.set("mentor", mentorName);
-      }
+      if (userRole === "MENTOR" || mentorName) params.set("mentor", mentorName);
       if (username !== menteeName) params.set("student", username);
-      const queryString = params.toString();
-      return queryString ? `${baseUrl}?${queryString}` : baseUrl;
     }
+    return `/tutor/statistics/detail?${params.toString()}`;
   };
 
   return (
@@ -195,7 +187,7 @@ export default function TabView({
                     Filtered by mentor:{" "}
                     <span className="font-medium">{mentorName}</span>
                     <Link
-                      href={`/tutor/statistics/${courseId}`}
+                      href={`/tutor/statistics/detail?id=${courseId}`}
                       className="text-primary ml-2 hover:underline"
                     >
                       Clear filter

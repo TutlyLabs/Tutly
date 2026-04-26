@@ -1,27 +1,19 @@
+"use client";
+
 import { RiReactjsFill } from "react-icons/ri";
 import { IoLogoHtml5 } from "react-icons/io5";
 import Link from "next/link";
+
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 import SandboxTemplates from "./_components/SandboxTemplates";
-import { isFeatureEnabled } from "@/lib/featureFlags";
-import { getServerSession } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
-export default async function PlaygroundsPage() {
-  const session = await getServerSession();
-  const currentUser = session?.user;
-
-  if (!currentUser) {
-    redirect("/sign-in");
-  }
-
-  const isSandboxEnabled = await isFeatureEnabled(
-    "sandbox_templates",
-    currentUser,
-  );
-
+export default function PlaygroundsPage() {
+  const q = api.featureFlags.isEnabled.useQuery({ key: "sandbox_templates" });
+  if (q.isLoading) return <PageLoader />;
   return (
     <div className="flex flex-col gap-8">
-      {isSandboxEnabled ? (
+      {q.data ? (
         <div>
           <h2 className="mb-4 text-2xl font-bold">Framework Templates</h2>
           <SandboxTemplates />

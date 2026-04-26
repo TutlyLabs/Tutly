@@ -101,7 +101,7 @@ const AssignmentTable = ({
   const router = useRouter();
 
   const handleAssignmentClick = (assignmentId: string) => {
-    router.push(`/assignments/${assignmentId}`);
+    router.push(`/assignments/detail?id=${assignmentId}`);
   };
 
   return (

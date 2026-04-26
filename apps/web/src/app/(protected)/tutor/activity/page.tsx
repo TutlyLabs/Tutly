@@ -1,37 +1,29 @@
-import { api } from "@/trpc/server";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
+import PageLoader from "@/components/loader/PageLoader";
+import { api } from "@/trpc/react";
 import UserCards from "./_components/UserCards";
 
-interface ActivityPageProps {
-  searchParams: Promise<{
-    search?: string;
-    filter?: string[];
-    page?: string;
-    limit?: string;
-  }>;
-}
+export default function ActivityPage() {
+  const sp = useSearchParams();
+  const search = sp.get("search") ?? undefined;
+  const filter = sp.getAll("filter");
+  const page = parseInt(sp.get("page") ?? "1");
+  const limit = parseInt(sp.get("limit") ?? "10");
 
-export default async function ActivityPage({
-  searchParams,
-}: ActivityPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const search = resolvedSearchParams.search || undefined;
-  const filter = resolvedSearchParams.filter || [];
-  const page = parseInt(resolvedSearchParams.page || "1");
-  const limit = parseInt(resolvedSearchParams.limit || "10");
-
-  const activityData = await api.users.getTutorActivityData({
+  const q = api.users.getTutorActivityData.useQuery({
     search,
     filter,
     page,
     limit,
   });
-
-  if (!activityData?.success || !activityData.data) {
+  if (q.isLoading) return <PageLoader />;
+  if (!q.data?.success || !q.data.data) {
     return <div>Failed to load activity data or access denied.</div>;
   }
-
-  const { users, totalItems, activeCount } = activityData.data;
-
+  const { users, totalItems, activeCount } = q.data.data;
   return (
     <UserCards data={users} totalItems={totalItems} activeCount={activeCount} />
   );

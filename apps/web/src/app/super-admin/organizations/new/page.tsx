@@ -21,7 +21,7 @@ export default function NewOrganizationPage() {
   const createOrg = api.superAdmin.createOrganization.useMutation({
     onSuccess: (data) => {
       toast.success("Organization created successfully!");
-      router.push(`/super-admin/organizations/${data.id}`);
+      router.push(`/super-admin/organizations/detail?id=${data.id}`);
     },
     onError: (error) => {
       toast.error(error.message);

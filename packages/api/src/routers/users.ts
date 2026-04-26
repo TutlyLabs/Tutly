@@ -28,6 +28,32 @@ export const generateRandomPassword = (length = 8) => {
 };
 
 export const usersRouter = createTRPCRouter({
+  hasCredentialAccount: protectedProcedure.query(async ({ ctx }) => {
+    const account = await ctx.db.account.findFirst({
+      where: { userId: ctx.session.user.id, providerId: "credential" },
+      select: { id: true },
+    });
+    return Boolean(account);
+  }),
+
+  getProfileRedirect: protectedProcedure
+    .input(z.object({ username: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const enrolled = await ctx.db.enrolledUsers.findFirst({
+        where: { username: input.username.toUpperCase() },
+        include: {
+          course: { select: { id: true } },
+          user: { select: { role: true } },
+        },
+        orderBy: { startDate: "desc" },
+      });
+      return {
+        courseId: enrolled?.course?.id ?? null,
+        isMentor: enrolled?.user?.role === "MENTOR",
+        username: input.username,
+      };
+    }),
+
   getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
 

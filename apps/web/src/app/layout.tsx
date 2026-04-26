@@ -44,7 +44,7 @@ export default async function RootLayout({
                 </Suspense>
                 <Toaster />
                 <Crisp />
-                {children}
+                <Suspense fallback={null}>{children}</Suspense>
               </NuqsAdapter>
             </LayoutProvider>
           </TRPCReactProvider>

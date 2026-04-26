@@ -10,42 +10,28 @@ import { randomUUID } from "crypto";
 import { ac, ROLES } from "./permissions";
 
 export interface CreateServerAuthOptions {
-  /** Better Auth secret. */
   secret: string;
-  /** Public-facing base URL of the auth server (e.g. https://learn.tutly.in). */
   baseURL: string;
-  /** Prisma client instance (any Prisma client compatible with prismaAdapter). */
-  // We deliberately type this loosely to avoid importing Prisma here.
+  // Loosely typed so this package doesn't depend on @prisma/client.
   db: any;
-  /** Whether to use HTTPS-only cookies (typically true in production). */
   useSecureCookies: boolean;
-  /** Send a password-reset email. The caller composes the React template. */
   sendResetPassword: (params: {
     user: { id: string; email: string };
     url: string;
   }) => Promise<void>;
-  /** Hook called after the customSession plugin loads the user. */
   customSessionHandler: (input: {
-      user: any;
-      session: any;
+    user: any;
+    session: any;
   }) => Promise<any>;
-  /** Optional Google credentials. */
   google?: { clientId: string; clientSecret: string };
-  /** Optional GitHub credentials. */
   github?: { clientId: string; clientSecret: string };
-  /** Optional Zoom credentials. */
   zoom?: { clientId: string; clientSecret: string };
-  /** Password hashing primitives. Caller provides bcrypt or whatever they prefer. */
   password: {
     hash: (plaintext: string) => Promise<string>;
     verify: (data: { password: string; hash: string }) => Promise<boolean>;
   };
-  /** afterEmailVerification hook (e.g. to update the user record). */
   afterEmailVerification?: (user: any) => Promise<void>;
-  /**
-   * Returns the trusted-origins list. The factory adds Capacitor and Expo
-   * origins for native clients automatically.
-   */
+  // Capacitor + Expo native origins are appended automatically.
   trustedOrigins?: (request?: Request) => string[];
 }
 

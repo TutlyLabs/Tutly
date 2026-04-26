@@ -1,32 +1,33 @@
 import type { NextConfig } from "next";
 import path from "path";
 
-const nextConfig: NextConfig = {
-  output: "standalone",
-  outputFileTracingRoot: path.join(__dirname, "../.."),
+const isCapacitor = process.env.NEXT_PUBLIC_BUILD_TARGET === "capacitor";
 
-  /** We already do linting and typechecking as separate tasks in CI */
+const nextConfig: NextConfig = {
+  // Web build is `standalone` (Next.js server). Mobile build uses static
+  // export so the bundle ships inside the Capacitor app.
+  output: isCapacitor ? "export" : "standalone",
+  ...(isCapacitor
+    ? {}
+    : { outputFileTracingRoot: path.join(__dirname, "../..") }),
+
   typescript: { ignoreBuildErrors: true },
 
-  experimental: {
-    serverActions: {
-      allowedOrigins: ["learn.tutly.in", "localhost:3000"],
-    },
-  },
-
-  // transpilePackages: [],
+  ...(isCapacitor
+    ? {}
+    : {
+        experimental: {
+          serverActions: {
+            allowedOrigins: ["learn.tutly.in", "localhost:3000"],
+          },
+        },
+      }),
 
   images: {
     unoptimized: true,
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-      {
-        protocol: "http",
-        hostname: "**",
-      },
+      { protocol: "https", hostname: "**" },
+      { protocol: "http", hostname: "**" },
     ],
   },
 };
