@@ -33,6 +33,17 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Decode google-services.json (optional)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "GOOGLE_SERVICES_JSON secret not set — Firebase will be unconfigured in this APK and push notifications will be dormant."
+            exit 0
+          fi
+          echo "$GOOGLE_SERVICES_JSON" | base64 -d > apps/web/android/app/google-services.json
+          echo "Wrote apps/web/android/app/google-services.json ($(wc -c < apps/web/android/app/google-services.json) bytes)"
+
       - name: Create Release PR or build APK
         id: changesets
         uses: changesets/action@v1
