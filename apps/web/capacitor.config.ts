@@ -1,7 +1,6 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-// Bundles Next.js's static `out/` into the native app. Do not set
-// `server.url` — it disables offline launch and breaks App Store review.
+// Do not set server.url — disables offline launch and fails App Store review.
 const config: CapacitorConfig = {
   appId: "in.tutly.app",
   appName: "Tutly",

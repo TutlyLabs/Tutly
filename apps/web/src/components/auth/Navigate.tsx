@@ -3,8 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-// Client-side <Redirect /> equivalent. Renders nothing and replaces the
-// current history entry once mounted.
 export function Navigate({
   to,
   replace = true,

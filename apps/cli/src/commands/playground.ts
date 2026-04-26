@@ -3,7 +3,7 @@ import { createServer, IncomingMessage } from "http";
 import * as path from "path";
 import type { IPty } from "node-pty";
 import { Command, flags } from "@oclif/command";
-import chokidar from "chokidar";
+import { watch as chokidarWatch, type FSWatcher } from "chokidar";
 import cors from "cors";
 import express from "express";
 import * as WebSocket from "ws";
@@ -48,7 +48,7 @@ export default class Playground extends Command {
   private app!: express.Application;
   private server!: ReturnType<typeof createServer>;
   private wss!: WebSocketServer;
-  private fileWatcher?: chokidar.FSWatcher;
+  private fileWatcher?: FSWatcher;
   private watcherClients: Set<WebSocket.WebSocket> = new Set();
   private terminals: Map<string, TerminalSession> = new Map();
 
@@ -252,7 +252,7 @@ export default class Playground extends Command {
         const stats = await fs.stat(fullPath);
 
         if (stats.isDirectory()) {
-          await fs.rmdir(fullPath, { recursive: true });
+          await fs.rm(fullPath, { recursive: true });
           res.json({ success: true, message: "Directory deleted" });
         } else {
           await fs.unlink(fullPath);
@@ -562,7 +562,7 @@ export default class Playground extends Command {
   }
 
   private async setupFileWatcher(directory: string) {
-    this.fileWatcher = chokidar.watch(directory, {
+    this.fileWatcher = chokidarWatch(directory, {
       ignored: /(^|[\/\\])\.(?!tutly)[^/\\\\]+/, // ignore dotfiles except .tutly
       persistent: true,
       ignoreInitial: true,

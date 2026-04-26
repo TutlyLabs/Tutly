@@ -4,8 +4,6 @@ import { ZodError } from "zod";
 
 import { db, type Db } from "@tutly/db";
 
-// Loosely typed so this package doesn't import the app's SessionUser shape;
-// apps narrow at the call site.
 export interface SessionContext {
   user: any | null;
   session: any;
@@ -18,7 +16,6 @@ export interface TRPCContext {
   source: string;
 }
 
-// Apps load the session from auth.api.getSession({ headers }) and pass it in.
 export const createTRPCContext = async (opts: {
   headers: Headers;
   session: SessionContext | null;

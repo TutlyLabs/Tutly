@@ -1,8 +1,3 @@
-/**
- * CORS for /api/* routes. Applied via Next.js middleware in proxy.ts.
- * Better Auth's `trustedOrigins` is a separate CSRF gate; both are needed.
- */
-
 const PROD_ORIGIN_PATTERNS: readonly RegExp[] = [
   /^https:\/\/learn\.tutly\.in$/,
   /^http:\/\/localhost$/,
@@ -26,7 +21,7 @@ export function isTrustedOrigin(origin: string | null | undefined): boolean {
   return getActivePatterns().some((p) => p.test(origin));
 }
 
-// Authorization must stay listed — CORS spec forbids wildcarding it.
+// Authorization cannot be wildcarded per CORS spec.
 const ALLOWED_REQUEST_HEADERS = [
   "Authorization",
   "Content-Type",

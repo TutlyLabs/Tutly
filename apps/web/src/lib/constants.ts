@@ -50,8 +50,6 @@ export const FRONTEND_URL =
   "http://localhost:3000";
 
 export const getPreviewUrl = () => {
-  // Capacitor / static bundle: bundle origin (capacitor://localhost or
-  // a static host) is not the API origin. Honor an explicit override.
   if (typeof window !== "undefined") {
     const explicit = process.env.NEXT_PUBLIC_API_URL;
     if (explicit) return explicit.replace(/\/$/, "");

@@ -12,7 +12,6 @@ import { ac, ROLES } from "./permissions";
 export interface CreateServerAuthOptions {
   secret: string;
   baseURL: string;
-  // Loosely typed so this package doesn't depend on @prisma/client.
   db: any;
   useSecureCookies: boolean;
   sendResetPassword: (params: {
@@ -31,7 +30,6 @@ export interface CreateServerAuthOptions {
     verify: (data: { password: string; hash: string }) => Promise<boolean>;
   };
   afterEmailVerification?: (user: any) => Promise<void>;
-  // Capacitor + Expo native origins are appended automatically.
   trustedOrigins?: (request?: Request) => string[];
 }
 

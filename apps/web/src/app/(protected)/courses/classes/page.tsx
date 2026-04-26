@@ -19,7 +19,6 @@ export default function ClassesPage() {
   if (!user || q.isLoading) return <PageLoader />;
   if (!courseId) return <Navigate to="/courses" />;
 
-  // Forward existing query string (minus our `id`) as extras on the redirect.
   const extras = new URLSearchParams(sp);
   extras.delete("id");
   if (q.data) extras.set("classId", q.data.id);

@@ -4,8 +4,6 @@ import path from "path";
 const isCapacitor = process.env.NEXT_PUBLIC_BUILD_TARGET === "capacitor";
 
 const nextConfig: NextConfig = {
-  // Web build is `standalone` (Next.js server). Mobile build uses static
-  // export so the bundle ships inside the Capacitor app.
   output: isCapacitor ? "export" : "standalone",
   ...(isCapacitor
     ? {}

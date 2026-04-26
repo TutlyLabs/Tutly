@@ -1,9 +1,4 @@
 #!/usr/bin/env node
-// Builds the Capacitor static export. Two kinds of files are moved aside:
-//  - src/app/api/* (server-only handlers; mobile calls them remotely)
-//  - dynamic [id] route segments (static export can't handle runtime params)
-// Both are restored when the build finishes (success or failure).
-
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -13,7 +8,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const stash = path.join(root, ".cap-stash");
 
-// Folders moved aside before the cap build. Add new dynamic [id] routes here.
 const STASH_PATHS = ["src/app/api"];
 
 const moves = [];
@@ -42,11 +36,7 @@ if (fs.existsSync(stash)) {
 
 try {
   for (const p of STASH_PATHS) stashFolder(p);
-  // Static bundle origin (capacitor://localhost / static host) is not the API
-  // origin. Pass NEXT_PUBLIC_API_URL through so the bundled tRPC + auth client
-  // know where to call. Defaults to production; override per-environment.
-  const apiUrl =
-    process.env.NEXT_PUBLIC_API_URL ?? "https://learn.tutly.in";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "https://learn.tutly.in";
 
   execSync("next build --webpack", {
     cwd: root,
