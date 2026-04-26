@@ -9,15 +9,10 @@ import {
   createBearerFetchOptions,
   localStorageBearerStorage,
 } from "@tutly/api-client";
+import { ac, ROLES } from "@tutly/auth/client";
+
 import type { auth } from "@/server/auth";
 import { getPreviewUrl } from "@/lib/constants";
-import {
-  ac,
-  adminRole,
-  instructorRole,
-  mentorRole,
-  studentRole,
-} from "./permissions";
 
 export const authClient = createAuthClient({
   baseURL: getPreviewUrl(),
@@ -26,15 +21,6 @@ export const authClient = createAuthClient({
     customSessionClient<typeof auth>(),
     inferAdditionalFields<typeof auth>(),
     usernameClient(),
-    adminClient({
-      ac,
-      roles: {
-        ADMIN: adminRole,
-        INSTRUCTOR: instructorRole,
-        MENTOR: mentorRole,
-        STUDENT: studentRole,
-        SUPER_ADMIN: adminRole,
-      },
-    }),
+    adminClient({ ac, roles: ROLES }),
   ],
 });

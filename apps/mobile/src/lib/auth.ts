@@ -6,6 +6,7 @@ import {
   adminClient,
 } from "better-auth/client/plugins";
 import { createBearerFetchOptions } from "@tutly/api-client";
+import { ac, ROLES } from "@tutly/auth/client";
 
 import { nativeBearerStorage } from "@/native/storage";
 import { API_BASE_URL } from "@/lib/env";
@@ -17,7 +18,7 @@ export const authClient = createAuthClient({
     customSessionClient(),
     inferAdditionalFields(),
     usernameClient(),
-    adminClient(),
+    adminClient({ ac, roles: ROLES }),
   ],
 });
 

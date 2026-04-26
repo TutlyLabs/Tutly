@@ -1,11 +1,8 @@
 import { compare, hash } from "bcryptjs";
-import { expo } from "@better-auth/expo";
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { customSession } from "better-auth/plugins/custom-session";
-import { bearer } from "better-auth/plugins/bearer";
-import { username } from "better-auth/plugins/username";
-import { admin } from "better-auth/plugins/admin";
+import { Resend } from "resend";
+
+import { createServerAuth } from "@tutly/auth/server";
+
 import {
   RESEND_API_KEY,
   GOOGLE_CLIENT_ID,
@@ -17,232 +14,99 @@ import {
   BETTER_AUTH_SECRET,
   BETTER_AUTH_URL,
 } from "@/lib/constants";
-import { db } from "../../lib/db";
-import { randomUUID } from "crypto";
+import { db } from "@/lib/db";
 import ResetPasswordEmailTemplate from "@/components/email/ResetPasswordEmailTemplate";
-import { Resend } from "resend";
-import {
-  ac,
-  adminRole,
-  instructorRole,
-  mentorRole,
-  studentRole,
-} from "./permissions";
 
 const resend = new Resend(RESEND_API_KEY);
 
-export const auth = betterAuth({
+export const auth = createServerAuth({
   secret: BETTER_AUTH_SECRET,
   baseURL: BETTER_AUTH_URL,
-  database: prismaAdapter(db, {
-    provider: "postgresql",
-  }),
-  advanced: {
-    useSecureCookies: process.env.NODE_ENV === "production",
-    database: {
-      generateId: () => randomUUID(),
-    },
-    ipAddress: {
-      ipAddressHeaders: ["x-real-ip", "x-forwarded-for"],
-      disableIpTracking: false,
-    },
+  db,
+  useSecureCookies: process.env.NODE_ENV === "production",
+  password: {
+    hash: (password) => hash(password, 10),
+    verify: ({ password, hash: storedHash }) => compare(password, storedHash),
   },
-  session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // refresh session every 24 hours
-    cookieCache: {
-      enabled: true,
-      maxAge: 60 * 30, // 30 min cache before re-validating from DB
-    },
-  },
-  user: {
-    modelName: "User",
-    fields: {
-      emailVerified: "isEmailVerified",
-    },
-  },
-  emailAndPassword: {
-    enabled: true,
-    disableSignUp: true,
-    password: {
-      hash: async (password) => {
-        return hash(password, 10);
-      },
-      verify: async (data) => {
-        const isValidPassword = await compare(data.password, data.hash);
-        return isValidPassword;
-      },
-    },
-    sendResetPassword: async ({ user, url }) => {
-      const userData = await db.user.findUnique({
-        where: { id: user.id },
-        select: { name: true },
+  sendResetPassword: async ({ user, url }) => {
+    const userData = await db.user.findUnique({
+      where: { id: user.id },
+      select: { name: true },
+    });
+    const userName = userData?.name || "User";
+    try {
+      const { data, error } = await resend.emails.send({
+        from: "Tutly <no-reply@otp.tutly.in>",
+        to: [user.email],
+        subject: "Reset Your Password - Tutly",
+        react: ResetPasswordEmailTemplate({ resetLink: url, name: userName }),
       });
-
-      const userName = userData?.name || "User";
-
-      try {
-        const { data, error } = await resend.emails.send({
-          from: "Tutly <no-reply@otp.tutly.in>",
-          to: [user.email],
-          subject: "Reset Your Password - Tutly",
-          react: ResetPasswordEmailTemplate({
-            resetLink: url,
-            name: userName,
-          }),
-        });
-
-        if (error) {
-          console.error("Error sending password reset email:", error);
-          throw new Error("Failed to send password reset email");
-        }
-
-        console.log("Password reset email sent successfully:", data);
-      } catch (error) {
-        console.error("Error in sendResetPassword:", error);
-        throw error;
+      if (error) {
+        console.error("Error sending password reset email:", error);
+        throw new Error("Failed to send password reset email");
       }
-    },
+      console.log("Password reset email sent successfully:", data);
+    } catch (error) {
+      console.error("Error in sendResetPassword:", error);
+      throw error;
+    }
   },
-  emailVerification: {
-    async afterEmailVerification(user) {
-      await db.user.update({
+  afterEmailVerification: async (user) => {
+    await db.user.update({
+      where: { id: user.id },
+      data: { emailVerified: new Date() },
+    });
+  },
+  customSessionHandler: async ({ user, session }) => {
+    try {
+      const prismaUser = await db.user.findUnique({
         where: { id: user.id },
-        data: {
-          emailVerified: new Date(),
-          // isEmailVerified: true,
-        },
+        include: { organization: true, adminForCourses: true },
       });
-    },
-  },
-  roles: ["STUDENT", "INSTRUCTOR", "ADMIN", "MENTOR", "SUPER_ADMIN"],
-  socialProviders: {
-    ...(GOOGLE_CLIENT_ID &&
-      GOOGLE_CLIENT_SECRET && {
-        google: {
-          clientId: GOOGLE_CLIENT_ID,
-          clientSecret: GOOGLE_CLIENT_SECRET,
-          disableSignUp: true,
-        },
-      }),
-    ...(GITHUB_CLIENT_ID &&
-      GITHUB_CLIENT_SECRET && {
-        github: {
-          clientId: GITHUB_CLIENT_ID,
-          clientSecret: GITHUB_CLIENT_SECRET,
-          disableSignUp: true,
-        },
-      }),
-    ...(ZOOM_CLIENT_ID &&
-      ZOOM_CLIENT_SECRET && {
-        zoom: {
-          clientId: ZOOM_CLIENT_ID,
-          clientSecret: ZOOM_CLIENT_SECRET,
-          disableSignUp: true,
-        },
-      }),
-  },
-  plugins: [
-    expo(),
-    username({
-      usernameNormalization: (username) => username.toUpperCase(),
-      displayUsernameNormalization: false,
-      usernameValidator: (username) => {
-        if (!username || username.trim().length === 0) {
-          return false;
-        }
-        return true;
-      },
-      displayUsernameValidator: (displayUsername) => {
-        if (displayUsername) {
-          throw new Error(
-            "displayUsername is not allowed. Please use username only.",
-          );
-          // return false;
-        }
-        return true;
-      },
-    }),
-    bearer(),
-    admin({
-      ac,
-      adminRoles: ["ADMIN", "INSTRUCTOR", "SUPER_ADMIN"],
-      impersonationSessionDuration: 60 * 60, // 1 hour
-      roles: {
-        ADMIN: adminRole,
-        INSTRUCTOR: instructorRole,
-        MENTOR: mentorRole,
-        STUDENT: studentRole,
-        SUPER_ADMIN: adminRole,
-      },
-    }),
-    customSession(async ({ user, session }) => {
-      try {
-        const prismaUser = await db.user.findUnique({
-          where: { id: user.id },
-          include: {
-            organization: true,
-            adminForCourses: true,
-          },
-        });
-
-        if (!prismaUser) return { user, session };
-
-        if (prismaUser.disabledAt) {
-          await db.session.deleteMany({ where: { userId: user.id } });
-          return { session: null, user: null };
-        }
-
-        const now = new Date();
-        const lastSeenThreshold = 60 * 1000; // 1 min
-
-        if (
-          !prismaUser.lastSeen ||
-          now.getTime() - prismaUser.lastSeen.getTime() > lastSeenThreshold
-        ) {
-          db.user
-            .update({
-              where: { id: user.id },
-              data: { lastSeen: now },
-            })
-            .catch(console.error);
-        }
-
-        return {
-          user: {
-            ...prismaUser,
-            username: prismaUser.username,
-            password: undefined,
-            oneTimePassword: undefined,
-          },
-          session,
-        };
-      } catch (error) {
-        console.error("customSession error:", error);
-        return { user, session };
+      if (!prismaUser) return { user, session };
+      if (prismaUser.disabledAt) {
+        await db.session.deleteMany({ where: { userId: user.id } });
+        return { session: null, user: null };
       }
-    }),
+      const now = new Date();
+      const lastSeenThreshold = 60 * 1000;
+      if (
+        !prismaUser.lastSeen ||
+        now.getTime() - prismaUser.lastSeen.getTime() > lastSeenThreshold
+      ) {
+        db.user
+          .update({ where: { id: user.id }, data: { lastSeen: now } })
+          .catch(console.error);
+      }
+      return {
+        user: {
+          ...prismaUser,
+          username: prismaUser.username,
+          password: undefined,
+          oneTimePassword: undefined,
+        },
+        session,
+      };
+    } catch (error) {
+      console.error("customSession error:", error);
+      return { user, session };
+    }
+  },
+  google:
+    GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET
+      ? { clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET }
+      : undefined,
+  github:
+    GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET
+      ? { clientId: GITHUB_CLIENT_ID, clientSecret: GITHUB_CLIENT_SECRET }
+      : undefined,
+  zoom:
+    ZOOM_CLIENT_ID && ZOOM_CLIENT_SECRET
+      ? { clientId: ZOOM_CLIENT_ID, clientSecret: ZOOM_CLIENT_SECRET }
+      : undefined,
+  trustedOrigins: () => [
+    "https://learn.tutly.in",
+    "http://localhost:3000",
+    ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**"] : []),
   ],
-  trustedOrigins: (request) => {
-    const origins = [
-      "https://learn.tutly.in",
-      "http://localhost:3000",
-      "tutly://",
-      "tutly://*",
-      // Capacitor WebView origins (iOS uses capacitor://, Android uses http://localhost)
-      "capacitor://localhost",
-      "http://localhost",
-    ];
-    if (process.env.NODE_ENV === "development") {
-      origins.push("exp://", "exp://**");
-    }
-    if (!request) {
-      return origins;
-    }
-    const origin = request.headers.get("origin");
-    if (origin?.endsWith(".vercel.app")) {
-      origins.push(origin);
-    }
-    return origins;
-  },
 });
