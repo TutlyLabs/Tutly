@@ -1,1 +1,1 @@
-export * from "../../prisma/generated/browser";
+export * from "@tutly/db/browser";

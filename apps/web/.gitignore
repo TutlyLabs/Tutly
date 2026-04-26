@@ -8,9 +8,7 @@
 # testing
 /coverage
 
-# database
-/prisma/db.sqlite
-/prisma/db.sqlite-journal
+# database (schema lives in packages/db now)
 db.sqlite
 
 # next.js
@@ -51,7 +49,6 @@ yarn-error.log*
 *.swp
 .DS_Store
 Thumbs.db
-/prisma/generated
 
 # VSCode assets
 /public/vscode/assets

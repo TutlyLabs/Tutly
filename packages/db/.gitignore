@@ -1,0 +1,4 @@
+node_modules
+prisma/generated
+prisma/db.sqlite
+prisma/db.sqlite-journal
