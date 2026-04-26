@@ -38,6 +38,7 @@ const NATIVE_TRUSTED_ORIGINS = [
   "tutly://*",
   "capacitor://localhost",
   "http://localhost",
+  "https://localhost",
 ];
 
 export function createServerAuth(opts: CreateServerAuthOptions) {

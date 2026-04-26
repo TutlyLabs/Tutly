@@ -1,5 +1,6 @@
 const PROD_ORIGIN_PATTERNS: readonly RegExp[] = [
   /^https:\/\/learn\.tutly\.in$/,
+  /^https:\/\/localhost$/,
   /^http:\/\/localhost$/,
   /^capacitor:\/\/localhost$/,
   /^tutly:\/\//,
@@ -34,6 +35,8 @@ const ALLOWED_REQUEST_HEADERS = [
 
 const ALLOWED_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS";
 
+const EXPOSED_RESPONSE_HEADERS = ["set-auth-token", "set-auth-jwt"] as const;
+
 export function buildCorsHeaders(
   origin: string | null | undefined,
 ): Record<string, string> {
@@ -42,6 +45,7 @@ export function buildCorsHeaders(
     "Access-Control-Allow-Origin": origin!,
     "Access-Control-Allow-Methods": ALLOWED_METHODS,
     "Access-Control-Allow-Headers": ALLOWED_REQUEST_HEADERS.join(", "),
+    "Access-Control-Expose-Headers": EXPOSED_RESPONSE_HEADERS.join(", "),
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
