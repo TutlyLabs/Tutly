@@ -3,6 +3,7 @@
 import { AlertCircle, Search, UserPlus, UserX, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { UserLink } from "@/components/UserLink";
 import {
   FaSort,
   FaSortAlphaDown,
@@ -443,7 +444,10 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
                 <TableRow key={user.id} className="group hover:bg-muted/50">
                   <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-3">
+                    <UserLink
+                      username={user.username}
+                      className="flex items-center space-x-3"
+                    >
                       <Image
                         src={user.image || "/placeholder.jpg"}
                         alt={user.username}
@@ -451,10 +455,14 @@ const UserTable = ({ users, courseId }: UserTableProps) => {
                         height={32}
                         className="h-8 w-8 rounded-full object-cover"
                       />
-                      <span className="font-medium">{user.username}</span>
-                    </div>
+                      <span className="text-primary font-medium">
+                        {user.username}
+                      </span>
+                    </UserLink>
                   </TableCell>
-                  <TableCell>{user.name}</TableCell>
+                  <TableCell>
+                    <UserLink username={user.username}>{user.name}</UserLink>
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={

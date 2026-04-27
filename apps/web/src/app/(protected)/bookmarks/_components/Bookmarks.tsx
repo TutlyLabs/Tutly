@@ -49,7 +49,7 @@ const getBookmarkDetails = (
     },
     NOTIFICATION: {
       icon: Bell,
-      href: `/notifications/${objectId}`,
+      href: `/dashboard`,
       bg: "bg-purple-500/15",
       fg: "text-purple-500",
       label: "Notification",

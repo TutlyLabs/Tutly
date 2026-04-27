@@ -12,6 +12,10 @@ export const notificationsRouter = createTRPCRouter({
     const notifications = await ctx.db.notification.findMany({
       where: { intendedForId: userId },
       orderBy: { createdAt: "desc" },
+      include: {
+        causedBy: { select: { id: true, name: true, username: true, image: true } },
+      },
+      take: 100,
     });
     return notifications;
   }),

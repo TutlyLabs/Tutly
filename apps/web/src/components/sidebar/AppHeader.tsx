@@ -78,7 +78,7 @@ export function AppHeader({ user, crumbReplacement = {} }: AppHeaderProps) {
               />
             )}
           </div>
-          <div className="flex items-center gap-1 sm:gap-5">
+          <div className="flex items-center gap-1 sm:gap-4">
             {!isMobile && (
               <CommandPaletteTrigger
                 onClick={() => setCommandPaletteOpen(true)}

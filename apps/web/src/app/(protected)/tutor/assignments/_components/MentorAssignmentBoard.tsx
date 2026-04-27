@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+import { UserLink } from "@/components/UserLink";
 import type { Course, User } from "@tutly/db/browser";
 
 import NoDataFound from "@/components/NoDataFound";
@@ -159,13 +162,15 @@ const MentorAssignmentBoard = ({
               <div className="flex items-center justify-between p-1">
                 <div className="flex items-center gap-2 md:gap-5">
                   {index + 1}
-                  <Image
-                    src={student?.image || "/placeholder.jpg"}
-                    height={40}
-                    width={40}
-                    alt=""
-                    className="rounded-full"
-                  />
+                  <UserLink username={student.username} stopPropagation>
+                    <Image
+                      src={student?.image || "/placeholder.jpg"}
+                      height={40}
+                      width={40}
+                      alt=""
+                      className="rounded-full transition-opacity hover:opacity-80"
+                    />
+                  </UserLink>
                   <div>
                     <h1
                       className="cursor-pointer text-xs font-medium md:text-sm"

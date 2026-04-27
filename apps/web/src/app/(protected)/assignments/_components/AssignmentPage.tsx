@@ -13,6 +13,7 @@ import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 import ContentPreview from "@/components/ContentPreview";
+import { UserLink } from "@/components/UserLink";
 import { Pagination } from "@/components/table/Pagination";
 import { Button } from "@tutly/ui/button";
 import {
@@ -864,10 +865,21 @@ const AdminAssignmentTable = ({
                 <TableRow key={index}>
                   <TableCell className="text-foreground">{index + 1}</TableCell>
                   <TableCell className="text-foreground">
-                    {user.username}
+                    <UserLink username={user.username} className="text-primary">
+                      {user.username}
+                    </UserLink>
                   </TableCell>
                   <TableCell className="text-foreground">
-                    {user.mentorUsername}
+                    {user.mentorUsername ? (
+                      <UserLink
+                        username={user.mentorUsername}
+                        className="text-primary"
+                      >
+                        {user.mentorUsername}
+                      </UserLink>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     <Button
@@ -929,10 +941,22 @@ const AdminAssignmentTable = ({
                       {index + 1}
                     </TableCell>
                     <TableCell className="text-foreground">
-                      <div>{submission.enrolledUser.username}</div>
-                      <div className="text-muted-foreground text-xs">
-                        {submission.enrolledUser.mentorUsername}
-                      </div>
+                      <UserLink
+                        username={submission.enrolledUser.username}
+                        className="text-primary"
+                      >
+                        {submission.enrolledUser.username}
+                      </UserLink>
+                      {submission.enrolledUser.mentorUsername && (
+                        <div className="text-muted-foreground text-xs">
+                          <UserLink
+                            username={submission.enrolledUser.mentorUsername}
+                            className="hover:text-primary"
+                          >
+                            {submission.enrolledUser.mentorUsername}
+                          </UserLink>
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-foreground">
                       {day(submission.submissionDate).format(

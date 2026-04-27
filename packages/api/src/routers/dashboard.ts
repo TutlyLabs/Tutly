@@ -15,6 +15,7 @@ export const dashboardRouter = createTRPCRouter({
           },
         },
         select: {
+          mentorUsername: true,
           course: {
             select: {
               id: true,
@@ -66,6 +67,7 @@ export const dashboardRouter = createTRPCRouter({
           return {
             courseId: enrolledCourse.course?.id,
             courseTitle: enrolledCourse.course?.title,
+            mentorUsername: enrolledCourse.mentorUsername,
             assignments: courseAssignments,
             assignmentsSubmitted: submissions.length,
             totalPoints,

@@ -687,6 +687,19 @@ export const coursesRouter = createTRPCRouter({
           },
         });
 
+        // Auto-join course chat group if it exists
+        const enrolledUser = await ctx.db.user.findUnique({ where: { username: input.username } });
+        if (enrolledUser) {
+          const group = await ctx.db.chatGroup.findFirst({ where: { courseId: input.courseId, type: "COURSE" } });
+          if (group) {
+            await ctx.db.groupMember.upsert({
+              where: { groupId_userId: { groupId: group.id, userId: enrolledUser.id } },
+              create: { groupId: group.id, userId: enrolledUser.id, role: "MEMBER" },
+              update: {},
+            });
+          }
+        }
+
         return { success: true, data: newEnrollment };
       } catch {
         return { error: "Failed to enroll student" };
@@ -817,6 +830,24 @@ export const coursesRouter = createTRPCRouter({
             mentorUsername: input.mentorUsername,
           },
         });
+
+        // Auto-join mentor to the course chat group
+        const mentor = await ctx.db.user.findUnique({
+          where: { username: input.mentorUsername },
+          select: { id: true },
+        });
+        if (mentor) {
+          const group = await ctx.db.chatGroup.findFirst({
+            where: { courseId: input.courseId, type: "COURSE" },
+          });
+          if (group) {
+            await ctx.db.groupMember.upsert({
+              where: { groupId_userId: { groupId: group.id, userId: mentor.id } },
+              create: { groupId: group.id, userId: mentor.id, role: "MEMBER" },
+              update: {},
+            });
+          }
+        }
 
         return { success: true, data: updatedUser };
       } catch {

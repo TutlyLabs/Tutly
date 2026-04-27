@@ -59,6 +59,7 @@ interface BasicDetailsProps {
   gender: string;
   tshirtSize: string;
   onUpdate: (profile: Partial<Profile>) => Promise<void>;
+  defaultEditing?: boolean;
 }
 
 export default function BasicDetails({
@@ -69,8 +70,9 @@ export default function BasicDetails({
   gender,
   tshirtSize,
   onUpdate,
+  defaultEditing = false,
 }: BasicDetailsProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(defaultEditing);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

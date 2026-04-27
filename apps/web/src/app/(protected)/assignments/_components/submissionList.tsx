@@ -1,5 +1,8 @@
+"use client";
+
 import { useEffect } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { UserLink } from "@/components/UserLink";
 
 import SortBy from "./SortBy";
 
@@ -16,6 +19,7 @@ export const SubmissionList = ({
   searchParams: any;
   username: any;
 }) => {
+  const router = useRouter();
   const sortBy = searchParams?.sortBy || "username";
 
   useEffect(() => {
@@ -82,33 +86,40 @@ export const SubmissionList = ({
             }
 
             return (
-              <Link key={index} href={hrefLink}>
-                <div
-                  id={
-                    singleSubmission.id === searchParams?.submissionId
-                      ? `submission-${singleSubmission.id}`
-                      : undefined
-                  }
-                  className={`cursor-pointer border-b p-2 hover:bg-gray-100 hover:text-blue-500 ${
-                    singleSubmission.id == searchParams?.submissionId &&
-                    "bg-gray-100 text-blue-500"
-                  } ${singleSubmission.points.length > 0 && "text-green-500"}`}
-                >
-                  <p className="text-sm">
+              <div
+                key={index}
+                id={
+                  singleSubmission.id === searchParams?.submissionId
+                    ? `submission-${singleSubmission.id}`
+                    : undefined
+                }
+                onClick={() => router.push(hrefLink)}
+                className={`cursor-pointer border-b p-2 hover:bg-gray-100 hover:text-blue-500 ${
+                  singleSubmission.id == searchParams?.submissionId &&
+                  "bg-gray-100 text-blue-500"
+                } ${singleSubmission.points.length > 0 && "text-green-500"}`}
+              >
+                <p className="flex items-center gap-1 text-sm">
+                  <UserLink
+                    username={singleSubmission.enrolledUser.username}
+                    target="_blank"
+                    stopPropagation
+                    className="hover:text-blue-600"
+                  >
                     {singleSubmission.enrolledUser.username}
-                    {singleSubmission.submissionCount > 1 &&
-                      ` (${singleSubmission.submissionIndex}/${singleSubmission.submissionCount})`}
-                  </p>
+                  </UserLink>
+                  {singleSubmission.submissionCount > 1 &&
+                    ` (${singleSubmission.submissionIndex}/${singleSubmission.submissionCount})`}
+                </p>
+                <p className="text-xs text-slate-600">
+                  {singleSubmission.enrolledUser.user.name}
+                </p>
+                {!assignment && (
                   <p className="text-xs text-slate-600">
-                    {singleSubmission.enrolledUser.user.name}
+                    {singleSubmission?.assignment?.title}
                   </p>
-                  {!assignment && (
-                    <p className="text-xs text-slate-600">
-                      {singleSubmission?.assignment?.title}
-                    </p>
-                  )}
-                </div>
-              </Link>
+                )}
+              </div>
             );
           })}
       </div>

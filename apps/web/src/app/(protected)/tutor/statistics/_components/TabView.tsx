@@ -136,23 +136,37 @@ export default function TabView({
                         >
                           <CardContent className="p-4">
                             <div className="flex items-start gap-4">
-                              {mentor.image ? (
-                                <Image
-                                  src={mentor.image}
-                                  alt={mentor.username}
-                                  width={48}
-                                  height={48}
-                                  className="rounded-full"
-                                />
-                              ) : (
-                                <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full">
-                                  <span className="text-lg font-medium">
-                                    {(mentor.name || mentor.username)
-                                      .charAt(0)
-                                      .toUpperCase()}
-                                  </span>
-                                </div>
-                              )}
+                              <button
+                                type="button"
+                                className="flex-shrink-0"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  window.open(
+                                    `/u/${mentor.username}`,
+                                    "_blank",
+                                  );
+                                }}
+                                title="View profile"
+                              >
+                                {mentor.image ? (
+                                  <Image
+                                    src={mentor.image}
+                                    alt={mentor.username}
+                                    width={48}
+                                    height={48}
+                                    className="rounded-full transition-opacity hover:opacity-80"
+                                  />
+                                ) : (
+                                  <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full transition-opacity hover:opacity-80">
+                                    <span className="text-lg font-medium">
+                                      {(mentor.name || mentor.username)
+                                        .charAt(0)
+                                        .toUpperCase()}
+                                    </span>
+                                  </div>
+                                )}
+                              </button>
                               <div className="min-w-0 flex-1">
                                 <p className="truncate font-medium">
                                   {mentor.name || mentor.username}
@@ -209,23 +223,34 @@ export default function TabView({
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start gap-4">
-                          {mentee.image ? (
-                            <Image
-                              src={mentee.image}
-                              alt={mentee.username}
-                              width={48}
-                              height={48}
-                              className="rounded-full"
-                            />
-                          ) : (
-                            <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full">
-                              <span className="text-lg font-medium">
-                                {(mentee.name || mentee.username)
-                                  .charAt(0)
-                                  .toUpperCase()}
-                              </span>
-                            </div>
-                          )}
+                          <button
+                            type="button"
+                            className="flex-shrink-0"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.open(`/u/${mentee.username}`, "_blank");
+                            }}
+                            title="View profile"
+                          >
+                            {mentee.image ? (
+                              <Image
+                                src={mentee.image}
+                                alt={mentee.username}
+                                width={48}
+                                height={48}
+                                className="rounded-full transition-opacity hover:opacity-80"
+                              />
+                            ) : (
+                              <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full transition-opacity hover:opacity-80">
+                                <span className="text-lg font-medium">
+                                  {(mentee.name || mentee.username)
+                                    .charAt(0)
+                                    .toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                          </button>
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-medium">
                               {mentee.name || mentee.username}
@@ -235,7 +260,20 @@ export default function TabView({
                             </p>
                             {mentee.mentorUsername && (
                               <p className="text-muted-foreground truncate text-sm">
-                                mentor: {mentee.mentorUsername}
+                                mentor:{" "}
+                                <button
+                                  className="hover:text-primary hover:underline"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    window.open(
+                                      `/u/${mentee.mentorUsername}`,
+                                      "_blank",
+                                    );
+                                  }}
+                                >
+                                  @{mentee.mentorUsername}
+                                </button>
                               </p>
                             )}
                             {mentee.mobile && (
@@ -287,23 +325,34 @@ export default function TabView({
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start gap-4">
-                          {mentee.image ? (
-                            <Image
-                              src={mentee.image}
-                              alt={mentee.username}
-                              width={48}
-                              height={48}
-                              className="rounded-full"
-                            />
-                          ) : (
-                            <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full">
-                              <span className="text-lg font-medium">
-                                {(mentee.name || mentee.username)
-                                  .charAt(0)
-                                  .toUpperCase()}
-                              </span>
-                            </div>
-                          )}
+                          <button
+                            type="button"
+                            className="flex-shrink-0"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.open(`/u/${mentee.username}`, "_blank");
+                            }}
+                            title="View profile"
+                          >
+                            {mentee.image ? (
+                              <Image
+                                src={mentee.image}
+                                alt={mentee.username}
+                                width={48}
+                                height={48}
+                                className="rounded-full transition-opacity hover:opacity-80"
+                              />
+                            ) : (
+                              <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full transition-opacity hover:opacity-80">
+                                <span className="text-lg font-medium">
+                                  {(mentee.name || mentee.username)
+                                    .charAt(0)
+                                    .toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                          </button>
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-medium">
                               {mentee.name || mentee.username}

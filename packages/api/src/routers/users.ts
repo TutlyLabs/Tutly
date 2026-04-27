@@ -172,6 +172,7 @@ export const usersRouter = createTRPCRouter({
             experiences: z.array(z.record(z.string(), z.any())),
             address: z.record(z.string(), z.string()),
             documents: z.record(z.string(), z.string()),
+            metadata: z.record(z.string(), z.any()),
           })
           .partial(),
       }),
@@ -1149,6 +1150,169 @@ export const usersRouter = createTRPCRouter({
           details: error instanceof Error ? error.message : String(error),
         };
       }
+    }),
+
+  // Public profile — accessible without auth if profile is public
+  getPublicProfile: publicProcedure
+    .input(z.object({ username: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.user.findUnique({
+        where: { username: input.username },
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          image: true,
+          role: true,
+          isProfilePublic: true,
+          createdAt: true,
+          organizationId: true,
+          profile: {
+            select: {
+              headline: true,
+              skills: true,
+              aboutMe: true,
+              hobbies: true,
+              socialLinks: true,
+              professionalProfiles: true,
+              academicDetails: true,
+              experiences: true,
+              dateOfBirth: true,
+              gender: true,
+              address: true,
+              metadata: true,
+            },
+          },
+          enrolledUsers: {
+            select: {
+              course: { select: { id: true, title: true, image: true } },
+              startDate: true,
+            },
+            take: 10,
+          },
+        },
+      });
+
+      if (!user) return null;
+      if (!user.isProfilePublic) return { id: user.id, isPrivate: true };
+
+      // For instructors/mentors also fetch courses they teach/mentor + stats
+      let taughtCourses: Array<{ id: string; title: string; image: string | null }> = [];
+      let instructorStats: { totalStudents: number; totalCourses: number; totalAssignments: number } | null = null;
+      if (user.role === "INSTRUCTOR" || user.role === "MENTOR") {
+        const courses = await ctx.db.course.findMany({
+          where: { createdById: user.id },
+          select: { id: true, title: true, image: true },
+        });
+        taughtCourses = courses.slice(0, 10);
+        const courseIds = courses.map((c) => c.id);
+        const [studentCount, assignmentCount] = await Promise.all([
+          courseIds.length > 0
+            ? ctx.db.enrolledUsers.count({ where: { courseId: { in: courseIds } } })
+            : Promise.resolve(0),
+          courseIds.length > 0
+            ? ctx.db.attachment.count({ where: { courseId: { in: courseIds } } })
+            : Promise.resolve(0),
+        ]);
+        instructorStats = {
+          totalStudents: studentCount,
+          totalCourses: courses.length,
+          totalAssignments: assignmentCount,
+        };
+      }
+
+      // Compute stats for students
+      let stats: { totalPoints: number; totalSubmissions: number; assignmentsEvaluated: number; attendancePercentage: number | null } | null = null;
+      const activityCounts: Record<string, number> = {};
+      const oneYearAgo = new Date();
+      oneYearAgo.setDate(oneYearAgo.getDate() - 364);
+      oneYearAgo.setHours(0, 0, 0, 0);
+
+      if (user.role === "STUDENT") {
+        const [submissions, attendance] = await Promise.all([
+          ctx.db.submission.findMany({
+            where: { enrolledUser: { username: user.username } },
+            include: { points: { select: { score: true } } },
+          }),
+          ctx.db.attendance.findMany({
+            where: { username: user.username },
+            select: { attended: true },
+          }),
+        ]);
+        const totalPoints = submissions.reduce(
+          (acc, s) => acc + s.points.reduce((a, p) => a + (p.score ?? 0), 0),
+          0,
+        );
+        const evaluatedCount = submissions.filter((s) => s.points.length > 0).length;
+        const attendancePercentage = attendance.length > 0
+          ? Math.round((attendance.filter((a) => a.attended).length / attendance.length) * 100)
+          : null;
+        stats = { totalPoints, totalSubmissions: submissions.length, assignmentsEvaluated: evaluatedCount, attendancePercentage };
+
+        for (const s of submissions) {
+          const d = s.submissionDate ?? s.createdAt;
+          if (d && d >= oneYearAgo) {
+            const key = d.toISOString().slice(0, 10);
+            activityCounts[key] = (activityCounts[key] ?? 0) + 1;
+          }
+        }
+      } else if (user.role === "INSTRUCTOR" || user.role === "MENTOR") {
+        const points = await ctx.db.point.findMany({
+          where: {
+            createdAt: { gte: oneYearAgo },
+            submissions: {
+              enrolledUser: {
+                course: { createdById: user.id },
+              },
+            },
+          },
+          select: { createdAt: true },
+        });
+        for (const p of points) {
+          const key = p.createdAt.toISOString().slice(0, 10);
+          activityCounts[key] = (activityCounts[key] ?? 0) + 1;
+        }
+      }
+
+      const activityHeatmap = Object.entries(activityCounts).map(
+        ([date, count]) => ({ date, count }),
+      );
+
+      return {
+        ...user,
+        taughtCourses,
+        stats,
+        instructorStats,
+        activityHeatmap,
+      };
+    }),
+
+  // Toggle profile visibility
+  setProfilePublic: protectedProcedure
+    .input(z.object({ isPublic: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.user.update({
+        where: { id: ctx.session.user.id },
+        data: { isProfilePublic: input.isPublic },
+        select: { isProfilePublic: true },
+      });
+    }),
+
+  // Update headline + skills (profile extended fields)
+  updateProfileExtended: protectedProcedure
+    .input(
+      z.object({
+        headline: z.string().max(120).optional(),
+        skills: z.array(z.string()).max(30).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      return ctx.db.profile.upsert({
+        where: { userId },
+        create: { userId, ...input },
+        update: input,
+      });
     }),
 
   disableUser: protectedProcedure

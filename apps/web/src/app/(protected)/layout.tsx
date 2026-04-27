@@ -16,6 +16,7 @@ import {
 import { ProtectedShell } from "@/components/auth/ProtectedShell";
 import { authClient } from "@/server/auth/client";
 import { api } from "@/trpc/react";
+import { NotificationsProvider } from "@/providers/notifications-provider";
 
 export default function ProtectedLayout({
   children,
@@ -45,25 +46,27 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <LayoutProvider>
-      <div className="flex h-screen w-full overflow-hidden">
-        <div>
-          <AppSidebar
-            user={user}
-            isIntegrationsEnabled={integrationsQ.data ?? false}
-            isAIAssistantEnabled={aiAssistantQ.data ?? false}
-          />
+      <NotificationsProvider>
+        <div className="flex h-screen w-full overflow-hidden">
+          <div>
+            <AppSidebar
+              user={user}
+              isIntegrationsEnabled={integrationsQ.data ?? false}
+              isAIAssistantEnabled={aiAssistantQ.data ?? false}
+            />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 ease-in-out">
+            {isImpersonating && <ImpersonationBanner user={user} />}
+            <AppHeader user={user} />
+            <LayoutContent>
+              <Suspense fallback={<FullPageSpinnerSkeleton />}>
+                {children}
+              </Suspense>
+            </LayoutContent>
+          </div>
         </div>
-        <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 ease-in-out">
-          {isImpersonating && <ImpersonationBanner user={user} />}
-          <AppHeader user={user} />
-          <LayoutContent>
-            <Suspense fallback={<FullPageSpinnerSkeleton />}>
-              {children}
-            </Suspense>
-          </LayoutContent>
-        </div>
-      </div>
-      <Crisp user={user} organization={user.organization} />
+        <Crisp user={user} organization={user.organization} />
+      </NotificationsProvider>
     </LayoutProvider>
   );
 }

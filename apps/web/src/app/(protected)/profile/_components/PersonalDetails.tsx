@@ -31,6 +31,7 @@ interface PersonalDetailsProps {
   hobbies: string[];
   aboutMe: string;
   onUpdate: (profile: Partial<Profile>) => Promise<void>;
+  defaultEditing?: boolean;
 }
 
 export default function PersonalDetails({
@@ -38,8 +39,9 @@ export default function PersonalDetails({
   hobbies,
   aboutMe,
   onUpdate,
+  defaultEditing = false,
 }: PersonalDetailsProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(defaultEditing);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

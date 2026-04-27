@@ -1,3 +1,4 @@
+import { chatRouter } from "./routers/chat";
 import { aiQueryRouter } from "./routers/aiQuery";
 import { assignmentsRouter } from "./routers/assignments";
 import { attachmentsRouter } from "./routers/attachments";
@@ -37,6 +38,7 @@ import { createCallerFactory, createTRPCRouter } from "./trpc";
 export const appRouter = createTRPCRouter({
   superAdmin: superAdminRouter,
   aiQuery: aiQueryRouter,
+  chat: chatRouter,
   assignments: assignmentsRouter,
   attachments: attachmentsRouter,
   attendances: attendanceRouter,

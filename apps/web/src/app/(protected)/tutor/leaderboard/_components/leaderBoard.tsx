@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { FaCrown } from "react-icons/fa6";
 import Image from "next/image";
+import { UserLink } from "@/components/UserLink";
 
 import {
   Select,
@@ -244,17 +245,21 @@ const LeaderBoard = ({
                 <div className="text-muted-foreground w-7 shrink-0 text-center text-sm font-semibold tabular-nums">
                   {index + 1}
                 </div>
-                <Image
-                  src={data.image || "/placeholder.jpg"}
-                  alt={data.name}
-                  width={36}
-                  height={36}
-                  className="bg-muted h-9 w-9 shrink-0 rounded-full object-cover"
-                />
+                <UserLink username={data.username} className="shrink-0">
+                  <Image
+                    src={data.image || "/placeholder.jpg"}
+                    alt={data.name}
+                    width={36}
+                    height={36}
+                    className="bg-muted h-9 w-9 rounded-full object-cover transition-opacity hover:opacity-80"
+                  />
+                </UserLink>
                 <div className="min-w-0 flex-1">
-                  <p className="text-foreground truncate text-sm font-medium">
-                    {data.name}
-                  </p>
+                  <UserLink username={data.username}>
+                    <p className="text-foreground truncate text-sm font-medium">
+                      {data.name}
+                    </p>
+                  </UserLink>
                   <p className="text-muted-foreground truncate text-[11px]">
                     @{data.username}
                   </p>

@@ -62,36 +62,47 @@ export const classesRouter = createTRPCRouter({
           meetingPasscode: input.meetingPasscode ?? null,
         };
 
+        let createdClass;
         if (input.folderId) {
-          return await ctx.db.class.create({
+          createdClass = await ctx.db.class.create({
             data: {
               ...classData,
-              Folder: {
-                connect: {
-                  id: input.folderId,
-                },
-              },
+              Folder: { connect: { id: input.folderId } },
             },
           });
         } else if (input.folderName) {
-          return await ctx.db.class.create({
+          createdClass = await ctx.db.class.create({
             data: {
               ...classData,
               Folder: {
                 create: {
                   title: input.folderName,
-                  createdAt: input.createdAt
-                    ? new Date(input.createdAt)
-                    : new Date(),
+                  createdAt: input.createdAt ? new Date(input.createdAt) : new Date(),
                 },
               },
             },
           });
+        } else {
+          createdClass = await ctx.db.class.create({ data: classData });
         }
 
-        return await ctx.db.class.create({
-          data: classData,
+        // Post activity to course chat group (fire-and-forget)
+        const group = await ctx.db.chatGroup.findFirst({
+          where: { courseId: input.courseId, type: "COURSE" },
         });
+        if (group) {
+          await ctx.db.message.create({
+            data: {
+              groupId: group.id,
+              senderId: ctx.session.user.id,
+              content: `📚 New class added: ${input.classTitle}`,
+              type: "ACTIVITY",
+              metadata: { event: "CLASS_CREATED", classId: createdClass.id, courseId: input.courseId },
+            },
+          });
+        }
+
+        return createdClass;
       } catch (error) {
         console.error("Error creating class:", error);
         throw new Error("Error creating class");

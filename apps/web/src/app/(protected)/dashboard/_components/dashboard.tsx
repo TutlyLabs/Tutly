@@ -41,13 +41,16 @@ const Dashboard = ({ name, currentUser }: Props) => {
     return null;
   };
 
-  const isStudent = currentUser.role === "STUDENT";
+  const hasOverlapCards =
+    currentUser.role === "STUDENT" ||
+    currentUser.role === "MENTOR" ||
+    currentUser.role === "INSTRUCTOR";
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4">
       <div
         className={`relative overflow-hidden rounded-xl bg-gradient-to-l from-blue-400 to-blue-600 shadow-md ${
-          isStudent ? "sm:pb-20" : "sm:h-40"
+          hasOverlapCards ? "sm:pb-20" : "sm:h-40"
         }`}
       >
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10" />
@@ -69,7 +72,7 @@ const Dashboard = ({ name, currentUser }: Props) => {
         </div>
       </div>
 
-      <div className={isStudent ? "sm:-mt-16" : ""}>{renderCards()}</div>
+      <div className={hasOverlapCards ? "sm:-mt-16" : ""}>{renderCards()}</div>
     </div>
   );
 };

@@ -31,10 +31,15 @@ const formSchema = z.object({
 interface AddressProps {
   address: Record<string, string>;
   onUpdate: (profile: Partial<Profile>) => Promise<void>;
+  defaultEditing?: boolean;
 }
 
-export default function Address({ address, onUpdate }: AddressProps) {
-  const [isEditing, setIsEditing] = useState(false);
+export default function Address({
+  address,
+  onUpdate,
+  defaultEditing = false,
+}: AddressProps) {
+  const [isEditing, setIsEditing] = useState(defaultEditing);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

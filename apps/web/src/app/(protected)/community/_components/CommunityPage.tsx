@@ -1,179 +1,119 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "sonner";
-
-import { Tabs } from "@tutly/ui/tabs";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@tutly/ui/alert-dialog";
-import { Button } from "@tutly/ui/button";
-import { Textarea } from "@tutly/ui/textarea";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
 import { useClientSession } from "@/lib/auth/client";
+import { GroupSidebar } from "./GroupSidebar";
+import { ChatView } from "./ChatView";
+import { cn } from "@tutly/utils";
 
-import Messages from "./Messages";
-
-interface Course {
-  id: string;
-  title: string;
-  isPublished: boolean;
-  doubts: any[];
-}
-
-interface MainPageProps {
-  allDoubts: Course[];
-}
-
-export default function Community({ allDoubts }: MainPageProps) {
-  const [currentCourse, setCurrentCourse] = useState<string>(
-    allDoubts[0]?.id ?? "",
+export function CommunityPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(
+    searchParams.get("g"),
   );
-  const [show, setShow] = useState<boolean>(false);
-  const [message, setMessage] = useState<string>("");
+  const { data: session } = useClientSession();
 
-  const filteredallDoubts = allDoubts.filter((x) => x.id === currentCourse);
+  const {
+    data: groups = [],
+    isLoading,
+    refetch,
+  } = api.chat.getMyGroups.useQuery();
 
-  const { data, isPending } = useClientSession();
-  const utils = api.useUtils();
+  // React to URL changes (e.g., "Message" button from profile page while already on community)
+  useEffect(() => {
+    const g = searchParams.get("g");
+    if (g && g !== activeGroupId) setActiveGroupId(g);
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const createDoubt = api.doubts.createDoubt.useMutation({
-    onSuccess: () => {
-      void utils.doubts.getEnrolledCoursesDoubts.invalidate();
-      toast.success("Doubt added successfully");
-      setMessage("");
-      setShow(false);
-    },
-    onError: () => {
-      toast.error("Failed to add doubt");
-    },
-  });
-
-  const handleAddDoubt = async (data: { message: string }) => {
-    await createDoubt.mutateAsync({
-      courseId: currentCourse,
-      title: "",
-      description: data.message,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const data = {
-      message: message,
-    };
-    if (!data.message) {
-      toast.error("Please enter a message");
-      return;
+  // Update URL when group changes
+  useEffect(() => {
+    if (activeGroupId) {
+      router.replace(`/community?g=${activeGroupId}`, { scroll: false });
+    } else {
+      router.replace("/community", { scroll: false });
     }
-    await handleAddDoubt(data);
-  };
+  }, [activeGroupId, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    e.preventDefault();
-    setMessage(e.target.value);
-  };
-
-  const handleCtrlEnterDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && e.ctrlKey) {
-      void handleSubmit(e);
+  // Auto-select first group on desktop
+  useEffect(() => {
+    if (!activeGroupId && groups.length > 0 && window.innerWidth >= 768) {
+      setActiveGroupId(groups[0]!.id);
     }
-  };
+  }, [groups, activeGroupId]);
 
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
-  const currentUser = data?.user!;
+  const currentUser = session?.user;
+  const activeGroup = groups.find((g) => g.id === activeGroupId) ?? null;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
-            Community
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Ask, answer, and learn together.
-          </p>
-        </div>
-        <AlertDialog open={show} onOpenChange={setShow}>
-          <AlertDialogTrigger asChild>
-            <Button size="sm">
-              {currentUser.role === "STUDENT" ? "Ask a doubt" : "Raise a query"}
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Share your query</AlertDialogTitle>
-              <AlertDialogDescription>
-                Be specific — others learn from your phrasing as much as the
-                answer.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <Textarea
-              id="message"
-              placeholder="Start typing your doubt here…"
-              onChange={handleChange}
-              onKeyDown={handleCtrlEnterDown}
-              rows={4}
-              value={message}
-              className="resize-none"
-            />
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleSubmit}>
-                Submit
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+    <div className="bg-card flex h-[calc(100vh-4rem)] overflow-hidden sm:rounded-xl sm:border sm:shadow-sm">
+      <div
+        className={cn(
+          "bg-background flex flex-col border-r",
+          "w-full md:w-80 md:flex-shrink-0 lg:w-96",
+          activeGroupId ? "hidden md:flex" : "flex",
+        )}
+      >
+        <GroupSidebar
+          groups={groups}
+          isLoading={isLoading}
+          activeGroupId={activeGroupId}
+          onSelect={setActiveGroupId}
+          onGroupCreated={(id) => {
+            void refetch();
+            setActiveGroupId(id);
+          }}
+          currentUserId={currentUser?.id ?? ""}
+        />
       </div>
 
-      <div className="-mx-3 overflow-x-auto sm:mx-0">
-        <div className="flex items-center gap-2 px-3 pb-2 sm:px-0">
-          {allDoubts?.map(
-            (course) =>
-              course.isPublished && (
-                <button
-                  key={course.id}
-                  onClick={() => setCurrentCourse(course.id)}
-                  className={`inline-flex h-8 shrink-0 cursor-pointer items-center rounded-full border px-3 text-xs font-medium whitespace-nowrap transition-colors ${
-                    currentCourse === course.id
-                      ? "bg-primary text-primary-foreground border-transparent"
-                      : "bg-card text-foreground/70 hover:bg-accent hover:text-foreground"
-                  }`}
-                >
-                  <span className="max-w-[140px] truncate">{course.title}</span>
-                </button>
-              ),
-          )}
-        </div>
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col",
+          activeGroupId ? "flex" : "hidden md:flex",
+        )}
+      >
+        {activeGroup && currentUser ? (
+          <ChatView
+            group={activeGroup}
+            currentUser={currentUser}
+            onBack={() => setActiveGroupId(null)}
+          />
+        ) : (
+          <EmptyState />
+        )}
       </div>
+    </div>
+  );
+}
 
-      <div className="flex flex-col gap-3">
-        {filteredallDoubts?.[0]?.doubts && (
-          <Messages doubts={filteredallDoubts[0].doubts} />
-        )}
-        {filteredallDoubts[0]?.doubts.length === 0 && (
-          <div className="bg-card rounded-xl border p-8 text-center shadow-sm">
-            <h2 className="text-foreground text-base font-semibold">
-              Start a discussion
-            </h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Be the first to share a question in this course.
-            </p>
-          </div>
-        )}
+function EmptyState() {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+      <div className="bg-primary/10 flex h-20 w-20 items-center justify-center rounded-full">
+        <svg
+          className="text-primary h-10 w-10"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
+        </svg>
       </div>
+      <h3 className="text-foreground text-lg font-semibold">
+        Select a conversation
+      </h3>
+      <p className="text-muted-foreground max-w-xs text-sm">
+        Pick a group from the left to start chatting with your classmates and
+        peers.
+      </p>
     </div>
   );
 }

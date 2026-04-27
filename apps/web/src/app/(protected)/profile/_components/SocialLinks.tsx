@@ -29,6 +29,7 @@ import { SectionHeader } from "./SectionHeader";
 interface SocialLinksProps {
   socialLinks: Record<string, string>;
   onUpdate: (profile: Partial<Profile>) => Promise<void>;
+  defaultEditing?: boolean;
 }
 
 const formSchema = z.object({
@@ -73,8 +74,9 @@ const formSchema = z.object({
 export default function SocialLinks({
   socialLinks,
   onUpdate,
+  defaultEditing = false,
 }: SocialLinksProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(defaultEditing);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

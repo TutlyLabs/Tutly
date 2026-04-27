@@ -835,9 +835,7 @@ export function CommandPalette({
                       <CommandItem
                         key={u.id}
                         onSelect={() =>
-                          handleSelect(() =>
-                            router.push(`/profile/view?u=${u.username}`),
-                          )
+                          handleSelect(() => router.push(`/u/${u.username}`))
                         }
                       >
                         <UsersIcon className="text-primary mr-2 h-4 w-4" />

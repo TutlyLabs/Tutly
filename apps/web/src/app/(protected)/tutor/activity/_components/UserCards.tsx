@@ -3,6 +3,7 @@
 import { Bell } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { UserLink } from "@/components/UserLink";
 
 import DisplayTable, { type Column } from "@/components/table/DisplayTable";
 import { Avatar, AvatarFallback, AvatarImage } from "@tutly/ui/avatar";
@@ -87,7 +88,10 @@ const columns: Column[] = [
       message: "Name must be 2-50 characters, letters and numbers only",
     },
     render: (_, row) => (
-      <div className="flex items-center gap-4">
+      <UserLink
+        username={row.username}
+        className="flex items-center gap-4 transition-opacity hover:opacity-80"
+      >
         <div className="relative">
           <Avatar className="ring-primary/20 h-10 w-10 ring-2">
             <AvatarImage
@@ -107,7 +111,7 @@ const columns: Column[] = [
           <div className="font-medium">{row.name ?? row.username}</div>
           <div className="text-muted-foreground text-sm">{row.username}</div>
         </div>
-      </div>
+      </UserLink>
     ),
   },
   {
@@ -240,7 +244,14 @@ const gridViewRender = (data: Record<string, any>[]) => (
           </p>
           {user.mentorUsername && (
             <p className="text-sm">
-              <span className="font-medium">Mentor:</span> {user.mentorUsername}
+              <span className="font-medium">Mentor:</span>{" "}
+              <UserLink
+                username={user.mentorUsername}
+                target="_blank"
+                className="text-primary"
+              >
+                @{user.mentorUsername}
+              </UserLink>
             </p>
           )}
         </div>

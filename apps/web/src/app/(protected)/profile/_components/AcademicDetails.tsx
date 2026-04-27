@@ -45,13 +45,15 @@ const formSchema = z.object({
 interface AcademicDetailsProps {
   academicDetails: Record<string, string>;
   onUpdate: (profile: Partial<Profile>) => Promise<void>;
+  defaultEditing?: boolean;
 }
 
 export default function AcademicDetails({
   academicDetails,
   onUpdate,
+  defaultEditing = false,
 }: AcademicDetailsProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(defaultEditing);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

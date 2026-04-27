@@ -12,7 +12,8 @@ import {
   FaMinusCircle,
 } from "react-icons/fa";
 import { ArrowUpDown } from "lucide-react";
-import Link from "next/link";
+
+import { UserLink } from "@/components/UserLink";
 import { Popover, PopoverContent, PopoverTrigger } from "@tutly/ui/popover";
 import {
   Tooltip,
@@ -282,8 +283,8 @@ export default function AttendanceIndicator({
     };
 
     return (
-      <Link
-        href={`/profile/view?u=${student.username}`}
+      <UserLink
+        username={student.username}
         target="_blank"
         className={`hover:bg-accent flex items-center gap-3 rounded-lg border p-2 transition-colors ${getBackgroundColor()}`}
       >
@@ -307,9 +308,16 @@ export default function AttendanceIndicator({
               @{student.username}
             </p>
             {mentorUsername && (
-              <p className="text-muted-foreground truncate text-xs leading-tight">
+              <button
+                className="text-muted-foreground hover:text-primary truncate text-xs leading-tight"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.open(`/u/${mentorUsername}`, "_blank");
+                }}
+              >
                 | Mentor: @{mentorUsername}
-              </p>
+              </button>
             )}
           </div>
         </div>
@@ -333,7 +341,7 @@ export default function AttendanceIndicator({
             <FaTimesCircle className="h-4 w-4 text-red-600" />
           ) : null}
         </div>
-      </Link>
+      </UserLink>
     );
   };
 

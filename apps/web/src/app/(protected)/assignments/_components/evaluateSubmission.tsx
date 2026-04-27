@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+
+import { UserLink } from "@/components/UserLink";
 import { useRouter } from "next/navigation";
 
 import day from "@tutly/utils/dayjs";
@@ -201,9 +203,18 @@ const EvaluateSubmission = ({
           {
             <tr>
               <td className="bg-card sticky left-0 px-2 py-2 font-medium">
-                {submission.enrolledUser.username}
+                <UserLink
+                  username={submission.enrolledUser.username}
+                  className="text-primary"
+                >
+                  {submission.enrolledUser.username}
+                </UserLink>
               </td>
-              <td className="">{submission.enrolledUser.user.name}</td>
+              <td className="">
+                <UserLink username={submission.enrolledUser.username}>
+                  {submission.enrolledUser.user.name}
+                </UserLink>
+              </td>
               <td className="px-2 py-1">
                 {day(submission.submissionDate).format(
                   "DD MMM YYYY hh:mm:ss A",

@@ -52,6 +52,24 @@ export const attachmentsRouter = createTRPCRouter({
           },
         });
 
+        // Post activity to course chat group (fire-and-forget)
+        if (input.attachmentType === "ASSIGNMENT") {
+          const group = await ctx.db.chatGroup.findFirst({
+            where: { courseId: input.courseId, type: "COURSE" },
+          });
+          if (group) {
+            await ctx.db.message.create({
+              data: {
+                groupId: group.id,
+                senderId: currentUser.id,
+                content: `📝 New assignment: ${input.title}${input.dueDate ? ` · Due ${input.dueDate.toLocaleDateString()}` : ""}`,
+                type: "ACTIVITY",
+                metadata: { event: "ASSIGNMENT_CREATED", attachmentId: attachment.id },
+              },
+            });
+          }
+        }
+
         return { success: true, data: attachment };
       } catch (error) {
         console.error("Error creating attachment:", error);
