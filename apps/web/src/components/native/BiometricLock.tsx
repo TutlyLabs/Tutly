@@ -1,7 +1,7 @@
 "use client";
 
 import { Fingerprint } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@tutly/ui/button";
 
@@ -15,15 +15,18 @@ const LOCK_AFTER_BACKGROUND_MS = 60_000;
 
 export default function BiometricLock() {
   const [locked, setLocked] = useState(false);
-  const [unlockedAt, setUnlockedAt] = useState<number | null>(null);
+  const promptingRef = useRef(false);
 
-  const promptUnlock = useCallback(async () => {
-    const ok = await authenticateBiometric("Unlock Tutly");
-    if (ok) {
-      setLocked(false);
-      setUnlockedAt(Date.now());
+  const promptUnlock = async () => {
+    if (promptingRef.current) return;
+    promptingRef.current = true;
+    try {
+      const ok = await authenticateBiometric("Unlock Tutly");
+      if (ok) setLocked(false);
+    } finally {
+      promptingRef.current = false;
     }
-  }, []);
+  };
 
   useEffect(() => {
     if (!isNative()) return;
@@ -36,31 +39,38 @@ export default function BiometricLock() {
       const enabled = await getBiometricLockEnabled();
       if (cancelled || !enabled) return;
 
-      setLocked(true);
-      void promptUnlock();
-
       const { App } = await import("@capacitor/app");
+      if (cancelled) return;
+
       const sub = await App.addListener("appStateChange", ({ isActive }) => {
         if (!isActive) {
           lastBackgroundedAt = Date.now();
           return;
         }
-        const idleMs = lastBackgroundedAt
-          ? Date.now() - lastBackgroundedAt
-          : Infinity;
+        if (lastBackgroundedAt === null) return;
+        const idleMs = Date.now() - lastBackgroundedAt;
+        lastBackgroundedAt = null;
         if (idleMs >= LOCK_AFTER_BACKGROUND_MS) {
           setLocked(true);
           void promptUnlock();
         }
       });
       removeListener = sub.remove;
+
+      if (cancelled) {
+        void sub.remove();
+        return;
+      }
+
+      setLocked(true);
+      void promptUnlock();
     })();
 
     return () => {
       cancelled = true;
       void removeListener?.();
     };
-  }, [promptUnlock]);
+  }, []);
 
   if (!locked) return null;
 
@@ -69,7 +79,7 @@ export default function BiometricLock() {
       role="dialog"
       aria-modal="true"
       aria-label="App locked"
-      className="bg-background/95 fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 backdrop-blur-md"
+      className="bg-background fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6"
     >
       <Fingerprint className="text-primary h-20 w-20" />
       <div className="text-center">
@@ -79,11 +89,6 @@ export default function BiometricLock() {
         </p>
       </div>
       <Button onClick={() => void promptUnlock()}>Unlock</Button>
-      {unlockedAt !== null && (
-        <p className="text-muted-foreground text-xs">
-          Tap Unlock if the prompt didn&apos;t appear
-        </p>
-      )}
     </div>
   );
 }

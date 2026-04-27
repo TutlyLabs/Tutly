@@ -71,7 +71,7 @@ export default function StudentCertificate({
       course.totalAssignments <= 0
     ) {
       return (
-        <div className="bg-amber-500/10 border-amber-500/30 mx-auto max-w-3xl rounded-xl border p-5 text-center">
+        <div className="mx-auto max-w-3xl rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 text-center">
           <p className="text-foreground text-base font-semibold">
             Almost there 🎯
           </p>
@@ -153,7 +153,11 @@ export default function StudentCertificate({
         </AlertDialogContent>
       </AlertDialog>
 
-      <Tabs value={activeCourse} onValueChange={setActiveCourse} className="space-y-3">
+      <Tabs
+        value={activeCourse}
+        onValueChange={setActiveCourse}
+        className="space-y-3"
+      >
         <ScrollArea className="-mx-3 sm:mx-0">
           <TabsList className="bg-muted/40 mx-3 inline-flex h-9 w-max items-center gap-1 rounded-lg p-1 sm:mx-0">
             {data.courses.map((course: Course) => (

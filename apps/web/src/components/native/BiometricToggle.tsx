@@ -47,7 +47,9 @@ export default function BiometricToggle() {
       }
       await setBiometricLockEnabled(next);
       setEnabled(next);
-      toast.success(next ? "Biometric lock enabled" : "Biometric lock disabled");
+      toast.success(
+        next ? "Biometric lock enabled" : "Biometric lock disabled",
+      );
     } finally {
       setBusy(false);
     }

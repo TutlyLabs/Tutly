@@ -88,7 +88,7 @@ function UserAvatar({
         width={size}
         height={size}
         className={cn(
-          "bg-muted h-9 w-9 rounded-full object-cover ring-2 ring-offset-1 ring-offset-card",
+          "bg-muted ring-offset-card h-9 w-9 rounded-full object-cover ring-2 ring-offset-1",
           ringClass,
         )}
       />

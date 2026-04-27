@@ -36,7 +36,10 @@ export default function KeyboardHandler() {
 
       const onPointerDown = (e: PointerEvent) => {
         const target = e.target as Element | null;
-        if (isEditable(target) || target?.closest("input, textarea, [contenteditable='true']")) {
+        if (
+          isEditable(target) ||
+          target?.closest("input, textarea, [contenteditable='true']")
+        ) {
           return;
         }
         const active = document.activeElement;
@@ -45,7 +48,9 @@ export default function KeyboardHandler() {
           void Keyboard.hide();
         }
       };
-      document.addEventListener("pointerdown", onPointerDown, { passive: true });
+      document.addEventListener("pointerdown", onPointerDown, {
+        passive: true,
+      });
 
       cleanup = () => {
         void showSub.remove();

@@ -6,6 +6,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@tutly/ui/button";
@@ -119,9 +120,14 @@ export function SignIn() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="bg-card/95 w-full max-w-[400px] border shadow-xl backdrop-blur-sm">
         <CardHeader className="space-y-2 text-center">
-          <div className="mx-auto bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-2xl shadow-md">
-            <span className="text-base font-bold leading-none">T</span>
-          </div>
+          <Image
+            src="/icon.png"
+            alt="Tutly"
+            width={56}
+            height={56}
+            priority
+            className="mx-auto h-14 w-14 rounded-2xl shadow-md"
+          />
           <CardTitle className="text-foreground text-2xl font-semibold tracking-tight">
             Welcome back
           </CardTitle>

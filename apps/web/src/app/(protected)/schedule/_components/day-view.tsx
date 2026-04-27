@@ -55,7 +55,7 @@ export function DayView({ selectedDate, events, onEventClick }: DayViewProps) {
         {hours.map((hour) => (
           <div key={hour} className="relative h-[60px]">
             <div className="absolute m-2 flex w-full border-t">
-              <div className="text-muted-foreground sticky left-0 -mt-2.5 w-[68px] shrink-0 whitespace-nowrap pr-2 text-right text-xs sm:w-[72px] sm:text-sm">
+              <div className="text-muted-foreground sticky left-0 -mt-2.5 w-[68px] shrink-0 pr-2 text-right text-xs whitespace-nowrap sm:w-[72px] sm:text-sm">
                 {`${hour % 12 || 12}:00 ${hour < 12 ? "AM" : "PM"}`}
               </div>
               <div className="relative h-[60px] min-w-0 flex-1 p-2">

@@ -29,7 +29,7 @@ export default function UsersPage() {
         <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
           Users
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Browse and search all users across all organizations.
         </p>
       </div>
@@ -37,7 +37,7 @@ export default function UsersPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+          <Search className="text-muted-foreground/70 absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search by name, email, or username..."
@@ -71,10 +71,7 @@ export default function UsersPage() {
         {isLoading ? (
           <div className="space-y-4 p-6">
             {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="h-12 animate-pulse rounded bg-muted"
-              />
+              <div key={i} className="bg-muted h-12 animate-pulse rounded" />
             ))}
           </div>
         ) : (
@@ -82,27 +79,27 @@ export default function UsersPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-muted/30 border-b">
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     Organization
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     Last Seen
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-border divide-y">
                 {data?.users.map((user) => (
                   <tr
                     key={user.id}
@@ -127,13 +124,13 @@ export default function UsersPage() {
                           <p className="text-foreground font-medium">
                             {user.name}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             @{user.username}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                    <td className="text-muted-foreground px-6 py-4 text-sm">
                       {user.email || "—"}
                     </td>
                     <td className="px-6 py-4">
@@ -143,7 +140,7 @@ export default function UsersPage() {
                       {user.organization ? (
                         <Link
                           href={`/super-admin/organizations/detail?id=${user.organization.id}`}
-                          className="text-indigo-600 hover:text-primary/80"
+                          className="hover:text-primary/80 text-indigo-600"
                         >
                           {user.organization.name}
                         </Link>
@@ -151,7 +148,7 @@ export default function UsersPage() {
                         <span className="text-muted-foreground/70">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                    <td className="text-muted-foreground px-6 py-4 text-sm">
                       {user.lastSeen
                         ? new Date(user.lastSeen).toLocaleDateString()
                         : "Never"}
@@ -162,7 +159,7 @@ export default function UsersPage() {
                           Banned
                         </span>
                       ) : user.disabledAt ? (
-                        <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-xs font-medium">
+                        <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium">
                           Disabled
                         </span>
                       ) : (
@@ -177,7 +174,7 @@ export default function UsersPage() {
                   <tr>
                     <td
                       colSpan={6}
-                      className="px-6 py-8 text-center text-sm text-muted-foreground"
+                      className="text-muted-foreground px-6 py-8 text-center text-sm"
                     >
                       No users found.
                     </td>
@@ -189,7 +186,7 @@ export default function UsersPage() {
             {/* Pagination */}
             {data && data.totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 dark:border-gray-800">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Page {data.currentPage} of {data.totalPages} (
                   {data.totalCount} total)
                 </p>
@@ -197,14 +194,14 @@ export default function UsersPage() {
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 text-foreground/80 dark:hover:bg-gray-800"
+                    className="text-foreground/80 rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page >= (data?.totalPages ?? 1)}
-                    className="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 text-foreground/80 dark:hover:bg-gray-800"
+                    className="text-foreground/80 rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
                   >
                     Next
                   </button>

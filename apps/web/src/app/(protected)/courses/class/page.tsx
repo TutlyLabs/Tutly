@@ -6,12 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Navigate } from "@/components/auth/Navigate";
 import { useAuthSession } from "@/components/auth/ProtectedShell";
 import { FullPageSpinnerSkeleton } from "@/components/loader/Skeletons";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@tutly/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@tutly/ui/sheet";
 import { useIsMobile } from "@tutly/hooks";
 import { PageLayout } from "@/components/PageLayout";
 

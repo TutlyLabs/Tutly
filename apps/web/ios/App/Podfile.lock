@@ -5,13 +5,12 @@ PODS:
     - CapacitorCordova
   - CapacitorApp (6.0.3):
     - Capacitor
-  - CapacitorBrowser (8.0.3):
+  - CapacitorBrowser (6.0.6):
     - Capacitor
   - CapacitorCordova (6.2.1)
-  - CapacitorFilesystem (8.1.2):
+  - CapacitorFilesystem (6.0.4):
     - Capacitor
-    - IONFilesystemLib (~> 1.1.1)
-  - CapacitorHaptics (8.0.2):
+  - CapacitorHaptics (6.0.3):
     - Capacitor
   - CapacitorKeyboard (6.0.4):
     - Capacitor
@@ -21,15 +20,14 @@ PODS:
     - Capacitor
   - CapacitorPushNotifications (6.0.5):
     - Capacitor
-  - CapacitorShare (8.0.1):
+  - CapacitorShare (6.0.4):
     - Capacitor
   - CapacitorSplashScreen (6.0.4):
     - Capacitor
   - CapacitorStatusBar (6.0.3):
     - Capacitor
-  - CapawesomeCapacitorBadge (8.0.2):
+  - CapawesomeCapacitorBadge (6.0.0):
     - Capacitor
-  - IONFilesystemLib (1.1.2)
 
 DEPENDENCIES:
   - "AparajitaCapacitorBiometricAuth (from `../../../../node_modules/@aparajita/capacitor-biometric-auth`)"
@@ -47,10 +45,6 @@ DEPENDENCIES:
   - "CapacitorSplashScreen (from `../../../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../../../node_modules/@capacitor/status-bar`)"
   - "CapawesomeCapacitorBadge (from `../../../../node_modules/@capawesome/capacitor-badge`)"
-
-SPEC REPOS:
-  trunk:
-    - IONFilesystemLib
 
 EXTERNAL SOURCES:
   AparajitaCapacitorBiometricAuth:
@@ -88,19 +82,18 @@ SPEC CHECKSUMS:
   AparajitaCapacitorBiometricAuth: 1ae24ba90d7977dffb4bc9040f374a807a510c98
   Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
   CapacitorApp: a19ccb4f5f32d2534be5c6f524d5a9b614a1e8a7
-  CapacitorBrowser: c987c73d09d8bd3b5ec13f06338b1e14d5d2be69
+  CapacitorBrowser: 825163a1d6adce944ac7b9e3cab101146b5a9df8
   CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
-  CapacitorFilesystem: 2db285a1ac6e475cc27cae2e1bea999000f9e2be
-  CapacitorHaptics: 296f771ecd89c7a1bd92a7b6826a7d268e2e70f5
+  CapacitorFilesystem: 5b9aec35c0212bd0064e26d278c93e925864f212
+  CapacitorHaptics: 40f83026feeee9cfe36e89e9c98a3baaaf20c450
   CapacitorKeyboard: e8cd50fd5cbdd023a5947a5c0f5cca6e5aa5a253
   CapacitorNetwork: 093efa3664b692a971bdd01be70523291cd6a87f
   CapacitorPreferences: 5848e0691b36b4bb4acc98e481ab56d451578d30
   CapacitorPushNotifications: 35abece14371c57172e8321c9ccc8b6fa35fabfe
-  CapacitorShare: 0c58305114538568059bfc07111f22dcb9cb2a82
+  CapacitorShare: 77ff779e3b7c6ae9fb5461e52cf7ef805d429491
   CapacitorSplashScreen: ef140a8b1ea7244e0c245ce2dd4ce5251e7ab86a
   CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
-  CapawesomeCapacitorBadge: 0d9dca1ab1e770a4524c5a6c35d3c1ee91b296f8
-  IONFilesystemLib: 21a63377696b2d8fab5632ecfb7d2ac67bddb68a
+  CapawesomeCapacitorBadge: 4df4bd752f7fcf0cedfc0748bca1cbe8a0e29794
 
 PODFILE CHECKSUM: b29e04c8287400f12f7a25b0add22ab8e2129f55
 

@@ -80,11 +80,7 @@ export default function TopProgress() {
     >
       <div
         key={pulseKey}
-        className={
-          active
-            ? "tp-bar tp-bar-running"
-            : "tp-bar tp-bar-finishing"
-        }
+        className={active ? "tp-bar tp-bar-running" : "tp-bar tp-bar-finishing"}
       />
       <style jsx>{`
         .tp-bar {

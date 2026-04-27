@@ -15,9 +15,7 @@ export default function DashboardPage() {
   if (user.role === "SUPER_ADMIN") return <Navigate to="/super-admin" />;
 
   return (
-    <PullToRefresh
-      onRefresh={() => queryClient.invalidateQueries()}
-    >
+    <PullToRefresh onRefresh={() => queryClient.invalidateQueries()}>
       <Dashboard name={user.name} currentUser={user} />
     </PullToRefresh>
   );

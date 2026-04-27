@@ -224,10 +224,7 @@ export function CalendarSkeleton({ className }: PageProps) {
 export function FullPageSpinnerSkeleton({ className }: PageProps) {
   return (
     <div
-      className={cn(
-        "mx-auto flex w-full max-w-7xl flex-col gap-6",
-        className,
-      )}
+      className={cn("mx-auto flex w-full max-w-7xl flex-col gap-6", className)}
     >
       <PageHeaderSkeleton />
       <StatGridSkeleton count={4} />

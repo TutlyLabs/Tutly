@@ -53,7 +53,7 @@ export default function CourseSelector({
       onValueChange={onCourseChange}
       defaultValue={courses[0]?.courseId ?? ""}
     >
-      <SelectTrigger className="h-9 w-full cursor-pointer rounded-lg border-transparent !bg-white px-3 text-sm font-medium !text-slate-900 shadow-sm transition-colors hover:!bg-white/90 dark:!bg-white dark:hover:!bg-white/90 sm:w-52 [&_svg]:!text-slate-500">
+      <SelectTrigger className="h-9 w-full cursor-pointer rounded-lg border-transparent !bg-white px-3 text-sm font-medium !text-slate-900 shadow-sm transition-colors hover:!bg-white/90 sm:w-52 dark:!bg-white dark:hover:!bg-white/90 [&_svg]:!text-slate-500">
         <SelectValue placeholder="Select a course" />
       </SelectTrigger>
       <SelectContent

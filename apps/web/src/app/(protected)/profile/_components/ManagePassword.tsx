@@ -122,7 +122,9 @@ const ManagePassword = ({
   const renderEmailStep = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-foreground mb-2 text-xl font-semibold tracking-tight sm:text-2xl">Reset Your Password</h2>
+        <h2 className="text-foreground mb-2 text-xl font-semibold tracking-tight sm:text-2xl">
+          Reset Your Password
+        </h2>
         <p className="text-muted-foreground text-sm">
           Enter your email address and we'll send you a link to reset your
           password.
@@ -161,7 +163,9 @@ const ManagePassword = ({
       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
         <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
       </div>
-      <h2 className="text-foreground mb-2 text-xl font-semibold tracking-tight sm:text-2xl">Check Your Email</h2>
+      <h2 className="text-foreground mb-2 text-xl font-semibold tracking-tight sm:text-2xl">
+        Check Your Email
+      </h2>
       <p className="text-muted-foreground mb-4 text-sm">
         We've sent a password reset link to <strong>{email}</strong>
       </p>
@@ -185,7 +189,9 @@ const ManagePassword = ({
   const renderPasswordStep = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-foreground mb-2 text-xl font-semibold tracking-tight sm:text-2xl">Set New Password</h2>
+        <h2 className="text-foreground mb-2 text-xl font-semibold tracking-tight sm:text-2xl">
+          Set New Password
+        </h2>
         <p className="text-muted-foreground text-sm">
           Enter your new password below.
         </p>

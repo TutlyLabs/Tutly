@@ -1,0 +1,25 @@
+# Generated / build artifacts
+.next/
+out/
+dist/
+build/
+.cache/
+.turbo/
+.cap-stash/
+
+# Native projects (managed by Capacitor / Xcode / Android Studio)
+android/
+ios/
+
+# Vendored / copied assets
+public/vscode/
+*.min.js
+*.min.css
+
+# Lockfiles
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Generated TypeScript
+next-env.d.ts

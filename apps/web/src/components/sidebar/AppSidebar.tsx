@@ -267,7 +267,7 @@ export function AppSidebar({
                                           key={subItem.title}
                                           href={subItem.url}
                                           className={cn(
-                                            "relative flex items-center px-3 py-1.5 text-sm outline-none select-none transition-colors",
+                                            "relative flex items-center px-3 py-1.5 text-sm transition-colors outline-none select-none",
                                             matchPath(subItem.url)
                                               ? "bg-accent text-accent-foreground font-medium"
                                               : "text-popover-foreground hover:bg-accent hover:text-accent-foreground",

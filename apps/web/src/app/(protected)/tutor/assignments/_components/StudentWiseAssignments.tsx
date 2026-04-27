@@ -174,7 +174,7 @@ export default function StudentWiseAssignments({
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium md:gap-2">
                         {assignment.submissions.length === 0 ? (
-                          <span className="bg-rose-500/15 border-rose-500/30 inline-flex items-center rounded-full border px-2.5 py-1 text-rose-700 dark:text-rose-400">
+                          <span className="inline-flex items-center rounded-full border border-rose-500/30 bg-rose-500/15 px-2.5 py-1 text-rose-700 dark:text-rose-400">
                             Not submitted
                           </span>
                         ) : (
@@ -184,7 +184,7 @@ export default function StudentWiseAssignments({
                                 return (
                                   <span
                                     key={index}
-                                    className="bg-amber-500/15 border-amber-500/30 inline-flex items-center rounded-full border px-2.5 py-1 text-amber-700 dark:text-amber-400"
+                                    className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-amber-700 dark:text-amber-400"
                                   >
                                     Under review
                                   </span>
@@ -198,7 +198,7 @@ export default function StudentWiseAssignments({
                               return (
                                 <span
                                   key={index}
-                                  className="bg-emerald-500/15 border-emerald-500/30 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-emerald-700 dark:text-emerald-400"
+                                  className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1 text-emerald-700 dark:text-emerald-400"
                                 >
                                   Score: {total}
                                   <MdOutlineSportsScore className="h-3.5 w-3.5" />

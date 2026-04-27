@@ -16,10 +16,7 @@ export default function SuperAdminDashboard() {
         </h1>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="h-32 animate-pulse rounded-xl bg-muted"
-            />
+            <div key={i} className="bg-muted h-32 animate-pulse rounded-xl" />
           ))}
         </div>
       </div>
@@ -77,7 +74,7 @@ export default function SuperAdminDashboard() {
           </h2>
           <Link
             href="/super-admin/organizations"
-            className="flex items-center gap-1 text-primary hover:text-primary/80 text-sm"
+            className="text-primary hover:text-primary/80 flex items-center gap-1 text-sm"
           >
             View all <ArrowRight className="h-3.5 w-3.5" />
           </Link>
@@ -92,16 +89,14 @@ export default function SuperAdminDashboard() {
             <Link
               key={org.id}
               href={`/super-admin/organizations/detail?id=${org.id}`}
-              className="flex items-center justify-between hover:bg-accent/40 px-4 py-3 transition-colors sm:px-6"
+              className="hover:bg-accent/40 flex items-center justify-between px-4 py-3 transition-colors sm:px-6"
             >
               <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-sm font-bold text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
                   {org.name[0]?.toUpperCase() || "O"}
                 </div>
                 <div>
-                  <p className="text-foreground font-medium">
-                    {org.name}
-                  </p>
+                  <p className="text-foreground font-medium">{org.name}</p>
                   <p className="text-muted-foreground text-xs">{org.orgCode}</p>
                 </div>
               </div>

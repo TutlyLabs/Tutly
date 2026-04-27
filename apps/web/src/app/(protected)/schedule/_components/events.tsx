@@ -175,9 +175,7 @@ export const EventsSidebar = ({
             : "bg-card h-full rounded-xl p-3 shadow-sm"
         }
       >
-        <ScrollArea
-          className={fullWidth ? "h-full" : "h-[calc(100vh-8rem)]"}
-        >
+        <ScrollArea className={fullWidth ? "h-full" : "h-[calc(100vh-8rem)]"}>
           <div className="space-y-2 pb-1">
             {renderEventSection(
               "Live Events",

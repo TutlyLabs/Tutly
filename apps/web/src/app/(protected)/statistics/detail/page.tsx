@@ -58,10 +58,7 @@ export default function StatisticsDetailPage() {
         <ScrollBar orientation="horizontal" className="hidden" />
       </ScrollArea>
 
-      <Suspense
-        key={courseId}
-        fallback={<StatisticsLoadingSkeleton />}
-      >
+      <Suspense key={courseId} fallback={<StatisticsLoadingSkeleton />}>
         <StudentStats courseId={courseId} />
       </Suspense>
     </div>

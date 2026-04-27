@@ -1087,7 +1087,7 @@ const AdminAssignmentTable = ({
                                 size="icon"
                                 onClick={() => onDelete(submission.id)}
                               >
-                                <MdOutlineDelete className="h-4 w-4 text-destructive" />
+                                <MdOutlineDelete className="text-destructive h-4 w-4" />
                               </Button>
                             </div>
                           )}

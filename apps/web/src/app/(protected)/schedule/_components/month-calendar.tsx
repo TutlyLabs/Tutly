@@ -72,7 +72,7 @@ export function MonthCalendar({
         {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((dayName) => (
           <div
             key={dayName}
-            className={`${compact ? "h-7" : "h-9"} text-muted-foreground flex items-center justify-center text-center text-[11px] font-medium uppercase tracking-wide`}
+            className={`${compact ? "h-7" : "h-9"} text-muted-foreground flex items-center justify-center text-center text-[11px] font-medium tracking-wide uppercase`}
           >
             {dayName}
           </div>

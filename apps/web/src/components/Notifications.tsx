@@ -358,10 +358,7 @@ function NotificationsPanel({
             aria-label="Refresh notifications"
           >
             <RefreshCcw
-              className={cn(
-                "h-4 w-4",
-                isFetching ? "animate-spin" : undefined,
-              )}
+              className={cn("h-4 w-4", isFetching ? "animate-spin" : undefined)}
             />
           </Button>
           <DropdownMenu>

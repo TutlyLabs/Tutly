@@ -310,10 +310,7 @@ export function SandboxSettingsModal({
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!isValid || !hasChanges}
-          >
+          <Button onClick={handleSave} disabled={!isValid || !hasChanges}>
             Apply Configuration
           </Button>
         </DialogFooter>

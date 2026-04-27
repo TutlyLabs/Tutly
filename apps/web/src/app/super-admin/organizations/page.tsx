@@ -28,13 +28,13 @@ export default function OrganizationsPage() {
           <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
             Organizations
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             Manage all organizations on the platform.
           </p>
         </div>
         <Link
           href="/super-admin/organizations/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90"
+          className="bg-primary hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
         >
           <Plus className="h-4 w-4" />
           New Organization
@@ -44,7 +44,7 @@ export default function OrganizationsPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+          <Search className="text-muted-foreground/70 absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search by name, code, or subdomain..."
@@ -77,10 +77,7 @@ export default function OrganizationsPage() {
         {isLoading ? (
           <div className="space-y-4 p-6">
             {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="h-12 animate-pulse rounded bg-muted"
-              />
+              <div key={i} className="bg-muted h-12 animate-pulse rounded" />
             ))}
           </div>
         ) : (
@@ -88,24 +85,24 @@ export default function OrganizationsPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-muted/30 border-b">
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     Organization
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     Code
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     Users
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     Domains
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-border divide-y">
                 {data?.organizations.map((org) => (
                   <tr
                     key={org.id}
@@ -124,10 +121,10 @@ export default function OrganizationsPage() {
                         {org.orgCode}
                       </code>
                     </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                    <td className="text-muted-foreground px-6 py-4 text-sm">
                       {org._count.users}
                     </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                    <td className="text-muted-foreground px-6 py-4 text-sm">
                       {org._count.domains}
                     </td>
                     <td className="px-6 py-4">
@@ -139,7 +136,7 @@ export default function OrganizationsPage() {
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-6 py-8 text-center text-sm text-muted-foreground"
+                      className="text-muted-foreground px-6 py-8 text-center text-sm"
                     >
                       No organizations found.
                     </td>
@@ -151,7 +148,7 @@ export default function OrganizationsPage() {
             {/* Pagination */}
             {data && data.totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 dark:border-gray-800">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Page {data.currentPage} of {data.totalPages} (
                   {data.totalCount} total)
                 </p>

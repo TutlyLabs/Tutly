@@ -27,6 +27,16 @@ declare global {
   }
 }
 
+export function resetCrispSession() {
+  if (typeof window === "undefined") return;
+  if (!window.$crisp) return;
+  try {
+    window.$crisp.push(["do", "session:reset"]);
+  } catch {
+    // ignore — best effort
+  }
+}
+
 export function openCrispChat() {
   if (typeof window === "undefined") return;
   if (!window.$crisp) return;
@@ -54,6 +64,7 @@ export function openCrispChat() {
 
 export default function Crisp({ user, organization }: CrispProps) {
   const { hideCrisp } = useLayout();
+  const hideOnMobile = Boolean(user);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -65,6 +76,10 @@ html[data-crisp-mobile-hidden="true"] #crisp-chatbox {
   display: none !important;
 }`;
       document.head.appendChild(style);
+    }
+    if (!hideOnMobile) {
+      document.documentElement.removeAttribute("data-crisp-mobile-hidden");
+      return;
     }
     const apply = () => {
       const isMobile = window.matchMedia("(max-width: 767px)").matches;
@@ -81,7 +96,7 @@ html[data-crisp-mobile-hidden="true"] #crisp-chatbox {
     const mq = window.matchMedia("(max-width: 767px)");
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
-  }, []);
+  }, [hideOnMobile]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

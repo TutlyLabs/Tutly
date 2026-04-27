@@ -131,7 +131,7 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
   );
 
   const EmptyState = ({ fileType }: { fileType?: string }) => (
-    <div className="bg-card flex flex-col items-center rounded-xl border py-12 px-6 text-center shadow-sm">
+    <div className="bg-card flex flex-col items-center rounded-xl border px-6 py-12 text-center shadow-sm">
       <div className="bg-muted mb-3 flex h-12 w-12 items-center justify-center rounded-full">
         <FileText className="text-muted-foreground/70 h-5 w-5" />
       </div>

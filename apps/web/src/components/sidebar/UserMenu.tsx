@@ -140,20 +140,18 @@ export function UserMenu({ user }: UserMenuProps) {
               </DropdownMenuItem>
             )} */}
           </DropdownMenuGroup>
-          {isMobile && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="flex cursor-pointer items-center gap-2"
-                onClick={() => openCrispChat()}
-              >
-                <LifeBuoy className="h-5 w-5" />
-                Help & Support
-              </DropdownMenuItem>
-            </>
-          )}
           <DropdownMenuSeparator />
           <BiometricToggle />
+          {isMobile && (
+            <DropdownMenuItem
+              className="flex cursor-pointer items-center gap-2"
+              onClick={() => openCrispChat()}
+            >
+              <LifeBuoy className="h-5 w-5" />
+              Help & Support
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={async () => {
               toast.info("Logging out...");

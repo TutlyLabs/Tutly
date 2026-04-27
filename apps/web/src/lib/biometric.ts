@@ -27,7 +27,6 @@ export async function authenticateBiometric(reason: string): Promise<boolean> {
       allowDeviceCredential: true,
       iosFallbackTitle: "Use Passcode",
       androidTitle: "Tutly",
-      androidSubtitle: reason,
       androidConfirmationRequired: false,
     });
     return true;

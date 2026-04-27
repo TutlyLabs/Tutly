@@ -684,7 +684,7 @@ export default function Class({
             )}
 
             <div className="bg-card overflow-hidden rounded-xl border shadow-sm">
-              <div className="text-muted-foreground border-b px-4 py-2 text-xs font-semibold uppercase tracking-wide">
+              <div className="text-muted-foreground border-b px-4 py-2 text-xs font-semibold tracking-wide uppercase">
                 Assignments
               </div>
               {!attachments?.length ? (

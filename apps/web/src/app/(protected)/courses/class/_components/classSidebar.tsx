@@ -120,20 +120,11 @@ function ClassSidebar({
   };
 
   return (
-    <div
-      className={cn(
-        "relative z-10 h-full",
-        mobileFull && "w-full",
-      )}
-    >
+    <div className={cn("relative z-10 h-full", mobileFull && "w-full")}>
       <div
         className={cn(
           "transition-all duration-300 ease-in-out",
-          mobileFull
-            ? "w-full"
-            : isCollapsed
-              ? "w-0"
-              : "w-[220px]",
+          mobileFull ? "w-full" : isCollapsed ? "w-0" : "w-[220px]",
           mobileFull
             ? "bg-background flex h-full flex-col"
             : "bg-background flex h-full flex-col border-r shadow-sm",
@@ -145,9 +136,7 @@ function ClassSidebar({
               href={`/courses/detail?id=${courseId}`}
               className="hover:opacity-80"
             >
-              <h1 className="text-foreground text-sm font-semibold">
-                {title}
-              </h1>
+              <h1 className="text-foreground text-sm font-semibold">{title}</h1>
             </Link>
           </div>
         )}
@@ -214,10 +203,7 @@ function ClassSidebar({
         )}
 
         <ScrollArea
-          className={cn(
-            "min-h-0 flex-1 px-1",
-            isCollapsed && "hidden",
-          )}
+          className={cn("min-h-0 flex-1 px-1", isCollapsed && "hidden")}
         >
           <div className="space-y-1 p-2">
             {Object.entries(folderClasses).map(([folderId, classItems]) => {

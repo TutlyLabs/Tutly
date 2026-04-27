@@ -83,7 +83,7 @@ export default function Sessions({
       </div>
       <div className="bg-card rounded-xl border p-4 shadow-sm sm:p-6">
         <Tabs defaultValue="sessions" className="w-full">
-          <TabsList className="bg-muted/40 inline-flex h-9 w-full sm:w-auto items-center gap-1 rounded-lg p-1">
+          <TabsList className="bg-muted/40 inline-flex h-9 w-full items-center gap-1 rounded-lg p-1 sm:w-auto">
             <TabsTrigger value="sessions">Active Sessions</TabsTrigger>
             <TabsTrigger value="connections">Connected Accounts</TabsTrigger>
           </TabsList>
@@ -166,4 +166,3 @@ export default function Sessions({
     </div>
   );
 }
-

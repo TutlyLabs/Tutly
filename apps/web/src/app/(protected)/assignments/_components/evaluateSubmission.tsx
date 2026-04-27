@@ -151,22 +151,40 @@ const EvaluateSubmission = ({
             <th className="bg-muted/30 text-muted-foreground sticky left-0 px-2 py-2 text-[11px] font-semibold tracking-wide uppercase">
               Name
             </th>
-            <th scope="col" className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase">
+            <th
+              scope="col"
+              className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
+            >
               Submission Date
             </th>
-            <th scope="col" className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase">
+            <th
+              scope="col"
+              className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
+            >
               Responsiveness (/10)
             </th>
-            <th scope="col" className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase">
+            <th
+              scope="col"
+              className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
+            >
               Styling (/10)
             </th>
-            <th scope="col" className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase">
+            <th
+              scope="col"
+              className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
+            >
               Others (/10)
             </th>
-            <th scope="col" className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase">
+            <th
+              scope="col"
+              className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
+            >
               Total
             </th>
-            <th scope="col" className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase">
+            <th
+              scope="col"
+              className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
+            >
               Feedback
             </th>
             {showActions && (

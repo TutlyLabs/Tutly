@@ -117,14 +117,14 @@ export function WeekView({
                 <div
                   key={day.toString()}
                   className={`flex flex-col items-center justify-center px-1 py-2 text-center ${
-                    isToday
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground"
+                    isToday ? "bg-primary/10 text-primary" : "text-foreground"
                   }`}
                 >
-                  <span className="text-[10px] font-medium uppercase tracking-wide sm:text-xs">
+                  <span className="text-[10px] font-medium tracking-wide uppercase sm:text-xs">
                     <span className="sm:hidden">{format(day, "EEEEE")}</span>
-                    <span className="hidden sm:inline">{format(day, "EEE")}</span>
+                    <span className="hidden sm:inline">
+                      {format(day, "EEE")}
+                    </span>
                   </span>
                   <span
                     className={`mt-0.5 text-sm font-bold sm:text-base ${

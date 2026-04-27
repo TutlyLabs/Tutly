@@ -1,7 +1,10 @@
 "use client";
 
 import { useAuthSession } from "@/components/auth/ProtectedShell";
-import { GridSkeleton, PageHeaderSkeleton } from "@/components/loader/Skeletons";
+import {
+  GridSkeleton,
+  PageHeaderSkeleton,
+} from "@/components/loader/Skeletons";
 import { PullToRefresh } from "@/components/native/PullToRefresh";
 import { api } from "@/trpc/react";
 import CoursesPageClient from "./_components/CoursesPageClient";

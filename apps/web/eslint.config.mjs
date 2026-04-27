@@ -29,7 +29,21 @@ const config = [
     },
   },
   {
-    ignores: [".next/**", "node_modules/**", "public/vscode/**"],
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "out/**",
+      "dist/**",
+      "build/**",
+      ".cache/**",
+      ".turbo/**",
+      ".cap-stash/**",
+      "android/**",
+      "ios/**",
+      "public/vscode/**",
+      "**/*.min.js",
+      "**/*.min.css",
+    ],
   },
 ];
 

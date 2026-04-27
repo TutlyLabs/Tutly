@@ -24,10 +24,25 @@ interface ChangelogEntry {
 
 const RELEASE_NOTES: Record<string, ChangelogEntry[]> = {
   "3.6.0": [
-    { title: "A native, polished mobile app", detail: "Brand new mobile shell with hamburger menu, sheet notifications, and a calmer dark mode." },
-    { title: "Always-on loading states", detail: "Skeleton screens and a top progress bar keep things alive while data loads." },
-    { title: "Pull to refresh", detail: "Drag down anywhere on dashboard, courses, or assignments to refresh." },
-    { title: "Update prompts", detail: "We'll let you know when a new version of Tutly is ready." },
+    {
+      title: "A native, polished mobile app",
+      detail:
+        "Brand new mobile shell with hamburger menu, sheet notifications, and a calmer dark mode.",
+    },
+    {
+      title: "Always-on loading states",
+      detail:
+        "Skeleton screens and a top progress bar keep things alive while data loads.",
+    },
+    {
+      title: "Pull to refresh",
+      detail:
+        "Drag down anywhere on dashboard, courses, or assignments to refresh.",
+    },
+    {
+      title: "Update prompts",
+      detail: "We'll let you know when a new version of Tutly is ready.",
+    },
   ],
 };
 
@@ -49,7 +64,7 @@ export default function WhatsNew() {
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       // iOS Safari PWA flag
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       (window.navigator as any).standalone === true;
     if (!isNative() && !isStandalone) {
       window.localStorage.setItem(SEEN_KEY, v);
@@ -79,7 +94,7 @@ export default function WhatsNew() {
     >
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl border-t p-0 sm:max-w-md sm:mx-auto"
+        className="rounded-t-2xl border-t p-0 sm:mx-auto sm:max-w-md"
       >
         <div className="flex flex-col gap-4 px-5 pt-6 pb-5">
           <div className="flex items-center gap-3">

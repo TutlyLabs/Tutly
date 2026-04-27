@@ -114,7 +114,7 @@ export default function Leaderboard({
             Top scorers in this course.
           </p>
         </div>
-        <Trophy className="text-amber-500 hidden h-8 w-8 sm:block" />
+        <Trophy className="hidden h-8 w-8 text-amber-500 sm:block" />
       </div>
 
       {/* Course chips */}
@@ -174,8 +174,7 @@ export default function Leaderboard({
                   key={entry.userId}
                   className={cn(
                     "flex items-center gap-3 px-4 py-3",
-                    entry.username === currentUser.username &&
-                      "bg-amber-500/5",
+                    entry.username === currentUser.username && "bg-amber-500/5",
                   )}
                 >
                   <div className="text-muted-foreground w-7 shrink-0 text-center text-sm font-semibold tabular-nums">

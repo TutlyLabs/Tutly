@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -8,13 +8,18 @@ import { useClientSession } from "@/lib/auth/client";
 import { getPlatform, isNative } from "@/lib/native";
 import { api } from "@/trpc/react";
 
+let lastSent: { userId: string; token: string } | null = null;
+
 export default function PushNotifications() {
   const session = useClientSession();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const register = api.deviceTokens.register.useMutation();
+  const registerMutation = api.deviceTokens.register.useMutation();
 
   const userId = session.data?.user?.id;
+
+  const handlersRef = useRef({ router, queryClient, registerMutation });
+  handlersRef.current = { router, queryClient, registerMutation };
 
   useEffect(() => {
     if (!isNative() || !userId) return;
@@ -24,6 +29,14 @@ export default function PushNotifications() {
     let cancelled = false;
     const subs: { remove: () => Promise<void> }[] = [];
 
+    const track = (sub: { remove: () => Promise<void> }) => {
+      if (cancelled) {
+        void sub.remove();
+        return;
+      }
+      subs.push(sub);
+    };
+
     void (async () => {
       const { PushNotifications } = await import(
         "@capacitor/push-notifications"
@@ -31,48 +44,65 @@ export default function PushNotifications() {
       if (cancelled) return;
 
       const perm = await PushNotifications.checkPermissions();
+      if (cancelled) return;
       const status =
         perm.receive === "granted"
           ? "granted"
           : (await PushNotifications.requestPermissions()).receive;
-      if (status !== "granted") return;
+      if (cancelled || status !== "granted") return;
 
-      subs.push(
+      track(
         await PushNotifications.addListener("registration", (token) => {
-          register.mutate({
+          if (cancelled) return;
+          if (
+            lastSent &&
+            lastSent.userId === userId &&
+            lastSent.token === token.value
+          ) {
+            return;
+          }
+          lastSent = { userId, token: token.value };
+          handlersRef.current.registerMutation.mutate({
             token: token.value,
             platform: platform === "ios" ? "IOS" : "ANDROID",
           });
         }),
+      );
+      track(
         await PushNotifications.addListener("registrationError", (err) => {
           console.error("Push registration failed:", err);
         }),
-        await PushNotifications.addListener(
-          "pushNotificationReceived",
-          () => {
-            void queryClient.invalidateQueries({
-              queryKey: [["notifications", "getNotifications"]],
-            });
-          },
-        ),
+      );
+      track(
+        await PushNotifications.addListener("pushNotificationReceived", () => {
+          if (cancelled) return;
+          void handlersRef.current.queryClient.invalidateQueries({
+            queryKey: [["notifications", "getNotifications"]],
+          });
+        }),
+      );
+      track(
         await PushNotifications.addListener(
           "pushNotificationActionPerformed",
           (event) => {
+            if (cancelled) return;
             const data = event.notification.data as
               | { url?: string }
               | undefined;
-            if (data?.url) {
-              try {
-                const url = new URL(data.url);
-                router.push(`${url.pathname}${url.search}${url.hash}`);
-              } catch {
-                router.push(data.url);
-              }
+            if (!data?.url) return;
+            try {
+              const url = new URL(data.url);
+              handlersRef.current.router.push(
+                `${url.pathname}${url.search}${url.hash}`,
+              );
+            } catch {
+              handlersRef.current.router.push(data.url);
             }
           },
         ),
       );
 
+      if (cancelled) return;
       await PushNotifications.register();
     })();
 
@@ -80,7 +110,7 @@ export default function PushNotifications() {
       cancelled = true;
       for (const s of subs) void s.remove();
     };
-  }, [userId, router, queryClient, register]);
+  }, [userId]);
 
   return null;
 }

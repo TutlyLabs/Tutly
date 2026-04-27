@@ -105,7 +105,10 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ classes, data }) => {
         {/* months */}
         <div className="ms-16 mb-2 grid grid-cols-12 gap-1">
           {months.map((month) => (
-            <div key={month} className="text-muted-foreground text-xs font-medium">
+            <div
+              key={month}
+              className="text-muted-foreground text-xs font-medium"
+            >
               {month}
             </div>
           ))}

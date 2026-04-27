@@ -280,13 +280,13 @@ const Report = ({
   return (
     <div className="flex w-full flex-col">
       {/* Course navigation bar - horizontally scrollable on small screens */}
-      <div className="w-full overflow-x-auto bg-card px-2 py-3 sm:px-6">
+      <div className="bg-card w-full overflow-x-auto px-2 py-3 sm:px-6">
         <div className="flex min-w-max items-center gap-2">
           <Link
             href="/tutor/report/detail?id=all"
             className={`rounded px-2 py-1.5 text-sm whitespace-nowrap ${
               isAllView
-                ? "border border-primary bg-primary/10"
+                ? "border-primary bg-primary/10 border"
                 : "hover:bg-gray-100 dark:hover:bg-gray-700"
             }`}
           >
@@ -299,7 +299,7 @@ const Report = ({
                   href={`/tutor/report/detail?id=${course.id}`}
                   className={`rounded px-2 py-1.5 text-sm whitespace-nowrap ${
                     !isAllView && currentCourse?.id === course?.id
-                      ? "border border-primary bg-primary/10"
+                      ? "border-primary bg-primary/10 border"
                       : "hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   key={course?.id}
@@ -326,7 +326,7 @@ const Report = ({
         <div className="w-full">
           <div className="bg-card relative overflow-x-auto border shadow-sm sm:rounded-lg">
             {/* Filter and control section */}
-            <div className="flex flex-col gap-3 border-b bg-card p-3 sm:flex-row sm:justify-between">
+            <div className="bg-card flex flex-col gap-3 border-b p-3 sm:flex-row sm:justify-between">
               {/* Mentor filter */}
               {isMentor ? (
                 <div className="text-foreground/80 flex items-center text-sm">
@@ -344,7 +344,7 @@ const Report = ({
                     title="mentor name"
                     value={selectedMentor}
                     onChange={handleMentorChange}
-                    className="w-full rounded-lg border bg-background p-1.5 text-sm sm:w-auto"
+                    className="bg-background w-full rounded-lg border p-1.5 text-sm sm:w-auto"
                   >
                     <option value="">All Mentors</option>
                     {uniqueMentors.map((mentor) => (
@@ -359,13 +359,10 @@ const Report = ({
               {/* Export controls */}
               <div className="xs:flex-row flex flex-col gap-2 sm:items-center">
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="xs:w-auto w-full rounded-lg border bg-background px-3 py-1.5 text-sm hover:bg-accent">
+                  <DropdownMenuTrigger className="xs:w-auto bg-background hover:bg-accent w-full rounded-lg border px-3 py-1.5 text-sm">
                     View Columns
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="bg-card"
-                  >
+                  <DropdownMenuContent align="end" className="bg-card">
                     {Object.keys(visibleColumns)
                       .filter((col) => col !== "Mentor" || !isMentor)
                       .map((column) => (
@@ -392,14 +389,14 @@ const Report = ({
                     title="select format"
                     value={selectedFormat}
                     onChange={handleFormatChange}
-                    className="xs:flex-none flex-1 rounded-l-lg border bg-background px-2 py-1.5 text-sm"
+                    className="xs:flex-none bg-background flex-1 rounded-l-lg border px-2 py-1.5 text-sm"
                   >
                     <option value="pdf">PDF</option>
                     <option value="csv">CSV</option>
                   </select>
                   <button
                     onClick={handleDownload}
-                    className="rounded-r-lg bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 text-sm whitespace-nowrap"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-r-lg px-3 py-1.5 text-sm whitespace-nowrap"
                   >
                     Download
                   </button>
@@ -410,9 +407,9 @@ const Report = ({
             {/* Table section */}
             <div className="w-full overflow-x-auto">
               <table className="text-foreground/90 w-full border-collapse text-left text-sm">
-                <thead className="bg-muted text-muted-foreground text-[11px] uppercase tracking-wide">
+                <thead className="bg-muted text-muted-foreground text-[11px] tracking-wide uppercase">
                   <tr>
-                    <th className="cursor-pointer truncate border-b border-primary/30 px-3 py-2 sm:px-4 sm:py-3">
+                    <th className="border-primary/30 cursor-pointer truncate border-b px-3 py-2 sm:px-4 sm:py-3">
                       S.No
                     </th>
                     {Object.keys(columnMapping).map(
@@ -421,7 +418,7 @@ const Report = ({
                           <th
                             key={column}
                             onClick={() => handleSort(column)}
-                            className="cursor-pointer truncate border-b border-primary/30 px-3 py-2 sm:px-4 sm:py-3"
+                            className="border-primary/30 cursor-pointer truncate border-b px-3 py-2 sm:px-4 sm:py-3"
                           >
                             {column}
                             {sortColumn === columnMapping[column] &&
@@ -436,9 +433,7 @@ const Report = ({
                     <tr
                       key={index}
                       className={`${
-                        index % 2 === 0
-                          ? "bg-card"
-                          : "bg-muted/40"
+                        index % 2 === 0 ? "bg-card" : "bg-muted/40"
                       } hover:bg-gray-100 dark:hover:bg-gray-600`}
                     >
                       <td className="border-border border-b px-3 py-2 sm:px-4 sm:py-3">

@@ -46,14 +46,14 @@ export default function NewOrganizationPage() {
         <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
           New Organization
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Onboard a new organization to the platform.
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 bg-card"
+        className="bg-card space-y-6 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800"
       >
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -115,7 +115,7 @@ export default function NewOrganizationPage() {
         />
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-foreground/80">
+          <label className="text-foreground/80 mb-1 block text-sm font-medium">
             Initial Status
           </label>
           <select
@@ -123,7 +123,7 @@ export default function NewOrganizationPage() {
             onChange={(e) =>
               setFormData({ ...formData, status: e.target.value as any })
             }
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-gray-700 bg-muted text-foreground"
+            className="bg-muted text-foreground w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-gray-700"
           >
             <option value="PENDING">Pending</option>
             <option value="ACTIVE">Active</option>
@@ -134,14 +134,14 @@ export default function NewOrganizationPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 text-foreground/80 dark:hover:bg-gray-800"
+            className="text-foreground/80 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={createOrg.isPending}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+            className="bg-primary hover:bg-primary/90 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             {createOrg.isPending ? "Creating..." : "Create Organization"}
           </button>
@@ -175,7 +175,7 @@ function FormField({
 
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-foreground/80">
+      <label className="text-foreground/80 mb-1 block text-sm font-medium">
         {label}
       </label>
       {multiline ? (
@@ -197,7 +197,7 @@ function FormField({
           className={className}
         />
       )}
-      {hint && <p className="mt-1 text-xs text-muted-foreground/70">{hint}</p>}
+      {hint && <p className="text-muted-foreground/70 mt-1 text-xs">{hint}</p>}
     </div>
   );
 }

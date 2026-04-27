@@ -21,7 +21,7 @@ export default function DomainsPage() {
         <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
           Domains
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Overview of all provisioned domains across organizations.
         </p>
       </div>
@@ -46,34 +46,31 @@ export default function DomainsPage() {
         {isLoading ? (
           <div className="space-y-4 p-6">
             {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="h-12 animate-pulse rounded bg-muted"
-              />
+              <div key={i} className="bg-muted h-12 animate-pulse rounded" />
             ))}
           </div>
         ) : (
           <table className="w-full">
             <thead>
               <tr className="bg-muted/30 border-b">
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                   Domain
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                   Organization
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                   Created
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-border divide-y">
               {domains?.map((domain) => (
                 <tr
                   key={domain.id}
@@ -81,7 +78,7 @@ export default function DomainsPage() {
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-muted-foreground/70" />
+                      <Globe className="text-muted-foreground/70 h-4 w-4" />
                       <span className="text-foreground font-medium">
                         {domain.domain}
                       </span>
@@ -103,7 +100,7 @@ export default function DomainsPage() {
                   <td className="px-6 py-4 text-sm">
                     <Link
                       href={`/super-admin/organizations/detail?id=${domain.organization.id}`}
-                      className="text-indigo-600 hover:text-primary/80"
+                      className="hover:text-primary/80 text-indigo-600"
                     >
                       {domain.organization.name}
                     </Link>
@@ -111,7 +108,7 @@ export default function DomainsPage() {
                   <td className="px-6 py-4">
                     <StatusBadge status={domain.status} />
                   </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
+                  <td className="text-muted-foreground px-6 py-4 text-sm">
                     {new Date(domain.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
@@ -120,7 +117,7 @@ export default function DomainsPage() {
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-6 py-8 text-center text-sm text-muted-foreground"
+                    className="text-muted-foreground px-6 py-8 text-center text-sm"
                   >
                     No domains found.
                   </td>

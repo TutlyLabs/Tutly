@@ -63,7 +63,7 @@ export function MonthView({
         {dayLabelsLong.map((dayName, i) => (
           <div
             key={dayName + i}
-            className="text-muted-foreground h-8 text-center text-[11px] font-medium uppercase tracking-wide sm:text-sm"
+            className="text-muted-foreground h-8 text-center text-[11px] font-medium tracking-wide uppercase sm:text-sm"
           >
             <span className="sm:hidden">{dayLabels[i]}</span>
             <span className="hidden sm:inline">{dayName}</span>
@@ -107,7 +107,7 @@ export function MonthView({
                       title={event.name}
                     >
                       {event.type === "Holiday" ? (
-                        <span className="block w-full truncate rounded border border-rose-500/30 bg-rose-500/15 px-1 py-0.5 text-[10px] font-medium text-rose-700 dark:text-rose-400 sm:text-[11px]">
+                        <span className="block w-full truncate rounded border border-rose-500/30 bg-rose-500/15 px-1 py-0.5 text-[10px] font-medium text-rose-700 sm:text-[11px] dark:text-rose-400">
                           {event.type}
                         </span>
                       ) : event.type === "Assignment" ? (
@@ -115,7 +115,7 @@ export function MonthView({
                           {event.name}
                         </span>
                       ) : (
-                        <span className="block w-full truncate rounded border border-violet-500/30 bg-violet-500/15 px-1 py-0.5 text-[10px] font-medium text-violet-700 dark:text-violet-400 sm:text-[11px]">
+                        <span className="block w-full truncate rounded border border-violet-500/30 bg-violet-500/15 px-1 py-0.5 text-[10px] font-medium text-violet-700 sm:text-[11px] dark:text-violet-400">
                           {event.name}
                         </span>
                       )}

@@ -38,8 +38,7 @@ export default function UpdateBanner() {
     setStoreUrl(url);
 
     const current = currentAppVersion();
-    const isOutdated =
-      compareVersions(current, LATEST_NATIVE_VERSION) < 0;
+    const isOutdated = compareVersions(current, LATEST_NATIVE_VERSION) < 0;
     const isUnsupported =
       compareVersions(current, MIN_SUPPORTED_NATIVE_VERSION) < 0;
 
@@ -79,7 +78,7 @@ export default function UpdateBanner() {
     >
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl border-t p-0 sm:max-w-md sm:mx-auto"
+        className="rounded-t-2xl border-t p-0 sm:mx-auto sm:max-w-md"
       >
         <div className="flex flex-col items-center gap-4 px-5 pt-6 pb-5 text-center">
           <div className="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-2xl">

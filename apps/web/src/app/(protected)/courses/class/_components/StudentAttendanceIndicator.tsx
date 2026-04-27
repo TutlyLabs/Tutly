@@ -42,8 +42,7 @@ function StatusChip({
     emerald:
       "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400",
     rose: "bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 dark:text-rose-400",
-    muted:
-      "bg-muted/60 text-muted-foreground hover:bg-muted",
+    muted: "bg-muted/60 text-muted-foreground hover:bg-muted",
   };
   const chip = (
     <Link

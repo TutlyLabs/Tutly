@@ -21,7 +21,11 @@ export function LayoutContent({ children }: LayoutContentProps) {
   useEffect(() => {
     const key = `${pathname}?${searchParams.toString()}`;
     if (lastKey.current !== null && lastKey.current !== key) {
-      mainRef.current?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+      mainRef.current?.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "instant" as ScrollBehavior,
+      });
     }
     lastKey.current = key;
   }, [pathname, searchParams]);
@@ -31,7 +35,7 @@ export function LayoutContent({ children }: LayoutContentProps) {
       id="main-content"
       ref={mainRef}
       className={cn(
-        "flex-1 overflow-auto p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom)+72px)] sm:pb-6",
+        "flex-1 overflow-auto p-4 pb-[calc(env(safe-area-inset-bottom)+72px)] sm:p-6 sm:pb-6",
         className,
       )}
     >

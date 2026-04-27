@@ -80,7 +80,7 @@ const StatCard = ({
   label: string;
 }) => {
   return (
-    <div className="flex w-full min-w-0 flex-col items-center gap-2 rounded-xl border border-white/40 bg-white p-3 text-center shadow-lg shadow-black/5 ring-1 ring-black/5 transition-colors hover:bg-white/95 sm:flex-row sm:items-center sm:gap-4 sm:p-5 sm:text-left">
+    <div className="flex w-full min-w-0 flex-col items-center gap-2 rounded-xl border border-white/40 bg-white p-3 text-center shadow-lg ring-1 shadow-black/5 ring-black/5 transition-colors hover:bg-white/95 sm:flex-row sm:items-center sm:gap-4 sm:p-5 sm:text-left">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 sm:h-14 sm:w-14">
         <Image
           src={imgSrc}
@@ -91,10 +91,10 @@ const StatCard = ({
         />
       </div>
       <div className="flex w-full min-w-0 flex-col items-center sm:items-start">
-        <p className="text-xl leading-none font-bold tabular-nums text-blue-600 sm:text-3xl">
+        <p className="text-xl leading-none font-bold text-blue-600 tabular-nums sm:text-3xl">
           {value}
         </p>
-        <h1 className="mt-1 line-clamp-2 w-full text-[10px] font-medium leading-tight tracking-wide text-slate-500 uppercase sm:text-xs sm:font-semibold sm:tracking-normal sm:normal-case sm:text-slate-700">
+        <h1 className="mt-1 line-clamp-2 w-full text-[10px] leading-tight font-medium tracking-wide text-slate-500 uppercase sm:text-xs sm:font-semibold sm:tracking-normal sm:text-slate-700 sm:normal-case">
           {label}
         </h1>
       </div>
@@ -460,7 +460,7 @@ export function StudentCards({ selectedCourse }: Props) {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="flex w-full flex-col items-center gap-2 rounded-xl border border-white/40 bg-white p-3 shadow-lg shadow-black/5 ring-1 ring-black/5 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
+              className="flex w-full flex-col items-center gap-2 rounded-xl border border-white/40 bg-white p-3 shadow-lg ring-1 shadow-black/5 ring-black/5 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
             >
               <Skeleton className="h-10 w-10 rounded-lg sm:h-14 sm:w-14" />
               <div className="flex w-full flex-1 flex-col items-center gap-2 sm:items-start">
@@ -614,7 +614,7 @@ export function StudentCards({ selectedCourse }: Props) {
               </DropdownMenu>
             </div>
             <div className="relative w-full sm:order-2 sm:ml-auto sm:max-w-[260px]">
-              <Search className="text-muted-foreground/70 absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+              <Search className="text-muted-foreground/70 absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 type="text"
                 placeholder="Search assignments…"

@@ -164,9 +164,9 @@ export default class Playground extends Command {
       };
     const ALLOWED_EXTRA_ARG_PATTERN = /^[\w\-./@:=,]+$/;
 
-    const resolveTestCommand = (raw: unknown):
-      | { bin: string; argv: string[] }
-      | { error: string } => {
+    const resolveTestCommand = (
+      raw: unknown,
+    ): { bin: string; argv: string[] } | { error: string } => {
       if (typeof raw !== "string") return { error: "command must be a string" };
       const matchedKey = Object.keys(ALLOWED_RUNNERS)
         .sort((a, b) => b.length - a.length)
@@ -341,11 +341,15 @@ export default class Playground extends Command {
         this.log(`Running test command: ${raw}`);
 
         try {
-          const { stdout, stderr } = await execFileAsync(resolved.bin, resolved.argv, {
-            cwd: baseDir,
-            timeout: 120000, // 2 minute timeout
-            maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-          });
+          const { stdout, stderr } = await execFileAsync(
+            resolved.bin,
+            resolved.argv,
+            {
+              cwd: baseDir,
+              timeout: 120000, // 2 minute timeout
+              maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+            },
+          );
 
           try {
             const results = JSON.parse(stdout);

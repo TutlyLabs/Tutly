@@ -48,7 +48,7 @@ export function AppHeader({ user, crumbReplacement = {} }: AppHeaderProps) {
           "bg-background/85 supports-[backdrop-filter]:bg-background/65",
           "sticky top-0 z-40 flex shrink-0 items-center backdrop-blur",
           "h-[calc(3.5rem+env(safe-area-inset-top))] sm:h-[calc(4rem+env(safe-area-inset-top))]",
-          "border-b border-border/80",
+          "border-border/80 border-b",
           "pt-[env(safe-area-inset-top)]",
           "pr-[max(0.5rem,env(safe-area-inset-right))] pl-[max(0.5rem,env(safe-area-inset-left))]",
           "sm:pr-[max(1rem,env(safe-area-inset-right))] sm:pl-[max(1rem,env(safe-area-inset-left))]",

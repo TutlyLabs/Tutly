@@ -6,12 +6,33 @@ import { Loader2 } from "lucide-react";
 
 import { Button } from "@tutly/ui/button";
 import { authClient } from "@/server/auth/client";
+import { isNative } from "@/lib/native";
 import Image from "next/image";
+
+const NATIVE_OAUTH_BASE =
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+  "https://learn.tutly.in";
 
 interface SocialSigninProps {
   isGoogleSignInEnabled: boolean;
   isGithubSignInEnabled: boolean;
   isLoading?: boolean;
+}
+
+async function startSocialSignIn(provider: "google" | "github") {
+  if (isNative()) {
+    const url = new URL(`${NATIVE_OAUTH_BASE}/auth/native-oauth-start`);
+    url.searchParams.set("provider", provider);
+    url.searchParams.set("next", "/auth/post-login");
+    const { Browser } = await import("@capacitor/browser");
+    await Browser.open({ url: url.toString(), presentationStyle: "popover" });
+    return;
+  }
+
+  await authClient.signIn.social({
+    provider,
+    callbackURL: "/auth/post-login",
+  });
 }
 
 export function SocialSignin({
@@ -25,10 +46,7 @@ export function SocialSignin({
   const handleGoogleSignIn = async () => {
     try {
       setIsGoogleLoading(true);
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/auth/post-login",
-      });
+      await startSocialSignIn("google");
     } catch (error) {
       toast.error("Failed to initiate Google sign in", {
         duration: 3000,
@@ -43,10 +61,7 @@ export function SocialSignin({
   const handleGithubSignIn = async () => {
     try {
       setIsGithubLoading(true);
-      await authClient.signIn.social({
-        provider: "github",
-        callbackURL: "/auth/post-login",
-      });
+      await startSocialSignIn("github");
     } catch (error) {
       toast.error("Failed to initiate GitHub sign in", {
         duration: 3000,
@@ -68,7 +83,7 @@ export function SocialSignin({
         <div className="border-border absolute inset-0 flex items-center">
           <span className="w-full border-t" />
         </div>
-        <div className="relative flex justify-center text-[11px] uppercase tracking-wide">
+        <div className="relative flex justify-center text-[11px] tracking-wide uppercase">
           <span className="bg-card text-muted-foreground px-2">
             Or continue with
           </span>

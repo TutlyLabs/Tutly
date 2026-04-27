@@ -136,7 +136,7 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="group relative shrink-0 cursor-pointer rounded-full focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="group focus-visible:ring-ring relative shrink-0 cursor-pointer rounded-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             aria-label="Change profile picture"
           >
             <Avatar className="ring-background size-20 rounded-full ring-4 sm:size-24">

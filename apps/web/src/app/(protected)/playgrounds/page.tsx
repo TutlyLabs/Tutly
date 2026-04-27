@@ -40,7 +40,7 @@ export default function PlaygroundsPage() {
               href="/playgrounds/html-css-js"
               className="bg-card hover:border-primary/40 hover:bg-accent/30 group flex items-center gap-4 rounded-xl border p-4 shadow-sm transition-colors"
             >
-              <div className="bg-orange-500/10 grid h-14 w-14 shrink-0 place-items-center rounded-xl">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-orange-500/10">
                 <IoLogoHtml5 className="h-8 w-8 text-orange-500" />
               </div>
               <div className="min-w-0">
@@ -56,7 +56,7 @@ export default function PlaygroundsPage() {
               href="/playgrounds/react"
               className="bg-card hover:border-primary/40 hover:bg-accent/30 group flex items-center gap-4 rounded-xl border p-4 shadow-sm transition-colors"
             >
-              <div className="bg-sky-500/10 grid h-14 w-14 shrink-0 place-items-center rounded-xl">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-sky-500/10">
                 <RiReactjsFill className="h-8 w-8 text-sky-500" />
               </div>
               <div className="min-w-0">

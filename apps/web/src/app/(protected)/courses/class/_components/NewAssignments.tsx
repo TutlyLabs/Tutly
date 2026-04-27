@@ -196,25 +196,25 @@ const NewAttachmentPage = ({
                   </FormControl>
                   <SelectContent className="bg-popover text-popover-foreground text-base">
                     <SelectItem
-                      className="text-base cursor-pointer"
+                      className="cursor-pointer text-base"
                       value="ASSIGNMENT"
                     >
                       Assignment
                     </SelectItem>
                     <SelectItem
-                      className="text-base cursor-pointer"
+                      className="cursor-pointer text-base"
                       value="ZOOM"
                     >
                       Zoom
                     </SelectItem>
                     <SelectItem
-                      className="text-base cursor-pointer"
+                      className="cursor-pointer text-base"
                       value="GITHUB"
                     >
                       Github
                     </SelectItem>
                     <SelectItem
-                      className="text-base cursor-pointer"
+                      className="cursor-pointer text-base"
                       value="OTHERS"
                     >
                       Other
@@ -266,25 +266,25 @@ const NewAttachmentPage = ({
                   </FormControl>
                   <SelectContent className="bg-popover text-popover-foreground text-base">
                     <SelectItem
-                      className="text-base cursor-pointer"
+                      className="cursor-pointer text-base"
                       value="HTML_CSS_JS"
                     >
                       HTML CSS JS
                     </SelectItem>
                     <SelectItem
-                      className="text-base cursor-pointer"
+                      className="cursor-pointer text-base"
                       value="GIT"
                     >
                       GIT
                     </SelectItem>
                     <SelectItem
-                      className="text-base cursor-pointer"
+                      className="cursor-pointer text-base"
                       value="SANDBOX"
                     >
                       SANDBOX
                     </SelectItem>
                     <SelectItem
-                      className="text-base cursor-pointer"
+                      className="cursor-pointer text-base"
                       value="EXTERNAL_LINK"
                     >
                       EXTERNAL LINK
@@ -340,7 +340,7 @@ const NewAttachmentPage = ({
                       <SelectItem
                         key={c.id}
                         value={c.id}
-                        className="text-base cursor-pointer"
+                        className="cursor-pointer text-base"
                       >
                         {c.title}
                       </SelectItem>
