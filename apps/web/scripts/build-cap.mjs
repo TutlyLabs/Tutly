@@ -8,7 +8,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const stash = path.join(root, ".cap-stash");
 
-const STASH_PATHS = ["src/app/api"];
+// Server-only routes — excluded from the Capacitor static export.
+const STASH_PATHS = [
+  "src/app/api",
+  "src/app/auth/native-bridge",
+  "src/app/auth/native-oauth-start",
+];
 
 const moves = [];
 function stashFolder(rel) {
