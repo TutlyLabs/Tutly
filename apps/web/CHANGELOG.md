@@ -1,5 +1,18 @@
 # web
 
+## 4.1.0
+
+### Minor Changes
+
+- [#99](https://github.com/TutlyLabs/Tutly/pull/99) [`5862164`](https://github.com/TutlyLabs/Tutly/commit/5862164433a7dddd54eb5f2076bff807361512c7) Thanks [@UdaySagar-Git](https://github.com/UdaySagar-Git)! - Community + public profile rebuild.
+
+  - Community: course channels (admins post), per-mentor cohort groups, configurable posting policy, audit messages, search, replies, reactions, pinning, file uploads, @mentions.
+  - Public profile at `/u/[username]`: hero, projects, experience, education, coding profiles with brand icons, GitHub-style activity heatmap, verified badge, ghost-preview placeholders that open inline editors.
+  - Reusable `UserAvatar` and `UserLink` components used everywhere users are rendered.
+  - Sidebar: notifications dot, mentor cohort section, polished user menu.
+  - Dashboard: instructor and mentor stat cards refreshed to match student layout.
+  - Backfill script `db:sync-groups` to populate course + mentor groups for existing courses.
+
 ## 4.0.1
 
 ### Patch Changes
