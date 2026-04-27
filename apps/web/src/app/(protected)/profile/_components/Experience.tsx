@@ -20,6 +20,8 @@ import {
 } from "@tutly/ui/form";
 import { Input } from "@tutly/ui/input";
 
+import { SectionHeader } from "./SectionHeader";
+
 const experienceSchema = z.object({
   company: z.string().min(1, "Company name is required"),
   role: z.string().min(1, "Role is required"),
@@ -96,15 +98,12 @@ export default function Experience({ experiences, onUpdate }: ExperienceProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Experience</h2>
-        <Button
-          variant={isEditing ? "outline" : "default"}
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? "Cancel" : "Edit"}
-        </Button>
-      </div>
+      <SectionHeader
+        title="Experience"
+        description="Companies you've worked at."
+        isEditing={isEditing}
+        onToggle={() => setIsEditing(!isEditing)}
+      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

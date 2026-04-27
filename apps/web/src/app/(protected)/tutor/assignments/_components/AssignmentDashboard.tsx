@@ -28,35 +28,25 @@ const AssignmentDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="mx-2 flex flex-col gap-4 px-2 py-2 md:mx-14 md:px-8">
-        <div className="space-y-6">
-          {/* Dashboard Header */}
-          <div className="space-y-4">
-            <Skeleton className="mx-auto h-8 w-64" />
-            <Skeleton className="mx-auto h-4 w-96" />
-          </div>
-
-          {/* Dashboard Content */}
-          <div className="space-y-4">
-            <div className="flex justify-end">
-              <Skeleton className="h-6 w-32" />
+      <div className="mx-auto w-full max-w-7xl space-y-4">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-40" />
+          <Skeleton className="h-3 w-64" />
+        </div>
+        <div className="bg-card rounded-xl border shadow-sm">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 border-b p-4 last:border-b-0"
+            >
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3 w-1/4" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+              <Skeleton className="h-8 w-24 rounded-md" />
             </div>
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="flex items-center space-x-4 rounded-lg border p-4"
-                >
-                  <Skeleton className="h-12 w-12 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-1/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
-                  <Skeleton className="h-8 w-20" />
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     );
@@ -81,10 +71,15 @@ const AssignmentDashboard = () => {
   }
 
   return (
-    <div className="mx-2 flex flex-col gap-4 px-2 py-2 md:mx-14 md:px-8">
-      <h1 className="mt-4 py-2 text-center text-xl font-bold uppercase">
-        Assignments
-      </h1>
+    <div className="mx-auto w-full max-w-7xl space-y-4">
+      <div>
+        <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+          Assignments
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Browse student submissions across your courses.
+        </p>
+      </div>
       {courses === null || courses.length === 0 ? (
         <div className="text-center">No courses available!</div>
       ) : (

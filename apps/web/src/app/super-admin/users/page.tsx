@@ -26,10 +26,10 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
           Users
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Browse and search all users across all organizations.
         </p>
       </div>
@@ -37,7 +37,7 @@ export default function UsersPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
           <input
             type="text"
             placeholder="Search by name, email, or username..."
@@ -46,7 +46,7 @@ export default function UsersPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-10 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+            className="bg-background border-border focus:border-primary focus:ring-primary/40 w-full rounded-lg border py-2 pr-4 pl-10 text-sm focus:ring-1 focus:outline-none"
           />
         </div>
         <select
@@ -55,7 +55,7 @@ export default function UsersPage() {
             setRoleFilter(e.target.value);
             setPage(1);
           }}
-          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          className="bg-background border-border focus:border-primary rounded-lg border px-3 py-2 text-sm focus:outline-none"
         >
           <option value="">All Roles</option>
           <option value="INSTRUCTOR">Instructor</option>
@@ -67,13 +67,13 @@ export default function UsersPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className="bg-card overflow-hidden rounded-xl border">
         {isLoading ? (
           <div className="space-y-4 p-6">
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="h-12 animate-pulse rounded bg-gray-100 dark:bg-gray-800"
+                className="h-12 animate-pulse rounded bg-muted"
               />
             ))}
           </div>
@@ -81,28 +81,28 @@ export default function UsersPage() {
           <>
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <tr className="bg-muted/30 border-b">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     Organization
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     Last Seen
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              <tbody className="divide-y divide-border">
                 {data?.users.map((user) => (
                   <tr
                     key={user.id}
@@ -124,16 +124,16 @@ export default function UsersPage() {
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
+                          <p className="text-foreground font-medium">
                             {user.name}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             @{user.username}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {user.email || "—"}
                     </td>
                     <td className="px-6 py-4">
@@ -143,15 +143,15 @@ export default function UsersPage() {
                       {user.organization ? (
                         <Link
                           href={`/super-admin/organizations/detail?id=${user.organization.id}`}
-                          className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                          className="text-indigo-600 hover:text-primary/80"
                         >
                           {user.organization.name}
                         </Link>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-muted-foreground/70">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {user.lastSeen
                         ? new Date(user.lastSeen).toLocaleDateString()
                         : "Never"}
@@ -162,7 +162,7 @@ export default function UsersPage() {
                           Banned
                         </span>
                       ) : user.disabledAt ? (
-                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                        <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-xs font-medium">
                           Disabled
                         </span>
                       ) : (
@@ -177,7 +177,7 @@ export default function UsersPage() {
                   <tr>
                     <td
                       colSpan={6}
-                      className="px-6 py-8 text-center text-sm text-gray-500"
+                      className="px-6 py-8 text-center text-sm text-muted-foreground"
                     >
                       No users found.
                     </td>
@@ -189,7 +189,7 @@ export default function UsersPage() {
             {/* Pagination */}
             {data && data.totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 dark:border-gray-800">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Page {data.currentPage} of {data.totalPages} (
                   {data.totalCount} total)
                 </p>
@@ -197,14 +197,14 @@ export default function UsersPage() {
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 text-foreground/80 dark:hover:bg-gray-800"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page >= (data?.totalPages ?? 1)}
-                    className="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 text-foreground/80 dark:hover:bg-gray-800"
                   >
                     Next
                   </button>
@@ -224,7 +224,7 @@ function RoleBadge({ role }: { role: string }) {
       "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
     ADMIN: "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     MENTOR: "bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
-    STUDENT: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
+    STUDENT: "bg-muted text-muted-foreground",
     SUPER_ADMIN: "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400",
   };
 

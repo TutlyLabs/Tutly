@@ -18,6 +18,8 @@ import {
 import { Input } from "@tutly/ui/input";
 import { Textarea } from "@tutly/ui/textarea";
 
+import { SectionHeader } from "./SectionHeader";
+
 const formSchema = z.object({
   dateOfBirth: z.date().nullable(),
   hobbies: z.string(),
@@ -63,15 +65,12 @@ export default function PersonalDetails({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Personal Details</h2>
-        <Button
-          variant={isEditing ? "outline" : "default"}
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? "Cancel" : "Edit"}
-        </Button>
-      </div>
+      <SectionHeader
+        title="Personal Details"
+        description="Date of birth, hobbies and a short bio."
+        isEditing={isEditing}
+        onToggle={() => setIsEditing(!isEditing)}
+      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

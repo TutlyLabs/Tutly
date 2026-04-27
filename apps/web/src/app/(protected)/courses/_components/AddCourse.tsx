@@ -30,12 +30,12 @@ function AddCourse() {
   return (
     <>
       <Card
-        className="m-auto my-3 flex h-[200px] w-[280px] cursor-pointer flex-col items-center justify-center bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 text-white md:mx-2"
+        className="text-primary group bg-card hover:bg-primary/5 hover:border-primary/40 flex aspect-[16/9] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors"
         onClick={() => setOpenModal(true)}
       >
-        <div className="cursor-pointer text-center">
-          <FaPlus className="text-5xl" />
-          <h1 className="mt-3 text-xl">Add</h1>
+        <div className="text-center">
+          <FaPlus className="mx-auto text-3xl transition-transform group-hover:scale-110" />
+          <h1 className="mt-2 text-sm font-medium">New course</h1>
         </div>
       </Card>
 

@@ -172,49 +172,40 @@ export default function StudentWiseAssignments({
                           {assignment.title}
                         </h2>
                       </div>
-                      <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-white md:gap-6">
+                      <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium md:gap-2">
                         {assignment.submissions.length === 0 ? (
-                          <div className="flex items-center gap-6">
-                            <div className="bg-secondary-600 rounded-full p-2.5">
-                              not submitted
-                            </div>
-                          </div>
+                          <span className="bg-rose-500/15 border-rose-500/30 inline-flex items-center rounded-full border px-2.5 py-1 text-rose-700 dark:text-rose-400">
+                            Not submitted
+                          </span>
                         ) : (
-                          <div className="flex gap-2">
-                            {assignment.submissions.map(
-                              (eachSubmission: any, index: number) => {
-                                if (eachSubmission.points.length === 0) {
-                                  return (
-                                    <div
-                                      className="flex items-center gap-6"
-                                      key={index}
-                                    >
-                                      <div className="rounded-full bg-yellow-600 p-2.5 hover:bg-yellow-500">
-                                        Under review
-                                      </div>
-                                    </div>
-                                  );
-                                } else {
-                                  const total = eachSubmission.points.reduce(
-                                    (sum: number, point: any) =>
-                                      sum + (point.score || 0),
-                                    0,
-                                  );
-                                  return (
-                                    <div
-                                      className="flex items-center gap-6"
-                                      key={index}
-                                    >
-                                      <div className="flex items-center rounded-full bg-green-600 p-2.5">
-                                        <h1>Score : {total}</h1>
-                                        <MdOutlineSportsScore className="inline sm:h-5 sm:w-5" />
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                              },
-                            )}
-                          </div>
+                          assignment.submissions.map(
+                            (eachSubmission: any, index: number) => {
+                              if (eachSubmission.points.length === 0) {
+                                return (
+                                  <span
+                                    key={index}
+                                    className="bg-amber-500/15 border-amber-500/30 inline-flex items-center rounded-full border px-2.5 py-1 text-amber-700 dark:text-amber-400"
+                                  >
+                                    Under review
+                                  </span>
+                                );
+                              }
+                              const total = eachSubmission.points.reduce(
+                                (sum: number, point: any) =>
+                                  sum + (point.score || 0),
+                                0,
+                              );
+                              return (
+                                <span
+                                  key={index}
+                                  className="bg-emerald-500/15 border-emerald-500/30 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-emerald-700 dark:text-emerald-400"
+                                >
+                                  Score: {total}
+                                  <MdOutlineSportsScore className="h-3.5 w-3.5" />
+                                </span>
+                              );
+                            },
+                          )
                         )}
                         <button
                           title="Details"
@@ -229,7 +220,7 @@ export default function StudentWiseAssignments({
                               );
                             }
                           }}
-                          className="rounded bg-blue-500 p-2.5"
+                          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-7 cursor-pointer items-center rounded-full px-3 text-[11px] font-medium transition-colors"
                         >
                           View Details
                         </button>

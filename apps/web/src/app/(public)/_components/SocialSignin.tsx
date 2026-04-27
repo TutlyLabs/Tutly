@@ -63,11 +63,21 @@ export function SocialSignin({
   }
 
   return (
-    <div className="mt-3 flex flex-col gap-3">
+    <div className="mt-4 space-y-3">
+      <div className="relative">
+        <div className="border-border absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-[11px] uppercase tracking-wide">
+          <span className="bg-card text-muted-foreground px-2">
+            Or continue with
+          </span>
+        </div>
+      </div>
       {isGoogleSignInEnabled && (
         <Button
           variant="outline"
-          className="flex w-full items-center justify-center gap-2 border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30 dark:border-gray-700/50 dark:bg-gray-900/20 dark:hover:bg-gray-800/30"
+          className="bg-background hover:bg-accent flex h-10 w-full items-center justify-center gap-2 text-sm"
           onClick={handleGoogleSignIn}
           disabled={isGoogleLoading || isLoading}
         >
@@ -84,7 +94,7 @@ export function SocialSignin({
       {isGithubSignInEnabled && (
         <Button
           variant="outline"
-          className="flex w-full items-center justify-center gap-2 border-white/30 bg-white/20 backdrop-blur-sm hover:bg-white/30 dark:border-gray-700/50 dark:bg-gray-900/20 dark:hover:bg-gray-800/30"
+          className="bg-background hover:bg-accent flex h-10 w-full items-center justify-center gap-2 text-sm"
           onClick={handleGithubSignIn}
           disabled={isGithubLoading || isLoading}
         >

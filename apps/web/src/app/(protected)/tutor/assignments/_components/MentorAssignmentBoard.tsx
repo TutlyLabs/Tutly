@@ -131,14 +131,15 @@ const MentorAssignmentBoard = ({
           >
             Evaluate
           </a> */}
-          <div className="bg-secondary-200 m-auto flex items-center rounded border text-black md:m-0">
+          <div className="relative">
+            <FaSearch className="text-muted-foreground/70 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
             <Input
               title="input"
-              placeholder="Search here"
+              placeholder="Search students…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-background h-9 pl-9 text-sm"
             />
-            <FaSearch className="m-2 h-5 w-5 text-white/80" />
           </div>
         </div>
       </div>
@@ -195,16 +196,17 @@ const MentorAssignmentBoard = ({
                   </div>
                 </div>
                 {student?.role === "STUDENT" && (
-                  <div
+                  <button
+                    type="button"
                     onClick={() =>
                       router.push(
                         `/tutor/assignments/student?id=${student.username}`,
                       )
                     }
-                    className="cursor-pointer rounded-lg bg-blue-600 p-2 text-sm font-medium text-white"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-8 cursor-pointer items-center rounded-md px-3 text-xs font-medium transition-colors"
                   >
                     Assignments
-                  </div>
+                  </button>
                 )}
               </div>
             </div>

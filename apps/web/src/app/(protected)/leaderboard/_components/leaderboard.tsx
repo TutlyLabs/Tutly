@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { FaCrown } from "react-icons/fa6";
+import { useEffect, useMemo, useState } from "react";
+import { Trophy } from "lucide-react";
 import Image from "next/image";
 import type { User, Course } from "@tutly/db/browser";
 
+import { ScrollArea, ScrollBar } from "@tutly/ui/scroll-area";
 import NoDataFound from "@/components/NoDataFound";
+import { cn } from "@tutly/utils";
 
 type SubmissionWithRelations = {
   id: string;
@@ -59,6 +61,11 @@ export default function Leaderboard({
   );
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData[]>([]);
 
+  const visibleCourses = useMemo(
+    () => courses.filter((c) => c.isPublished),
+    [courses],
+  );
+
   useEffect(() => {
     const filteredSubmissions = submissions.filter((submission) =>
       currentUser.role === "INSTRUCTOR"
@@ -68,7 +75,6 @@ export default function Leaderboard({
     );
 
     const leaderboardMap = new Map<string, LeaderboardData>();
-
     filteredSubmissions.forEach((submission) => {
       const userId = submission.enrolledUser.user.id;
       const totalPoints = submission.totalPoints;
@@ -77,8 +83,8 @@ export default function Leaderboard({
         existing.totalPoints += totalPoints;
       } else {
         leaderboardMap.set(userId, {
-          userId: userId,
-          totalPoints: totalPoints,
+          userId,
+          totalPoints,
           name: submission.enrolledUser.user.name,
           username: submission.enrolledUser.user.username,
           image: submission.enrolledUser.user.image,
@@ -86,94 +92,191 @@ export default function Leaderboard({
         });
       }
     });
-
-    const leaderboardArray = Array.from(leaderboardMap.values());
-    leaderboardArray.sort((a, b) => b.totalPoints - a.totalPoints);
-
-    setLeaderboardData(leaderboardArray);
+    const arr = Array.from(leaderboardMap.values())
+      .filter((d) => d.totalPoints > 0)
+      .sort((a, b) => b.totalPoints - a.totalPoints)
+      .map((d, i) => ({ ...d, rank: i + 1 }));
+    setLeaderboardData(arr);
   }, [currentCourse, submissions, currentUser.role, currentUser.username]);
 
+  const top3 = leaderboardData.slice(0, 3);
+  const rest = leaderboardData.slice(3);
+
   return (
-    <div className="mx-2 mt-6 mb-10 flex flex-col gap-4 md:mx-14">
-      {/* Leaderboard-header */}
-      <div className="flex flex-col text-center">
-        <FaCrown className="m-auto h-20 w-20 text-blue-500 dark:text-yellow-400" />
-        <h1 className="text-2xl font-semibold text-blue-500 dark:text-yellow-400">
-          Leaderboard
-        </h1>
+    <div className="mx-auto w-full max-w-7xl space-y-4 sm:space-y-5">
+      {/* Header */}
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+            Leaderboard
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Top scorers in this course.
+          </p>
+        </div>
+        <Trophy className="text-amber-500 hidden h-8 w-8 sm:block" />
       </div>
-      {/* Courses list */}
-      <div className="mt-4 flex gap-3">
-        {courses?.map((course) => (
-          <button
-            hidden={!course.isPublished}
-            onClick={() => setCurrentCourse(course.id)}
-            className={`w-20 rounded p-1 px-2 sm:w-auto ${
-              currentCourse === course.id && "rounded border"
-            }`}
-            key={course.id}
-          >
-            <h1 className="max-w-xs truncate text-sm font-medium">
-              {course.title}
-            </h1>
-          </button>
-        ))}
-      </div>
-      {/* Leaderboard */}
+
+      {/* Course chips */}
+      <ScrollArea className="-mx-3 sm:mx-0">
+        <div className="flex items-center gap-2 px-3 pb-2 sm:px-0">
+          {visibleCourses.map((course) => {
+            const active = currentCourse === course.id;
+            return (
+              <button
+                key={course.id}
+                onClick={() => setCurrentCourse(course.id)}
+                className={cn(
+                  "inline-flex h-8 shrink-0 cursor-pointer items-center rounded-full border px-3 text-xs font-medium whitespace-nowrap transition-colors",
+                  active
+                    ? "bg-primary text-primary-foreground border-transparent"
+                    : "bg-card text-foreground/70 hover:bg-accent hover:text-foreground",
+                )}
+              >
+                {course.title}
+              </button>
+            );
+          })}
+        </div>
+        <ScrollBar orientation="horizontal" className="hidden" />
+      </ScrollArea>
+
       {leaderboardData.length === 0 ? (
-        <NoDataFound message="No data found!" />
+        <div className="bg-card rounded-xl border p-8 shadow-sm">
+          <NoDataFound message="No data found yet — submit assignments to climb the board." />
+        </div>
       ) : (
-        <table>
-          <thead className="bg-slate-600 text-white">
-            <tr>
-              <th className="py-2 pl-12 text-start text-sm uppercase">
-                <div className="flex items-center gap-2">Rank</div>
-              </th>
-              <th className="text-start text-sm uppercase">
-                <div className="flex items-center gap-2">Name</div>
-              </th>
-              <th className="text-start text-sm uppercase">
-                <div className="flex items-center gap-2">Points</div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboardData.map((data, index) => {
-              if (data.totalPoints === 0) return null;
-              return (
-                <tr
-                  className={`border-b-2 bg-gradient-to-r p-2 px-4 hover:text-white ${
-                    currentUser.username === data.username
-                      ? "from-yellow-500/65 via-yellow-600/80 to-yellow-700"
-                      : "hover:from-blue-600 hover:to-sky-500"
-                  }`}
-                  key={data.userId}
+        <>
+          {/* Top-3 podium — 2 / 1 / 3, aligned flush at the bottom */}
+          {top3.length > 0 && (
+            <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-3 sm:gap-4">
+              {[top3[1], top3[0], top3[2]].map((entry, displayIdx) => {
+                if (!entry) return null;
+                const realRank =
+                  displayIdx === 0 ? 2 : displayIdx === 1 ? 1 : 3;
+                return (
+                  <PodiumCard
+                    key={entry.userId}
+                    entry={entry}
+                    rank={realRank}
+                    isMe={entry.username === currentUser.username}
+                  />
+                );
+              })}
+            </div>
+          )}
+
+          {/* Remaining list */}
+          {rest.length > 0 && (
+            <ul className="bg-card divide-border divide-y overflow-hidden rounded-xl border shadow-sm">
+              {rest.map((entry) => (
+                <li
+                  key={entry.userId}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3",
+                    entry.username === currentUser.username &&
+                      "bg-amber-500/5",
+                  )}
                 >
-                  <td className="pl-12">{index + 1}</td>
-                  <td className="flex items-center space-x-3 md:gap-4">
-                    <Image
-                      src={data.image || "/placeholder.jpg"}
-                      alt={`User ${index + 1}`}
-                      width={35}
-                      height={35}
-                      className="h-10 w-10 rounded-full"
-                    />
-                    <div className="py-2">
-                      <h1 className="text-md font-medium">{data.name}</h1>
-                      <h1 className="text-xs">@{data.username}</h1>
-                    </div>
-                  </td>
-                  <td>
-                    <h1 className="text-xs font-medium md:text-sm">
-                      {data.totalPoints} points
-                    </h1>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  <div className="text-muted-foreground w-7 shrink-0 text-center text-sm font-semibold tabular-nums">
+                    {entry.rank}
+                  </div>
+                  <Image
+                    src={entry.image || "/placeholder.jpg"}
+                    alt={entry.name}
+                    width={36}
+                    height={36}
+                    className="bg-muted h-9 w-9 shrink-0 rounded-full object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-foreground truncate text-sm font-medium">
+                      {entry.name}
+                    </p>
+                    <p className="text-muted-foreground truncate text-[11px]">
+                      @{entry.username}
+                    </p>
+                  </div>
+                  <div className="text-foreground shrink-0 text-sm font-semibold tabular-nums">
+                    {entry.totalPoints}{" "}
+                    <span className="text-muted-foreground text-[11px] font-normal">
+                      pts
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
+    </div>
+  );
+}
+
+function PodiumCard({
+  entry,
+  rank,
+  isMe,
+}: {
+  entry: LeaderboardData;
+  rank: number;
+  isMe: boolean;
+}) {
+  const tones: Record<number, { gradient: string; ring: string }> = {
+    1: { gradient: "from-amber-500/20", ring: "ring-amber-500" },
+    2: { gradient: "from-zinc-400/15", ring: "ring-zinc-400" },
+    3: { gradient: "from-orange-700/15", ring: "ring-orange-700" },
+  };
+  const medal: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
+  const topPad: Record<number, string> = {
+    1: "sm:pt-10",
+    2: "sm:pt-6",
+    3: "sm:pt-4",
+  };
+  const t = tones[rank]!;
+  return (
+    <div
+      className={cn(
+        "bg-card relative flex w-full min-w-0 flex-col items-center gap-2 overflow-hidden rounded-2xl border p-5 pb-6 text-center shadow-sm",
+        "bg-gradient-to-b to-transparent",
+        t.gradient,
+        topPad[rank],
+        rank === 1 && "border-amber-500/30 shadow-md",
+        isMe && "ring-primary/60 ring-2",
+      )}
+    >
+      <span className="absolute top-3 right-3 text-2xl">{medal[rank]}</span>
+      <Image
+        src={entry.image || "/placeholder.jpg"}
+        alt={entry.name}
+        width={64}
+        height={64}
+        className={cn(
+          "bg-muted rounded-full object-cover ring-2 ring-offset-2",
+          rank === 1 ? "h-16 w-16" : "h-14 w-14",
+          t.ring,
+        )}
+      />
+      <p
+        className={cn(
+          "text-foreground line-clamp-1 w-full px-1 font-semibold",
+          rank === 1 ? "text-base" : "text-sm",
+        )}
+        title={entry.name}
+      >
+        {entry.name}
+      </p>
+      <p className="text-muted-foreground -mt-1 line-clamp-1 w-full px-1 text-[11px]">
+        @{entry.username}
+      </p>
+      <p
+        className={cn(
+          "text-foreground mt-1 font-bold tabular-nums",
+          rank === 1 ? "text-2xl" : "text-lg",
+        )}
+      >
+        {entry.totalPoints}{" "}
+        <span className="text-muted-foreground text-xs font-normal">pts</span>
+      </p>
     </div>
   );
 }

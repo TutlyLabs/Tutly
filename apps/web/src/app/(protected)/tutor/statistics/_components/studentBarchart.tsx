@@ -10,15 +10,13 @@ import {
 } from "@tutly/ui/chart";
 import { InboxIcon } from "lucide-react";
 
-const chartData = [
-  { browser: "evaluated", submissions: 275, fill: "var(--color-evaluated)" },
-  { browser: "unreviewed", submissions: 200, fill: "var(--color-unreviewed)" },
-  {
-    browser: "unsubmitted",
-    submissions: 187,
-    fill: "var(--color-unsubmitted)",
-  },
-];
+const BROWSERS = ["evaluated", "unreviewed", "unsubmitted"] as const;
+const buildChartData = (data: number[]) =>
+  BROWSERS.map((browser, idx) => ({
+    browser,
+    submissions: data[idx] ?? 0,
+    fill: `var(--color-${browser})`,
+  }));
 
 const chartConfig = {
   submissions: {
@@ -63,7 +61,7 @@ export function StudentBarchart({ data }: any) {
     );
   }
 
-  chartData.forEach((d, ind) => (d.submissions = data[ind]));
+  const chartData = buildChartData(data as number[]);
   return (
     <Card className="h-[300px] w-full">
       <CardHeader>

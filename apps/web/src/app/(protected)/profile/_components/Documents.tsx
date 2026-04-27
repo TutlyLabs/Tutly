@@ -24,6 +24,8 @@ import { Input } from "@tutly/ui/input";
 import { useFileUpload } from "@/components/useFileUpload";
 import { api } from "@/trpc/react";
 
+import { SectionHeader } from "./SectionHeader";
+
 const formSchema = z.object({
   resume: z.string().optional(),
 });
@@ -92,17 +94,13 @@ export default function Documents({ documents, onUpdate }: DocumentsProps) {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between py-4">
-        <h2 className="text-2xl font-semibold">Documents</h2>
-        <Button
-          variant={isEditing ? "outline" : "default"}
-          onClick={() => setIsEditing(!isEditing)}
-          className="h-10"
-        >
-          {isEditing ? "Cancel" : "Edit"}
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <SectionHeader
+        title="Documents"
+        description="Resume and other supporting files."
+        isEditing={isEditing}
+        onToggle={() => setIsEditing(!isEditing)}
+      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">

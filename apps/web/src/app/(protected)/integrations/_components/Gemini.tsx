@@ -158,7 +158,7 @@ export const GeminiIntegration = ({
         </AccordionTrigger>
         <AccordionContent className="p-4 pt-0">
           <div className="flex flex-col gap-2">
-            <div className="mb-4 rounded border-l-4 border-blue-500 bg-blue-100 p-4 text-blue-700">
+            <div className="border-primary bg-primary/10 text-foreground mb-4 rounded-md border-l-4 p-4">
               <strong className="mb-2 block">
                 How to set up Gemini API Integration:
               </strong>
@@ -169,7 +169,7 @@ export const GeminiIntegration = ({
                     href="https://aistudio.google.com/app/apikey"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-700 underline"
+                    className="text-primary hover:text-primary/80 underline underline-offset-2"
                   >
                     Google AI Studio
                   </Link>{" "}

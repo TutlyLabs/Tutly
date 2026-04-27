@@ -12,12 +12,10 @@ export default function SessionsPage() {
   }
   const { sessions, accounts, currentSessionId } = q.data.data;
   return (
-    <div className="mx-auto w-full max-w-[600px] p-6">
-      <Sessions
-        sessions={sessions}
-        accounts={accounts}
-        currentSessionId={currentSessionId}
-      />
-    </div>
+    <Sessions
+      sessions={sessions}
+      accounts={accounts}
+      currentSessionId={currentSessionId}
+    />
   );
 }

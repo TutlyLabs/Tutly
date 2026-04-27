@@ -96,7 +96,7 @@ export const NotesComponent = ({ notes }: { notes: Notes[] }) => {
   };
 
   return (
-    <div className="w-full space-y-4 p-2 sm:p-4">
+    <div className="mx-auto w-full max-w-7xl space-y-4">
       <div className="flex flex-col gap-3">
         <Input
           placeholder="Search notes..."
@@ -122,24 +122,24 @@ export const NotesComponent = ({ notes }: { notes: Notes[] }) => {
         </div>
       </div>
 
-      <Tabs defaultValue="ALL" className="w-full">
-        <div className="overflow-x-auto pb-2">
-          <TabsList className="flex min-w-max">
+      <Tabs defaultValue="ALL" className="w-full space-y-3">
+        <div className="-mx-3 overflow-x-auto pb-2 sm:mx-0">
+          <TabsList className="bg-muted/40 mx-3 inline-flex h-9 w-max items-center gap-1 rounded-lg p-1 sm:mx-0">
             {categories.map((category) => (
               <TabsTrigger
                 key={category}
                 value={category}
-                className="flex-1 px-2 py-1 text-xs whitespace-nowrap sm:px-3 sm:py-1.5 sm:text-sm"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground h-7 rounded-md px-3 text-xs font-medium whitespace-nowrap data-[state=active]:shadow-sm"
               >
-                {category}
+                {category.charAt(0) + category.slice(1).toLowerCase()}
               </TabsTrigger>
             ))}
           </TabsList>
         </div>
 
         {categories.map((category) => (
-          <TabsContent key={category} value={category}>
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <TabsContent key={category} value={category} className="m-0">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filteredNotes
                 .filter(
                   (note) => category === "ALL" || note.category === category,
@@ -153,50 +153,52 @@ export const NotesComponent = ({ notes }: { notes: Notes[] }) => {
                   const Icon = details.icon;
 
                   return (
-                    <Card key={note.id}>
-                      <CardHeader className="flex flex-row items-center gap-2 py-2 sm:gap-4 sm:py-3">
+                    <Card
+                      key={note.id}
+                      className="bg-card flex flex-col gap-2 rounded-xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      <div className="flex items-center gap-3">
                         <div
-                          className={`bg-muted rounded-full p-1.5 ${details.style}`}
+                          className={`bg-muted/60 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${details.style}`}
                         >
-                          <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <Icon className="h-4 w-4" />
                         </div>
-                        <div className="flex flex-1 flex-wrap items-center gap-1 sm:gap-2">
-                          <CardTitle className="text-xs sm:text-sm">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-foreground text-sm font-medium">
                             {details.label}
-                          </CardTitle>
-                          <CardDescription className="xs:inline hidden text-xs">
+                          </p>
+                          <p className="text-muted-foreground text-[11px]">
                             {formatDistanceToNow(note.createdAt, {
                               addSuffix: true,
                             })}
-                          </CardDescription>
-                          <Link
-                            href={details.href}
-                            className="text-muted-foreground hover:text-primary ml-auto text-xs transition-colors"
-                          >
-                            View
-                          </Link>
+                          </p>
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2 py-2">
-                        <div className="prose dark:prose-invert max-w-none">
-                          <ContentPreview
-                            content={note.description || ""}
-                            jsonContent={note.descriptionJson}
-                            className="text-xs sm:text-sm"
-                          />
-                        </div>
-
-                        <div className="flex flex-wrap gap-1">
+                        <Link
+                          href={details.href}
+                          className="text-muted-foreground hover:text-primary text-xs font-medium transition-colors"
+                        >
+                          View
+                        </Link>
+                      </div>
+                      <div className="prose prose-sm dark:prose-invert text-foreground/90 max-w-none">
+                        <ContentPreview
+                          content={note.description || ""}
+                          jsonContent={note.descriptionJson}
+                          className="text-xs sm:text-sm"
+                        />
+                      </div>
+                      {note.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
                           {note.tags.map((tag) => (
                             <span
                               key={tag}
-                              className="bg-secondary text-secondary-foreground rounded-full px-1.5 py-0.5 text-xs sm:px-2"
+                              className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-medium"
                             >
                               {tag}
                             </span>
                           ))}
                         </div>
-                      </CardContent>
+                      )}
                     </Card>
                   );
                 })}

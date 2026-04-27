@@ -26,6 +26,8 @@ import {
 import { Input } from "@tutly/ui/input";
 import { api } from "@/trpc/react";
 
+import { SectionHeader } from "./SectionHeader";
+
 const formSchema = z.object({
   github: z
     .string()
@@ -138,15 +140,12 @@ export default function ProfessionalProfiles({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Professional Profiles</h2>
-        <Button
-          variant={isEditing ? "outline" : "default"}
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? "Cancel" : "Edit"}
-        </Button>
-      </div>
+      <SectionHeader
+        title="Professional Profiles"
+        description="Your handles on coding platforms."
+        isEditing={isEditing}
+        onToggle={() => setIsEditing(!isEditing)}
+      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

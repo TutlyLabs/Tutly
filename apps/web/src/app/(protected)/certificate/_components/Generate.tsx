@@ -37,11 +37,12 @@ export default function Generate({ user }: GenerateProps) {
         </div>
       )}
       <button
+        type="button"
         onClick={() => void downloadCertificate()}
-        className="mb-4 rounded bg-blue-600 px-4 py-2 font-semibold text-white shadow hover:bg-blue-700"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 mb-4 inline-flex h-9 cursor-pointer items-center rounded-md px-4 text-sm font-medium shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         disabled={isLoading}
       >
-        {isLoading ? "Downloading..." : "Download Certificate"}
+        {isLoading ? "Downloading…" : "Download Certificate"}
       </button>
       <div
         id="certificate"

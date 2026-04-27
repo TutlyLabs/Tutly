@@ -63,14 +63,16 @@ export function MonthCalendar({
 
   return (
     <div className={`${compact ? "text-xs" : "text-sm"}`}>
-      <h2 className={`${compact ? "text-sm" : "text-xl"} mb-5 font-semibold`}>
+      <h2
+        className={`${compact ? "text-sm" : "text-xl"} text-foreground mb-3 font-semibold`}
+      >
         {format(month, "MMMM yyyy")}
       </h2>
       <div className="grid grid-cols-7 gap-px">
         {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((dayName) => (
           <div
             key={dayName}
-            className={`${compact ? "h-8" : "h-10"} text-muted-foreground text-center font-medium`}
+            className={`${compact ? "h-7" : "h-9"} text-muted-foreground flex items-center justify-center text-center text-[11px] font-medium uppercase tracking-wide`}
           >
             {dayName}
           </div>
@@ -84,24 +86,23 @@ export function MonthCalendar({
             return (
               <div
                 key={`${weekIndex}-${dayIndex}`}
-                className={`${compact ? "h-8" : "h-10"} ${
-                  isCurrentMonth ? "bg-background" : "bg-muted/50"
-                } ${
-                  isToday ? "rounded-full bg-green-600 text-white" : ""
-                } relative m-0.5 flex flex-col items-center justify-center`}
+                className={`${compact ? "h-7 w-7" : "h-9 w-9"} relative mx-auto my-0.5 flex flex-col items-center justify-center rounded-full ${
+                  isToday
+                    ? "bg-primary text-primary-foreground font-semibold"
+                    : isCurrentMonth
+                      ? "text-foreground"
+                      : "text-muted-foreground/50"
+                }`}
               >
                 <span>{getDate(day)}</span>
                 {dayEvents.length > 0 && (
-                  <div className="absolute right-0 bottom-0 left-0 flex justify-center">
-                    {dayEvents.map((event, index) => (
-                      <div
-                        key={index}
-                        className="mt-1 h-1 w-4 cursor-pointer rounded-full bg-red-500"
-                        title={event.name}
-                        onClick={() => onEventClick(event)}
-                      ></div>
-                    ))}
-                  </div>
+                  <span
+                    className={`absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${
+                      isToday ? "bg-primary-foreground" : "bg-primary"
+                    }`}
+                    title={dayEvents.map((e) => e.name).join(", ")}
+                    onClick={() => onEventClick(dayEvents[0]!)}
+                  />
                 )}
               </div>
             );

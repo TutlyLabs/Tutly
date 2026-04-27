@@ -17,20 +17,18 @@ export default function GetByAssignmentPage() {
   }
   const { courses, sortedAssignments } = q.data.data;
   return (
-    <div className="flex flex-col gap-4 py-2 md:mx-14 md:px-8">
-      <div>
-        <h1 className="m-2 rounded-lg bg-gradient-to-r from-blue-600 to-sky-500 py-2 text-center text-xl font-semibold">
-          ASSIGNMENTS
-        </h1>
-        {courses && courses.length > 0 ? (
-          <SingleAssignmentBoard
-            courses={courses}
-            assignments={sortedAssignments}
-          />
-        ) : (
-          <NoDataFound message="No Course found!" />
-        )}
-      </div>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+        Assignments
+      </h1>
+      {courses && courses.length > 0 ? (
+        <SingleAssignmentBoard
+          courses={courses}
+          assignments={sortedAssignments}
+        />
+      ) : (
+        <NoDataFound message="No Course found!" />
+      )}
     </div>
   );
 }

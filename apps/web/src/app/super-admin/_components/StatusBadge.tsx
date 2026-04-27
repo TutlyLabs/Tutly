@@ -17,8 +17,8 @@ const statusMap: Record<string, { bg: string; text: string; label: string }> = {
     label: "Suspended",
   },
   ARCHIVED: {
-    bg: "bg-gray-100 dark:bg-gray-800",
-    text: "text-gray-600 dark:text-gray-400",
+    bg: "bg-muted",
+    text: "text-muted-foreground",
     label: "Archived",
   },
   PENDING_VERIFICATION: {
@@ -32,8 +32,8 @@ const statusMap: Record<string, { bg: string; text: string; label: string }> = {
     label: "Failed",
   },
   REMOVED: {
-    bg: "bg-gray-100 dark:bg-gray-800",
-    text: "text-gray-600 dark:text-gray-400",
+    bg: "bg-muted",
+    text: "text-muted-foreground",
     label: "Removed",
   },
 };

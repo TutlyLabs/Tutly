@@ -71,14 +71,17 @@ export default function StudentCertificate({
       course.totalAssignments <= 0
     ) {
       return (
-        <div className="mx-auto max-w-3xl rounded-lg bg-yellow-100 p-4 text-center">
-          <p className="text-lg font-semibold text-yellow-700">
-            Complete all {course.courseTitle} assignments to unlock your{" "}
-            {course.courseTitle} certificate!
+        <div className="bg-amber-500/10 border-amber-500/30 mx-auto max-w-3xl rounded-xl border p-5 text-center">
+          <p className="text-foreground text-base font-semibold">
+            Almost there 🎯
           </p>
-          <p className="mt-2 text-sm text-yellow-600">
-            Assignments completed: {course.assignmentsSubmitted} /{" "}
-            {course.totalAssignments}
+          <p className="text-muted-foreground mt-1 text-sm">
+            Complete all assignments to unlock the {course.courseTitle}{" "}
+            certificate.
+          </p>
+          <p className="text-foreground mt-3 text-xs font-medium tabular-nums">
+            {course.assignmentsSubmitted} / {course.totalAssignments}{" "}
+            assignments completed
           </p>
         </div>
       );
@@ -131,7 +134,16 @@ export default function StudentCertificate({
   };
 
   return (
-    <div className="mx-auto">
+    <div className="mx-auto w-full max-w-7xl space-y-4">
+      <div>
+        <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+          Certificates
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Download your completion certificates.
+        </p>
+      </div>
+
       <AlertDialog open={isLoading}>
         <AlertDialogContent className="flex items-center justify-center">
           <AlertDialogDescription className="text-center">
@@ -140,27 +152,41 @@ export default function StudentCertificate({
           </AlertDialogDescription>
         </AlertDialogContent>
       </AlertDialog>
-      <Tabs value={activeCourse} onValueChange={setActiveCourse}>
+
+      <Tabs value={activeCourse} onValueChange={setActiveCourse} className="space-y-3">
+        <ScrollArea className="-mx-3 sm:mx-0">
+          <TabsList className="bg-muted/40 mx-3 inline-flex h-9 w-max items-center gap-1 rounded-lg p-1 sm:mx-0">
+            {data.courses.map((course: Course) => (
+              <TabsTrigger
+                key={course.courseId}
+                value={course.courseId}
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground h-7 rounded-md px-3 text-xs font-medium whitespace-nowrap data-[state=active]:shadow-sm"
+              >
+                {course.courseTitle}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <ScrollBar orientation="horizontal" className="hidden" />
+        </ScrollArea>
+
         {data.courses.map((course: Course) => (
-          <TabsContent key={course.courseId} value={course.courseId}>
-            <div className="mb-6 flex items-center justify-between">
-              <TabsList className="">
-                {data.courses.map((course: Course) => (
-                  <TabsTrigger key={course.courseId} value={course.courseId}>
-                    {course.courseTitle}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {course.assignmentsSubmitted === course.totalAssignments && (
+          <TabsContent
+            key={course.courseId}
+            value={course.courseId}
+            className="m-0 space-y-3"
+          >
+            {course.assignmentsSubmitted === course.totalAssignments && (
+              <div className="flex justify-end">
                 <Button
                   onClick={() => void downloadCertificate(course.courseTitle)}
-                  className="flex items-center gap-2"
+                  className="gap-2"
+                  size="sm"
                 >
-                  <IoMdDownload className="h-5 w-5" />
+                  <IoMdDownload className="h-4 w-4" />
                   Download Certificate
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
             <div>{renderCertificate(course)}</div>
           </TabsContent>
         ))}

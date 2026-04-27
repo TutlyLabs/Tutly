@@ -31,11 +31,13 @@ function ClassSidebar({
   title,
   currentUser,
   isCourseAdmin = false,
+  mobileFull = false,
 }: {
   courseId: string;
   title: string;
   currentUser: SessionUser;
   isCourseAdmin: boolean;
+  mobileFull?: boolean;
 }) {
   const [openFolders, setOpenFolders] = useState<string[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -118,22 +120,37 @@ function ClassSidebar({
   };
 
   return (
-    <div className="relative z-10">
+    <div
+      className={cn(
+        "relative z-10 h-full",
+        mobileFull && "w-full",
+      )}
+    >
       <div
         className={cn(
           "transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-0" : "w-[200px]",
-          "bg-background flex h-full flex-col border-r shadow-sm",
+          mobileFull
+            ? "w-full"
+            : isCollapsed
+              ? "w-0"
+              : "w-[220px]",
+          mobileFull
+            ? "bg-background flex h-full flex-col"
+            : "bg-background flex h-full flex-col border-r shadow-sm",
         )}
       >
-        <div className={cn("border-b px-3 py-2", isCollapsed && "hidden")}>
-          <Link
-            href={`/courses/detail?id=${courseId}`}
-            className="hover:opacity-80"
-          >
-            <h1 className="text-sm font-semibold">{title}</h1>
-          </Link>
-        </div>
+        {!mobileFull && (
+          <div className={cn("border-b px-3 py-2", isCollapsed && "hidden")}>
+            <Link
+              href={`/courses/detail?id=${courseId}`}
+              className="hover:opacity-80"
+            >
+              <h1 className="text-foreground text-sm font-semibold">
+                {title}
+              </h1>
+            </Link>
+          </div>
+        )}
         {(currentUser?.role === "INSTRUCTOR" || isCourseAdmin) && (
           <TooltipProvider>
             <div className="flex justify-around border-b py-2">
@@ -197,7 +214,10 @@ function ClassSidebar({
         )}
 
         <ScrollArea
-          className={cn("max-h-[80vh] flex-1 px-1", isCollapsed && "hidden")}
+          className={cn(
+            "min-h-0 flex-1 px-1",
+            isCollapsed && "hidden",
+          )}
         >
           <div className="space-y-1 p-2">
             {Object.entries(folderClasses).map(([folderId, classItems]) => {
@@ -245,16 +265,18 @@ function ClassSidebar({
           </div>
         </ScrollArea>
 
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn(
-            "absolute top-[350px] -right-4 h-8 w-8 rounded-full shadow-md transition-all duration-300",
-          )}
-        >
-          {isCollapsed ? <IoIosArrowForward /> : <IoIosArrowBack />}
-        </Button>
+        {!mobileFull && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className={cn(
+              "absolute top-[350px] -right-4 h-8 w-8 rounded-full shadow-md transition-all duration-300",
+            )}
+          >
+            {isCollapsed ? <IoIosArrowForward /> : <IoIosArrowBack />}
+          </Button>
+        )}
       </div>
     </div>
   );

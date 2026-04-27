@@ -180,7 +180,7 @@ export default function ImageComponent({
     <Suspense
       fallback={
         <div
-          className="image-container group relative inline-block animate-pulse rounded-md bg-gray-200 dark:bg-gray-700"
+          className="image-container group bg-muted relative inline-block animate-pulse rounded-md"
           style={{
             width: typeof currentWidth === "number" ? currentWidth : 500,
             height: typeof currentHeight === "number" ? currentHeight : 300,

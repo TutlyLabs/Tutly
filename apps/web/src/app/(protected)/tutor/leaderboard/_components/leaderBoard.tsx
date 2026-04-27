@@ -11,9 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@tutly/ui/select";
+import { ScrollArea, ScrollBar } from "@tutly/ui/scroll-area";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import NoDataFound from "@/components/NoDataFound";
+import { cn } from "@tutly/utils";
 
 interface Submission {
   id: string;
@@ -157,34 +159,47 @@ const LeaderBoard = ({
     setLeaderboardData(leaderboardArray);
   }, [selectedCourse, submissions, activeMentor, currentUser.role]);
 
+  const visibleCourses = courses
+    ?.filter((c) => c.isPublished)
+    .sort((a, b) => a.title.localeCompare(b.title));
+
   return (
-    <div className="mx-2 mt-6 mb-10 flex flex-col gap-4 md:mx-14">
-      <div className="flex flex-col text-center">
-        <FaCrown className="m-auto h-20 w-20 text-blue-500 dark:text-yellow-400" />
-        <h1 className="text-2xl font-semibold text-blue-500 dark:text-yellow-400">
-          Leaderboard
-        </h1>
+    <div className="mx-auto w-full max-w-7xl space-y-4">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+            Leaderboard
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Top scorers in your courses.
+          </p>
+        </div>
+        <FaCrown className="hidden h-7 w-7 text-amber-500 sm:block" />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap gap-3">
-          {courses
-            ?.sort((a, b) => a.title.localeCompare(b.title))
-            .map((course) => (
-              <button
-                hidden={!course.isPublished}
-                onClick={() => handleCourseChange(course.id)}
-                className={`w-20 rounded p-1 px-2 sm:w-auto ${
-                  selectedCourse === course.id && "rounded border"
-                }`}
-                key={course.id}
-              >
-                <h1 className="max-w-xs truncate text-sm font-medium">
-                  {course.title}
-                </h1>
-              </button>
-            ))}
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <ScrollArea className="-mx-3 sm:mx-0">
+          <div className="flex items-center gap-2 px-3 pb-2 sm:px-0">
+            {visibleCourses?.map((course) => {
+              const active = selectedCourse === course.id;
+              return (
+                <button
+                  key={course.id}
+                  onClick={() => handleCourseChange(course.id)}
+                  className={cn(
+                    "inline-flex h-8 shrink-0 cursor-pointer items-center rounded-full border px-3 text-xs font-medium whitespace-nowrap transition-colors",
+                    active
+                      ? "bg-primary text-primary-foreground border-transparent"
+                      : "bg-card text-foreground/70 hover:bg-accent hover:text-foreground",
+                  )}
+                >
+                  <span className="max-w-[140px] truncate">{course.title}</span>
+                </button>
+              );
+            })}
+          </div>
+          <ScrollBar orientation="horizontal" className="hidden" />
+        </ScrollArea>
 
         {currentUser.role === "INSTRUCTOR" && (
           <Select
@@ -193,11 +208,11 @@ const LeaderBoard = ({
               setActiveMentor(value === "all" ? null : value)
             }
           >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Mentor" />
+            <SelectTrigger className="h-9 w-full sm:w-[200px]">
+              <SelectValue placeholder="All mentors" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Mentors</SelectItem>
+              <SelectItem value="all">All mentors</SelectItem>
               {mentors
                 ?.filter((mentor) => mentor.courseId == selectedCourse)
                 .map((mentor) => (
@@ -211,58 +226,48 @@ const LeaderBoard = ({
       </div>
 
       {leaderboardData.length === 0 ? (
-        <NoDataFound message="No data found!" />
+        <div className="bg-card rounded-xl border p-8 shadow-sm">
+          <NoDataFound message="No data yet — submissions will populate the board." />
+        </div>
       ) : (
-        <table>
-          <thead className="bg-slate-600 text-white">
-            <tr>
-              <th className="py-2 pl-12 text-start text-sm uppercase">
-                <div className="flex items-center gap-2">Rank</div>
-              </th>
-              <th className="text-start text-sm uppercase">
-                <div className="flex items-center gap-2">Name</div>
-              </th>
-              <th className="text-start text-sm uppercase">
-                <div className="flex items-center gap-2">Points</div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboardData.map((data, index) => {
-              if (data.totalPoints === 0) return null;
-              return (
-                <tr
-                  className={`border-b-2 bg-gradient-to-r p-2 px-4 hover:text-white ${
-                    currentUser.username === data.username
-                      ? "from-yellow-500/65 via-yellow-600/80 to-yellow-700"
-                      : "hover:from-blue-600 hover:to-sky-500"
-                  }`}
-                  key={data.userId}
-                >
-                  <td className="pl-12">{index + 1}</td>
-                  <td className="flex items-center md:gap-4">
-                    <Image
-                      src={data.image || "/placeholder.jpg"}
-                      alt={`User ${index + 1}`}
-                      width={35}
-                      height={35}
-                      className="h-10 w-10 rounded-full"
-                    />
-                    <div className="py-2">
-                      <h1 className="text-md font-medium">{data.name}</h1>
-                      <h1 className="text-xs">@{data.username}</h1>
-                    </div>
-                  </td>
-                  <td>
-                    <h1 className="text-xs font-medium md:text-sm">
-                      {data.totalPoints} points
-                    </h1>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <ul className="bg-card divide-border divide-y overflow-hidden rounded-xl border shadow-sm">
+          {leaderboardData
+            .filter((d) => d.totalPoints > 0)
+            .map((data, index) => (
+              <li
+                key={data.userId}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3",
+                  currentUser.username === data.username && "bg-amber-500/5",
+                )}
+              >
+                <div className="text-muted-foreground w-7 shrink-0 text-center text-sm font-semibold tabular-nums">
+                  {index + 1}
+                </div>
+                <Image
+                  src={data.image || "/placeholder.jpg"}
+                  alt={data.name}
+                  width={36}
+                  height={36}
+                  className="bg-muted h-9 w-9 shrink-0 rounded-full object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-foreground truncate text-sm font-medium">
+                    {data.name}
+                  </p>
+                  <p className="text-muted-foreground truncate text-[11px]">
+                    @{data.username}
+                  </p>
+                </div>
+                <div className="text-foreground shrink-0 text-sm font-semibold tabular-nums">
+                  {data.totalPoints}{" "}
+                  <span className="text-muted-foreground text-[11px] font-normal">
+                    pts
+                  </span>
+                </div>
+              </li>
+            ))}
+        </ul>
       )}
     </div>
   );

@@ -117,30 +117,24 @@ const SingleAssignmentBoard = ({
                         {assignment.class?.title}
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-white md:gap-6">
-                      <div>
-                        <div className="rounded-full bg-green-600 p-2.5">
-                          {assignmentsEvaluated.length} evaluated
-                        </div>
-                      </div>
-                      <div>
-                        <div className="rounded-full bg-yellow-600 p-2.5">
-                          {assignment.submissions.length -
-                            assignmentsEvaluated.length}{" "}
-                          under review
-                        </div>
-                      </div>
-                      <div className="itens-center flex gap-6">
-                        <div className="bg-secondary-600 rounded-full p-2.5">
-                          {assignment.submissions.length} submissions
-                        </div>
-                      </div>
+                    <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium md:gap-2">
+                      <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1 text-emerald-700 dark:text-emerald-400">
+                        {assignmentsEvaluated.length} evaluated
+                      </span>
+                      <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-amber-700 dark:text-amber-400">
+                        {assignment.submissions.length -
+                          assignmentsEvaluated.length}{" "}
+                        under review
+                      </span>
+                      <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2.5 py-1">
+                        {assignment.submissions.length} submissions
+                      </span>
                       <button
                         title="Details"
                         onClick={() =>
                           router.push(`/assignments/detail?id=${assignment.id}`)
                         }
-                        className="rounded bg-blue-500 p-2.5"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-7 cursor-pointer items-center rounded-full px-3 text-[11px] font-medium transition-colors"
                       >
                         View Details
                       </button>

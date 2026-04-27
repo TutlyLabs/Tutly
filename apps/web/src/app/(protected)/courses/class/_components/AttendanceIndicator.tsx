@@ -350,7 +350,7 @@ export default function AttendanceIndicator({
               <TooltipTrigger asChild>
                 <Badge
                   variant="outline"
-                  className="flex items-center gap-2 bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 dark:text-blue-400"
+                  className="bg-primary/10 text-primary border-primary/30 hover:bg-primary/15 flex items-center gap-2"
                 >
                   <FaUsers className="h-3 w-3" />
                   <span className="text-[10px] font-medium">
@@ -481,7 +481,7 @@ export default function AttendanceIndicator({
               </Select>
             </div>
 
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="bg-muted/40 inline-flex h-9 w-full items-center gap-1 overflow-x-auto rounded-lg p-1">
               <TabsTrigger value="all" className="text-xs">
                 All (
                 {filteredAllStudents.attendedStudents.length +

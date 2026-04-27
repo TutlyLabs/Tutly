@@ -19,7 +19,7 @@ import {
   FaTrashAlt,
   FaUpload,
 } from "react-icons/fa";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Menu } from "lucide-react";
 import { RiEdit2Fill } from "react-icons/ri";
 import { useDebounce } from "use-debounce";
 import { useRouter } from "next/navigation";
@@ -73,6 +73,7 @@ interface ClassProps {
     adminForCourses?: { id: string }[];
   };
   initialNotesData?: any;
+  onOpenClassMenu?: () => void;
 }
 
 export default function Class({
@@ -80,6 +81,7 @@ export default function Class({
   classId,
   currentUser,
   initialNotesData,
+  onOpenClassMenu,
 }: ClassProps) {
   const [selectedAttachment, setSelectedAttachment] =
     useState<Attachment | null>(null);
@@ -106,6 +108,8 @@ export default function Class({
   const router = useRouter();
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const tagInputRef = useRef<HTMLInputElement>(null);
   const [isClearNotesDialogOpen, setIsClearNotesDialogOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -352,21 +356,33 @@ export default function Class({
   const renderAttachmentLink = (attachment: Attachment) => {
     if (attachment.attachmentType === "ASSIGNMENT") {
       return (
-        <Link href={`/assignments/detail?id=${attachment.id}`}>
-          <ExternalLink className="m-auto h-4 w-4" />
+        <Link
+          href={`/assignments/detail?id=${attachment.id}`}
+          aria-label="Open assignment"
+          title="Open assignment"
+          className="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+        >
+          <ExternalLink className="h-4 w-4" />
         </Link>
       );
     }
 
     if (attachment.link) {
       return (
-        <Link href={attachment.link} className="text-sm">
-          <ExternalLink className="m-auto h-4 w-4" />
+        <Link
+          href={attachment.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open link"
+          title="Open link"
+          className="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+        >
+          <ExternalLink className="h-4 w-4" />
         </Link>
       );
     }
 
-    return "No link";
+    return null;
   };
 
   const handleDelete = async () => {
@@ -417,10 +433,12 @@ export default function Class({
   };
 
   const addTag = () => {
-    if (newTag && !tags.includes(newTag)) {
-      setTags([...tags, newTag]);
+    const trimmed = newTag.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed]);
       setNewTag("");
     }
+    setIsAddingTag(false);
   };
 
   const removeTag = (tagToRemove: string) => {
@@ -455,109 +473,139 @@ export default function Class({
   };
 
   return (
-    <div className="flex flex-col gap-2 md:mx-5">
-      <div className="flex flex-wrap gap-6">
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
         <div className="min-w-0 flex-1">
-          <div className="h-full w-full rounded-xl p-2">
+          <div className="h-full w-full">
             <div>
-              <div className="mb-2 flex w-full items-center justify-between">
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
-                  <div className="flex items-center gap-3">
-                    <p className="text-xl font-semibold">{title}</p>
-
-                    {!isLiveClass && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={openVideoInNewTab}
-                        className="flex cursor-pointer items-center gap-2 hover:bg-blue-500/10"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span className="text-xs">Open Video</span>
-                      </Button>
-                    )}
-
-                    {haveAdminAccess &&
-                      attendanceData?.data?.attendance?.length === 0 && (
-                        <>
-                          <Badge
-                            variant="outline"
-                            className="flex items-center gap-1.5 bg-gray-500/10 text-gray-700 hover:bg-gray-500/20 dark:text-gray-400"
-                          >
-                            <FaClock className="h-3 w-3" />
-                            <span className="text-xs font-medium">
-                              Not Marked Yet
-                            </span>
-                          </Badge>
-                          <Link
-                            href={`/tutor/attendance?courseId=${courseId}&classId=${classId}`}
-                            target="_blank"
-                          >
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex cursor-pointer items-center gap-2 hover:bg-blue-500/10"
-                            >
-                              <FaUpload className="h-3.5 w-3.5" />
-                              <span className="text-xs">Upload Attendance</span>
-                            </Button>
-                          </Link>
-                        </>
-                      )}
-
-                    {haveAdminAccess && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setIsEditClassDialogOpen(true)}
-                          className="hover:bg-secondary/80"
-                        >
-                          <RiEdit2Fill className="h-5 w-5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={async () => {
-                            const result = await fetchClassDeletionInfo();
-                            if (result.data?.success) {
-                              setClassDeletionInfo(result.data.data);
-                            }
-                            setIsDeleteClassDialogOpen(true);
-                          }}
-                          className="text-destructive hover:bg-destructive/10"
-                        >
-                          <FaTrash className="h-5 w-5" />
-                        </Button>
-                      </>
-                    )}
+              {/* Title + meta — single row, compact */}
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  {onOpenClassMenu && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={toggleBookMark}
-                      className="hover:bg-secondary/80"
+                      onClick={onOpenClassMenu}
+                      className="hover:bg-accent -ml-1 h-8 w-8 shrink-0"
+                      aria-label="Open class list"
+                      title="Classes"
                     >
-                      {isBookmarked ? (
-                        <FaBookmark className="h-5 w-5 text-yellow-500" />
-                      ) : (
-                        <FaRegBookmark className="h-5 w-5" />
-                      )}
+                      <Menu className="h-4 w-4" />
                     </Button>
-
-                    {currentUser.role === "STUDENT" && (
-                      <StudentAttendanceIndicator
-                        courseId={courseId}
-                        attendance={studentAttendanceData?.data || undefined}
-                        attendanceUploaded={
-                          studentAttendanceData?.attendanceUploaded || false
-                        }
-                      />
-                    )}
-                  </div>
+                  )}
+                  <h1 className="text-foreground min-w-0 truncate text-lg font-semibold sm:text-xl">
+                    {title}
+                  </h1>
+                  <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
+                    <span className="hidden sm:inline">
+                      · {dayjs(createdAt).format("MMM D, YYYY")}
+                    </span>
+                    <span className="sm:hidden">
+                      · {dayjs(createdAt).format("MMM D")}
+                    </span>
+                  </span>
                 </div>
-                <p className="text-sm font-medium whitespace-nowrap">
-                  {dayjs(createdAt).format("MMM D, YYYY")}
-                </p>
+
+                <div className="flex shrink-0 items-center gap-1">
+                  {currentUser.role === "STUDENT" && (
+                    <StudentAttendanceIndicator
+                      courseId={courseId}
+                      attendance={studentAttendanceData?.data || undefined}
+                      attendanceUploaded={
+                        studentAttendanceData?.attendanceUploaded || false
+                      }
+                    />
+                  )}
+
+                  {haveAdminAccess &&
+                    attendanceData?.data?.attendance?.length === 0 && (
+                      <Badge
+                        variant="outline"
+                        className="bg-muted/40 h-7 gap-1 text-[11px]"
+                      >
+                        <FaClock className="h-3 w-3" />
+                        Not marked
+                      </Badge>
+                    )}
+
+                  {!isLiveClass && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={openVideoInNewTab}
+                      className="hover:bg-accent h-8 w-8"
+                      aria-label="Open video"
+                      title="Open video"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  )}
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleBookMark}
+                    className="hover:bg-accent h-8 w-8"
+                    aria-label={
+                      isBookmarked ? "Remove bookmark" : "Add bookmark"
+                    }
+                    title={isBookmarked ? "Bookmarked" : "Bookmark"}
+                  >
+                    {isBookmarked ? (
+                      <FaBookmark className="h-4 w-4 text-yellow-500" />
+                    ) : (
+                      <FaRegBookmark className="h-4 w-4" />
+                    )}
+                  </Button>
+
+                  {haveAdminAccess &&
+                    attendanceData?.data?.attendance?.length === 0 && (
+                      <Link
+                        href={`/tutor/attendance?courseId=${courseId}&classId=${classId}`}
+                        target="_blank"
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="hover:bg-accent h-8 w-8"
+                          aria-label="Upload attendance"
+                          title="Upload attendance"
+                        >
+                          <FaUpload className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+
+                  {haveAdminAccess && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsEditClassDialogOpen(true)}
+                        className="hover:bg-accent h-8 w-8"
+                        aria-label="Edit class"
+                        title="Edit class"
+                      >
+                        <RiEdit2Fill className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={async () => {
+                          const result = await fetchClassDeletionInfo();
+                          if (result.data?.success) {
+                            setClassDeletionInfo(result.data.data);
+                          }
+                          setIsDeleteClassDialogOpen(true);
+                        }}
+                        className="text-destructive hover:bg-destructive/10 h-8 w-8"
+                        aria-label="Delete class"
+                      >
+                        <FaTrash className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
               {currentUser.role !== "STUDENT" && (
                 <div className="mb-2 max-w-[710px] overflow-x-auto">
@@ -576,7 +624,7 @@ export default function Class({
                   />
                 </div>
               )}
-              <div className="text-secondary-100 aspect-video w-full flex-1 rounded-xl bg-gray-500/10 object-cover">
+              <div className="bg-muted/40 aspect-video w-full flex-1 overflow-hidden rounded-xl object-cover">
                 {isLiveClass ? (
                   <LiveClassBanner
                     title={title}
@@ -596,10 +644,10 @@ export default function Class({
           </div>
         </div>
 
-        <div className="w-full pb-4 md:m-0 md:w-96">
-          <div className="h-full w-full rounded-xl p-2">
+        <div className="w-full md:m-0 md:w-96">
+          <div className="h-full w-full">
             {haveAdminAccess && (
-              <div className="mb-4 flex w-full justify-end">
+              <div className="mb-3 flex w-full justify-end">
                 <Dialog
                   open={isAddAssignmentDialogOpen}
                   onOpenChange={setIsAddAssignmentDialogOpen}
@@ -635,142 +683,172 @@ export default function Class({
               </div>
             )}
 
-            <table className="w-full border-collapse">
-              <thead className="border-secondary-400 mb-4 border-b-2 font-semibold">
-                <tr>
-                  <th className="px-4 py-2">Title</th>
-                  <th className="px-4 py-2">Link</th>
-                  <th className="px-4 py-2">Due Date</th>
-                  {haveAdminAccess && <th className="px-4 py-2">Actions</th>}
-                </tr>
-              </thead>
-              <tbody className="text-white">
-                {!attachments?.length ? (
-                  <tr className="bg-blue-500 text-center">
-                    <td className="py-4 text-center text-lg" colSpan={4}>
-                      No assignments
-                    </td>
-                  </tr>
-                ) : (
-                  attachments.map((attachment, index) => (
-                    <tr className="bg-blue-500 text-center" key={index}>
-                      <td className="px-4 py-2">
-                        <div className="font-semibold">
+            <div className="bg-card overflow-hidden rounded-xl border shadow-sm">
+              <div className="text-muted-foreground border-b px-4 py-2 text-xs font-semibold uppercase tracking-wide">
+                Assignments
+              </div>
+              {!attachments?.length ? (
+                <div className="text-muted-foreground py-6 text-center text-sm">
+                  No assignments
+                </div>
+              ) : (
+                <ul className="divide-border divide-y">
+                  {attachments.map((attachment, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center gap-3 px-4 py-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-foreground truncate text-sm font-medium">
                           {attachment.title}
-                          <div className="text-sm font-medium text-neutral-300">
-                            {attachment.attachmentType.toLowerCase()}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2">
+                        </p>
+                        <p className="text-muted-foreground mt-0.5 truncate text-[11px] capitalize">
+                          {attachment.attachmentType.toLowerCase()}
+                          {attachment.attachmentType === "ASSIGNMENT" &&
+                            attachment.dueDate &&
+                            ` · Due ${dayjs(attachment.dueDate).format("MMM D, YYYY")}`}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
                         {renderAttachmentLink(attachment)}
-                      </td>
-                      <td className="px-4 py-2">
-                        {attachment.attachmentType === "ASSIGNMENT" &&
-                        attachment.dueDate
-                          ? dayjs(attachment.dueDate).format("MMM D, YYYY")
-                          : "-"}
-                      </td>
-                      {haveAdminAccess && (
-                        <td className="px-4 py-2">
+                        {haveAdminAccess && (
                           <DropdownMenu>
-                            <DropdownMenuTrigger>
-                              <BsThreeDotsVertical className="h-5 w-5" />
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="hover:bg-accent h-7 w-7 cursor-pointer"
+                                aria-label="Attachment options"
+                              >
+                                <BsThreeDotsVertical className="h-4 w-4" />
+                              </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent>
+                            <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedAttachment(attachment);
                                   setIsEditAssignmentDialogOpen(true);
                                 }}
+                                className="cursor-pointer"
                               >
-                                <div className="flex items-center gap-2">
-                                  <FaPencilAlt className="h-4 w-4" />
-                                  Edit
-                                </div>
+                                <FaPencilAlt className="mr-2 h-4 w-4" />
+                                Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-red-600"
+                                className="text-destructive cursor-pointer"
                                 onClick={() => {
                                   setSelectedAttachment(attachment);
                                   setIsDeleteAssignmentDialogOpen(true);
                                 }}
                               >
-                                <div className="flex items-center gap-2">
-                                  <FaTrashAlt className="h-4 w-4" />
-                                  Delete
-                                </div>
+                                <FaTrashAlt className="mr-2 h-4 w-4" />
+                                Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </td>
-                      )}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Notes Section */}
-      <div className="w-full rounded-xl bg-transparent shadow-lg">
-        <div className="mb-4 flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <FaStickyNote className="h-5 w-5 text-blue-600" />
-            <h2 className="text-xl font-semibold">Class Notes</h2>
-          </div>
-          <div className="flex flex-1 items-center gap-2">
-            <FaTags className="h-5 w-5 text-blue-600" />
-            <div className="flex flex-wrap items-center gap-2">
+      <div className="w-full">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <div className="flex shrink-0 items-center gap-2">
+              <FaStickyNote className="text-primary h-4 w-4 sm:h-5 sm:w-5" />
+              <h2 className="text-foreground text-base font-semibold sm:text-lg">
+                Class Notes
+              </h2>
+            </div>
+            {tags.length > 0 && (
+              <span className="bg-border hidden h-4 w-px sm:inline-block" />
+            )}
+            <div className="flex flex-wrap items-center gap-1.5">
               {tags.map((tag) => (
                 <Badge
                   key={tag}
                   variant="secondary"
-                  className="flex items-center gap-2 px-3 py-1"
+                  className="h-6 gap-1.5 px-2 text-[11px]"
                 >
                   {tag}
                   <button
                     onClick={() => removeTag(tag)}
-                    className="text-xs hover:text-red-500"
+                    className="hover:text-destructive text-xs leading-none"
+                    aria-label={`Remove ${tag}`}
                   >
                     ×
                   </button>
                 </Badge>
               ))}
-              <div className="flex items-center gap-2">
-                <Input
-                  type="text"
-                  placeholder="Add tag..."
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addTag()}
-                  className="h-8 w-32"
-                />
-                <Button variant="outline" size="sm" onClick={addTag}>
-                  Add
+              {isAddingTag ? (
+                <div className="flex items-center gap-1.5">
+                  <Input
+                    ref={tagInputRef}
+                    type="text"
+                    autoFocus
+                    placeholder="Tag name…"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") addTag();
+                      if (e.key === "Escape") {
+                        setNewTag("");
+                        setIsAddingTag(false);
+                      }
+                    }}
+                    onBlur={() => {
+                      if (!newTag.trim()) setIsAddingTag(false);
+                    }}
+                    className="h-7 w-28 text-xs"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addTag}
+                    className="h-7 px-2 text-xs"
+                  >
+                    Save
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsAddingTag(true)}
+                  className="text-muted-foreground hover:text-foreground h-7 gap-1 px-2 text-[11px]"
+                >
+                  <FaTags className="h-3 w-3" />
+                  Add tag
                 </Button>
-              </div>
+              )}
             </div>
           </div>
-          <div className="text-muted-foreground text-sm whitespace-nowrap">
+          <div className="text-muted-foreground flex items-center gap-2 text-xs">
             {notesStatus && <span>{notesStatus}</span>}
             {lastSaved && (
-              <span> • Last saved {dayjs(lastSaved).fromNow()}</span>
+              <span className="hidden sm:inline">
+                Last saved {dayjs(lastSaved).fromNow()}
+              </span>
+            )}
+            {notes && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsClearNotesDialogOpen(true)}
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive h-7 gap-1 px-2 text-xs"
+              >
+                <FaTrash className="h-3 w-3" />
+                Clear
+              </Button>
             )}
           </div>
-          {notes && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsClearNotesDialogOpen(true)}
-              className="text-red-500 hover:bg-red-100/10 hover:text-red-600"
-            >
-              <FaTrash className="mr-1 h-4 w-4" />
-              Clear
-            </Button>
-          )}
         </div>
 
         {initialNotesData || notesData ? (

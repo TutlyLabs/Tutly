@@ -122,7 +122,7 @@ const ManagePassword = ({
   const renderEmailStep = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="mb-2 text-2xl font-bold">Reset Your Password</h2>
+        <h2 className="text-foreground mb-2 text-xl font-semibold tracking-tight sm:text-2xl">Reset Your Password</h2>
         <p className="text-muted-foreground text-sm">
           Enter your email address and we'll send you a link to reset your
           password.
@@ -161,7 +161,7 @@ const ManagePassword = ({
       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
         <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
       </div>
-      <h2 className="mb-2 text-2xl font-bold">Check Your Email</h2>
+      <h2 className="text-foreground mb-2 text-xl font-semibold tracking-tight sm:text-2xl">Check Your Email</h2>
       <p className="text-muted-foreground mb-4 text-sm">
         We've sent a password reset link to <strong>{email}</strong>
       </p>
@@ -185,7 +185,7 @@ const ManagePassword = ({
   const renderPasswordStep = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="mb-2 text-2xl font-bold">Set New Password</h2>
+        <h2 className="text-foreground mb-2 text-xl font-semibold tracking-tight sm:text-2xl">Set New Password</h2>
         <p className="text-muted-foreground text-sm">
           Enter your new password below.
         </p>
@@ -335,8 +335,8 @@ const ManagePassword = ({
   );
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-      <div className="bg-background mx-auto w-full max-w-sm min-w-[300px] rounded-lg p-6 shadow-sm">
+    <div className="mx-auto w-full max-w-md py-6 sm:py-10">
+      <div className="bg-card space-y-5 rounded-2xl border p-5 shadow-sm sm:p-7">
         {!emailSent && !token && renderEmailStep()}
         {emailSent && !token && renderEmailSentStep()}
         {token && renderPasswordStep()}

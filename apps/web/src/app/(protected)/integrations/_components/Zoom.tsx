@@ -71,7 +71,7 @@ export const ZoomIntegration = ({ zoom }: { zoom?: Account | undefined }) => {
         <AccordionContent className="p-4 pt-0">
           <div className="flex flex-col gap-4">
             {zoom ? (
-              <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm dark:bg-gray-900">
+              <div className="flex items-center justify-between bg-card rounded-lg border p-4 shadow-sm">
                 <div className="flex items-center gap-3">
                   <Image
                     src={avatar}
@@ -95,8 +95,8 @@ export const ZoomIntegration = ({ zoom }: { zoom?: Account | undefined }) => {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm dark:bg-gray-900">
-                <span className="text-gray-700 dark:text-gray-200">
+              <div className="flex items-center justify-between bg-card rounded-lg border p-4 shadow-sm">
+                <span className="text-foreground/80">
                   Not linked
                 </span>
                 <Button

@@ -23,7 +23,7 @@ const ReactPlayground = ({ currentUser }: { currentUser: any }) => {
       ) : (
         <Suspense
           fallback={
-            <div className="space-y-6 p-6">
+            <div className="space-y-6">
               <div className="space-y-4">
                 <Skeleton className="h-8 w-48" />
                 <Skeleton className="h-4 w-96" />

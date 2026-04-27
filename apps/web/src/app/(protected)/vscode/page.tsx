@@ -22,13 +22,15 @@ export default function VSCodePage() {
   if (!user || cfg.isLoading) return <PageLoader />;
   if (!cfg.data?.isAuthorized) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-zinc-950 text-white">
+      <div className="bg-background flex min-h-[calc(100vh-7rem)] w-full flex-col items-center justify-center px-6">
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="rounded-full bg-red-500/10 p-4">
-            <ShieldAlert className="h-8 w-8 text-red-500" />
+          <div className="bg-destructive/10 flex h-14 w-14 items-center justify-center rounded-2xl">
+            <ShieldAlert className="text-destructive h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-bold">Unauthorized Access</h1>
-          <p className="text-zinc-400">
+          <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+            Unauthorized access
+          </h1>
+          <p className="text-muted-foreground max-w-sm text-sm">
             The configuration token is invalid or has been tampered with.
           </p>
         </div>

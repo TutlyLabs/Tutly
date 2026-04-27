@@ -151,7 +151,7 @@ export default function RichTextEditor({
         underline: "underline",
         strikethrough: "line-through",
         underlineStrikethrough: "underline line-through",
-        code: "bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 font-mono text-sm",
+        code: "bg-muted rounded px-1.5 py-0.5 font-mono text-sm",
       },
       code: "block bg-background border rounded p-4 font-mono text-sm my-2 overflow-x-auto relative",
       codeHighlight: {

@@ -2,13 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Profile } from "@tutly/db/browser";
-import { FileType } from "@tutly/db/browser";
-import { type ChangeEvent, useRef, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import * as z from "zod";
 import MobileInput from "@/components/MobileInput";
-import { useRouter } from "next/navigation";
 
 import { Button } from "@tutly/ui/button";
 import {
@@ -27,9 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@tutly/ui/select";
-import { useFileUpload } from "@/components/useFileUpload";
-import { api } from "@/trpc/react";
-import Image from "next/image";
+
+import { SectionHeader } from "./SectionHeader";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -56,7 +52,6 @@ const formSchema = z.object({
 });
 
 interface BasicDetailsProps {
-  avatar: string;
   email: string;
   secondaryEmail: string;
   mobile: string;
@@ -67,7 +62,6 @@ interface BasicDetailsProps {
 }
 
 export default function BasicDetails({
-  avatar,
   email,
   secondaryEmail,
   mobile,
@@ -77,17 +71,6 @@ export default function BasicDetails({
   onUpdate,
 }: BasicDetailsProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const router = useRouter();
-
-  const { mutate: updateAvatar } = api.users.updateUserAvatar.useMutation({
-    onSuccess: () => {
-      toast.success("Profile picture updated successfully");
-      router.refresh();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to update profile picture");
-    },
-  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -117,27 +100,16 @@ export default function BasicDetails({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Basic Details</h2>
-        <Button
-          variant={isEditing ? "outline" : "default"}
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? "Cancel" : "Edit"}
-        </Button>
-      </div>
+      <SectionHeader
+        title="Basic Details"
+        description="Contact details and preferences."
+        isEditing={isEditing}
+        onToggle={() => setIsEditing(!isEditing)}
+      />
 
-      <div className="flex flex-col gap-8 md:flex-row">
-        <div className="flex-shrink-0">
-          <Avatar avatar={avatar} onUpdate={updateAvatar} />
-        </div>
-
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex-grow space-y-6"
-          >
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="email"
@@ -267,89 +239,13 @@ export default function BasicDetails({
               />
             </div>
 
-            {isEditing && (
-              <Button type="submit" className="w-full md:w-auto">
-                Save Changes
-              </Button>
-            )}
-          </form>
-        </Form>
-      </div>
+          {isEditing && (
+            <Button type="submit" className="w-full md:w-auto">
+              Save Changes
+            </Button>
+          )}
+        </form>
+      </Form>
     </div>
   );
 }
-
-const Avatar = ({
-  avatar,
-  onUpdate,
-}: {
-  avatar: string;
-  onUpdate: (data: { avatar: string }) => void;
-}) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const { uploadFile } = useFileUpload({
-    fileType: FileType.AVATAR,
-    onUpload: async (file) => {
-      if (!file?.publicUrl) return;
-      onUpdate({ avatar: file.publicUrl });
-    },
-  });
-
-  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return;
-    setIsUploading(true);
-
-    try {
-      const file = e.target.files[0];
-      if (!file) return;
-      await uploadFile(file);
-    } catch (error) {
-      console.error("Error uploading avatar:", error);
-      toast.error("Failed to upload profile picture");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  return (
-    <div className="group relative">
-      <div className="h-48 w-48 overflow-hidden rounded-full border-4 border-gray-200">
-        <Image
-          src={avatar || "/placeholder.jpg"}
-          alt="Profile Avatar"
-          className="h-full w-full object-cover"
-          width={192}
-          height={192}
-        />
-
-        {isUploading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <div className="loading-spinner text-white" />
-          </div>
-        )}
-      </div>
-
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-        <Button
-          variant="secondary"
-          size="sm"
-          className="bg-black/50 text-white hover:bg-black/70"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-        >
-          Change Photo
-        </Button>
-      </div>
-
-      <Input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleUpload}
-        className="hidden"
-      />
-    </div>
-  );
-};

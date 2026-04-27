@@ -72,12 +72,18 @@ export default function Sessions({
   };
 
   return (
-    <div className="mx-auto w-full max-w-[600px] p-6">
-      <div className="bg-background rounded-xl border p-6 shadow-lg">
-        <h2 className="mb-6 text-2xl font-semibold">Account Settings</h2>
-
+    <div className="mx-auto w-full max-w-2xl space-y-4">
+      <div>
+        <h2 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+          Account Settings
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          Manage your active sessions and connected accounts.
+        </p>
+      </div>
+      <div className="bg-card rounded-xl border p-4 shadow-sm sm:p-6">
         <Tabs defaultValue="sessions" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="bg-muted/40 inline-flex h-9 w-full sm:w-auto items-center gap-1 rounded-lg p-1">
             <TabsTrigger value="sessions">Active Sessions</TabsTrigger>
             <TabsTrigger value="connections">Connected Accounts</TabsTrigger>
           </TabsList>
@@ -160,3 +166,4 @@ export default function Sessions({
     </div>
   );
 }
+

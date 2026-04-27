@@ -54,7 +54,7 @@ export default function CourseManageClient({ courseId, currentUser }: Props) {
   }
 
   return (
-    <div className="w-full px-4">
+    <div className="mx-auto w-full max-w-7xl space-y-4">
       <UsersTable users={usersData.data} courseId={courseId} />
     </div>
   );

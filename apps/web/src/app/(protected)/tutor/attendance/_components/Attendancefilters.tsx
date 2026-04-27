@@ -616,15 +616,15 @@ const AttendanceTable = ({
     }
   });
   return (
-    <div className="mx-auto mt-4 w-full space-y-2 px-1 sm:mt-8 sm:w-[95%] sm:space-y-4">
-      <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-0">
+    <div className="mx-auto w-full max-w-7xl space-y-4">
+      <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
         <Tabs
           defaultValue="all"
           value={activeTab}
           onValueChange={setActiveTab}
           className="w-full overflow-x-auto pb-1 sm:w-auto"
         >
-          <TabsList className="w-full sm:w-auto">
+          <TabsList className="bg-muted/40 inline-flex h-9 w-max items-center gap-1 rounded-lg p-1 sm:w-auto">
             <TabsTrigger
               value="all"
               className="gap-1 text-xs sm:gap-2 sm:text-sm"
@@ -691,18 +691,18 @@ const AttendanceTable = ({
           </TabsList>
         </Tabs>
 
-        <div className="relative w-full sm:max-w-sm">
-          <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="text-muted-foreground/70 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
           <Input
-            placeholder="Search students..."
+            placeholder="Search students…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
+            className="bg-background h-9 pl-9 text-sm"
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="bg-card overflow-x-auto rounded-xl border shadow-sm">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">

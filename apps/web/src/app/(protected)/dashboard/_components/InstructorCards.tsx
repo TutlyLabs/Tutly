@@ -17,11 +17,11 @@ export function InstructorCards({ selectedCourse }: Props) {
 
   if (isLoading) {
     return (
-      <div className="mb-10 flex flex-wrap justify-center gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="w-80 rounded-md bg-white p-2 text-gray-900 shadow-xl"
+            className="bg-card text-foreground w-full rounded-xl border p-4 shadow-sm"
           >
             <Skeleton className="mx-auto h-24 w-24 rounded-md" />
             <Skeleton className="mx-auto mt-2 h-8 w-16" />
@@ -43,8 +43,8 @@ export function InstructorCards({ selectedCourse }: Props) {
 
   return (
     <div>
-      <div className="mb-10 flex flex-wrap justify-center gap-4">
-        <div className="w-80 rounded-md bg-white p-2 text-gray-900 shadow-xl">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="bg-card text-foreground w-full rounded-xl border p-4 shadow-sm">
           <MdOutlineNoteAlt className="m-auto h-24 w-24 text-blue-400" />
           <p className="pt-2 font-bold text-blue-600">
             {instructorData.totalCourses}
@@ -53,14 +53,14 @@ export function InstructorCards({ selectedCourse }: Props) {
         </div>
         {course && (
           <>
-            <div className="w-80 rounded-md bg-white p-2 text-gray-900 shadow-xl">
+            <div className="bg-card text-foreground w-full rounded-xl border p-4 shadow-sm">
               <SiGoogleclassroom className="m-auto h-24 w-24 text-blue-400" />
               <p className="pt-2 font-bold text-blue-600">
                 {course.classCount}
               </p>
               <h1 className="p-1 text-sm font-bold">Classes in this course</h1>
             </div>
-            <div className="w-80 rounded-md bg-white p-2 text-gray-900 shadow-xl">
+            <div className="bg-card text-foreground w-full rounded-xl border p-4 shadow-sm">
               <PiStudentBold className="m-auto h-24 w-24 text-blue-400" />
               <p className="pt-2 font-bold text-blue-600">
                 {course.studentCount}

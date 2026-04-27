@@ -89,38 +89,38 @@
 }
 
 .dark {
-  --background: hsl(228 24% 12%);
+  --background: hsl(224 18% 9%);
   --foreground: hsl(210 24% 98%);
-  --card: hsl(222.2 84% 4.9%);
+  --card: hsl(224 16% 13%);
   --card-foreground: hsl(210 40% 98%);
-  --popover: hsl(222.2 84% 4.9%);
+  --popover: hsl(224 16% 14%);
   --popover-foreground: hsl(210 40% 98%);
   --primary: hsl(217.2 91.2% 59.8%);
   --primary-foreground: hsl(0 0% 98%);
-  --secondary: hsl(217.2 32.6% 17.5%);
+  --secondary: hsl(224 14% 17%);
   --secondary-foreground: hsl(210 40% 98%);
-  --muted: hsl(217.2 32.6% 17.5%);
+  --muted: hsl(224 14% 17%);
   --muted-foreground: hsl(215 20.2% 65.1%);
-  --accent: hsl(217.2 32.6% 25%);
+  --accent: hsl(224 14% 22%);
   --accent-foreground: hsl(210 40% 98%);
-  --destructive: hsl(0 62.8% 30.6%);
+  --destructive: hsl(0 62.8% 45%);
   --destructive-foreground: hsl(210 40% 98%);
-  --border: hsl(217.2 32.6% 17.5%);
-  --input: hsl(217.2 32.6% 17.5%);
-  --ring: hsl(224.3 76.3% 48%);
+  --border: hsl(224 14% 20%);
+  --input: hsl(224 14% 20%);
+  --ring: hsl(217.2 91.2% 59.8%);
   --chart-1: hsl(220 70% 50%);
   --chart-2: hsl(160 60% 45%);
   --chart-3: hsl(30 80% 55%);
   --chart-4: hsl(280 65% 60%);
   --chart-5: hsl(340 75% 55%);
-  --sidebar-background: hsl(228 24% 12%);
-  --sidebar-foreground: hsl(210 24% 98%);
+  --sidebar-background: hsl(224 18% 8%);
+  --sidebar-foreground: hsl(210 24% 92%);
   --sidebar-primary: hsl(217.2 91.2% 59.8%);
   --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(217.2 32.6% 25%);
+  --sidebar-accent: hsl(224 14% 18%);
   --sidebar-accent-foreground: hsl(210 40% 98%);
-  --sidebar-border: hsl(217.2 32.6% 17.5%);
-  --sidebar-ring: hsl(224.3 76.3% 48%);
+  --sidebar-border: hsl(224 14% 16%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
 
 @layer base {
@@ -129,5 +129,30 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings:
+      "ss01" on,
+      "cv11" on,
+      "ss02" on;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  /* Numeric tabular figures everywhere a number lives in a table-like context. */
+  .tabular-nums,
+  td,
+  th {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Headings — slightly tighter tracking for premium feel. */
+  h1,
+  h2 {
+    letter-spacing: -0.018em;
+  }
+  /* Force native form controls to use the app font. */
+  input,
+  textarea,
+  select,
+  button {
+    font-family: inherit;
   }
 }
