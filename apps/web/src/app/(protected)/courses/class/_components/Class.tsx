@@ -19,7 +19,7 @@ import {
   FaTrashAlt,
   FaUpload,
 } from "react-icons/fa";
-import { ExternalLink, Menu } from "lucide-react";
+import { ExternalLink, Menu, MessageSquare } from "lucide-react";
 import { RiEdit2Fill } from "react-icons/ri";
 import { useDebounce } from "use-debounce";
 import { useRouter } from "next/navigation";
@@ -122,6 +122,7 @@ export default function Class({
   const { data: classes } = api.classes.getClassesByCourseId.useQuery({
     courseId,
   });
+  const { data: courseGroup } = api.chat.getCourseGroup.useQuery({ courseId });
   const { data: classDetails } = api.classes.getClassDetails.useQuery({
     id: classId,
   });
@@ -557,6 +558,20 @@ export default function Class({
                       <FaRegBookmark className="h-4 w-4" />
                     )}
                   </Button>
+
+                  {courseGroup && (
+                    <Link href={`/community?g=${courseGroup.groupId}`}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hover:bg-accent h-8 w-8"
+                        aria-label="Course chat"
+                        title="Course chat"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
 
                   {haveAdminAccess &&
                     attendanceData?.data?.attendance?.length === 0 && (

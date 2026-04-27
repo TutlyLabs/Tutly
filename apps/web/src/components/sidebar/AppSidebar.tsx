@@ -31,6 +31,8 @@ import type { SessionUser } from "@/lib/auth";
 import { cn } from "@tutly/utils";
 import { usePathname } from "next/navigation";
 import { useLayout } from "@/providers/layout-provider";
+import { api } from "@/trpc/react";
+import { useNotifications } from "@/providers/notifications-provider";
 
 export interface SidebarItem {
   title: string;
@@ -39,6 +41,7 @@ export interface SidebarItem {
   items?: SidebarItem[];
   isActive?: boolean;
   className?: string;
+  badge?: number;
 }
 
 interface AppSidebarProps {
@@ -46,6 +49,25 @@ interface AppSidebarProps {
   className?: string;
   isIntegrationsEnabled?: boolean | undefined;
   isAIAssistantEnabled?: boolean | undefined;
+}
+
+function OrgLogo({ src, name }: { src: string; name: string }) {
+  const [error, setError] = useState(false);
+  const initial = name.charAt(0).toUpperCase();
+  return (
+    <div className="bg-sidebar-primary text-sidebar-primary-foreground flex h-8 min-h-8 w-8 min-w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg">
+      {!error ? (
+        <img
+          src={src}
+          alt={name}
+          className="h-8 w-8 object-cover"
+          onError={() => setError(true)}
+        />
+      ) : (
+        <span className="text-sm font-bold">{initial}</span>
+      )}
+    </div>
+  );
 }
 
 export function AppSidebar({
@@ -58,13 +80,41 @@ export function AppSidebar({
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(() => !forceClose);
   const isMobile = useIsMobile();
+  const { setOpen: openNotifications } = useNotifications();
 
-  const sidebarItems = getDefaultSidebarItems({
-    role: user.role,
-    isAdmin: user.isAdmin,
-    isIntegrationsEnabled: isIntegrationsEnabled ?? false,
-    isAIAssistantEnabled: isAIAssistantEnabled ?? false,
+  const rawSidebarItems = useMemo(
+    () =>
+      getDefaultSidebarItems({
+        role: user.role,
+        isAdmin: user.isAdmin,
+        isIntegrationsEnabled: isIntegrationsEnabled ?? false,
+        isAIAssistantEnabled: isAIAssistantEnabled ?? false,
+      }),
+    [user.role, user.isAdmin, isIntegrationsEnabled, isAIAssistantEnabled],
+  );
+
+  const { data: unreadData } = api.chat.getUnreadCount.useQuery(undefined, {
+    refetchInterval: 30_000,
   });
+  const unreadCount = unreadData?.count ?? 0;
+
+  const { data: notifications = [] } =
+    api.notifications.getNotifications.useQuery(undefined, {
+      refetchInterval: 60_000,
+    });
+  const unreadNotifCount = notifications.filter((n: any) => !n.readAt).length;
+
+  const sidebarItems = useMemo(
+    () =>
+      rawSidebarItems.map((item) => {
+        if (item.url === "/community" && unreadCount > 0)
+          return { ...item, badge: unreadCount };
+        if (item.url === "/notifications" && unreadNotifCount > 0)
+          return { ...item, badge: unreadNotifCount };
+        return item;
+      }),
+    [rawSidebarItems, unreadCount, unreadNotifCount],
+  );
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -127,6 +177,7 @@ export function AppSidebar({
           url: targetUrl,
           icon: item.icon,
           active,
+          badge: item.badge,
         };
       })
       .filter(Boolean) as Array<{
@@ -134,9 +185,15 @@ export function AppSidebar({
       url: string;
       icon: React.ElementType;
       active: boolean;
+      badge?: number;
     }>;
 
-    return tabs.slice(0, 5);
+    // Prioritize key items: Dashboard, Community, Notifications always in mobile tabs
+    const PRIORITY_URLS = ["/dashboard", "/community", "/notifications"];
+    const priority = tabs.filter((t) => PRIORITY_URLS.includes(t.url));
+    const rest = tabs.filter((t) => !PRIORITY_URLS.includes(t.url));
+    const ordered = [...priority, ...rest];
+    return ordered.slice(0, 5);
   }, [sidebarItems, pathname]);
 
   if (hideSidebar) return null;
@@ -186,15 +243,7 @@ export function AppSidebar({
                 >
                   <SidebarMenuButton size="lg" asChild className="mx-auto">
                     <Link href="/dashboard" aria-label="Go to dashboard">
-                      <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg">
-                        <img
-                          src={organizationLogo}
-                          alt="Logo"
-                          width={32}
-                          height={32}
-                          className="h-full w-full rounded-md object-cover"
-                        />
-                      </div>
+                      <OrgLogo src={organizationLogo} name={organizationName} />
                       {!headerCollapsed && expanded && (
                         <div className="grid flex-1 text-left text-sm leading-tight">
                           <span className="truncate font-semibold">
@@ -326,6 +375,22 @@ export function AppSidebar({
                               </CollapsibleContent>
                             )}
                           </>
+                        ) : item.url === "/notifications" ? (
+                          <SidebarMenuButton
+                            tooltip={expanded ? "" : item.title}
+                            onClick={() => openNotifications(true)}
+                            className={cn(
+                              "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base",
+                            )}
+                          >
+                            <span className="relative inline-flex shrink-0">
+                              <ItemIcon className="size-4" />
+                              {!!item.badge && (
+                                <span className="ring-background absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-red-500 ring-2" />
+                              )}
+                            </span>
+                            {expanded && <span>{item.title}</span>}
+                          </SidebarMenuButton>
                         ) : (
                           <Link href={item.url}>
                             <SidebarMenuButton
@@ -337,7 +402,12 @@ export function AppSidebar({
                                 "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base",
                               )}
                             >
-                              <ItemIcon className="size-6" />
+                              <span className="relative inline-flex shrink-0">
+                                <ItemIcon className="size-4" />
+                                {!!item.badge && (
+                                  <span className="ring-background absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-red-500 ring-2" />
+                                )}
+                              </span>
                               {expanded && <span>{item.title}</span>}
                             </SidebarMenuButton>
                           </Link>
@@ -358,34 +428,58 @@ export function AppSidebar({
                 const TabIcon = tab.icon;
                 return (
                   <li key={tab.title} className="flex-1">
-                    <Link
-                      href={tab.url}
-                      onClick={() => void haptics.light()}
-                      aria-current={tab.active ? "page" : undefined}
-                      className={cn(
-                        "group relative flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium",
-                        tab.active
-                          ? "text-primary"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      <span
-                        aria-hidden
+                    {tab.url === "/notifications" ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void haptics.light();
+                          openNotifications(true);
+                        }}
                         className={cn(
-                          "absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full transition-all",
-                          tab.active ? "bg-primary opacity-100" : "opacity-0",
-                        )}
-                      />
-                      <div
-                        className={cn(
-                          "grid size-9 place-items-center rounded-full transition-colors",
-                          tab.active ? "bg-primary/10" : "",
+                          "group relative flex w-full flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium",
+                          "text-muted-foreground hover:text-foreground",
                         )}
                       >
-                        <TabIcon className="size-5" />
-                      </div>
-                      <span className="leading-none">{tab.title}</span>
-                    </Link>
+                        <div className="grid size-9 place-items-center rounded-full transition-colors">
+                          <TabIcon className="size-5" />
+                        </div>
+                        <span className="leading-none">{tab.title}</span>
+                      </button>
+                    ) : (
+                      <Link
+                        href={tab.url}
+                        onClick={() => void haptics.light()}
+                        aria-current={tab.active ? "page" : undefined}
+                        className={cn(
+                          "group relative flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium",
+                          tab.active
+                            ? "text-primary"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        <span
+                          aria-hidden
+                          className={cn(
+                            "absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full transition-all",
+                            tab.active ? "bg-primary opacity-100" : "opacity-0",
+                          )}
+                        />
+                        <div
+                          className={cn(
+                            "grid size-9 place-items-center rounded-full transition-colors",
+                            tab.active ? "bg-primary/10" : "",
+                          )}
+                        >
+                          <span className="relative inline-flex">
+                            <TabIcon className="size-5" />
+                            {!!tab.badge && (
+                              <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-red-500" />
+                            )}
+                          </span>
+                        </div>
+                        <span className="leading-none">{tab.title}</span>
+                      </Link>
+                    )}
                   </li>
                 );
               })}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Menu } from "lucide-react";
+import { ExternalLink, Menu, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -34,6 +34,8 @@ export default function CourseDetailsClient({
   const { data: assignmentsResponse, isLoading: assignmentsLoading } =
     api.attachments.getCourseAssignments.useQuery({ courseId });
   const assignments = assignmentsResponse?.data;
+
+  const { data: courseGroup } = api.chat.getCourseGroup.useQuery({ courseId });
 
   if (!user) {
     router.push("/sign-in");
@@ -88,19 +90,46 @@ export default function CourseDetailsClient({
             <h2 className="text-foreground text-sm font-semibold">
               Assignments
             </h2>
+            {courseGroup && (
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 flex-shrink-0"
+              >
+                <Link href={`/community?g=${courseGroup.groupId}`}>
+                  <MessageSquare className="h-4 w-4" />
+                </Link>
+              </Button>
+            )}
           </div>
         )}
 
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-7xl space-y-4 p-4 sm:p-6">
             {!isMobile && (
-              <div>
-                <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
-                  Assignments
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  All assignments in this course.
-                </p>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+                    Assignments
+                  </h1>
+                  <p className="text-muted-foreground text-sm">
+                    All assignments in this course.
+                  </p>
+                </div>
+                {courseGroup && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="flex-shrink-0 gap-1.5"
+                  >
+                    <Link href={`/community?g=${courseGroup.groupId}`}>
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      Course Chat
+                    </Link>
+                  </Button>
+                )}
               </div>
             )}
 

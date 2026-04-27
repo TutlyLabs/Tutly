@@ -3,6 +3,7 @@
 import { ArrowUpDown, Search } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import { UserLink } from "@/components/UserLink";
 
 import { Button } from "@tutly/ui/button";
 import { Input } from "@tutly/ui/input";
@@ -210,7 +211,10 @@ const OverallAttendanceTable = ({
                         {index + 1}
                       </TableCell>
                       <TableCell className="py-2 sm:py-2.5 md:py-3">
-                        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+                        <UserLink
+                          username={item.username}
+                          className="flex items-center gap-2 transition-opacity hover:opacity-80 sm:gap-3 md:gap-4"
+                        >
                           <div className="relative h-6 w-6 flex-shrink-0 overflow-hidden rounded-full sm:h-8 sm:w-8 md:h-10 md:w-10">
                             <Image
                               src={
@@ -226,7 +230,7 @@ const OverallAttendanceTable = ({
                           <span className="text-xs font-medium sm:text-sm md:text-base">
                             {item.name}
                           </span>
-                        </div>
+                        </UserLink>
                       </TableCell>
                       <TableCell className="hidden py-2 text-xs sm:table-cell sm:py-2.5 sm:text-sm md:py-3">
                         {item.username}

@@ -59,11 +59,12 @@ const columns: Column[] = [
             <AlertCircle className="text-destructive h-4 w-4" />
           </div>
         )}
-        <span
-          className={row.disabledAt ? "text-muted-foreground line-through" : ""}
+        <a
+          href={`/u/${row.username}`}
+          className={`hover:underline ${row.disabledAt ? "text-muted-foreground line-through" : ""}`}
         >
           {value}
-        </span>
+        </a>
       </div>
     ),
   },

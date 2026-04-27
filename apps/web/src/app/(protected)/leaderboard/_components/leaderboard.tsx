@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import Image from "next/image";
 import type { User, Course } from "@tutly/db/browser";
+import { UserLink } from "@/components/UserLink";
 
 import { ScrollArea, ScrollBar } from "@tutly/ui/scroll-area";
 import NoDataFound from "@/components/NoDataFound";
@@ -180,17 +181,21 @@ export default function Leaderboard({
                   <div className="text-muted-foreground w-7 shrink-0 text-center text-sm font-semibold tabular-nums">
                     {entry.rank}
                   </div>
-                  <Image
-                    src={entry.image || "/placeholder.jpg"}
-                    alt={entry.name}
-                    width={36}
-                    height={36}
-                    className="bg-muted h-9 w-9 shrink-0 rounded-full object-cover"
-                  />
+                  <UserLink username={entry.username} className="shrink-0">
+                    <Image
+                      src={entry.image || "/placeholder.jpg"}
+                      alt={entry.name}
+                      width={36}
+                      height={36}
+                      className="bg-muted h-9 w-9 rounded-full object-cover transition-opacity hover:opacity-80"
+                    />
+                  </UserLink>
                   <div className="min-w-0 flex-1">
-                    <p className="text-foreground truncate text-sm font-medium">
-                      {entry.name}
-                    </p>
+                    <UserLink username={entry.username}>
+                      <p className="text-foreground truncate text-sm font-medium">
+                        {entry.name}
+                      </p>
+                    </UserLink>
                     <p className="text-muted-foreground truncate text-[11px]">
                       @{entry.username}
                     </p>
@@ -244,26 +249,30 @@ function PodiumCard({
       )}
     >
       <span className="absolute top-3 right-3 text-2xl">{medal[rank]}</span>
-      <Image
-        src={entry.image || "/placeholder.jpg"}
-        alt={entry.name}
-        width={64}
-        height={64}
-        className={cn(
-          "bg-muted rounded-full object-cover ring-2 ring-offset-2",
-          rank === 1 ? "h-16 w-16" : "h-14 w-14",
-          t.ring,
-        )}
-      />
-      <p
-        className={cn(
-          "text-foreground line-clamp-1 w-full px-1 font-semibold",
-          rank === 1 ? "text-base" : "text-sm",
-        )}
-        title={entry.name}
-      >
-        {entry.name}
-      </p>
+      <UserLink username={entry.username}>
+        <Image
+          src={entry.image || "/placeholder.jpg"}
+          alt={entry.name}
+          width={64}
+          height={64}
+          className={cn(
+            "bg-muted rounded-full object-cover ring-2 ring-offset-2 transition-opacity hover:opacity-80",
+            rank === 1 ? "h-16 w-16" : "h-14 w-14",
+            t.ring,
+          )}
+        />
+      </UserLink>
+      <UserLink username={entry.username} className="w-full">
+        <p
+          className={cn(
+            "text-foreground line-clamp-1 w-full px-1 font-semibold",
+            rank === 1 ? "text-base" : "text-sm",
+          )}
+          title={entry.name}
+        >
+          {entry.name}
+        </p>
+      </UserLink>
       <p className="text-muted-foreground -mt-1 line-clamp-1 w-full px-1 text-[11px]">
         @{entry.username}
       </p>

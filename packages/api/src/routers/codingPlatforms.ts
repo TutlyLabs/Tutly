@@ -8,6 +8,49 @@ import {
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const codingPlatformsRouter = createTRPCRouter({
+  // Get all org members who have configured coding platform handles
+  getOrgCodingProfiles: protectedProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.session.user.organizationId;
+    const profiles = await ctx.db.profile.findMany({
+      where: {
+        user: { organizationId: orgId ?? undefined },
+      },
+      select: {
+        userId: true,
+        professionalProfiles: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    const CODING_PLATFORMS = ["leetcode", "codeforces", "codechef", "hackerrank", "interviewbit"] as const;
+
+    return profiles
+      .map((p) => {
+        const handles = (p.professionalProfiles as Record<string, string> | null) ?? {};
+        const configured = CODING_PLATFORMS.filter((pl) => !!handles[pl]);
+        if (configured.length === 0) return null;
+        return {
+          user: p.user,
+          handles: Object.fromEntries(configured.map((pl) => [pl, handles[pl]])) as Record<string, string>,
+          configuredCount: configured.length,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b!.configuredCount - a!.configuredCount) as Array<{
+        user: { id: string; name: string | null; username: string; image: string | null; role: string };
+        handles: Record<string, string>;
+        configuredCount: number;
+      }>;
+  }),
+
   validatePlatformHandles: protectedProcedure
     .input(
       z.object({

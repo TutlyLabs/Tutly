@@ -84,13 +84,15 @@ interface ProfessionalProfilesProps {
   onUpdate: (profile: {
     professionalProfiles: Record<string, string>;
   }) => Promise<void>;
+  defaultEditing?: boolean;
 }
 
 export default function ProfessionalProfiles({
   professionalProfiles,
   onUpdate,
+  defaultEditing = false,
 }: ProfessionalProfilesProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(defaultEditing);
 
   const { mutate: validateHandles } =
     api.codingPlatforms.validatePlatformHandles.useMutation({

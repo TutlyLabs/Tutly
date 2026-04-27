@@ -17,14 +17,28 @@ import {
   Mail,
   Phone,
   User as UserIcon,
+  ExternalLink,
+  Sparkles,
+  Copy,
+  Check,
+  FolderOpen,
+  Plus,
+  Trash2,
+  Link2,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@tutly/ui/avatar";
+import { Badge } from "@tutly/ui/badge";
+import { Button } from "@tutly/ui/button";
 import { Card } from "@tutly/ui/card";
+import { Input } from "@tutly/ui/input";
 import { ScrollArea, ScrollBar } from "@tutly/ui/scroll-area";
+import { Switch } from "@tutly/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
+import { Textarea } from "@tutly/ui/textarea";
 import { useFileUpload } from "@/components/useFileUpload";
 import { api } from "@/trpc/react";
+import Link from "next/link";
 
 import AcademicDetails from "./AcademicDetails";
 import Address from "./Address";
@@ -33,9 +47,11 @@ import Documents from "./Documents";
 import Experience from "./Experience";
 import PersonalDetails from "./PersonalDetails";
 import ProfessionalProfiles from "./ProfessionalProfiles";
+import { ProjectsEditor } from "./ProjectsEditor";
 import SocialLinks from "./SocialLinks";
 
 const TABS = [
+  { value: "public", label: "Public Profile", icon: Sparkles },
   { value: "basic", label: "Basic", icon: IdCard },
   { value: "personal", label: "Personal", icon: UserIcon },
   { value: "professional", label: "Professional", icon: Briefcase },
@@ -43,6 +59,7 @@ const TABS = [
   { value: "academic", label: "Academic", icon: BookOpen },
   { value: "social", label: "Social", icon: Globe },
   { value: "experience", label: "Experience", icon: Briefcase },
+  { value: "projects", label: "Projects", icon: FolderOpen },
   { value: "documents", label: "Documents", icon: Files },
 ];
 
@@ -57,6 +74,102 @@ function initials(name?: string) {
     .toUpperCase();
 }
 
+interface CompletenessItem {
+  label: string;
+  done: boolean;
+  points: number;
+  tab?: string;
+}
+
+function computeCompleteness(opts: {
+  avatar: string;
+  headline: string;
+  skills: string[];
+  profile: any;
+  projects: any[];
+}): { percentage: number; items: CompletenessItem[] } {
+  const { avatar, headline, skills, profile, projects } = opts;
+  const items: CompletenessItem[] = [
+    {
+      label: "Profile photo",
+      done: !!avatar && avatar !== "/placeholder.jpg",
+      points: 15,
+      tab: "basic",
+    },
+    { label: "Headline", done: !!headline?.trim(), points: 15, tab: "public" },
+    {
+      label: "About me",
+      done: !!profile?.aboutMe?.trim(),
+      points: 10,
+      tab: "personal",
+    },
+    {
+      label: "Skills (3+)",
+      done: skills.length >= 3,
+      points: 10,
+      tab: "public",
+    },
+    {
+      label: "Phone number",
+      done: !!profile?.mobile?.trim(),
+      points: 5,
+      tab: "basic",
+    },
+    {
+      label: "Academic details",
+      done: !!(
+        profile?.academicDetails?.college || profile?.academicDetails?.branch
+      ),
+      points: 10,
+      tab: "academic",
+    },
+    {
+      label: "Coding profiles",
+      done: !!(
+        profile?.professionalProfiles &&
+        Object.values(profile.professionalProfiles).some(Boolean)
+      ),
+      points: 10,
+      tab: "professional",
+    },
+    {
+      label: "Social links",
+      done: !!(
+        profile?.socialLinks && Object.values(profile.socialLinks).some(Boolean)
+      ),
+      points: 5,
+      tab: "social",
+    },
+    {
+      label: "Experience",
+      done: !!(profile?.experiences?.length > 0),
+      points: 5,
+      tab: "experience",
+    },
+    {
+      label: "Portfolio project",
+      done: projects.length > 0,
+      points: 5,
+      tab: "projects",
+    },
+    {
+      label: "Date of birth",
+      done: !!profile?.dateOfBirth,
+      points: 5,
+      tab: "personal",
+    },
+    {
+      label: "Address",
+      done: !!(profile?.address?.city || profile?.address?.state),
+      points: 5,
+      tab: "address",
+    },
+  ];
+  const total = items.reduce((s, i) => s + i.points, 0);
+  const earned = items.filter((i) => i.done).reduce((s, i) => s + i.points, 0);
+  return { percentage: Math.round((earned / total) * 100), items };
+}
+
 export default function ProfilePage({ userProfile }: { userProfile?: any }) {
   const [profile, setProfile] = useState(userProfile?.profile);
   const [avatar, setAvatar] = useState<string>(
@@ -65,6 +178,95 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  // Active tab for controlled navigation from completeness hints + ?tab= query
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window === "undefined") return "public";
+    const t = new URLSearchParams(window.location.search).get("tab");
+    return t && TABS.some((x) => x.value === t) ? t : "public";
+  });
+
+  // Headline + skills state
+  const [headline, setHeadline] = useState<string>(profile?.headline ?? "");
+  const [skillsInput, setSkillsInput] = useState<string>("");
+  const [skills, setSkills] = useState<string[]>(profile?.skills ?? []);
+  const [isPublic, setIsPublic] = useState<boolean>(
+    userProfile?.isProfilePublic ?? true,
+  );
+  const [copied, setCopied] = useState(false);
+
+  // Projects state
+  type Project = {
+    title: string;
+    description: string;
+    url: string;
+    techStack: string[];
+  };
+  const [projects, setProjects] = useState<Project[]>(
+    (profile?.metadata as any)?.projects ?? [],
+  );
+  const [isSavingProjects, setIsSavingProjects] = useState(false);
+
+  const copyProfileLink = () => {
+    const url = `${window.location.origin}/u/${userProfile?.username}`;
+    void navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      toast.success("Profile link copied!");
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const { mutate: updateExtended, isPending: isSavingExtended } =
+    api.users.updateProfileExtended.useMutation({
+      onSuccess: () => toast.success("Public profile saved"),
+      onError: () => toast.error("Failed to save"),
+    });
+
+  const { mutate: updateMetadata } = api.users.updateUserProfile.useMutation({
+    onSuccess: () => {
+      toast.success("Projects saved");
+      setIsSavingProjects(false);
+    },
+    onError: () => {
+      toast.error("Failed to save projects");
+      setIsSavingProjects(false);
+    },
+  });
+
+  const saveProjectsList = async (next: typeof projects) => {
+    setIsSavingProjects(true);
+    updateMetadata({
+      profile: {
+        metadata: { ...((profile?.metadata as object) ?? {}), projects: next },
+      },
+    });
+  };
+
+  const { mutate: setProfilePublic } = api.users.setProfilePublic.useMutation({
+    onSuccess: (data) => {
+      setIsPublic(data.isProfilePublic);
+      toast.success(
+        data.isProfilePublic
+          ? "Profile is now public"
+          : "Profile is now private",
+      );
+    },
+    onError: () => toast.error("Failed to update visibility"),
+  });
+
+  const handleAddSkill = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      const val = skillsInput.trim().replace(/,$/, "");
+      if (val && !skills.includes(val) && skills.length < 30) {
+        setSkills((prev) => [...prev, val]);
+      }
+      setSkillsInput("");
+    }
+  };
+
+  const removeSkill = (s: string) =>
+    setSkills((prev) => prev.filter((x) => x !== s));
 
   const { mutate: updateProfile } = api.users.updateUserProfile.useMutation({
     onSuccess: (data) => {
@@ -126,6 +328,15 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
       ? userProfile.role
       : userProfile?.role?.name;
 
+  const completeness = computeCompleteness({
+    avatar,
+    headline,
+    skills,
+    profile,
+    projects,
+  });
+  const incomplete = completeness.items.filter((i) => !i.done);
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4">
       {/* Identity hero */}
@@ -184,10 +395,91 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
               )}
             </div>
           </div>
+          <div className="flex shrink-0 items-center gap-2 self-end pb-1 sm:pb-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5"
+              onClick={copyProfileLink}
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-green-500" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+              {copied ? "Copied!" : "Share"}
+            </Button>
+            <Button asChild variant="outline" size="sm" className="gap-1.5">
+              <Link href={`/u/${userProfile?.username}`} target="_blank">
+                <ExternalLink className="h-3.5 w-3.5" />
+                View Profile
+              </Link>
+            </Button>
+          </div>
         </div>
+
+        {/* Profile completeness */}
+        {completeness.percentage < 100 && (
+          <div className="px-4 pb-4 sm:px-6 sm:pb-5">
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-foreground text-xs font-medium">
+                Profile strength
+              </span>
+              <span className="text-primary text-xs font-semibold">
+                {completeness.percentage}%
+              </span>
+            </div>
+            <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+              <div
+                className="from-primary to-primary/70 h-full rounded-full bg-gradient-to-r transition-all duration-500"
+                style={{ width: `${completeness.percentage}%` }}
+              />
+            </div>
+            {incomplete.length > 0 && (
+              <p className="text-muted-foreground mt-1.5 text-xs">
+                Complete:{" "}
+                {incomplete.slice(0, 3).map((i, idx) => (
+                  <span key={i.label}>
+                    {idx > 0 && ", "}
+                    {i.tab ? (
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab(i.tab!)}
+                        className="text-primary font-medium hover:underline"
+                      >
+                        {i.label}
+                      </button>
+                    ) : (
+                      <span className="text-foreground/70 font-medium">
+                        {i.label}
+                      </span>
+                    )}
+                  </span>
+                ))}
+                {incomplete.length > 3 && (
+                  <span> +{incomplete.length - 3} more</span>
+                )}
+              </p>
+            )}
+          </div>
+        )}
+        {completeness.percentage === 100 && (
+          <div className="px-4 pb-4 sm:px-6 sm:pb-5">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <div className="rounded-full bg-emerald-100 p-1 dark:bg-emerald-900/30">
+                <Check className="h-3 w-3" />
+              </div>
+              <span className="text-xs font-medium">Profile complete!</span>
+            </div>
+          </div>
+        )}
       </Card>
 
-      <Tabs defaultValue="basic" className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <ScrollArea className="-mx-3 sm:mx-0">
           <TabsList className="bg-muted/40 mx-3 inline-flex h-10 w-max items-center gap-1 rounded-lg p-1 sm:mx-0">
             {TABS.map((t) => {
@@ -207,9 +499,114 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
           <ScrollBar orientation="horizontal" className="hidden" />
         </ScrollArea>
 
+        <TabsContent value="public">
+          <Card className="bg-card space-y-6 rounded-xl border p-4 shadow-sm sm:p-6">
+            <div>
+              <h3 className="text-foreground mb-1 text-sm font-semibold">
+                Headline
+              </h3>
+              <p className="text-muted-foreground mb-2 text-xs">
+                A short line that appears under your name on your public
+                profile.
+              </p>
+              <Input
+                placeholder="e.g. Full-Stack Developer · Open to work"
+                maxLength={120}
+                value={headline}
+                onChange={(e) => setHeadline(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <h3 className="text-foreground mb-1 text-sm font-semibold">
+                Skills
+              </h3>
+              <p className="text-muted-foreground mb-2 text-xs">
+                Press Enter or comma to add. Up to 30 skills.
+              </p>
+              <div className="mb-2 flex flex-wrap gap-2">
+                {skills.map((s) => (
+                  <Badge key={s} variant="secondary" className="gap-1 pr-1">
+                    {s}
+                    <button
+                      type="button"
+                      onClick={() => removeSkill(s)}
+                      className="hover:text-destructive ml-0.5 rounded-sm"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <Input
+                placeholder="React, Node.js, Python…"
+                value={skillsInput}
+                onChange={(e) => setSkillsInput(e.target.value)}
+                onKeyDown={handleAddSkill}
+                disabled={skills.length >= 30}
+              />
+            </div>
+
+            <div className="bg-accent/30 flex items-center gap-2 rounded-lg border px-4 py-3">
+              <div className="flex-1">
+                <p className="text-foreground text-sm font-medium">
+                  Profile Visibility
+                </p>
+                <p className="text-muted-foreground mt-0.5 text-xs">
+                  {isPublic
+                    ? "Your profile is public — anyone with the link can view it."
+                    : "Your profile is private — only you can view it."}
+                </p>
+              </div>
+              <Switch
+                checked={isPublic}
+                onCheckedChange={(checked) =>
+                  setProfilePublic({ isPublic: checked })
+                }
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Button
+                onClick={() => updateExtended({ headline, skills })}
+                disabled={isSavingExtended}
+              >
+                {isSavingExtended ? "Saving…" : "Save Public Profile"}
+              </Button>
+              <Button asChild variant="outline">
+                <Link
+                  href={`/u/${userProfile?.username}`}
+                  target="_blank"
+                  className="gap-1.5"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Preview
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={copyProfileLink}
+                className="gap-1.5"
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-green-500" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                {copied ? "Copied!" : "Copy Link"}
+              </Button>
+            </div>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="basic">
           <Card className="bg-card rounded-xl border p-4 shadow-sm sm:p-6">
             <BasicDetails
+              defaultEditing={
+                !profile?.mobile?.trim() &&
+                !profile?.whatsapp?.trim() &&
+                !profile?.gender?.trim()
+              }
               email={userProfile?.email || ""}
               secondaryEmail={profile?.secondaryEmail || ""}
               mobile={profile?.mobile || ""}
@@ -224,6 +621,11 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
         <TabsContent value="personal">
           <Card className="bg-card rounded-xl border p-4 shadow-sm sm:p-6">
             <PersonalDetails
+              defaultEditing={
+                !profile?.aboutMe?.trim() &&
+                !(profile?.hobbies?.length ?? 0) &&
+                !profile?.dateOfBirth
+              }
               dateOfBirth={profile?.dateOfBirth as Date}
               hobbies={profile?.hobbies || []}
               aboutMe={profile?.aboutMe || ""}
@@ -235,6 +637,12 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
         <TabsContent value="professional">
           <Card className="bg-card rounded-xl border p-4 shadow-sm sm:p-6">
             <ProfessionalProfiles
+              defaultEditing={
+                !Object.values(
+                  (profile?.professionalProfiles as Record<string, string>) ??
+                    {},
+                ).some(Boolean)
+              }
               professionalProfiles={
                 profile?.professionalProfiles as Record<string, string>
               }
@@ -246,6 +654,11 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
         <TabsContent value="address">
           <Card className="bg-card rounded-xl border p-4 shadow-sm sm:p-6">
             <Address
+              defaultEditing={
+                !Object.values(
+                  (profile?.address as Record<string, string>) ?? {},
+                ).some(Boolean)
+              }
               address={profile?.address as Record<string, string>}
               onUpdate={handleUpdateProfile}
             />
@@ -255,6 +668,11 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
         <TabsContent value="academic">
           <Card className="bg-card rounded-xl border p-4 shadow-sm sm:p-6">
             <AcademicDetails
+              defaultEditing={
+                !Object.values(
+                  (profile?.academicDetails as Record<string, string>) ?? {},
+                ).some(Boolean)
+              }
               academicDetails={
                 profile?.academicDetails as Record<string, string>
               }
@@ -266,6 +684,9 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
         <TabsContent value="experience">
           <Card className="bg-card rounded-xl border p-4 shadow-sm sm:p-6">
             <Experience
+              defaultEditing={
+                !((profile?.experiences as any[] | undefined)?.length ?? 0)
+              }
               experiences={profile?.experiences as Array<Record<string, any>>}
               onUpdate={handleUpdateProfile}
             />
@@ -275,8 +696,26 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
         <TabsContent value="social">
           <Card className="bg-card rounded-xl border p-4 shadow-sm sm:p-6">
             <SocialLinks
+              defaultEditing={
+                !Object.values(
+                  (profile?.socialLinks as Record<string, string>) ?? {},
+                ).some(Boolean)
+              }
               socialLinks={profile?.socialLinks as Record<string, string>}
               onUpdate={handleUpdateProfile}
+            />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="projects">
+          <Card className="bg-card rounded-xl border p-4 shadow-sm sm:p-6">
+            <ProjectsEditor
+              initial={projects}
+              isSaving={isSavingProjects}
+              onSave={async (next) => {
+                setProjects(next);
+                await saveProjectsList(next);
+              }}
             />
           </Card>
         </TabsContent>

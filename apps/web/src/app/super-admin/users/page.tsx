@@ -5,6 +5,8 @@ import { Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+
+import { UserLink } from "@/components/UserLink";
 import { useQueryState } from "nuqs";
 
 export default function UsersPage() {
@@ -106,7 +108,11 @@ export default function UsersPage() {
                     className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   >
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                      <UserLink
+                        username={user.username}
+                        target="_blank"
+                        className="flex items-center gap-3 transition-opacity hover:opacity-80"
+                      >
                         {user.image ? (
                           <Image
                             src={user.image}
@@ -121,14 +127,14 @@ export default function UsersPage() {
                           </div>
                         )}
                         <div>
-                          <p className="text-foreground font-medium">
+                          <p className="text-foreground font-medium hover:underline">
                             {user.name}
                           </p>
                           <p className="text-muted-foreground text-xs">
                             @{user.username}
                           </p>
                         </div>
-                      </div>
+                      </UserLink>
                     </td>
                     <td className="text-muted-foreground px-6 py-4 text-sm">
                       {user.email || "—"}

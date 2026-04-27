@@ -1,16 +1,19 @@
 import type { Role } from "@tutly/db/browser";
 import {
   BarChart,
+  Bell,
   Bookmark,
   Brain,
   Building2,
   Calendar,
   ClipboardList,
+  Code2,
   Globe,
   GraduationCap,
   HardDrive,
   Home,
   LayoutDashboard,
+  MessageSquare,
   Plug,
   Terminal,
   Users,
@@ -105,7 +108,12 @@ const InstructorItems = [
   {
     title: "Community",
     url: "/community",
-    icon: Users,
+    icon: MessageSquare,
+  },
+  {
+    title: "Notifications",
+    url: "/notifications",
+    icon: Bell,
   },
   {
     title: "Management",
@@ -202,7 +210,12 @@ const AdminItems = [
   {
     title: "Community",
     url: "/community",
-    icon: Users,
+    icon: MessageSquare,
+  },
+  {
+    title: "Notifications",
+    url: "/notifications",
+    icon: Bell,
   },
   {
     title: "Management",
@@ -299,7 +312,12 @@ const MentorItems = [
   {
     title: "Community",
     url: "/community",
-    icon: Users,
+    icon: MessageSquare,
+  },
+  {
+    title: "Notifications",
+    url: "/notifications",
+    icon: Bell,
   },
   {
     title: "Management",
@@ -372,6 +390,10 @@ const StudentItems = [
         title: "Leaderboard",
         url: "/leaderboard",
       },
+      {
+        title: "Coding Profiles",
+        url: "/coding-platforms/leaderboard",
+      },
     ],
   },
   {
@@ -388,7 +410,12 @@ const StudentItems = [
   {
     title: "Community",
     url: "/community",
-    icon: Users,
+    icon: MessageSquare,
+  },
+  {
+    title: "Notifications",
+    url: "/notifications",
+    icon: Bell,
   },
   {
     title: "Bookmarks",

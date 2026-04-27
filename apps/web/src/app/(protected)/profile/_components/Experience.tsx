@@ -38,10 +38,15 @@ const formSchema = z.object({
 interface ExperienceProps {
   experiences: Array<Record<string, any>>;
   onUpdate: (profile: Partial<Profile>) => Promise<void>;
+  defaultEditing?: boolean;
 }
 
-export default function Experience({ experiences, onUpdate }: ExperienceProps) {
-  const [isEditing, setIsEditing] = useState(false);
+export default function Experience({
+  experiences,
+  onUpdate,
+  defaultEditing = false,
+}: ExperienceProps) {
+  const [isEditing, setIsEditing] = useState(defaultEditing);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

@@ -26,6 +26,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
+    "db:sync-groups": "bun run scripts/sync-community-groups.ts",
     "postinstall": "prisma generate",
     "lint": "eslint \"src/**/*.ts*\" --max-warnings 0",
     "typecheck": "tsc --noEmit"

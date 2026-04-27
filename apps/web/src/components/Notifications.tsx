@@ -30,7 +30,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@tutly/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@tutly/ui/popover";
 import {
   Sheet,
   SheetContent,
@@ -45,11 +44,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@tutly/ui/tooltip";
-import { useIsMobile } from "@tutly/hooks";
 import type { SessionUser } from "@/lib/auth";
 import { isNative } from "@/lib/native";
 import day from "@tutly/utils/dayjs";
 import { cn } from "@tutly/utils";
+import { useNotifications } from "@/providers/notifications-provider";
 
 interface NotificationLink {
   href: string;
@@ -563,8 +562,7 @@ function NotificationsPanel({
 
 export default function Notifications({ user: _user }: { user: SessionUser }) {
   const router = useRouter();
-  const isMobile = useIsMobile();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = useNotifications();
 
   const {
     data: notifications = [],
@@ -641,43 +639,17 @@ export default function Notifications({ user: _user }: { user: SessionUser }) {
     </Button>
   );
 
-  if (isMobile) {
-    return (
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>{trigger}</SheetTrigger>
-        <SheetContent
-          side="right"
-          className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
-        >
-          <SheetHeader className="border-b px-3 py-3">
-            <SheetTitle className="text-base">Notifications</SheetTitle>
-          </SheetHeader>
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <NotificationsPanel
-              notifications={notifications}
-              unreadCount={unreadCount}
-              isFetching={isRefetchingNotifications}
-              onRefetch={() => void refetchNotifications()}
-              onToggleRead={(id) => toggleReadStatus({ id })}
-              onMarkAllAsRead={() => markAllAsRead()}
-              selectedCategories={selectedCategories}
-              setSelectedCategories={setSelectedCategories}
-              onItemClick={handleNotificationClick}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent
-        align="end"
-        className="bg-popover w-[440px] max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border p-0 shadow-xl"
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>{trigger}</SheetTrigger>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
       >
-        <div className="flex h-[520px] flex-col overflow-hidden">
+        <SheetHeader className="border-b px-3 py-3">
+          <SheetTitle className="text-base">Notifications</SheetTitle>
+        </SheetHeader>
+        <div className="flex flex-1 flex-col overflow-hidden">
           <NotificationsPanel
             notifications={notifications}
             unreadCount={unreadCount}
@@ -688,10 +660,9 @@ export default function Notifications({ user: _user }: { user: SessionUser }) {
             selectedCategories={selectedCategories}
             setSelectedCategories={setSelectedCategories}
             onItemClick={handleNotificationClick}
-            contained
           />
         </div>
-      </PopoverContent>
-    </Popover>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -446,9 +446,18 @@ const Report = ({
                               key={column}
                               className="border-border border-b px-3 py-2 sm:px-4 sm:py-3"
                             >
-                              {column === "Attendance"
-                                ? formatAttendance(row[key])
-                                : row[key]}
+                              {column === "Attendance" ? (
+                                formatAttendance(row[key])
+                              ) : column === "Username" ? (
+                                <Link
+                                  href={`/u/${row[key]}`}
+                                  className="text-primary hover:underline"
+                                >
+                                  {row[key]}
+                                </Link>
+                              ) : (
+                                row[key]
+                              )}
                             </td>
                           ),
                       )}

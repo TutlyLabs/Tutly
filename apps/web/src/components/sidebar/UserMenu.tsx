@@ -2,6 +2,7 @@
 
 import {
   ChevronDown,
+  ExternalLink,
   LifeBuoy,
   LockIcon,
   LogOut,
@@ -100,7 +101,13 @@ export function UserMenu({ user }: UserMenuProps) {
             <Link href="/profile">
               <DropdownMenuItem className="flex cursor-pointer items-center gap-2">
                 <UserIcon className="h-5 w-5" />
-                Profile
+                Edit Profile
+              </DropdownMenuItem>
+            </Link>
+            <Link href={`/u/${user.username}`} target="_blank">
+              <DropdownMenuItem className="flex cursor-pointer items-center gap-2">
+                <ExternalLink className="h-5 w-5" />
+                View Public Profile
               </DropdownMenuItem>
             </Link>
             <Link href={`/change-password`}>
@@ -151,7 +158,6 @@ export function UserMenu({ user }: UserMenuProps) {
               Help & Support
             </DropdownMenuItem>
           )}
-          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={async () => {
               toast.info("Logging out...");
