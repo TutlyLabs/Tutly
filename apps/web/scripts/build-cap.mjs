@@ -9,10 +9,15 @@ const root = path.resolve(__dirname, "..");
 const stash = path.join(root, ".cap-stash");
 
 // Server-only routes — excluded from the Capacitor static export.
+// (Dynamic routes need generateStaticParams or live data — neither is
+// meaningful for an offline static bundle. Users land on the prod URL
+// for these via web browser / share links.)
 const STASH_PATHS = [
   "src/app/api",
   "src/app/auth/native-bridge",
   "src/app/auth/native-oauth-start",
+  "src/app/(protected)/doubts",
+  "src/app/u",
 ];
 
 const moves = [];
