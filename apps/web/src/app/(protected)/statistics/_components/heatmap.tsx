@@ -69,25 +69,31 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ classes, data }) => {
   ];
 
   const getCellColor = (isPresent: boolean, isInClass: boolean) => {
-    if (!isInClass) return "bg-gray-900";
+    if (!isInClass) return "bg-muted";
     return isPresent ? "bg-[#2EB88A]" : "bg-[#E23670]";
   };
 
   return (
-    <Card className="flex flex-col items-center p-2 px-4">
+    <Card className="bg-card flex flex-col items-center rounded-xl border p-4 shadow-sm">
       <div className="mb-4 flex w-full items-center justify-between">
-        <div className="font-semibold">Attendance Heatmap</div>
+        <div className="text-foreground text-base font-semibold sm:text-lg">
+          Attendance Heatmap
+        </div>
         <div className="flex items-center gap-2">
           <div className="text-lg font-semibold">{currentYear}</div>
           <Button
             onClick={handlePreviousYear}
-            className="rounded border p-1 hover:bg-gray-900"
+            variant="outline"
+            size="icon"
+            className="hover:bg-accent h-8 w-8"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <Button
             onClick={handleNextYear}
-            className="rounded border p-1 hover:bg-gray-900"
+            variant="outline"
+            size="icon"
+            className="hover:bg-accent h-8 w-8"
             disabled={currentYear === startOfToday().getFullYear()}
           >
             <ChevronRight className="h-5 w-5" />
@@ -99,7 +105,7 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ classes, data }) => {
         {/* months */}
         <div className="ms-16 mb-2 grid grid-cols-12 gap-1">
           {months.map((month) => (
-            <div key={month} className="text-xs font-medium text-gray-500">
+            <div key={month} className="text-muted-foreground text-xs font-medium">
               {month}
             </div>
           ))}

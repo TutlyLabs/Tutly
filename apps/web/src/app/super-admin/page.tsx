@@ -11,14 +11,14 @@ export default function SuperAdminDashboard() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
           Dashboard
         </h1>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
-              className="h-32 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800"
+              className="h-32 animate-pulse rounded-xl bg-muted"
             />
           ))}
         </div>
@@ -29,10 +29,10 @@ export default function SuperAdminDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
           Dashboard
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="text-muted-foreground text-sm">
           Platform-wide overview of all organizations and users.
         </p>
       </div>
@@ -70,21 +70,21 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Recent organizations */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+      <div className="bg-card rounded-xl border">
+        <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
+          <h2 className="text-foreground text-base font-semibold sm:text-lg">
             Recent Organizations
           </h2>
           <Link
             href="/super-admin/organizations"
-            className="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+            className="flex items-center gap-1 text-primary hover:text-primary/80 text-sm"
           >
             View all <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="divide-border divide-y">
           {stats?.recentOrgs?.length === 0 && (
-            <div className="px-6 py-8 text-center text-sm text-gray-500">
+            <div className="text-muted-foreground px-4 py-8 text-center text-sm sm:px-6">
               No organizations yet. Create your first one!
             </div>
           )}
@@ -92,21 +92,21 @@ export default function SuperAdminDashboard() {
             <Link
               key={org.id}
               href={`/super-admin/organizations/detail?id=${org.id}`}
-              className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              className="flex items-center justify-between hover:bg-accent/40 px-4 py-3 transition-colors sm:px-6"
             >
               <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-sm font-bold text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
                   {org.name[0]?.toUpperCase() || "O"}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">
+                  <p className="text-foreground font-medium">
                     {org.name}
                   </p>
-                  <p className="text-xs text-gray-500">{org.orgCode}</p>
+                  <p className="text-muted-foreground text-xs">{org.orgCode}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-500">
+                <span className="text-muted-foreground text-sm">
                   {org._count.users} users
                 </span>
                 <StatusBadge status={org.status} />
@@ -145,15 +145,15 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="group rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-gray-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
+      className="group bg-card hover:bg-accent/30 rounded-xl border p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className="flex items-center gap-4">
         <div className={`rounded-lg p-2.5 ${colorMap[color]}`}>
           <Icon className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm text-gray-500">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          <p className="text-muted-foreground text-sm">{title}</p>
+          <p className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
             {value.toLocaleString()}
           </p>
         </div>

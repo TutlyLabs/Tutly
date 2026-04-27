@@ -25,103 +25,105 @@ interface StudentAttendanceIndicatorProps {
   attendanceUploaded: boolean;
 }
 
+function StatusChip({
+  href,
+  icon,
+  label,
+  tone,
+  tooltip,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  tone: "emerald" | "rose" | "muted";
+  tooltip?: string;
+}) {
+  const toneClasses: Record<typeof tone, string> = {
+    emerald:
+      "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400",
+    rose: "bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 dark:text-rose-400",
+    muted:
+      "bg-muted/60 text-muted-foreground hover:bg-muted",
+  };
+  const chip = (
+    <Link
+      href={href}
+      target="_blank"
+      className="inline-flex items-center"
+      aria-label={label}
+      title={label}
+    >
+      <Badge
+        variant="outline"
+        className={`flex h-7 cursor-pointer items-center gap-1.5 ${toneClasses[tone]}`}
+      >
+        {icon}
+        {/* Full label desktop, icon-only mobile */}
+        <span className="hidden text-xs font-medium sm:inline">{label}</span>
+      </Badge>
+    </Link>
+  );
+  if (!tooltip) return chip;
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{chip}</TooltipTrigger>
+        <TooltipContent>
+          <p className="text-xs">{tooltip}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export default function StudentAttendanceIndicator({
   courseId,
   attendance,
   attendanceUploaded,
 }: StudentAttendanceIndicatorProps) {
-  // If attendance has been uploaded
-  if (attendanceUploaded) {
-    // Check if student's record exists
-    if (attendance) {
-      // Student is present
-      if (attendance.attended) {
-        return (
-          <Link
-            href={`/statistics/detail?id=${courseId}`}
-            target="_blank"
-            className="flex items-center gap-2"
-          >
-            <Badge
-              variant="outline"
-              className="flex cursor-pointer items-center gap-1.5 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400"
-            >
-              <FaCheckCircle className="h-3 w-3" />
-              <span className="text-xs font-medium">
-                {attendance.attendedDuration
-                  ? `Present (${attendance.attendedDuration}m)`
-                  : "Present"}
-              </span>
-            </Badge>
-          </Link>
-        );
-      }
-      // Student is absent (record exists but attended is false)
-      return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href={`/statistics/detail?id=${courseId}`}
-                target="_blank"
-                className="flex items-center gap-2"
-              >
-                <Badge
-                  variant="outline"
-                  className="flex cursor-pointer items-center gap-1.5 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-400"
-                >
-                  <FaTimesCircle className="h-3 w-3" />
-                  <span className="text-xs font-medium">
-                    {attendance.attendedDuration
-                      ? `Absent (${attendance.attendedDuration}m)`
-                      : "Absent"}
-                  </span>
-                </Badge>
-              </Link>
-            </TooltipTrigger>
-            {attendance.attendedDuration && (
-              <TooltipContent>
-                <p className="text-xs">
-                  Below minimum attendance criteria set by instructor
-                </p>
-              </TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
-      );
-    }
-    // Attendance uploaded but no record for this student - means absent
+  const href = `/statistics/detail?id=${courseId}`;
+
+  if (!attendanceUploaded) {
     return (
-      <Link
-        href={`/statistics/detail?id=${courseId}`}
-        target="_blank"
-        className="flex items-center gap-2"
-      >
-        <Badge
-          variant="outline"
-          className="flex items-center gap-1.5 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-400"
-        >
-          <FaTimesCircle className="h-3 w-3" />
-          <span className="text-xs font-medium">Absent</span>
-        </Badge>
-      </Link>
+      <StatusChip
+        href={href}
+        tone="muted"
+        icon={<FaClock className="h-3 w-3" />}
+        label="Not Marked Yet"
+      />
     );
   }
 
-  // Attendance not yet uploaded
+  if (attendance?.attended) {
+    return (
+      <StatusChip
+        href={href}
+        tone="emerald"
+        icon={<FaCheckCircle className="h-3 w-3" />}
+        label={
+          attendance.attendedDuration
+            ? `Present (${attendance.attendedDuration}m)`
+            : "Present"
+        }
+      />
+    );
+  }
+
+  // Absent (record exists but not attended, OR no record)
+  const label = attendance?.attendedDuration
+    ? `Absent (${attendance.attendedDuration}m)`
+    : "Absent";
   return (
-    <Link
-      href={`/statistics/detail?id=${courseId}`}
-      target="_blank"
-      className="flex items-center gap-2"
-    >
-      <Badge
-        variant="outline"
-        className="flex items-center gap-1.5 bg-gray-500/10 text-gray-700 hover:bg-gray-500/20 dark:text-gray-400"
-      >
-        <FaClock className="h-3 w-3" />
-        <span className="text-xs font-medium">Not Marked Yet</span>
-      </Badge>
-    </Link>
+    <StatusChip
+      href={href}
+      tone="rose"
+      icon={<FaTimesCircle className="h-3 w-3" />}
+      label={label}
+      tooltip={
+        attendance?.attendedDuration
+          ? "Below minimum attendance criteria set by instructor"
+          : undefined
+      }
+    />
   );
 }

@@ -75,7 +75,7 @@ export const GoogleIntegration = ({
         <AccordionContent className="p-4 pt-0">
           <div className="flex flex-col gap-4">
             {google ? (
-              <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm dark:bg-gray-900">
+              <div className="flex items-center justify-between bg-card rounded-lg border p-4 shadow-sm">
                 <div className="flex items-center gap-3">
                   <Image
                     src={avatar}
@@ -102,15 +102,15 @@ export const GoogleIntegration = ({
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm dark:bg-gray-900">
-                <span className="text-gray-700 dark:text-gray-200">
+              <div className="flex items-center justify-between bg-card rounded-lg border p-4 shadow-sm">
+                <span className="text-foreground/80">
                   Not linked
                 </span>
                 <Button
                   onClick={handleLink}
                   disabled={isLinking}
                   size="sm"
-                  className="inline-block rounded bg-[#4285F4] px-4 py-2 text-xs text-white transition-colors hover:bg-[#357ae8]"
+                  className="inline-block rounded bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 text-xs font-medium transition-colors"
                 >
                   {isLinking ? "Linking..." : "Link Google"}
                 </Button>

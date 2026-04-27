@@ -54,15 +54,19 @@ export function MonthView({
     });
   };
 
+  const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
+  const dayLabelsLong = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
   return (
-    <div className="h-full p-4">
+    <div className="h-full p-2 sm:p-4">
       <div className="grid grid-cols-7 gap-px">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((dayName) => (
+        {dayLabelsLong.map((dayName, i) => (
           <div
-            key={dayName}
-            className="text-muted-foreground h-8 text-center text-sm font-medium"
+            key={dayName + i}
+            className="text-muted-foreground h-8 text-center text-[11px] font-medium uppercase tracking-wide sm:text-sm"
           >
-            {dayName}
+            <span className="sm:hidden">{dayLabels[i]}</span>
+            <span className="hidden sm:inline">{dayName}</span>
           </div>
         ))}
       </div>
@@ -77,43 +81,51 @@ export function MonthView({
             return (
               <div
                 key={dayIndex}
-                className={`border-border flex h-[90px] flex-col items-start border p-2 md:h-[120px] ${
-                  isCurrentMonth ? "bg-background" : "bg-muted/50"
+                className={`border-border flex h-[64px] flex-col items-start overflow-hidden border p-1 sm:h-[110px] sm:p-2 ${
+                  isCurrentMonth
+                    ? "bg-background"
+                    : "bg-muted/40 text-muted-foreground"
                 }`}
               >
                 <div
-                  className={`mb-1 text-sm ${
+                  className={`mb-0.5 text-xs sm:mb-1 sm:text-sm ${
                     isToday
-                      ? "flex h-10 w-10 items-center justify-center rounded-full bg-green-600 font-bold"
-                      : ""
+                      ? "bg-primary text-primary-foreground flex h-6 w-6 items-center justify-center rounded-full font-semibold sm:h-7 sm:w-7"
+                      : "text-foreground"
                   }`}
                 >
                   {getDate(day)}
                 </div>
 
-                <div className="flex w-full flex-col">
-                  {dayEvents.map((event, index) => (
-                    <div
+                <div className="flex w-full min-w-0 flex-col gap-0.5 sm:gap-1">
+                  {dayEvents.slice(0, 2).map((event, index) => (
+                    <button
                       key={index}
-                      className="cursor-pointer overflow-hidden rounded px-2 py-1 text-center text-xs"
+                      type="button"
+                      className="w-full cursor-pointer overflow-hidden text-left"
                       onClick={() => onEventClick(event)}
                       title={event.name}
                     >
                       {event.type === "Holiday" ? (
-                        <div className="ml-auto rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-500">
+                        <span className="block w-full truncate rounded border border-rose-500/30 bg-rose-500/15 px-1 py-0.5 text-[10px] font-medium text-rose-700 dark:text-rose-400 sm:text-[11px]">
                           {event.type}
-                        </div>
+                        </span>
                       ) : event.type === "Assignment" ? (
-                        <div className="ml-auto rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
+                        <span className="bg-primary/10 text-primary border-primary/30 block w-full truncate rounded border px-1 py-0.5 text-[10px] font-medium sm:text-[11px]">
                           {event.name}
-                        </div>
+                        </span>
                       ) : (
-                        <div className="ml-auto rounded-full bg-violet-100 px-2 py-1 text-xs font-semibold text-violet-600">
+                        <span className="block w-full truncate rounded border border-violet-500/30 bg-violet-500/15 px-1 py-0.5 text-[10px] font-medium text-violet-700 dark:text-violet-400 sm:text-[11px]">
                           {event.name}
-                        </div>
+                        </span>
                       )}
-                    </div>
+                    </button>
                   ))}
+                  {dayEvents.length > 2 && (
+                    <span className="text-muted-foreground text-[10px]">
+                      +{dayEvents.length - 2} more
+                    </span>
+                  )}
                 </div>
               </div>
             );

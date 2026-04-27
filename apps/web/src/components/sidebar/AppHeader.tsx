@@ -1,6 +1,7 @@
 "use client";
 
-import { Separator } from "@tutly/ui/separator";
+import Link from "next/link";
+import Image from "next/image";
 import { useIsMobile } from "@tutly/hooks";
 import type { SessionUser } from "@/lib/auth";
 import { useLayout } from "@/providers/layout-provider";
@@ -42,27 +43,53 @@ export function AppHeader({ user, crumbReplacement = {} }: AppHeaderProps) {
 
   return (
     <>
-      <header className="bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] shrink-0 items-center gap-1 border-b pt-[env(safe-area-inset-top)] pr-[max(0.5rem,env(safe-area-inset-right))] pl-[max(0.5rem,env(safe-area-inset-left))] backdrop-blur sm:gap-2 sm:pr-[max(1rem,env(safe-area-inset-right))] sm:pl-[max(1rem,env(safe-area-inset-left))]">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-1 pl-4 sm:gap-2 sm:pl-0">
-            {isMobile && (
-              <Separator orientation="vertical" className="ml-3 h-4 sm:ml-5" />
+      <header
+        className={[
+          "bg-background/85 supports-[backdrop-filter]:bg-background/65",
+          "sticky top-0 z-40 flex shrink-0 items-center backdrop-blur",
+          "h-[calc(3.5rem+env(safe-area-inset-top))] sm:h-[calc(4rem+env(safe-area-inset-top))]",
+          "border-b border-border/80",
+          "pt-[env(safe-area-inset-top)]",
+          "pr-[max(0.5rem,env(safe-area-inset-right))] pl-[max(0.5rem,env(safe-area-inset-left))]",
+          "sm:pr-[max(1rem,env(safe-area-inset-right))] sm:pl-[max(1rem,env(safe-area-inset-left))]",
+        ].join(" ")}
+      >
+        <div className="flex w-full items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-1 items-center pl-12 sm:pl-1">
+            {isMobile ? (
+              <Link
+                href="/dashboard"
+                aria-label="Tutly home"
+                className="flex items-center select-none"
+              >
+                <Image
+                  src="/icon.png"
+                  alt="Tutly"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 rounded-lg object-contain"
+                  priority
+                />
+              </Link>
+            ) : (
+              <DynamicBreadcrumbs
+                pathname={pathname}
+                crumbReplacement={crumbReplacement}
+              />
             )}
-            <DynamicBreadcrumbs
-              pathname={pathname}
-              crumbReplacement={crumbReplacement}
-            />
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-5">
             {!isMobile && (
               <CommandPaletteTrigger
                 onClick={() => setCommandPaletteOpen(true)}
-                className="max-w-[200px]"
+                className="w-[260px]"
               />
             )}
-            <span className="text-md font-medium max-sm:hidden">
-              {user.role}
-            </span>
+            {user.role && (
+              <span className="text-foreground hidden text-base font-medium tracking-wide sm:inline-block">
+                {user.role}
+              </span>
+            )}
             <ModeToggle />
             <Notifications user={user} />
             <UserMenu user={user} />

@@ -97,7 +97,7 @@ export const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
       onClick={createSubmissionRepo}
       disabled={isCreating || !hasTemplateRepo}
       size="sm"
-      className="h-9 cursor-pointer border-transparent bg-blue-600 text-xs text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+      className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 cursor-pointer border-transparent text-xs disabled:cursor-not-allowed disabled:opacity-50"
     >
       {isCreating ? (
         <FiRefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
@@ -157,7 +157,7 @@ export const GitSubmissionSection = ({ assignment }: { assignment: any }) => {
             }}
             disabled={isLaunching}
             size="sm"
-            className="h-8 cursor-pointer border-transparent bg-blue-600 px-4 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 cursor-pointer border-transparent px-4 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLaunching ? (
               <FiRefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />

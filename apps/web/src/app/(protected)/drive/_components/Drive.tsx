@@ -2,7 +2,7 @@
 
 import type { File } from "@tutly/db/browser";
 import { formatDistanceToNow } from "date-fns";
-import { Download, FileText, Plus, Trash2 } from "lucide-react";
+import { Download, FileText, Trash2, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -98,61 +98,71 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
   );
 
   const FileCard = ({ file }: { file: File }) => (
-    <Card key={file.id} className="p-4 transition-shadow hover:shadow-lg">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center space-x-3">
-          <FileText className="h-8 w-8 text-blue-500" />
-          <div>
-            <h3 className="max-w-[200px] truncate text-lg font-medium">
-              {file.name}
-            </h3>
-            <p className="text-sm text-gray-500">
-              {formatDistanceToNow(new Date(file.createdAt), {
-                addSuffix: true,
-              })}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => void handleDownload(file.id)}
-            title="Download"
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-          <DeleteDialog fileId={file.id} />
-        </div>
+    <Card
+      key={file.id}
+      className="bg-card flex items-start gap-3 rounded-xl border p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-4"
+    >
+      <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+        <FileText className="text-primary h-5 w-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="text-foreground truncate text-sm font-medium sm:text-base">
+          {file.name}
+        </h3>
+        <p className="text-muted-foreground text-[11px]">
+          {formatDistanceToNow(new Date(file.createdAt), {
+            addSuffix: true,
+          })}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-0.5">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => void handleDownload(file.id)}
+          aria-label="Download"
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+        <DeleteDialog fileId={file.id} />
       </div>
     </Card>
   );
 
   const EmptyState = ({ fileType }: { fileType?: string }) => (
-    <div className="py-12 text-center">
-      <FileText className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-      <h3 className="text-xl font-medium text-gray-600">
-        No {fileType ? `${fileType.toLowerCase()} ` : ""}files uploaded yet
+    <div className="bg-card flex flex-col items-center rounded-xl border py-12 px-6 text-center shadow-sm">
+      <div className="bg-muted mb-3 flex h-12 w-12 items-center justify-center rounded-full">
+        <FileText className="text-muted-foreground/70 h-5 w-5" />
+      </div>
+      <h3 className="text-foreground text-base font-semibold">
+        No {fileType ? `${fileType.toLowerCase()} ` : ""}files yet
       </h3>
-      <p className="text-gray-500">
+      <p className="text-muted-foreground text-sm">
         Your uploaded {fileType ? `${fileType.toLowerCase()} ` : ""}files will
-        appear here
+        appear here.
       </p>
     </div>
   );
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <h1 className="text-3xl font-bold">My Drive</h1>
+    <div className="mx-auto w-full max-w-7xl space-y-4">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
+        <div>
+          <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+            My Drive
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Upload, browse, and manage your files.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="flex items-center gap-2"
+            className="cursor-pointer gap-2"
           >
-            <Plus className="h-4 w-4" />
+            <Upload className="h-4 w-4" />
             Upload File
           </Button>
           <Input
@@ -165,21 +175,19 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
       </div>
 
       {isUploading && (
-        <div className="mb-4">
-          <div className="h-2 rounded bg-gray-200">
-            <div className="h-full animate-pulse rounded bg-blue-500" />
-          </div>
+        <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+          <div className="bg-primary h-full w-1/3 animate-pulse rounded-full" />
         </div>
       )}
 
-      <Tabs defaultValue="ALL" className="w-full">
-        <div className="overflow-x-auto pb-2">
-          <TabsList className="mb-4 flex w-full min-w-max">
+      <Tabs defaultValue="ALL" className="space-y-3">
+        <div className="-mx-3 overflow-x-auto pb-2 sm:mx-0">
+          <TabsList className="bg-muted/40 mx-3 inline-flex h-9 w-max items-center gap-1 rounded-lg p-1 sm:mx-0">
             {fileTypes.map((type) => (
               <TabsTrigger
                 key={type}
                 value={type}
-                className="flex-1 px-2 py-1 text-xs whitespace-nowrap sm:px-3 sm:py-1.5 sm:text-sm"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground h-7 rounded-md px-3 text-xs font-medium whitespace-nowrap data-[state=active]:shadow-sm"
               >
                 {type.charAt(0) + type.slice(1).toLowerCase()}
               </TabsTrigger>
@@ -194,15 +202,15 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
               : uploadedFiles.filter((file) => file.fileType === fileType);
 
           return (
-            <TabsContent key={fileType} value={fileType}>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredFiles.map((file) => (
-                  <FileCard key={file.id} file={file} />
-                ))}
-              </div>
-
-              {filteredFiles.length === 0 && (
+            <TabsContent key={fileType} value={fileType} className="m-0">
+              {filteredFiles.length === 0 ? (
                 <EmptyState fileType={fileType !== "ALL" ? fileType : ""} />
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredFiles.map((file) => (
+                    <FileCard key={file.id} file={file} />
+                  ))}
+                </div>
               )}
             </TabsContent>
           );

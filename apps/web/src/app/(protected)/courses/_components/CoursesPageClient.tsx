@@ -32,31 +32,47 @@ export default function CoursesPageClient({
   const coursesFinal =
     user.role === "INSTRUCTOR" ? coursesData.data : publishedCourses;
 
-  return (
-    <div className="w-full">
-      <div className="flex w-full">
-        {coursesFinal?.length === 0 && (
-          <div>
-            {user.role === "INSTRUCTOR" && !user.isAdmin ? (
-              <AddCourse />
-            ) : (
-              <NoDataFound
-                message="No courses found!"
-                className="flex h-[80vh] w-[80vw] flex-col items-center justify-center"
-              />
-            )}
-          </div>
-        )}
+  const isInstructor = user.role === "INSTRUCTOR" && !user.isAdmin;
+  const showEmpty = coursesFinal?.length === 0;
 
-        {coursesFinal?.length > 0 && (
-          <div className="flex flex-wrap">
-            {coursesFinal.map((course: Course) => (
-              <CourseCard key={course.id} course={course} currentUser={user} />
-            ))}
-            {user.role === "INSTRUCTOR" && !user.isAdmin && <AddCourse />}
-          </div>
-        )}
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-4">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+            Courses
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            {showEmpty
+              ? isInstructor
+                ? "Create your first course to get started."
+                : "Nothing here yet — your courses will show up once you're enrolled."
+              : `${coursesFinal.length} ${coursesFinal.length === 1 ? "course" : "courses"}`}
+          </p>
+        </div>
       </div>
+
+      {showEmpty ? (
+        isInstructor ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <AddCourse />
+          </div>
+        ) : (
+          <div className="bg-card rounded-xl border p-6 shadow-sm">
+            <NoDataFound
+              message="No courses found!"
+              className="flex h-[40vh] flex-col items-center justify-center"
+            />
+          </div>
+        )
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {coursesFinal.map((course: Course) => (
+            <CourseCard key={course.id} course={course} currentUser={user} />
+          ))}
+          {isInstructor && <AddCourse />}
+        </div>
+      )}
     </div>
   );
 }

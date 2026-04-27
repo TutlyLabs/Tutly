@@ -43,7 +43,15 @@ function StudentStats({
     !studentData ||
     !attendanceData
   ) {
-    return null;
+    return (
+      <div className="flex flex-col gap-4 md:gap-6">
+        <div className="flex flex-col gap-4 md:flex-row md:gap-6">
+          <div className="bg-card h-[300px] w-full animate-pulse rounded-xl border md:w-1/3" />
+          <div className="bg-card h-[300px] w-full animate-pulse rounded-xl border md:w-2/3" />
+        </div>
+        <div className="bg-card h-[400px] w-full animate-pulse rounded-xl border" />
+      </div>
+    );
   }
 
   const typedAttendanceData = attendanceData as AttendanceData;
@@ -79,7 +87,7 @@ function StudentStats({
         ).toFixed(2);
 
   return (
-    <div className="mx-4 flex flex-col gap-4 md:mx-8 md:gap-6">
+    <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex flex-col gap-4 md:flex-row md:gap-6">
         <div className="w-full rounded-xl shadow-xl shadow-blue-500/5 md:w-1/3">
           <Radialchart
@@ -94,7 +102,7 @@ function StudentStats({
                 # Rank
               </h1>
               <div className="flex items-center justify-between">
-                <h1 className="text-primary-500 text-3xl font-bold md:text-4xl">
+                <h1 className="text-primary text-3xl font-bold tabular-nums md:text-4xl">
                   NA
                 </h1>
                 <h1>
@@ -106,7 +114,7 @@ function StudentStats({
               <h1 className="bg-background absolute -top-3 px-1 text-sm">
                 Score
               </h1>
-              <h1 className="text-primary-500 text-3xl font-bold md:text-4xl">
+              <h1 className="text-primary text-3xl font-bold tabular-nums md:text-4xl">
                 {studentData.totalPoints}
               </h1>
               <h1 className="text-xs text-gray-500 md:text-sm">

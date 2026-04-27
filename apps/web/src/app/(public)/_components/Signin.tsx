@@ -116,12 +116,18 @@ export function SignIn() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-2">
-      <Card className="w-full max-w-[400px] border-white/30 bg-white/20 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-900/20">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold">
-            Sign In
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="bg-card/95 w-full max-w-[400px] border shadow-xl backdrop-blur-sm">
+        <CardHeader className="space-y-2 text-center">
+          <div className="mx-auto bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-2xl shadow-md">
+            <span className="text-base font-bold leading-none">T</span>
+          </div>
+          <CardTitle className="text-foreground text-2xl font-semibold tracking-tight">
+            Welcome back
           </CardTitle>
+          <p className="text-muted-foreground text-sm">
+            Sign in to continue your learning journey.
+          </p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -193,11 +199,11 @@ export function SignIn() {
               </div>
               <Button
                 type="submit"
-                className="bg-primary/90 hover:bg-primary mt-4 w-full transition-colors"
+                className="mt-3 h-10 w-full text-sm font-medium"
                 disabled={isLoading}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? "Signing in..." : "Sign in"}
+                {isLoading ? "Signing in…" : "Sign in"}
               </Button>
             </form>
             <SocialSignin

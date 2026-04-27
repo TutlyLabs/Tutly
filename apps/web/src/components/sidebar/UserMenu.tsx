@@ -1,9 +1,14 @@
 "use client";
 
-import { LockIcon, LogOut, UserIcon } from "lucide-react";
+import {
+  ChevronDown,
+  LifeBuoy,
+  LockIcon,
+  LogOut,
+  UserIcon,
+} from "lucide-react";
 // import {  Settings } from "lucide-react";
 import { useState } from "react";
-import { FaCaretDown } from "react-icons/fa";
 import Link from "next/link";
 import { toast } from "sonner";
 import type { SessionUser } from "@/lib/auth";
@@ -20,6 +25,8 @@ import {
 } from "@tutly/ui/dropdown-menu";
 import { useLogout } from "@/hooks/use-logout";
 import BiometricToggle from "@/components/native/BiometricToggle";
+import { openCrispChat } from "@/components/Crisp";
+import { useIsMobile } from "@tutly/hooks";
 
 interface UserMenuProps {
   user: SessionUser;
@@ -28,33 +35,37 @@ interface UserMenuProps {
 export function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const logout = useLogout();
+  const isMobile = useIsMobile();
 
   return (
     <div className="relative">
       <DropdownMenu onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
-          <div className="bg-muted hover:bg-muted/80 flex w-16 cursor-pointer items-center rounded-xl px-2 py-1">
-            <Avatar className="h-7 w-7 cursor-pointer rounded-full">
+          <button
+            type="button"
+            className="hover:bg-accent inline-flex cursor-pointer items-center gap-1 rounded-full p-0.5 pr-1.5 transition-colors"
+            aria-label="User menu"
+          >
+            <Avatar className="h-8 w-8 rounded-full">
               <AvatarImage
                 src={user.image ?? "/placeholder.jpg"}
                 alt={user.name ?? user.username}
               />
-              <AvatarFallback className="rounded-full">
+              <AvatarFallback className="text-xs font-medium">
                 {user.name
                   ? user.name
                       .split(" ")
                       .map((n) => n[0])
                       .join("")
-                  : user.username}
+                      .slice(0, 2)
+                  : user.username.slice(0, 2)}
               </AvatarFallback>
             </Avatar>
-            <div
-              className="ml-1 transition-transform duration-200"
+            <ChevronDown
+              className="text-muted-foreground h-3.5 w-3.5 transition-transform duration-200"
               style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-            >
-              <FaCaretDown className="h-4 w-4" />
-            </div>
-          </div>
+            />
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           className="bg-background border-border w-56 rounded-lg border shadow-lg"
@@ -129,6 +140,18 @@ export function UserMenu({ user }: UserMenuProps) {
               </DropdownMenuItem>
             )} */}
           </DropdownMenuGroup>
+          {isMobile && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="flex cursor-pointer items-center gap-2"
+                onClick={() => openCrispChat()}
+              >
+                <LifeBuoy className="h-5 w-5" />
+                Help & Support
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           <BiometricToggle />
           <DropdownMenuItem

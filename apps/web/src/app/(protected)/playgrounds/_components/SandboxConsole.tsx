@@ -25,19 +25,20 @@ const SandboxConsole = () => {
   };
 
   return (
-    <div className="h-full bg-white">
-      <div className="flex justify-between px-10 py-2">
-        <h1 className="text-lg font-semibold text-gray-600">Console</h1>
+    <div className="bg-card h-full">
+      <div className="bg-muted/30 flex items-center justify-between border-b px-4 py-2">
+        <h1 className="text-foreground text-sm font-semibold">Console</h1>
         <button
-          className="rounded bg-blue-500 px-2 py-1 text-white"
+          type="button"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-7 cursor-pointer items-center rounded-md px-2.5 text-xs font-medium transition-colors"
           onClick={reset}
         >
           Clear
         </button>
       </div>
-      <div className="overflow-auto">
+      <div className="text-foreground/90 overflow-auto p-3 font-mono text-xs">
         {logs.map((log, index) => (
-          <div key={index} className="p-2">
+          <div key={index} className="p-1 whitespace-pre-wrap">
             {formatLogData(log.data)}
           </div>
         ))}

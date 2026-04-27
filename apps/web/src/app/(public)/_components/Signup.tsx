@@ -114,12 +114,18 @@ export function SignUp() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-2">
-      <Card className="w-full max-w-[400px] border-white/30 bg-white/20 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-900/20">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold">
-            Sign Up
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="bg-card/95 w-full max-w-[400px] border shadow-xl backdrop-blur-sm">
+        <CardHeader className="space-y-2 text-center">
+          <div className="mx-auto bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-2xl shadow-md">
+            <span className="text-base font-bold leading-none">T</span>
+          </div>
+          <CardTitle className="text-foreground text-2xl font-semibold tracking-tight">
+            Create your account
           </CardTitle>
+          <p className="text-muted-foreground text-sm">
+            Get started with Tutly in seconds.
+          </p>
         </CardHeader>
         <CardContent>
           <Form {...form}>

@@ -8,11 +8,11 @@ export default function BookmarksPage() {
   const q = api.bookmarks.getUserBookmarks.useQuery();
   if (q.isLoading) return <PageLoader />;
   if (!q.data?.success || !q.data.data) {
-    return <div>Failed to load bookmarks.</div>;
+    return (
+      <div className="text-muted-foreground bg-card flex h-64 items-center justify-center rounded-xl border text-sm">
+        Failed to load bookmarks.
+      </div>
+    );
   }
-  return (
-    <div className="container mx-auto py-6">
-      <Bookmarks bookmarks={q.data.data} />
-    </div>
-  );
+  return <Bookmarks bookmarks={q.data.data} />;
 }

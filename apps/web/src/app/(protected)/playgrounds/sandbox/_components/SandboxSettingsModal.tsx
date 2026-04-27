@@ -313,7 +313,6 @@ export function SandboxSettingsModal({
           <Button
             onClick={handleSave}
             disabled={!isValid || !hasChanges}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           >
             Apply Configuration
           </Button>

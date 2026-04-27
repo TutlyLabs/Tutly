@@ -25,16 +25,16 @@ export default function OrganizationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
             Organizations
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Manage all organizations on the platform.
           </p>
         </div>
         <Link
           href="/super-admin/organizations/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90"
         >
           <Plus className="h-4 w-4" />
           New Organization
@@ -44,7 +44,7 @@ export default function OrganizationsPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
           <input
             type="text"
             placeholder="Search by name, code, or subdomain..."
@@ -53,7 +53,7 @@ export default function OrganizationsPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-10 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+            className="bg-background border-border focus:border-primary focus:ring-primary/40 w-full rounded-lg border py-2 pr-4 pl-10 text-sm focus:ring-1 focus:outline-none"
           />
         </div>
         <select
@@ -62,7 +62,7 @@ export default function OrganizationsPage() {
             setStatusFilter(e.target.value);
             setPage(1);
           }}
-          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          className="bg-background border-border focus:border-primary rounded-lg border px-3 py-2 text-sm focus:outline-none"
         >
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>
@@ -73,13 +73,13 @@ export default function OrganizationsPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className="bg-card overflow-hidden rounded-xl border">
         {isLoading ? (
           <div className="space-y-4 p-6">
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="h-12 animate-pulse rounded bg-gray-100 dark:bg-gray-800"
+                className="h-12 animate-pulse rounded bg-muted"
               />
             ))}
           </div>
@@ -87,25 +87,25 @@ export default function OrganizationsPage() {
           <>
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <tr className="bg-muted/30 border-b">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     Organization
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     Code
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     Users
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     Domains
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              <tbody className="divide-y divide-border">
                 {data?.organizations.map((org) => (
                   <tr
                     key={org.id}
@@ -114,20 +114,20 @@ export default function OrganizationsPage() {
                     <td className="px-6 py-4">
                       <Link
                         href={`/super-admin/organizations/detail?id=${org.id}`}
-                        className="font-medium text-gray-900 hover:text-indigo-600 dark:text-white dark:hover:text-indigo-400"
+                        className="text-foreground hover:text-primary font-medium"
                       >
                         {org.name}
                       </Link>
                     </td>
                     <td className="px-6 py-4">
-                      <code className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                      <code className="bg-muted text-muted-foreground rounded px-2 py-0.5 text-xs">
                         {org.orgCode}
                       </code>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {org._count.users}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {org._count.domains}
                     </td>
                     <td className="px-6 py-4">
@@ -139,7 +139,7 @@ export default function OrganizationsPage() {
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-6 py-8 text-center text-sm text-gray-500"
+                      className="px-6 py-8 text-center text-sm text-muted-foreground"
                     >
                       No organizations found.
                     </td>
@@ -151,7 +151,7 @@ export default function OrganizationsPage() {
             {/* Pagination */}
             {data && data.totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 dark:border-gray-800">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Page {data.currentPage} of {data.totalPages} (
                   {data.totalCount} total)
                 </p>

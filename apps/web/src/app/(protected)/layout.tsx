@@ -9,7 +9,10 @@ import { ImpersonationBanner } from "@/components/ImpersonationBanner";
 import { LayoutProvider } from "@/providers/layout-provider";
 import { LayoutContent } from "@/components/LayoutContent";
 import Crisp from "@/components/Crisp";
-import PageLoader from "@/components/loader/PageLoader";
+import {
+  AppShellSkeleton,
+  FullPageSpinnerSkeleton,
+} from "@/components/loader/Skeletons";
 import { ProtectedShell } from "@/components/auth/ProtectedShell";
 import { authClient } from "@/server/auth/client";
 import { api } from "@/trpc/react";
@@ -35,7 +38,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     key: "ai_assistant",
   });
 
-  if (!data?.user) return <PageLoader />;
+  if (!data?.user) return <AppShellSkeleton />;
   const user = data.user;
   const isImpersonating = (data.session as { impersonatedBy?: string } | null)
     ?.impersonatedBy;
@@ -54,7 +57,9 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
           {isImpersonating && <ImpersonationBanner user={user} />}
           <AppHeader user={user} />
           <LayoutContent>
-            <Suspense fallback={<PageLoader />}>{children}</Suspense>
+            <Suspense fallback={<FullPageSpinnerSkeleton />}>
+              {children}
+            </Suspense>
           </LayoutContent>
         </div>
       </div>

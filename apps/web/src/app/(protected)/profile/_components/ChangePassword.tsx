@@ -297,16 +297,16 @@ const ChangePassword = ({
   );
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-      <div className="bg-background mx-auto w-full max-w-sm space-y-6 rounded-lg p-8 shadow-sm">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
+    <div className="mx-auto w-full max-w-md py-6 sm:py-10">
+      <div className="bg-card space-y-5 rounded-2xl border p-5 shadow-sm sm:p-7">
+        <div className="space-y-1.5 text-center">
+          <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
             {isPasswordExists ? "Change Password" : "Set Password"}
           </h1>
           <p className="text-muted-foreground text-sm">
             {isPasswordExists
-              ? "Enter your current password and choose a new one"
-              : "Choose a strong password for your account"}
+              ? "Enter your current password and choose a new one."
+              : "Choose a strong password for your account."}
           </p>
         </div>
         {renderPasswordStep()}

@@ -9,6 +9,7 @@ import { FiEdit } from "react-icons/fi";
 import { MdOutlineDelete } from "react-icons/md";
 import { RiWhatsappLine } from "react-icons/ri";
 import { FiRefreshCw, FiPlus, FiTerminal } from "react-icons/fi";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 import ContentPreview from "@/components/ContentPreview";
@@ -255,52 +256,52 @@ export default function AssignmentPage({
   const selectedMentor = searchParams.get("mentor") || "all";
 
   return (
-    <div className="relative mx-2 my-2 md:mx-10">
-      <h1 className="rounded bg-gradient-to-l from-blue-500 to-blue-600 p-2 text-center text-sm font-medium text-white md:text-lg">
-        Assignment Submission : {assignment?.title}
+    <div className="mx-auto w-full max-w-7xl space-y-3">
+      <h1 className="text-foreground text-lg font-semibold tracking-tight sm:text-xl">
+        {assignment?.title}
       </h1>
 
       <div className="my-4 flex items-center justify-between text-xs font-medium md:text-sm">
         <div className="flex items-center gap-2">
-          <p className="bg-secondary-500 rounded p-1 px-2 text-white">
+          <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium">
             # {assignment?.class?.course?.title}
-          </p>
+          </span>
           {assignment?.class?.course && (
             <Link
               href={`/courses/class?id=${assignment.class.course.id}&classId=${assignment.class.id}`}
-              className="rounded bg-blue-500 p-1 px-2 text-white transition hover:bg-blue-600"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors"
               target="_blank"
               rel="noopener noreferrer"
             >
-              {assignment.class.title}
+              <ExternalLink className="h-3 w-3" />
+              {assignment.class.title || "Open class"}
             </Link>
           )}
         </div>
         <div className="flex items-center justify-center gap-4">
           {assignment?.dueDate != null && (
-            <div
-              className={`rounded p-1 px-2 text-white ${
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${
                 new Date(assignment?.dueDate) > new Date()
-                  ? "bg-primary-600"
-                  : "bg-secondary-500"
+                  ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                  : "bg-rose-500/15 text-rose-700 dark:text-rose-400"
               }`}
             >
-              Last Date : {assignment?.dueDate.toISOString().split("T")[0]}
-            </div>
+              Due {assignment?.dueDate.toISOString().split("T")[0]}
+            </span>
           )}
         </div>
       </div>
-      <div className="flex w-full items-center justify-between">
-        <span className="mt-5 block">Details : 👇</span>
-        <div className="flex items-center justify-center gap-4">
-          <h1 className="rounded-md border p-1 text-sm">
-            Max responses : {assignment?.maxSubmissions}
-          </h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-foreground text-base font-semibold sm:text-lg">
+          Details
+        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium">
+            Max responses · {assignment?.maxSubmissions}
+          </span>
           {haveAdminAccess && assignment.submissionMode === "SANDBOX" && (
-            <Button
-              asChild
-              className="rounded-md bg-blue-600 p-1 px-3 hover:bg-blue-700"
-            >
+            <Button asChild size="sm" variant="outline" className="h-8">
               <Link
                 href={`/playgrounds/sandbox?assignmentId=${assignment.id}&editTemplate=true`}
                 target="_blank"
@@ -316,7 +317,7 @@ export default function AssignmentPage({
               onOpenChange={setIsEditClassDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button className="rounded-md bg-emerald-700 p-1 px-3 hover:bg-emerald-800">
+                <Button size="sm" className="h-8">
                   Edit
                 </Button>
               </DialogTrigger>
@@ -553,8 +554,8 @@ const StudentAssignmentSubmission = ({
     <div className="space-y-6">
       <div>
         {isMaxSubmissionsReached ? (
-          <div className="my-5 text-center text-lg font-semibold text-white">
-            No more responses are accepted!
+          <div className="bg-muted text-muted-foreground rounded-lg border px-4 py-3 text-center text-sm font-medium">
+            No more responses are accepted.
           </div>
         ) : isPlaygroundSubmission ? (
           <Button asChild>
@@ -791,44 +792,43 @@ const AdminAssignmentTable = ({
 
   return (
     <div>
-      <div className="mt-8 mb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-6 max-sm:flex-col">
-          <div className="rounded-md bg-blue-600 px-3 py-2 text-sm text-white">
-            Submissions : 👇
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={selectedMentor} onValueChange={onMentorChange}>
-              <SelectTrigger className="w-[180px] text-white max-sm:w-[150px]">
-                <SelectValue placeholder="Filter by mentor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Mentors</SelectItem>
-                {mentors.map((mentor) => (
-                  <SelectItem key={mentor} value={mentor}>
-                    {mentor}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={() => setNonSubmissions(!nonSubmissions)}
-              variant="link"
-              className="text-muted-foreground hover:text-foreground italic"
-            >
-              {!nonSubmissions ? "Not received from?" : "Received from?"}
-            </Button>
-          </div>
+      <div className="mt-6 mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-foreground text-base font-semibold sm:text-lg">
+            Submissions
+          </h2>
+          <Select value={selectedMentor} onValueChange={onMentorChange}>
+            <SelectTrigger className="h-8 w-[160px]">
+              <SelectValue placeholder="All mentors" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All mentors</SelectItem>
+              {mentors.map((mentor) => (
+                <SelectItem key={mentor} value={mentor}>
+                  {mentor}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            onClick={() => setNonSubmissions(!nonSubmissions)}
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground h-8"
+          >
+            {!nonSubmissions ? "Not received from?" : "Received from?"}
+          </Button>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="relative">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 sm:flex-none">
+            <FaSearch className="text-muted-foreground/70 absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
             <Input
-              className="pl-8"
+              className="bg-background h-8 w-full pl-9 text-sm sm:w-[200px]"
               placeholder="Search username"
               value={searchQuery}
               onChange={(e) => onSearch(e.target.value)}
             />
-            <FaSearch className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2" />
           </div>
           <Button
             onClick={() => {
@@ -840,15 +840,15 @@ const AdminAssignmentTable = ({
                 router.push(`/assignments/evaluate?id=${assignmentId}`);
               }
             }}
-            variant={"link"}
-            className="border border-white text-white hover:bg-white hover:text-black"
+            size="sm"
+            className="h-8"
           >
             Evaluate
           </Button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="bg-card overflow-x-auto rounded-xl border shadow-sm">
         {nonSubmissions ? (
           <Table>
             <TableHeader className="bg-muted">
@@ -1070,7 +1070,7 @@ const AdminAssignmentTable = ({
                                   }
                                   target="_blank"
                                 >
-                                  <FaEye className="h-4 w-4 text-white" />
+                                  <FaEye className="h-4 w-4" />
                                 </Link>
                               </Button>
                               <Button
@@ -1080,14 +1080,14 @@ const AdminAssignmentTable = ({
                                   onEdit(index, submission.id);
                                 }}
                               >
-                                <FiEdit className="h-4 w-4 text-white" />
+                                <FiEdit className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDelete(submission.id)}
                               >
-                                <MdOutlineDelete className="h-4 w-4 text-white" />
+                                <MdOutlineDelete className="h-4 w-4 text-destructive" />
                               </Button>
                             </div>
                           )}

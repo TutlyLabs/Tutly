@@ -1,49 +1,85 @@
 "use client";
 
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Navigate } from "@/components/auth/Navigate";
 import { useAuthSession } from "@/components/auth/ProtectedShell";
-import PageLoader from "@/components/loader/PageLoader";
-import { api } from "@/trpc/react";
+import { FullPageSpinnerSkeleton } from "@/components/loader/Skeletons";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@tutly/ui/sheet";
+import { useIsMobile } from "@tutly/hooks";
+import { PageLayout } from "@/components/PageLayout";
+
 import ClassSidebar from "./_components/classSidebar";
 import Class from "./_components/Class";
-import { PageLayout } from "@/components/PageLayout";
 
 export default function ClassPage() {
   const { user } = useAuthSession();
   const sp = useSearchParams();
   const id = sp.get("id");
   const classId = sp.get("classId");
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
-  const notesQ = api.notes.getNote.useQuery(
-    { userId: user?.id ?? "", objectId: classId ?? "" },
-    { enabled: Boolean(user && classId) },
-  );
-
-  if (!user || notesQ.isLoading) return <PageLoader />;
+  if (!user) return <FullPageSpinnerSkeleton />;
   if (!id || !classId) return <Navigate to="/courses" />;
 
+  const isCourseAdmin = user.role === "INSTRUCTOR";
+
   return (
-    <PageLayout forceClose>
-      <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden">
-        <ClassSidebar
-          courseId={id}
-          title="Assignments"
-          currentUser={user}
-          isCourseAdmin={user.role === "INSTRUCTOR"}
-        />
-        <div className="flex-1 overflow-y-auto">
-          <div className="m-3">
-            <Class
-              courseId={id}
-              classId={classId}
-              currentUser={user}
-              initialNotesData={notesQ.data}
-            />
+    <PageLayout forceClose className="!p-0">
+      <div className="flex h-[calc(100vh-3.5rem)] w-full overflow-hidden sm:h-[calc(100vh-4rem)]">
+        {!isMobile && (
+          <ClassSidebar
+            courseId={id}
+            title="Assignments"
+            currentUser={user}
+            isCourseAdmin={isCourseAdmin}
+          />
+        )}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <div className="w-full p-4 sm:p-6 lg:px-8 xl:px-10">
+              <Class
+                key={classId}
+                courseId={id}
+                classId={classId}
+                currentUser={user}
+                onOpenClassMenu={
+                  isMobile ? () => setSheetOpen(true) : undefined
+                }
+              />
+            </div>
           </div>
         </div>
       </div>
+
+      {isMobile && (
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetContent
+            side="left"
+            className="flex w-[85%] flex-col gap-0 p-0 sm:max-w-sm"
+          >
+            <SheetHeader className="border-b px-4 py-3">
+              <SheetTitle className="text-base">Classes</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-hidden">
+              <ClassSidebar
+                courseId={id}
+                title="Assignments"
+                currentUser={user}
+                isCourseAdmin={isCourseAdmin}
+                mobileFull
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </PageLayout>
   );
 }

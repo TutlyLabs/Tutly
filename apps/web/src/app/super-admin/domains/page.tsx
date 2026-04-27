@@ -18,10 +18,10 @@ export default function DomainsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
           Domains
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Overview of all provisioned domains across organizations.
         </p>
       </div>
@@ -31,7 +31,7 @@ export default function DomainsPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          className="bg-background border-border focus:border-primary rounded-lg border px-3 py-2 text-sm focus:outline-none"
         >
           <option value="">All Statuses</option>
           <option value="ACTIVE">Active</option>
@@ -42,38 +42,38 @@ export default function DomainsPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className="bg-card overflow-hidden rounded-xl border">
         {isLoading ? (
           <div className="space-y-4 p-6">
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="h-12 animate-pulse rounded bg-gray-100 dark:bg-gray-800"
+                className="h-12 animate-pulse rounded bg-muted"
               />
             ))}
           </div>
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+              <tr className="bg-muted/30 border-b">
+                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                   Domain
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                   Organization
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase">
                   Created
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-border">
               {domains?.map((domain) => (
                 <tr
                   key={domain.id}
@@ -81,8 +81,8 @@ export default function DomainsPage() {
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-gray-400" />
-                      <span className="font-medium text-gray-900 dark:text-white">
+                      <Globe className="h-4 w-4 text-muted-foreground/70" />
+                      <span className="text-foreground font-medium">
                         {domain.domain}
                       </span>
                     </div>
@@ -103,7 +103,7 @@ export default function DomainsPage() {
                   <td className="px-6 py-4 text-sm">
                     <Link
                       href={`/super-admin/organizations/detail?id=${domain.organization.id}`}
-                      className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                      className="text-indigo-600 hover:text-primary/80"
                     >
                       {domain.organization.name}
                     </Link>
@@ -111,7 +111,7 @@ export default function DomainsPage() {
                   <td className="px-6 py-4">
                     <StatusBadge status={domain.status} />
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
                     {new Date(domain.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
@@ -120,7 +120,7 @@ export default function DomainsPage() {
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-6 py-8 text-center text-sm text-gray-500"
+                    className="px-6 py-8 text-center text-sm text-muted-foreground"
                   >
                     No domains found.
                   </td>

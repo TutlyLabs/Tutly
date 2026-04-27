@@ -194,27 +194,27 @@ const NewAttachmentPage = ({
                       />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-secondary-700 bg-background text-base text-white">
+                  <SelectContent className="bg-popover text-popover-foreground text-base">
                     <SelectItem
-                      className="hover:bg-secondary-800 text-base"
+                      className="text-base cursor-pointer"
                       value="ASSIGNMENT"
                     >
                       Assignment
                     </SelectItem>
                     <SelectItem
-                      className="hover:bg-secondary-800 text-base"
+                      className="text-base cursor-pointer"
                       value="ZOOM"
                     >
                       Zoom
                     </SelectItem>
                     <SelectItem
-                      className="hover:bg-secondary-800 text-base"
+                      className="text-base cursor-pointer"
                       value="GITHUB"
                     >
                       Github
                     </SelectItem>
                     <SelectItem
-                      className="hover:bg-secondary-800 text-base"
+                      className="text-base cursor-pointer"
                       value="OTHERS"
                     >
                       Other
@@ -264,27 +264,27 @@ const NewAttachmentPage = ({
                       />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-secondary-700 bg-background text-base text-white">
+                  <SelectContent className="bg-popover text-popover-foreground text-base">
                     <SelectItem
-                      className="hover:bg-secondary-800 text-base"
+                      className="text-base cursor-pointer"
                       value="HTML_CSS_JS"
                     >
                       HTML CSS JS
                     </SelectItem>
                     <SelectItem
-                      className="hover:bg-secondary-800 text-base"
+                      className="text-base cursor-pointer"
                       value="GIT"
                     >
                       GIT
                     </SelectItem>
                     <SelectItem
-                      className="hover:bg-secondary-800 text-base"
+                      className="text-base cursor-pointer"
                       value="SANDBOX"
                     >
                       SANDBOX
                     </SelectItem>
                     <SelectItem
-                      className="hover:bg-secondary-800 text-base"
+                      className="text-base cursor-pointer"
                       value="EXTERNAL_LINK"
                     >
                       EXTERNAL LINK
@@ -335,12 +335,12 @@ const NewAttachmentPage = ({
                       />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-secondary-700 bg-background text-base text-white">
+                  <SelectContent className="bg-popover text-popover-foreground text-base">
                     {(classes || []).map((c: any) => (
                       <SelectItem
                         key={c.id}
                         value={c.id}
-                        className="hover:bg-secondary-800 text-base"
+                        className="text-base cursor-pointer"
                       >
                         {c.title}
                       </SelectItem>

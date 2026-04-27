@@ -32,7 +32,12 @@ import {
   DropdownMenuTrigger,
 } from "@tutly/ui/dropdown-menu";
 import { Input } from "@tutly/ui/input";
-import { ScrollArea } from "@tutly/ui/scroll-area";
+import {
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@tutly/ui/dropdown-menu";
+import { Search, SlidersHorizontal } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -75,19 +80,23 @@ const StatCard = ({
   label: string;
 }) => {
   return (
-    <div className="flex w-full flex-col items-center rounded-md bg-white p-4 text-gray-900 shadow-xl sm:w-80 sm:flex-row">
-      <div className="flex h-20 w-20 items-center justify-center">
+    <div className="flex w-full min-w-0 flex-col items-center gap-2 rounded-xl border border-white/40 bg-white p-3 text-center shadow-lg shadow-black/5 ring-1 ring-black/5 transition-colors hover:bg-white/95 sm:flex-row sm:items-center sm:gap-4 sm:p-5 sm:text-left">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 sm:h-14 sm:w-14">
         <Image
           src={imgSrc}
           alt={alt}
-          width={80}
-          height={80}
-          className="object-contain"
+          width={40}
+          height={40}
+          className="h-7 w-7 object-contain sm:h-10 sm:w-10"
         />
       </div>
-      <div className="text-center sm:ml-4">
-        <p className="pt-3 text-2xl font-bold text-blue-600">{value}</p>
-        <h1 className="p-1 text-sm font-bold text-gray-700">{label}</h1>
+      <div className="flex w-full min-w-0 flex-col items-center sm:items-start">
+        <p className="text-xl leading-none font-bold tabular-nums text-blue-600 sm:text-3xl">
+          {value}
+        </p>
+        <h1 className="mt-1 line-clamp-2 w-full text-[10px] font-medium leading-tight tracking-wide text-slate-500 uppercase sm:text-xs sm:font-semibold sm:tracking-normal sm:normal-case sm:text-slate-700">
+          {label}
+        </h1>
       </div>
     </div>
   );
@@ -105,21 +114,21 @@ const AssignmentTable = ({
   };
 
   return (
-    <ScrollArea className="h-[310px] overflow-y-auto">
-      <Table>
-        <TableHeader>
+    <div className="h-[310px] w-full overflow-auto">
+      <Table className="min-w-[480px]">
+        <TableHeader className="bg-card sticky top-0 z-10">
           <TableRow>
-            <TableHead>Status</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Submissions</TableHead>
-            <TableHead>Points</TableHead>
+            <TableHead className="whitespace-nowrap">Status</TableHead>
+            <TableHead className="whitespace-nowrap">Title</TableHead>
+            <TableHead className="whitespace-nowrap">Submissions</TableHead>
+            <TableHead className="whitespace-nowrap">Points</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {searchFilteredAssignments.map((assignment: any) => (
             <TableRow
               key={assignment.id}
-              className="cursor-pointer text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="hover:bg-accent/40 cursor-pointer text-left transition-colors"
               onClick={() => handleAssignmentClick(assignment.id)}
             >
               <TableCell>
@@ -133,9 +142,13 @@ const AssignmentTable = ({
                   {assignment.status}
                 </Badge>
               </TableCell>
-              <TableCell className="font-medium">{assignment.title}</TableCell>
-              <TableCell>{assignment.submissions?.length || 0}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium whitespace-nowrap">
+                {assignment.title}
+              </TableCell>
+              <TableCell className="whitespace-nowrap">
+                {assignment.submissions?.length || 0}
+              </TableCell>
+              <TableCell className="whitespace-nowrap">
                 {assignment.submissions?.reduce(
                   (total: any, submission: any) =>
                     total + (submission.points?.[0]?.score || 0),
@@ -146,7 +159,7 @@ const AssignmentTable = ({
           ))}
         </TableBody>
       </Table>
-    </ScrollArea>
+    </div>
   );
 };
 
@@ -160,38 +173,41 @@ const ProgressBars = ({
   totalAssignments: number;
 }) => {
   return (
-    <Card className="flex-1 px-10 py-6">
-      <h2 className="text-center text-lg font-semibold dark:text-white">
+    <Card className="bg-card flex-1 rounded-xl border p-5 shadow-sm sm:p-6">
+      <h2 className="text-foreground text-base font-semibold sm:text-lg">
         Submission Summary
       </h2>
-      <div className="flex h-full flex-col justify-center space-y-6">
+      <div className="mt-5 flex h-full flex-col justify-center space-y-5">
         {[
           {
             label: "Successfully Submitted",
             count: submittedCount,
-            color: "bg-green-600",
+            color: "bg-emerald-500",
           },
           {
             label: "Not Submitted",
             count: notSubmittedCount,
-            color: "bg-red-600",
+            color: "bg-rose-500",
           },
         ].map((item) => (
           <div key={item.label} className="space-y-2">
-            <div className="flex items-center justify-between text-base font-medium dark:text-white">
+            <div className="text-foreground flex items-center justify-between text-sm font-medium">
               <span>{item.label}</span>
-              <span>
-                {item.count}/{totalAssignments} (
-                {((item.count / totalAssignments) * 100).toFixed(2)}%)
+              <span className="text-muted-foreground tabular-nums">
+                {item.count}/{totalAssignments} ·{" "}
+                {totalAssignments
+                  ? ((item.count / totalAssignments) * 100).toFixed(0)
+                  : "0"}
+                %
               </span>
             </div>
-            <div className="h-3.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+            <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
               <div
-                className={`${item.color} h-3.5 rounded-full`}
+                className={`${item.color} h-full rounded-full transition-all`}
                 style={{
-                  width: `${((item.count / totalAssignments) * 100).toFixed(2)}%`,
+                  width: `${totalAssignments ? ((item.count / totalAssignments) * 100).toFixed(2) : 0}%`,
                 }}
-              ></div>
+              />
             </div>
           </div>
         ))}
@@ -323,7 +339,7 @@ const PlatformScores = () => {
         {shouldShowUpdateProfile && (
           <ProfessionalProfilesModal onUpdate={() => {}}>
             <div className="absolute inset-0 z-10 flex items-center justify-center">
-              <div className="cursor-pointer rounded-lg bg-gray-800/80 px-4 py-2 text-white transition-colors hover:bg-gray-700/80">
+              <div className="bg-foreground/85 text-background hover:bg-foreground cursor-pointer rounded-lg px-4 py-2 text-sm font-medium shadow-md transition-colors">
                 Update Profile
               </div>
             </div>
@@ -377,17 +393,17 @@ const PlatformScores = () => {
               <div className="flex-1">
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-800 capitalize dark:text-gray-200">
+                    <span className="text-foreground text-xs font-medium capitalize">
                       {platform.name}
                     </span>
                     {!isPlatformConfigured ? (
                       <ProfessionalProfilesModal onUpdate={() => {}}>
-                        <span className="cursor-pointer text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                        <span className="text-primary hover:text-primary/80 cursor-pointer text-xs font-medium">
                           Not Configured
                         </span>
                       </ProfessionalProfilesModal>
                     ) : (
-                      <span className="text-xs font-medium text-gray-800 dark:text-gray-200">
+                      <span className="text-foreground text-xs font-medium tabular-nums">
                         {`${percentage.toFixed(1)}%`}
                       </span>
                     )}
@@ -395,7 +411,7 @@ const PlatformScores = () => {
                   {score &&
                     typeof score === "object" &&
                     "problemCount" in score && (
-                      <div className="flex justify-between text-[10px] text-gray-600 dark:text-gray-400">
+                      <div className="text-muted-foreground flex justify-between text-[10px] tabular-nums">
                         <span>Problems: {score.problemCount ?? 0}</span>
                         {score.currentRating && (
                           <span>Rating: {Math.round(score.currentRating)}</span>
@@ -438,18 +454,18 @@ export function StudentCards({ selectedCourse }: Props) {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-3">
         {/* Stats Cards */}
-        <div className="mb-6 flex flex-wrap justify-center gap-4 md:mb-10 md:gap-10">
+        <div className="relative z-10 mx-auto grid w-full grid-cols-3 gap-2 px-1 sm:max-w-6xl sm:grid-cols-3 sm:gap-6 sm:px-8 lg:gap-8 lg:px-10">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="flex w-full flex-col items-center rounded-md bg-white p-4 text-gray-900 shadow-xl sm:w-80 sm:flex-row"
+              className="flex w-full flex-col items-center gap-2 rounded-xl border border-white/40 bg-white p-3 shadow-lg shadow-black/5 ring-1 ring-black/5 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
             >
-              <Skeleton className="flex h-20 w-20 items-center justify-center rounded-md" />
-              <div className="text-center sm:ml-4">
-                <Skeleton className="mt-3 h-8 w-16" />
-                <Skeleton className="mt-1 h-4 w-32" />
+              <Skeleton className="h-10 w-10 rounded-lg sm:h-14 sm:w-14" />
+              <div className="flex w-full flex-1 flex-col items-center gap-2 sm:items-start">
+                <Skeleton className="h-6 w-12 sm:h-7 sm:w-20" />
+                <Skeleton className="h-3 w-24 sm:w-32" />
               </div>
             </div>
           ))}
@@ -539,8 +555,8 @@ export function StudentCards({ selectedCourse }: Props) {
     Math.round((submittedCount / totalAssignments) * 100) ?? 0;
 
   return (
-    <>
-      <div className="mb-6 flex flex-wrap justify-center gap-4 md:mb-10 md:gap-10">
+    <div className="space-y-4">
+      <div className="relative z-10 mx-auto grid w-full grid-cols-3 gap-2 px-1 sm:max-w-6xl sm:grid-cols-3 sm:gap-6 sm:px-8 lg:gap-8 lg:px-10">
         {[
           {
             imgSrc: "/score.png",
@@ -564,73 +580,80 @@ export function StudentCards({ selectedCourse }: Props) {
           <StatCard key={index} {...item} />
         ))}
       </div>
-      <div className="flex flex-col gap-4 lg:flex-row">
-        <Card className="mb-3 w-full lg:w-2/3">
-          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle>Assignments</CardTitle>
-            <div className="flex flex-col gap-4 md:flex-row">
+      <div className="!mt-6 grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
+        <Card className="bg-card flex w-full flex-col rounded-xl border shadow-sm lg:col-span-2">
+          <CardHeader className="flex flex-col gap-2 pb-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="flex items-center justify-between gap-2 sm:contents">
+              <CardTitle className="text-base sm:text-lg">
+                Assignments
+              </CardTitle>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="w-full min-w-[140px] rounded-md border border-gray-300 px-2 py-1.5 text-sm font-medium text-gray-400 md:w-auto"
+                    size="icon"
+                    className="hover:bg-accent h-8 w-8 shrink-0 cursor-pointer sm:order-3"
+                    aria-label="Filter assignments"
                   >
-                    {selectedStatus}
+                    <SlidersHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setSelectedStatus("All")}>
-                    All
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setSelectedStatus("Submitted")}
-                  >
-                    Submitted
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setSelectedStatus("Not Submitted")}
-                  >
-                    Not Submitted
-                  </DropdownMenuItem>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuLabel>Filter</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {["All", "Submitted", "Not Submitted"].map((status) => (
+                    <DropdownMenuCheckboxItem
+                      key={status}
+                      checked={selectedStatus === status}
+                      onCheckedChange={() => setSelectedStatus(status)}
+                    >
+                      {status}
+                    </DropdownMenuCheckboxItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+            </div>
+            <div className="relative w-full sm:order-2 sm:ml-auto sm:max-w-[260px]">
+              <Search className="text-muted-foreground/70 absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
               <Input
                 type="text"
-                placeholder="Search assignment..."
-                className="w-full rounded-md border border-gray-300 p-2 md:flex-1"
+                placeholder="Search assignments…"
+                className="bg-background h-8 pl-9 text-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </CardHeader>
-          <CardContent>
-            <AssignmentTable
-              searchFilteredAssignments={searchFilteredAssignments}
-            />
+          <CardContent className="flex flex-1 flex-col pt-0">
+            <div className="flex-1">
+              <AssignmentTable
+                searchFilteredAssignments={searchFilteredAssignments}
+              />
+            </div>
           </CardContent>
         </Card>
 
-        <div className="w-full pb-3 lg:w-1/3">
-          <Card>
-            <CardHeader className="relative">
-              <div className="flex items-center justify-center gap-4">
-                <CardTitle>Platform Scores</CardTitle>
-                <Link
-                  href="/coding-platforms/leaderboard"
-                  className="text-primary hover:text-primary/80 dark:text-primary dark:hover:text-primary/80 absolute right-2 text-xs font-medium underline-offset-4 hover:underline"
-                >
-                  Leaderboard
-                </Link>
-              </div>
-              <CardDescription>
+        <Card className="bg-card flex w-full flex-col rounded-xl border shadow-sm">
+          <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg">
+                Platform Scores
+              </CardTitle>
+              <CardDescription className="text-xs">
                 Your scores on various coding platforms
               </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PlatformScores />
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+            <Link
+              href="/coding-platforms/leaderboard"
+              className="text-primary hover:text-primary/80 shrink-0 text-xs font-medium underline-offset-4 hover:underline"
+            >
+              Leaderboard
+            </Link>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col justify-center pt-0">
+            <PlatformScores />
+          </CardContent>
+        </Card>
       </div>
 
       {Number(totalAssignments) > 0 && (
@@ -648,6 +671,6 @@ export function StudentCards({ selectedCourse }: Props) {
           />
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -20,13 +20,14 @@ import { EventDetails } from "./event-details";
 
 dayjs.extend(isBetween);
 
-export const EventsSidebar = ({ events }: { events: any[] }) => {
+export const EventsSidebar = ({
+  events,
+  fullWidth = false,
+}: {
+  events: any[];
+  fullWidth?: boolean;
+}) => {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
-
-  // Debug logging
-  console.log("EventsSidebar received events:", events);
-  console.log("Events type:", typeof events);
-  console.log("Events length:", events?.length);
 
   const getStatusBadge = (startDate: string, endDate: string, type: string) => {
     const now = dayjs();
@@ -35,27 +36,27 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
 
     if (type === "Holiday" || type === "Assignment") {
       return (
-        <span className="ml-auto rounded-full bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-700">
+        <span className="bg-primary/10 text-primary border-primary/30 ml-auto inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium">
           {type}
         </span>
       );
     }
     if (now.isBetween(start, end, null, "[]")) {
       return (
-        <span className="ml-auto flex justify-center gap-1 rounded-full bg-purple-100 px-3 py-1.5 text-xs font-medium text-purple-500">
-          <CiStreamOn className="text-base font-bold" /> Live
+        <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-purple-500/30 bg-purple-500/15 px-2.5 py-1 text-[11px] font-medium text-purple-600 dark:text-purple-400">
+          <CiStreamOn className="h-3 w-3" /> Live
         </span>
       );
     }
     if (end.isBefore(now)) {
       return (
-        <span className="ml-auto rounded-full bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500">
+        <span className="ml-auto inline-flex items-center rounded-full border border-rose-500/30 bg-rose-500/15 px-2.5 py-1 text-[11px] font-medium text-rose-700 dark:text-rose-400">
           Completed
         </span>
       );
     } else {
       return (
-        <span className="ml-auto rounded-full bg-green-100 px-3 py-1.5 text-xs font-medium text-green-800">
+        <span className="ml-auto inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
           Upcoming
         </span>
       );
@@ -65,7 +66,7 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
   const renderEventItem = (event: any) => (
     <div
       key={event.id}
-      className="mb-2 flex cursor-pointer items-center gap-3 rounded-md bg-gray-100 p-3 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-gray-800"
+      className="bg-muted/40 hover:bg-muted/70 mb-2 flex cursor-pointer items-center gap-3 rounded-md p-3 transition-colors"
       onClick={() => setSelectedEvent(event)}
     >
       <PiTagChevronBold className="h-5 w-5 text-gray-600 dark:text-gray-300" />
@@ -81,7 +82,7 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
   const renderAssignmentItem = (assignment: any) => (
     <div
       key={assignment.id}
-      className="mb-2 flex cursor-pointer items-center gap-3 rounded-md bg-gray-100 p-3 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-gray-800"
+      className="bg-muted/40 hover:bg-muted/70 mb-2 flex cursor-pointer items-center gap-3 rounded-md p-3 transition-colors"
       onClick={() => setSelectedEvent(assignment)}
     >
       <div>
@@ -166,9 +167,17 @@ export const EventsSidebar = ({ events }: { events: any[] }) => {
     assignments.length > 0;
 
   return (
-    <div className="w-[260px]">
-      <Card className="bg-background h-full rounded-lg p-3 shadow-md">
-        <ScrollArea className="h-[calc(100vh-8rem)]">
+    <div className={fullWidth ? "h-full w-full" : "w-full"}>
+      <Card
+        className={
+          fullWidth
+            ? "bg-card h-full rounded-none border-0 p-3 shadow-none"
+            : "bg-card h-full rounded-xl p-3 shadow-sm"
+        }
+      >
+        <ScrollArea
+          className={fullWidth ? "h-full" : "h-[calc(100vh-8rem)]"}
+        >
           <div className="space-y-2 pb-1">
             {renderEventSection(
               "Live Events",

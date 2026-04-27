@@ -87,14 +87,14 @@ export default function OrganizationDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/70" />
       </div>
     );
   }
 
   if (!org) {
     return (
-      <div className="py-20 text-center text-gray-500">
+      <div className="py-20 text-center text-muted-foreground">
         Organization not found.
       </div>
     );
@@ -106,20 +106,20 @@ export default function OrganizationDetailPage() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="rounded-lg border border-gray-300 p-2 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          className="rounded-lg border border-gray-300 p-2 text-muted-foreground hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
             {org.name}
           </h1>
           <div className="mt-1 flex items-center gap-3">
-            <code className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+            <code className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 bg-muted dark:text-muted-foreground/70">
               {org.orgCode}
             </code>
             <StatusBadge status={org.status} />
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-muted-foreground">
               {org._count.users} users
             </span>
           </div>
@@ -127,7 +127,7 @@ export default function OrganizationDetailPage() {
         <div className="flex gap-2">
           <Link
             href={`/super-admin/users?orgId=${org.id}`}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 text-foreground/80 dark:hover:bg-gray-800"
           >
             View Users
           </Link>
@@ -147,7 +147,7 @@ export default function OrganizationDetailPage() {
                 setEditing(true);
               }
             }}
-            className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90"
           >
             {editing ? "Save Changes" : "Edit"}
           </button>
@@ -155,8 +155,8 @@ export default function OrganizationDetailPage() {
       </div>
 
       {/* Org Details */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 bg-card">
+        <h2 className="mb-4 text-foreground text-base font-semibold sm:text-lg">
           Details
         </h2>
         <div className="grid grid-cols-2 gap-4">
@@ -216,7 +216,7 @@ export default function OrganizationDetailPage() {
           <div className="mt-4 flex justify-end">
             <button
               onClick={() => setEditing(false)}
-              className="mr-2 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+              className="mr-2 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-muted-foreground/70 dark:hover:bg-gray-800"
             >
               Cancel
             </button>
@@ -225,25 +225,25 @@ export default function OrganizationDetailPage() {
       </div>
 
       {/* Domains Section */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 bg-card">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
           <div className="flex items-center gap-2">
-            <Globe className="h-5 w-5 text-gray-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <Globe className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-foreground text-base font-semibold sm:text-lg">
               Domains
             </h2>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setShowSubdomainForm(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 text-foreground/80 dark:hover:bg-gray-800"
             >
               <Plus className="h-3.5 w-3.5" />
               Subdomain
             </button>
             <button
               onClick={() => setShowCustomDomainForm(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 text-foreground/80 dark:hover:bg-gray-800"
             >
               <Plus className="h-3.5 w-3.5" />
               Custom Domain
@@ -253,7 +253,7 @@ export default function OrganizationDetailPage() {
 
         {/* Add subdomain form */}
         {showSubdomainForm && (
-          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 bg-accent/40">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -262,7 +262,7 @@ export default function OrganizationDetailPage() {
               className="flex items-end gap-3"
             >
               <div className="flex-1">
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-1 block text-sm font-medium text-foreground/80">
                   Subdomain
                 </label>
                 <div className="flex items-center">
@@ -275,9 +275,9 @@ export default function OrganizationDetailPage() {
                       )
                     }
                     placeholder="acme"
-                    className="rounded-l-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    className="rounded-l-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none dark:border-gray-700 bg-card text-foreground"
                   />
-                  <span className="rounded-r-lg border border-l-0 border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800">
+                  <span className="rounded-r-lg border border-l-0 border-gray-300 bg-gray-100 px-3 py-2 text-sm text-muted-foreground dark:border-gray-700 bg-muted">
                     .tutly.in
                   </span>
                 </div>
@@ -285,14 +285,14 @@ export default function OrganizationDetailPage() {
               <button
                 type="submit"
                 disabled={!newSubdomain || provisionSubdomain.isPending}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
               >
                 {provisionSubdomain.isPending ? "Provisioning..." : "Provision"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowSubdomainForm(false)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-muted-foreground/70 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>
@@ -302,7 +302,7 @@ export default function OrganizationDetailPage() {
 
         {/* Add custom domain form */}
         {showCustomDomainForm && (
-          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 bg-accent/40">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -311,7 +311,7 @@ export default function OrganizationDetailPage() {
               className="flex items-end gap-3"
             >
               <div className="flex-1">
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-1 block text-sm font-medium text-foreground/80">
                   Custom Domain
                 </label>
                 <input
@@ -319,20 +319,20 @@ export default function OrganizationDetailPage() {
                   value={newCustomDomain}
                   onChange={(e) => setNewCustomDomain(e.target.value)}
                   placeholder="learn.acme.com"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none dark:border-gray-700 bg-card text-foreground"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!newCustomDomain || addCustomDomain.isPending}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
               >
                 {addCustomDomain.isPending ? "Adding..." : "Add Domain"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowCustomDomainForm(false)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-muted-foreground/70 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>
@@ -341,9 +341,9 @@ export default function OrganizationDetailPage() {
         )}
 
         {/* Domains list */}
-        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="divide-y divide-border">
           {org.domains.length === 0 && (
-            <div className="px-6 py-8 text-center text-sm text-gray-500">
+            <div className="px-6 py-8 text-center text-sm text-muted-foreground">
               No domains configured. Add a subdomain or custom domain above.
             </div>
           )}
@@ -351,12 +351,12 @@ export default function OrganizationDetailPage() {
             <div key={domain.id} className="px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Globe className="h-4 w-4 text-gray-400" />
+                  <Globe className="h-4 w-4 text-muted-foreground/70" />
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="text-foreground font-medium">
                       {domain.domain}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {domain.domainType === "SUBDOMAIN"
                         ? "Subdomain"
                         : "Custom Domain"}
@@ -390,7 +390,7 @@ export default function OrganizationDetailPage() {
                           removeDomain.mutate({ domainId: domain.id });
                         }
                       }}
-                      className="rounded-md p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30"
+                      className="rounded-md p-1 text-muted-foreground/70 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -473,8 +473,8 @@ function DetailField({
 }) {
   return (
     <div>
-      <p className="text-xs font-medium text-gray-500">{label}</p>
-      <p className="mt-0.5 text-sm text-gray-900 dark:text-white">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="mt-0.5 text-sm text-foreground">
         {value || "—"}
       </p>
     </div>
@@ -496,14 +496,14 @@ function EditField({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-gray-500">
+      <label className="mb-1 block text-xs font-medium text-muted-foreground">
         {label}
       </label>
       {type === "select" && options ? (
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-700 bg-muted text-foreground"
         >
           {options.map((opt) => (
             <option key={opt} value={opt}>
@@ -516,7 +516,7 @@ function EditField({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-700 bg-muted text-foreground"
         />
       )}
     </div>

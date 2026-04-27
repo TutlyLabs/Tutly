@@ -646,7 +646,19 @@ export function CommandPalette({
         )}
 
         {!isLoading && debouncedSearch && !hasResults && (
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>
+            <div className="flex flex-col items-center justify-center gap-2 py-6">
+              <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-full">
+                <SearchIcon className="text-muted-foreground/70 h-4 w-4" />
+              </div>
+              <p className="text-foreground text-sm font-medium">
+                No results for &quot;{debouncedSearch}&quot;
+              </p>
+              <p className="text-muted-foreground text-xs">
+                Try a different keyword or browse categories above.
+              </p>
+            </div>
+          </CommandEmpty>
         )}
 
         {/* Search Results */}
@@ -1220,7 +1232,7 @@ export function CommandPaletteTrigger({
     <button
       onClick={onClick}
       className={cn(
-        "border-input bg-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex h-9 w-full max-w-xs items-center gap-2 rounded-md border px-3 py-2 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none",
+        "border-input bg-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex h-9 w-full cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none",
         className,
       )}
     >

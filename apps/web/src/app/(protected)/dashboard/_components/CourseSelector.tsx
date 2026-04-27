@@ -35,11 +35,7 @@ export default function CourseSelector({
   }, [courseSelectorData, selectedCourse, onCourseChange]);
 
   if (isLoading) {
-    return (
-      <div className="text-base font-medium text-white">
-        <Skeleton className="h-8 w-32 bg-white" />
-      </div>
-    );
+    return <Skeleton className="h-9 w-full bg-white/30 sm:w-44" />;
   }
 
   if (
@@ -52,23 +48,28 @@ export default function CourseSelector({
   const { courses } = courseSelectorData.data;
 
   return (
-    <div className="text-base font-medium text-white">
-      <Select
-        value={selectedCourse}
-        onValueChange={onCourseChange}
-        defaultValue={courses[0]?.courseId ?? ""}
+    <Select
+      value={selectedCourse}
+      onValueChange={onCourseChange}
+      defaultValue={courses[0]?.courseId ?? ""}
+    >
+      <SelectTrigger className="h-9 w-full cursor-pointer rounded-lg border-transparent !bg-white px-3 text-sm font-medium !text-slate-900 shadow-sm transition-colors hover:!bg-white/90 dark:!bg-white dark:hover:!bg-white/90 sm:w-52 [&_svg]:!text-slate-500">
+        <SelectValue placeholder="Select a course" />
+      </SelectTrigger>
+      <SelectContent
+        align="end"
+        className="border-slate-200 bg-white text-slate-900"
       >
-        <SelectTrigger className="ml-2 rounded-md !bg-white px-2 py-1 text-gray-900">
-          <SelectValue placeholder="Select a course" />
-        </SelectTrigger>
-        <SelectContent align="end">
-          {courses.map((course: { courseId: string; courseTitle: string }) => (
-            <SelectItem key={course.courseId} value={course.courseId}>
-              {course.courseTitle}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+        {courses.map((course: { courseId: string; courseTitle: string }) => (
+          <SelectItem
+            key={course.courseId}
+            value={course.courseId}
+            className="cursor-pointer text-slate-900 focus:bg-slate-100 focus:text-slate-900 data-[state=checked]:bg-slate-100"
+          >
+            {course.courseTitle}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

@@ -214,7 +214,7 @@ export default function LiveClassBanner({
           <Button
             onClick={handleJoinMeeting}
             variant={status === "live" ? "default" : "outline"}
-            className="w-[200px] gap-2 font-semibold shadow-sm sm:w-[240px]"
+            className="w-full max-w-[260px] gap-2 font-semibold shadow-sm"
             size={status === "live" ? "default" : "sm"}
           >
             <ExternalLink className="h-4 w-4" />

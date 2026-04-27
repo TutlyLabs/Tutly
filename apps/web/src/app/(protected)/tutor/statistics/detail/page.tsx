@@ -56,7 +56,7 @@ export default function StatisticsDetailPage() {
         </Suspense>
       ) : (
         <>
-          <div className="mx-4 mt-6 flex flex-col gap-4 md:mx-8 md:gap-6">
+          <div className="mt-4 flex flex-col gap-4 md:gap-6">
             <div className="flex flex-col gap-4 md:gap-6 lg:flex-row">
               <div className="w-full rounded-xl shadow-xl shadow-blue-500/5 lg:w-[350px]">
                 <Suspense fallback={<PiechartLoadingSkeleton />}>
@@ -64,20 +64,20 @@ export default function StatisticsDetailPage() {
                 </Suspense>
               </div>
               <div className="flex w-full flex-col gap-2 rounded-xl shadow-xl shadow-blue-500/5 md:flex-row lg:w-3/4">
-                <div className="flex w-full flex-col gap-4 p-4 text-gray-500 md:w-1/3 md:gap-6 md:p-14">
-                  <div className="relative rounded-xl border-4 p-4">
+                <div className="text-muted-foreground flex w-full flex-col gap-4 p-4 md:w-1/3 md:gap-6 md:p-6">
+                  <div className="border-border relative rounded-xl border-2 p-4">
                     <h1 className="bg-background absolute -top-3 px-1 text-sm md:text-base">
                       Total Students
                     </h1>
-                    <h1 className="text-primary-500 flex items-baseline justify-between text-2xl font-bold md:text-4xl">
+                    <h1 className="text-primary flex items-baseline justify-between text-2xl font-bold tabular-nums md:text-4xl">
                       <MenteeCount courseId={id} mentorUsername={mentor} />
                     </h1>
                   </div>
-                  <div className="relative rounded-xl border-4 p-4">
+                  <div className="border-border relative rounded-xl border-2 p-4">
                     <h1 className="bg-background absolute -top-3 px-1 text-sm md:text-base">
                       Total Sessions
                     </h1>
-                    <h1 className="text-primary-500 text-2xl font-bold md:text-4xl">
+                    <h1 className="text-primary text-2xl font-bold tabular-nums md:text-4xl">
                       13
                     </h1>
                   </div>
@@ -120,10 +120,10 @@ export default function StatisticsDetailPage() {
 
 function StatisticsLoadingSkeleton() {
   return (
-    <div className="mx-4 flex flex-col gap-4 md:mx-8 md:gap-6">
+    <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex flex-col gap-4 md:flex-row md:gap-6">
         <Skeleton className="h-[300px] w-full rounded-xl md:w-1/3" />
-        <Skeleton className="h-[300px] w-full rounded-xl md:w-3/4" />
+        <Skeleton className="h-[300px] w-full rounded-xl md:w-2/3" />
       </div>
       <Skeleton className="h-[400px] w-full rounded-xl" />
     </div>
@@ -175,7 +175,7 @@ function EvaluationLoadingSkeleton() {
       <div className="px-4 text-center font-semibold text-blue-500 md:px-16">
         <Skeleton className="mx-auto h-8 w-24" />
       </div>
-      <div className="m-auto my-4 w-4/5 rounded-full border border-gray-700">
+      <div className="border-border m-auto my-4 w-4/5 rounded-full border">
         <Skeleton className="h-[10px] w-1/2 rounded-full" />
       </div>
       <Skeleton className="mx-auto h-4 w-48" />
@@ -185,7 +185,7 @@ function EvaluationLoadingSkeleton() {
 
 function TabViewLoadingSkeleton() {
   return (
-    <div className="mx-4 mt-8 space-y-6 md:mx-8">
+    <div className="mt-8 space-y-6">
       <div className="flex items-center justify-between">
         <Skeleton className="h-10 w-[400px]" />
       </div>

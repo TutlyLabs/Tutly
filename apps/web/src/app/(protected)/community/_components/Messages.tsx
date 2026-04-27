@@ -3,12 +3,15 @@
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
-import { FaCrown } from "react-icons/fa";
-import { HiOutlineDotsHorizontal } from "react-icons/hi";
-import { LuReply, LuSendHorizontal, LuMessageCircleMore } from "react-icons/lu";
-import { MdDelete } from "react-icons/md";
-import { PiCrownSimpleFill } from "react-icons/pi";
-import { RxCross2 } from "react-icons/rx";
+import {
+  Crown,
+  MessageCircle,
+  MoreHorizontal,
+  Reply,
+  Send,
+  Trash2,
+  X,
+} from "lucide-react";
 
 import {
   AlertDialog,
@@ -22,7 +25,6 @@ import {
   AlertDialogTrigger,
 } from "@tutly/ui/alert-dialog";
 import { Button } from "@tutly/ui/button";
-import { Card } from "@tutly/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +34,7 @@ import {
 import { Input } from "@tutly/ui/input";
 import { api } from "@/trpc/react";
 import { useClientSession } from "@/lib/auth/client";
+import { cn } from "@tutly/utils";
 
 interface Doubt {
   id: string;
@@ -64,6 +67,57 @@ interface MessagesProps {
   doubts: Doubt[];
 }
 
+function UserAvatar({
+  user,
+  size = 36,
+}: {
+  user: { image?: string; role: string; name: string };
+  size?: number;
+}) {
+  const ringClass =
+    user.role === "INSTRUCTOR"
+      ? "ring-rose-500/60"
+      : user.role === "MENTOR"
+        ? "ring-amber-400/70"
+        : "ring-transparent";
+  return (
+    <div className="relative shrink-0">
+      <Image
+        src={user.image || "/placeholder.jpg"}
+        alt={user.name}
+        width={size}
+        height={size}
+        className={cn(
+          "bg-muted h-9 w-9 rounded-full object-cover ring-2 ring-offset-1 ring-offset-card",
+          ringClass,
+        )}
+      />
+      {(user.role === "INSTRUCTOR" || user.role === "MENTOR") && (
+        <span
+          className={cn(
+            "ring-card absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full text-[9px] ring-2",
+            user.role === "INSTRUCTOR"
+              ? "bg-rose-500 text-white"
+              : "bg-amber-400 text-amber-950",
+          )}
+        >
+          <Crown className="h-2.5 w-2.5" />
+        </span>
+      )}
+    </div>
+  );
+}
+
+function formatDateTime(dateTimeString: string) {
+  const dateTime = new Date(dateTimeString);
+  return dateTime.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export default function Messages({ doubts }: MessagesProps) {
   const [openAccordion, setOpenAccordion] = useState<number>(0);
   const [reply, setReply] = useState<string>("");
@@ -75,7 +129,7 @@ export default function Messages({ doubts }: MessagesProps) {
   const createResponse = api.doubts.createResponse.useMutation({
     onSuccess: () => {
       void utils.doubts.getUserDoubtsByCourseId.invalidate();
-      toast.success("Reply added successfully");
+      toast.success("Reply added");
       setReply("");
       setReplyId("");
     },
@@ -87,7 +141,7 @@ export default function Messages({ doubts }: MessagesProps) {
   const deleteDoubt = api.doubts.deleteDoubt.useMutation({
     onSuccess: () => {
       void utils.doubts.getUserDoubtsByCourseId.invalidate();
-      toast.success("Doubt deleted successfully");
+      toast.success("Doubt deleted");
     },
     onError: () => {
       toast.error("Failed to delete doubt");
@@ -97,332 +151,241 @@ export default function Messages({ doubts }: MessagesProps) {
   const deleteResponse = api.doubts.deleteResponse.useMutation({
     onSuccess: () => {
       void utils.doubts.getUserDoubtsByCourseId.invalidate();
-      toast.success("Reply deleted successfully");
+      toast.success("Reply deleted");
     },
     onError: () => {
       toast.error("Failed to delete reply");
     },
   });
 
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
+  if (isPending) return null;
   const currentUser = data?.user!;
 
   const handleReply = async (id: string) => {
     if (!reply) return;
-
-    await createResponse.mutateAsync({
-      doubtId: id,
-      description: reply,
-    });
+    await createResponse.mutateAsync({ doubtId: id, description: reply });
   };
 
   const handleDeleteDoubt = async (id: string) => {
-    await deleteDoubt.mutateAsync({
-      doubtId: id,
-    });
+    await deleteDoubt.mutateAsync({ doubtId: id });
   };
 
-  const handleDeleteReply = async (replyId: string) => {
-    await deleteResponse.mutateAsync({
-      responseId: replyId,
-    });
+  const handleDeleteReply = async (rid: string) => {
+    await deleteResponse.mutateAsync({ responseId: rid });
   };
 
   const toggleAccordion = (index: number) => {
     setOpenAccordion(openAccordion === index ? -1 : index);
   };
 
-  function formatDateTime(dateTimeString: string) {
-    const dateTime = new Date(dateTimeString);
-
-    const day = dateTime.getDate().toString().padStart(2, "0");
-    const month = (dateTime.getMonth() + 1).toString().padStart(2, "0");
-    const year = dateTime.getFullYear().toString().slice(-2);
-
-    let hour = dateTime.getHours();
-    const minute = dateTime.getMinutes().toString().padStart(2, "0");
-    const ampm = hour >= 12 ? "pm" : "am";
-    hour = hour % 12 || 12;
-
-    const formattedDate = `${day}/${month}/${year}`;
-    const formattedTime = `${hour}:${minute} ${ampm}`;
-
-    return `${formattedDate} , ${formattedTime}`;
-  }
+  if (!doubts?.length) return null;
 
   return (
-    <div className="">
-      {doubts?.length !== 0 && (
-        <Card
-          id="accordion-color"
-          data-accordion="collapse"
-          className="mt-5 w-full cursor-pointer space-y-4 text-gray-700"
-        >
-          {doubts?.map((qa, index) => (
-            <div
-              key={index}
-              className={`relative rounded-md bg-white p-4 transition-shadow duration-300 ease-in-out ${
-                openAccordion === index ? "shadow-xl" : "shadow-md"
-              }w-full`}
-            >
-              <div className="flex flex-col justify-between gap-4 p-2 sm:flex-row">
-                <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                  {qa.user.role === "STUDENT" && (
-                    <Image
-                      src={qa.user?.image || "/placeholder.jpg"}
-                      alt="profile"
-                      width={40}
-                      height={40}
-                      className="rounded-full shadow-lg ring shadow-fuchsia-500/50 ring-fuchsia-600 ring-offset-1"
-                    />
-                  )}
-                  {qa.user.role === "MENTOR" && (
-                    <div className="relative">
-                      <FaCrown className="absolute -top-3 -left-3 -rotate-45 text-yellow-400 shadow-yellow-500 drop-shadow-sm hover:text-yellow-500" />
-                      <Image
-                        src={qa.user?.image || "/placeholder.jpg"}
-                        alt="profile"
-                        width={40}
-                        height={40}
-                        className="rounded-full shadow-lg shadow-yellow-400/50"
-                      />
-                    </div>
-                  )}
-                  {qa.user.role === "INSTRUCTOR" && (
-                    <div className="relative">
-                      <FaCrown className="absolute -top-3 -left-3 -rotate-45 text-red-500 shadow-red-500 drop-shadow-sm hover:text-red-600" />
-                      <Image
-                        src={qa.user?.image || "/placeholder.jpg"}
-                        alt="profile"
-                        width={40}
-                        height={40}
-                        className="rounded-full shadow-lg shadow-red-400/50"
-                      />
-                    </div>
-                  )}
-                  <div className="flex flex-col justify-start gap-1">
-                    <div className="flex flex-row flex-wrap items-center justify-end gap-3">
-                      <p className="max-w-[150px] truncate text-xs font-semibold sm:max-w-xs">
-                        {qa?.user?.name}{" "}
-                      </p>
-                      <p className="text-xs font-medium text-gray-500">
-                        {" "}
-                        [ {qa.user?.username} ]
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-gray-400">
-                        Posted on {formatDateTime(qa?.createdAt)}
-                      </p>
-                    </div>
+    <div className="space-y-3">
+      {doubts.map((qa, index) => {
+        const isOpen = openAccordion === index;
+        const canDelete =
+          currentUser.role === "INSTRUCTOR" ||
+          (currentUser.role === "MENTOR" && qa.user.id === currentUser.id);
+        return (
+          <div
+            key={qa.id}
+            className="bg-card overflow-hidden rounded-xl border shadow-sm"
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-2 px-4 pt-4">
+              <div className="flex min-w-0 items-start gap-3">
+                <UserAvatar user={qa.user} />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <p className="text-foreground truncate text-sm font-medium">
+                      {qa.user.name}
+                    </p>
+                    <p className="text-muted-foreground text-[11px]">
+                      @{qa.user.username}
+                    </p>
                   </div>
-                </div>
-                <div className="flex items-center justify-end gap-4 p-2 text-sm">
-                  <div
-                    onClick={() => toggleAccordion(index)}
-                    className="text-sm font-medium"
-                  >
-                    <div className="flex items-center gap-2 p-1">
-                      <LuMessageCircleMore className="h-5 w-5" />
-                      <h1>{qa.response.length} replies</h1>
-                    </div>
-                  </div>
-                  <AlertDialog>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <HiOutlineDotsHorizontal className="text-gray-800" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="mt-2">
-                        <DropdownMenuItem onSelect={() => setReplyId(qa.id)}>
-                          <LuReply className="mr-2 h-4 w-4" />
-                          <span>Reply</span>
-                        </DropdownMenuItem>
-                        {(currentUser.role === "INSTRUCTOR" ||
-                          (currentUser.role === "MENTOR" &&
-                            qa.user.id === currentUser.id)) && (
-                          <DropdownMenuItem>
-                            <MdDelete className="mr-2 h-4 w-4" />
-                            <AlertDialogTrigger>Delete</AlertDialogTrigger>
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this? This action
-                          cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteDoubt(qa.id)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Confirm
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-              <div className="px-5">
-                <h1 className="text-lg font-semibold">{qa.description}</h1>
-              </div>
-
-              {openAccordion === index && qa.response.length === 0 && (
-                <div className="bg-secondary-200 hover:bg-secondary-300 m-2 flex items-center justify-center space-x-2 rounded-lg p-3">
-                  <p className="text-medium flex items-center justify-start font-bold">
-                    No responses
+                  <p className="text-muted-foreground mt-0.5 text-[11px]">
+                    {formatDateTime(qa.createdAt)}
                   </p>
                 </div>
-              )}
-
-              <div className="m-2 flex items-center">
-                {replyId === qa?.id && (
-                  <div className="m-2 flex w-full items-center gap-3">
-                    <Input
-                      placeholder="Enter your reply"
-                      value={reply}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && e.ctrlKey) {
-                          void handleReply(replyId);
-                        }
-                        if (e.key === "Escape") {
-                          setReplyId("");
-                        }
-                      }}
-                      onChange={(e) => setReply(e.target.value)}
-                      className="flex-grow"
-                    />
-                    <Button
-                      onClick={() => setReplyId("")}
-                      variant="outline"
-                      size="icon"
-                    >
-                      <RxCross2 className="h-4 w-4 text-white" />
-                    </Button>
-                    <Button
-                      onClick={() => void handleReply(qa.id)}
-                      variant="outline"
-                      size="icon"
-                    >
-                      <LuSendHorizontal className="h-4 w-4 text-white" />
-                    </Button>
-                  </div>
-                )}
               </div>
-
-              {openAccordion === index && qa?.response.length > 0 && (
-                <div className="rounded-lg p-3">
-                  {qa?.response.map((r, responseIndex) => (
-                    <div
-                      key={responseIndex}
-                      className="mb-2 rounded-lg bg-gray-200 p-5"
+              <AlertDialog>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hover:bg-accent h-8 w-8 cursor-pointer"
+                      aria-label="Doubt options"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex space-x-5">
-                          {r.user?.role === "STUDENT" && (
-                            <Image
-                              src={r.user?.image || "/placeholder.jpg"}
-                              alt="profile"
-                              width={40}
-                              height={40}
-                              className="rounded-full shadow-lg ring shadow-fuchsia-500/50 ring-fuchsia-600 ring-offset-1"
-                            />
-                          )}
-                          {r.user?.role === "MENTOR" && (
-                            <div className="relative">
-                              <FaCrown className="absolute -top-3 -left-3 -rotate-45 text-yellow-400 shadow-yellow-500 drop-shadow-sm hover:text-yellow-500" />
-                              <Image
-                                src={r.user?.image || "/placeholder.jpg"}
-                                alt="profile"
-                                width={40}
-                                height={40}
-                                className="rounded-full shadow-lg shadow-yellow-400/50"
-                              />
-                            </div>
-                          )}
-                          {r.user?.role === "INSTRUCTOR" && (
-                            <div className="relative">
-                              <PiCrownSimpleFill className="absolute -top-3 -left-3 -rotate-45 text-red-400 shadow-red-500 drop-shadow-sm hover:text-red-500" />
-                              <Image
-                                src={r.user?.image || "/placeholder.jpg"}
-                                alt="profile"
-                                width={40}
-                                height={40}
-                                className="rounded-full shadow-lg shadow-red-400/50"
-                              />
-                            </div>
-                          )}
-                          <div className="flex flex-col justify-start gap-1">
-                            <div className="flex flex-row justify-start gap-3">
-                              <p className="text-xs font-semibold">
-                                {r?.user?.name}{" "}
-                              </p>
-                              <p className="text-xs font-medium">
-                                {" "}
-                                [ {r?.user?.username} ]
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs font-medium">
-                                Posted on {formatDateTime(r?.createdAt)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div
-                          hidden={
-                            r.user.role === "INSTRUCTOR" &&
-                            currentUser.role !== "INSTRUCTOR"
-                          }
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36">
+                    <DropdownMenuItem
+                      onSelect={() => setReplyId(qa.id)}
+                      className="cursor-pointer"
+                    >
+                      <Reply className="mr-2 h-4 w-4" />
+                      Reply
+                    </DropdownMenuItem>
+                    {canDelete && (
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-destructive cursor-pointer"
                         >
-                          {(currentUser.role === "MENTOR" ||
-                            currentUser.role === "INSTRUCTOR") && (
-                            <AlertDialog>
-                              <AlertDialogTrigger>
-                                <MdDelete className="h-5 w-5 cursor-pointer text-red-600" />
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you absolutely sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete the reply.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteReply(r.id)}
-                                  >
-                                    Continue
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mt-4 -mb-2 text-sm font-semibold">
-                        {r.description}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this doubt?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleDeleteDoubt(qa.id)}
+                      className="bg-destructive hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
-          ))}
-        </Card>
-      )}
+
+            {/* Body */}
+            <p className="text-foreground px-4 pt-2 pb-3 text-sm leading-relaxed">
+              {qa.description}
+            </p>
+
+            {/* Replies summary */}
+            <button
+              type="button"
+              onClick={() => toggleAccordion(index)}
+              className="text-muted-foreground hover:bg-accent/40 flex w-full cursor-pointer items-center gap-2 border-t px-4 py-2.5 text-xs font-medium transition-colors"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              {qa.response.length}{" "}
+              {qa.response.length === 1 ? "reply" : "replies"}
+              <span className="ml-auto text-[11px]">
+                {isOpen ? "Hide" : "Show"}
+              </span>
+            </button>
+
+            {/* Reply composer */}
+            {replyId === qa.id && (
+              <div className="bg-muted/30 flex items-center gap-2 border-t px-3 py-2.5">
+                <Input
+                  placeholder="Write a reply…"
+                  value={reply}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void handleReply(qa.id);
+                    if (e.key === "Escape") setReplyId("");
+                  }}
+                  onChange={(e) => setReply(e.target.value)}
+                  className="bg-background h-9 flex-1 text-sm"
+                />
+                <Button
+                  onClick={() => setReplyId("")}
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 cursor-pointer"
+                  aria-label="Cancel reply"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={() => void handleReply(qa.id)}
+                  size="icon"
+                  className="h-9 w-9 cursor-pointer"
+                  aria-label="Send reply"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Replies list */}
+            {isOpen && qa.response.length > 0 && (
+              <ul className="divide-border bg-background/40 divide-y border-t">
+                {qa.response.map((r) => {
+                  const canDeleteReply =
+                    currentUser.role === "INSTRUCTOR" ||
+                    currentUser.role === "MENTOR";
+                  const hideForLowerRole =
+                    r.user.role === "INSTRUCTOR" &&
+                    currentUser.role !== "INSTRUCTOR";
+                  return (
+                    <li key={r.id} className="flex gap-3 px-4 py-3">
+                      <UserAvatar user={r.user} size={32} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <div className="flex flex-wrap items-baseline gap-x-2">
+                            <p className="text-foreground text-sm font-medium">
+                              {r.user.name}
+                            </p>
+                            <p className="text-muted-foreground text-[11px]">
+                              @{r.user.username}
+                            </p>
+                          </div>
+                          <p className="text-muted-foreground text-[11px]">
+                            {formatDateTime(r.createdAt)}
+                          </p>
+                        </div>
+                        <p className="text-foreground/90 mt-1 text-sm leading-relaxed">
+                          {r.description}
+                        </p>
+                      </div>
+                      {canDeleteReply && !hideForLowerRole && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:bg-destructive/10 h-8 w-8 shrink-0 cursor-pointer"
+                              aria-label="Delete reply"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete reply?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteReply(r.id)}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

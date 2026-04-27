@@ -14,7 +14,7 @@ export default function CoursePage() {
   if (!user) return <PageLoader />;
   if (!id) return <Navigate to="/courses" />;
   return (
-    <PageLayout forceClose>
+    <PageLayout forceClose className="!p-0">
       <CourseDetailsClient user={user} courseId={id} />
     </PageLayout>
   );

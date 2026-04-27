@@ -280,13 +280,13 @@ const Report = ({
   return (
     <div className="flex w-full flex-col">
       {/* Course navigation bar - horizontally scrollable on small screens */}
-      <div className="w-full overflow-x-auto bg-white px-2 py-3 sm:px-6 dark:bg-gray-800">
+      <div className="w-full overflow-x-auto bg-card px-2 py-3 sm:px-6">
         <div className="flex min-w-max items-center gap-2">
           <Link
             href="/tutor/report/detail?id=all"
             className={`rounded px-2 py-1.5 text-sm whitespace-nowrap ${
               isAllView
-                ? "border border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30"
+                ? "border border-primary bg-primary/10"
                 : "hover:bg-gray-100 dark:hover:bg-gray-700"
             }`}
           >
@@ -299,7 +299,7 @@ const Report = ({
                   href={`/tutor/report/detail?id=${course.id}`}
                   className={`rounded px-2 py-1.5 text-sm whitespace-nowrap ${
                     !isAllView && currentCourse?.id === course?.id
-                      ? "border border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30"
+                      ? "border border-primary bg-primary/10"
                       : "hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                   key={course?.id}
@@ -323,15 +323,15 @@ const Report = ({
           </div>
         </div>
       ) : (
-        <div className="w-full p-2 sm:p-4 md:p-6">
-          <div className="relative overflow-x-auto border shadow-md sm:rounded-lg dark:border-gray-700">
+        <div className="w-full">
+          <div className="bg-card relative overflow-x-auto border shadow-sm sm:rounded-lg">
             {/* Filter and control section */}
-            <div className="flex flex-col gap-3 border-b bg-white p-3 sm:flex-row sm:justify-between dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex flex-col gap-3 border-b bg-card p-3 sm:flex-row sm:justify-between">
               {/* Mentor filter */}
               {isMentor ? (
-                <div className="flex items-center text-sm dark:text-gray-200">
+                <div className="text-foreground/80 flex items-center text-sm">
                   <span className="mr-2 font-medium">Mentor:</span>
-                  <div className="rounded-lg border p-1.5 dark:border-gray-600">
+                  <div className="rounded-lg border p-1.5">
                     {uniqueMentors.map((mentor) => (
                       <span key={mentor}>{mentor}</span>
                     ))}
@@ -344,7 +344,7 @@ const Report = ({
                     title="mentor name"
                     value={selectedMentor}
                     onChange={handleMentorChange}
-                    className="w-full rounded-lg border bg-white p-1.5 text-sm sm:w-auto dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                    className="w-full rounded-lg border bg-background p-1.5 text-sm sm:w-auto"
                   >
                     <option value="">All Mentors</option>
                     {uniqueMentors.map((mentor) => (
@@ -359,12 +359,12 @@ const Report = ({
               {/* Export controls */}
               <div className="xs:flex-row flex flex-col gap-2 sm:items-center">
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="xs:w-auto w-full rounded-lg border bg-white px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                  <DropdownMenuTrigger className="xs:w-auto w-full rounded-lg border bg-background px-3 py-1.5 text-sm hover:bg-accent">
                     View Columns
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="dark:border-gray-700 dark:bg-gray-800"
+                    className="bg-card"
                   >
                     {Object.keys(visibleColumns)
                       .filter((col) => col !== "Mentor" || !isMentor)
@@ -378,7 +378,7 @@ const Report = ({
                               [column]: checked,
                             }))
                           }
-                          className="dark:text-gray-200 dark:hover:bg-gray-700 dark:focus:bg-gray-700"
+                          className="text-foreground/80"
                         >
                           {column}
                         </DropdownMenuCheckboxItem>
@@ -392,14 +392,14 @@ const Report = ({
                     title="select format"
                     value={selectedFormat}
                     onChange={handleFormatChange}
-                    className="xs:flex-none flex-1 rounded-l-lg border bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                    className="xs:flex-none flex-1 rounded-l-lg border bg-background px-2 py-1.5 text-sm"
                   >
                     <option value="pdf">PDF</option>
                     <option value="csv">CSV</option>
                   </select>
                   <button
                     onClick={handleDownload}
-                    className="rounded-r-lg bg-blue-500 px-3 py-1.5 text-sm whitespace-nowrap text-white hover:bg-blue-600"
+                    className="rounded-r-lg bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 text-sm whitespace-nowrap"
                   >
                     Download
                   </button>
@@ -409,10 +409,10 @@ const Report = ({
 
             {/* Table section */}
             <div className="w-full overflow-x-auto">
-              <table className="w-full border-collapse text-left text-sm dark:text-gray-200">
-                <thead className="bg-blue-500 text-xs text-white uppercase">
+              <table className="text-foreground/90 w-full border-collapse text-left text-sm">
+                <thead className="bg-muted text-muted-foreground text-[11px] uppercase tracking-wide">
                   <tr>
-                    <th className="cursor-pointer truncate border-b border-blue-600 px-3 py-2 sm:px-4 sm:py-3">
+                    <th className="cursor-pointer truncate border-b border-primary/30 px-3 py-2 sm:px-4 sm:py-3">
                       S.No
                     </th>
                     {Object.keys(columnMapping).map(
@@ -421,7 +421,7 @@ const Report = ({
                           <th
                             key={column}
                             onClick={() => handleSort(column)}
-                            className="cursor-pointer truncate border-b border-blue-600 px-3 py-2 sm:px-4 sm:py-3"
+                            className="cursor-pointer truncate border-b border-primary/30 px-3 py-2 sm:px-4 sm:py-3"
                           >
                             {column}
                             {sortColumn === columnMapping[column] &&
@@ -437,11 +437,11 @@ const Report = ({
                       key={index}
                       className={`${
                         index % 2 === 0
-                          ? "bg-white dark:bg-gray-800"
-                          : "bg-gray-50 dark:bg-gray-700"
+                          ? "bg-card"
+                          : "bg-muted/40"
                       } hover:bg-gray-100 dark:hover:bg-gray-600`}
                     >
-                      <td className="border-b border-gray-300 px-3 py-2 sm:px-4 sm:py-3 dark:border-gray-700">
+                      <td className="border-border border-b px-3 py-2 sm:px-4 sm:py-3">
                         {index + 1}
                       </td>
                       {Object.entries(columnMapping).map(
@@ -449,7 +449,7 @@ const Report = ({
                           visibleColumns[column] && (
                             <td
                               key={column}
-                              className="border-b border-gray-300 px-3 py-2 sm:px-4 sm:py-3 dark:border-gray-700"
+                              className="border-border border-b px-3 py-2 sm:px-4 sm:py-3"
                             >
                               {column === "Attendance"
                                 ? formatAttendance(row[key])

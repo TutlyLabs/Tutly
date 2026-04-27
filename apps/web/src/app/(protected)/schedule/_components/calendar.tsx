@@ -179,9 +179,9 @@ export const Calendar = ({
   };
 
   return (
-    <div className="flex flex-col">
-      <header className="flex flex-col items-center justify-between gap-5 border-b p-2 md:flex-row">
-        <div className="flex items-center space-x-4">
+    <div className="flex h-full flex-col">
+      <header className="flex flex-col items-stretch gap-3 border-b p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+        <div className="flex flex-wrap items-center gap-2">
           {isAuthorized && (
             <Tabs
               value={selectedView}
@@ -211,32 +211,41 @@ export const Calendar = ({
           )}
         </div>
         {selectedView === "calendar" ? (
-          <div className="flex items-center space-x-4">
-            <span className="text-lg font-semibold">
-              {format(selectedDate, "dd MMMM yyyy")}
+          <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-3">
+            <span className="text-foreground text-sm font-semibold sm:text-base">
+              {format(selectedDate, "d MMM yyyy")}
             </span>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-1.5">
               <Button
                 variant="outline"
                 size="icon"
+                className="h-8 w-8"
                 onClick={() => navigate("prev")}
+                aria-label="Previous"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="outline" onClick={navigateToday}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={navigateToday}
+              >
                 Today
               </Button>
               <Button
                 variant="outline"
                 size="icon"
+                className="h-8 w-8"
                 onClick={() => navigate("next")}
+                aria-label="Next"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
         ) : (
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-end">
             <AddHolidayDialog />
           </div>
         )}
@@ -244,7 +253,7 @@ export const Calendar = ({
 
       {selectedView === "calendar" ? (
         <>
-          <main className="h-[90vh] flex-1">
+          <main className="min-h-0 flex-1 overflow-auto">
             {view === "day" && (
               <DayView
                 selectedDate={selectedDate}

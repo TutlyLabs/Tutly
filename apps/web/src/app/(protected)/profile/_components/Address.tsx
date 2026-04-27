@@ -17,6 +17,8 @@ import {
 } from "@tutly/ui/form";
 import { Input } from "@tutly/ui/input";
 
+import { SectionHeader } from "./SectionHeader";
+
 const formSchema = z.object({
   building: z.string().optional(),
   street: z.string().optional(),
@@ -59,15 +61,12 @@ export default function Address({ address, onUpdate }: AddressProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Address</h2>
-        <Button
-          variant={isEditing ? "outline" : "default"}
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? "Cancel" : "Edit"}
-        </Button>
-      </div>
+      <SectionHeader
+        title="Address"
+        description="Where to reach you."
+        isEditing={isEditing}
+        onToggle={() => setIsEditing(!isEditing)}
+      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

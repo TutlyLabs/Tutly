@@ -36,7 +36,7 @@ export default function AssignmentDetailClient({
 
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="mx-auto w-full max-w-7xl space-y-6">
         {/* Assignment Header */}
         <div className="space-y-4">
           <Skeleton className="h-8 w-64" />

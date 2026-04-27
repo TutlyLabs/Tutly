@@ -75,7 +75,7 @@ export const GithubIntegration = ({
         <AccordionContent className="p-4 pt-0">
           <div className="flex flex-col gap-4">
             {github ? (
-              <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm dark:bg-gray-900">
+              <div className="flex items-center justify-between bg-card rounded-lg border p-4 shadow-sm">
                 <div className="flex items-center gap-3">
                   <Image
                     src={avatar}
@@ -93,21 +93,21 @@ export const GithubIntegration = ({
                   disabled={isUnlinking}
                   variant="outline"
                   size="sm"
-                  className="rounded border border-blue-600 bg-[#4285F4] px-3 py-1 text-xs text-white hover:bg-[#357ae8] disabled:opacity-60"
+                  className="rounded border bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1 text-xs font-medium disabled:opacity-60"
                 >
                   {isUnlinking ? "Unlinking..." : "Unlink"}
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm dark:bg-gray-900">
-                <span className="text-gray-700 dark:text-gray-200">
+              <div className="flex items-center justify-between bg-card rounded-lg border p-4 shadow-sm">
+                <span className="text-foreground/80">
                   Not linked
                 </span>
                 <Button
                   onClick={handleLink}
                   disabled={isLinking}
                   size="sm"
-                  className="inline-block rounded bg-[#4285F4] px-4 py-2 text-xs text-white transition-colors hover:bg-[#357ae8]"
+                  className="inline-block rounded bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 text-xs font-medium transition-colors"
                 >
                   {isLinking ? "Linking..." : "Link GitHub"}
                 </Button>

@@ -99,7 +99,6 @@ export function WeekView({
     return {
       top: `${startMinutes}px`,
       height: `${duration}px`,
-      backgroundColor: "#3b82f6",
       left: `${layout.left}%`,
       width: `${layout.width}%`,
       position: "absolute" as const,
@@ -109,32 +108,46 @@ export function WeekView({
   return (
     <div className="h-full overflow-auto">
       <div className="bg-background sticky top-0 z-10 border-b">
-        <div className="divide-border grid grid-cols-[60px_1fr] divide-x">
+        <div className="divide-border grid grid-cols-[44px_1fr] divide-x sm:grid-cols-[60px_1fr]">
           <div className="h-12"></div>
           <div className="divide-border grid grid-cols-7 divide-x">
-            {days.map((day) => (
-              <div
-                key={day.toString()}
-                className={`p-3 text-center ${
-                  isSameDay(day, today)
-                    ? "text-primary-foreground bg-green-600"
-                    : ""
-                }`}
-              >
-                <div className="text-sm font-medium">{format(day, "EEE")}</div>
-                <div className="text-sm font-bold">{format(day, "d")}</div>
-              </div>
-            ))}
+            {days.map((day) => {
+              const isToday = isSameDay(day, today);
+              return (
+                <div
+                  key={day.toString()}
+                  className={`flex flex-col items-center justify-center px-1 py-2 text-center ${
+                    isToday
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground"
+                  }`}
+                >
+                  <span className="text-[10px] font-medium uppercase tracking-wide sm:text-xs">
+                    <span className="sm:hidden">{format(day, "EEEEE")}</span>
+                    <span className="hidden sm:inline">{format(day, "EEE")}</span>
+                  </span>
+                  <span
+                    className={`mt-0.5 text-sm font-bold sm:text-base ${
+                      isToday
+                        ? "bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full"
+                        : ""
+                    }`}
+                  >
+                    {format(day, "d")}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="divide-border grid grid-cols-[60px_1fr] divide-x">
+      <div className="divide-border grid grid-cols-[44px_1fr] divide-x sm:grid-cols-[60px_1fr]">
         <div className="divide-border divide-y">
           {hours.map((hour) => (
             <div
               key={hour}
-              className="text-muted-foreground flex h-[60px] items-center justify-end pr-2 text-sm"
+              className="text-muted-foreground flex h-[60px] items-center justify-end pr-1.5 text-[10px] sm:pr-2 sm:text-sm"
             >
               {format(new Date().setHours(hour, 0, 0, 0), "h a")}
             </div>
@@ -158,14 +171,15 @@ export function WeekView({
                   if (!layout) return null;
 
                   return (
-                    <div
+                    <button
                       key={`${event.name}-${event.startDate.getTime()}`}
-                      className="text-primary-foreground cursor-pointer rounded p-2 text-xs font-semibold break-words whitespace-normal"
+                      type="button"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer overflow-hidden rounded-md p-1.5 text-left text-[11px] font-medium break-words whitespace-normal shadow-sm transition-colors"
                       style={getEventStyle(event, layout)}
                       onClick={() => onEventClick(event)}
                     >
-                      <h1>{event.name}</h1>
-                    </div>
+                      {event.name}
+                    </button>
                   );
                 })}
               </div>

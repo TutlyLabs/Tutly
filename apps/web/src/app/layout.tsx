@@ -8,9 +8,9 @@ import { Suspense } from "react";
 import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { LayoutProvider } from "@/providers/layout-provider";
-import { Toaster } from "sonner";
+import { ResponsiveToaster } from "@/components/ResponsiveToaster";
 import Crisp from "@/components/Crisp";
-import PageLoader from "@/components/loader/PageLoader";
+import TopProgress from "@/components/loader/TopProgress";
 import AppLifecycle from "@/components/native/AppLifecycle";
 import BadgeSync from "@/components/native/BadgeSync";
 import BiometricLock from "@/components/native/BiometricLock";
@@ -19,6 +19,8 @@ import KeyboardHandler from "@/components/native/KeyboardHandler";
 import OfflineBanner from "@/components/native/OfflineBanner";
 import PushNotifications from "@/components/native/PushNotifications";
 import StatusBarThemeSync from "@/components/native/StatusBarThemeSync";
+import UpdateBanner from "@/components/native/UpdateBanner";
+import WhatsNew from "@/components/native/WhatsNew";
 
 export const metadata: Metadata = {
   title: "Tutly",
@@ -61,12 +63,14 @@ export default async function RootLayout({
             <LayoutProvider>
               <NuqsAdapter>
                 <Suspense fallback={null}>
-                  <PageLoader />
+                  <TopProgress />
                 </Suspense>
-                <Toaster />
+                <ResponsiveToaster />
                 <Crisp />
                 <Suspense fallback={null}>{children}</Suspense>
                 <BiometricLock />
+                <UpdateBanner />
+                <WhatsNew />
               </NuqsAdapter>
             </LayoutProvider>
           </TRPCReactProvider>

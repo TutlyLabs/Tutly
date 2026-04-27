@@ -84,49 +84,57 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({
     isInClass: boolean,
     isNoAttendance: boolean,
   ) => {
-    if (isNoAttendance) return "bg-gray-500";
-    if (!isInClass) return "bg-gray-900";
+    if (isNoAttendance) return "bg-muted-foreground/40";
+    if (!isInClass) return "bg-muted";
     return isPresent ? "bg-[#2EB88A]" : "bg-[#E23670]";
   };
 
   return (
-    <Card className="flex flex-col items-center p-2 px-4">
-      <div className="mb-4 flex w-full items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="font-semibold">Attendance Heatmap</div>
-          <div className="flex items-center gap-3 text-xs text-gray-500">
+    <Card className="bg-card flex flex-col rounded-xl border p-4 shadow-sm">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="text-foreground text-base font-semibold sm:text-lg">
+            Attendance Heatmap
+          </div>
+          <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-[11px]">
             <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded-sm bg-[#2EB88A]"></div>
-              <span>Present</span>
+              <div className="h-2.5 w-2.5 rounded-sm bg-[#2EB88A]" />
+              Present
             </div>
             <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded-sm bg-[#E23670]"></div>
-              <span>Absent</span>
+              <div className="h-2.5 w-2.5 rounded-sm bg-[#E23670]" />
+              Absent
             </div>
             <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded-sm bg-gray-500"></div>
-              <span>Not Marked</span>
+              <div className="bg-muted-foreground/40 h-2.5 w-2.5 rounded-sm" />
+              Not marked
             </div>
             <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded-sm bg-gray-900"></div>
-              <span>No Class</span>
+              <div className="bg-muted h-2.5 w-2.5 rounded-sm" />
+              No class
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="text-lg font-semibold">{currentYear}</div>
+          <div className="text-foreground text-base font-semibold tabular-nums">
+            {currentYear}
+          </div>
           <Button
             onClick={handlePreviousYear}
-            className="rounded border p-1 hover:bg-gray-900"
+            variant="outline"
+            size="icon"
+            className="hover:bg-accent h-8 w-8"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
             onClick={handleNextYear}
-            className="rounded border p-1 hover:bg-gray-900"
+            variant="outline"
+            size="icon"
+            className="hover:bg-accent h-8 w-8"
             disabled={currentYear === startOfToday().getFullYear()}
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>

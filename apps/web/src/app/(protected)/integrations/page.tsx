@@ -31,12 +31,13 @@ export default function IntegrationsPage() {
   const accounts = accountsQ.data;
 
   return (
-    <div className="container mx-auto space-y-6 py-6">
-      <div className="mb-8 text-center">
-        <h1 className="mb-2 text-3xl font-bold">Integrations</h1>
-        <p className="text-muted-foreground">
-          Connect your favorite tools and services to enhance your Tutly
-          experience
+    <div className="mx-auto w-full max-w-7xl space-y-4">
+      <div>
+        <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+          Integrations
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Connect your favorite tools and services to Tutly.
         </p>
       </div>
 
