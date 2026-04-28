@@ -27,8 +27,6 @@ export default class Doctor extends Command {
     }),
   };
 
-  static args = [];
-
   async run() {
     const { flags } = await this.parse(Doctor);
     const checks: Array<{ label: string; ok: boolean; detail?: string }> = [];

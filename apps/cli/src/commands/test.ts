@@ -28,8 +28,6 @@ export default class Test extends Command {
     }),
   };
 
-  static args = [];
-
   async run() {
     const { flags } = await this.parse(Test);
     const rootDir = findAssignmentRoot(flags.dir);
