@@ -550,6 +550,7 @@ const StudentAssignmentSubmission = ({
     assignment.submissionMode === "EXTERNAL_LINK";
 
   const isGitSubmission = assignment.submissionMode === "GIT";
+  const isWorkspaceSubmission = assignment.submissionMode === "WORKSPACE";
 
   return (
     <div className="space-y-6">
@@ -569,6 +570,8 @@ const StudentAssignmentSubmission = ({
                 : "Submit another response"}
             </Link>
           </Button>
+        ) : isWorkspaceSubmission ? (
+          <WorkspaceSubmissionSection assignment={assignment} />
         ) : isGitSubmission ? (
           <GitSubmissionSection assignment={assignment} />
         ) : isExternalLinkSubmission ? (
@@ -683,9 +686,11 @@ const StudentAssignmentSubmission = ({
                 ? `/playgrounds/html-css-js?submissionId=${submission.id}`
                 : isExternalLinkSubmission
                   ? submission.submissionLink
-                  : isSandboxConfigured
-                    ? `/playgrounds/sandbox?submissionId=${submission.id}`
-                    : submission.submissionLink;
+                  : isWorkspaceSubmission
+                    ? `/assignments/evaluate?id=${assignment.id}&submissionId=${submission.id}`
+                    : isSandboxConfigured
+                      ? `/playgrounds/sandbox?submissionId=${submission.id}`
+                      : submission.submissionLink;
 
               return (
                 <TableRow key={index}>
@@ -712,6 +717,79 @@ const StudentAssignmentSubmission = ({
             })}
           </TableBody>
         </Table>
+      </div>
+    </div>
+  );
+};
+
+const WorkspaceSubmissionSection = ({ assignment }: { assignment: any }) => {
+  const [isOpening, setIsOpening] = useState(false);
+  const startWorkspace = api.submissions.startWorkspace.useMutation();
+
+  const openWorkspace = async () => {
+    setIsOpening(true);
+    try {
+      const started = await startWorkspace.mutateAsync({
+        assignmentId: assignment.id,
+        provider: "LOCAL",
+      });
+      if (started.error) {
+        toast.error(started.error);
+        return;
+      }
+
+      const query = new URLSearchParams({
+        assignmentId: assignment.id,
+      });
+      if (started.data?.workspaceToken) {
+        query.set("workspaceToken", started.data.workspaceToken);
+      }
+
+      const response = await fetch(`/api/config?${query.toString()}`);
+      const data = await response.json();
+      if (!response.ok || !data.config) {
+        toast.error(data.error ?? "Failed to create VS Code config");
+        return;
+      }
+
+      window.open(
+        `/vscode?config=${encodeURIComponent(data.config)}`,
+        "_blank",
+      );
+    } catch (error) {
+      toast.error("Failed to open workspace");
+    } finally {
+      setIsOpening(false);
+    }
+  };
+
+  return (
+    <div className="border-border bg-card flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <div className="text-foreground text-sm font-semibold">
+          Workspace assignment
+        </div>
+        <div className="text-muted-foreground text-xs">
+          Local or SSH execution, visible tests, previews, autosave, and final
+          submission.
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() =>
+            navigator.clipboard.writeText(
+              `npx tutly assignment ${assignment.id}`,
+            )
+          }
+        >
+          Copy CLI setup
+        </Button>
+        <Button type="button" onClick={openWorkspace} disabled={isOpening}>
+          <FiTerminal className="mr-2 h-4 w-4" />
+          {isOpening ? "Opening..." : "Open VS Code"}
+        </Button>
       </div>
     </div>
   );
@@ -906,6 +984,7 @@ const AdminAssignmentTable = ({
                 </TableHead>
                 <TableHead className="text-foreground">Styling(10)</TableHead>
                 <TableHead className="text-foreground">Others(10)</TableHead>
+                <TableHead className="text-foreground">Tests</TableHead>
                 <TableHead className="text-foreground">Total</TableHead>
                 <TableHead className="text-foreground">Feedback</TableHead>
                 {currentUser.role !== "STUDENT" && (
@@ -927,13 +1006,23 @@ const AdminAssignmentTable = ({
                 const oValue = submission.points.find(
                   (point: any) => point.category === "OTHER",
                 );
+                const testValue = submission.points.find(
+                  (point: any) => point.category === "TESTS",
+                );
 
-                const totalScore = [rValue, sValue, oValue].reduce(
+                const totalScore = [rValue, sValue, oValue, testValue].reduce(
                   (acc, currentValue) => {
                     return acc + (currentValue ? currentValue.score : 0);
                   },
                   0,
                 );
+                const viewHref =
+                  assignment.submissionMode === "WORKSPACE"
+                    ? `/assignments/evaluate?id=${assignmentId}&submissionId=${submission.id}`
+                    : assignment.submissionMode === "HTML_CSS_JS" ||
+                        isSandboxConfigured
+                      ? `/playgrounds/sandbox?submissionId=${submission.id}`
+                      : submission.submissionLink;
 
                 return (
                   <TableRow key={index}>
@@ -1042,7 +1131,15 @@ const AdminAssignmentTable = ({
                       )}
                     </TableCell>
                     <TableCell className="text-foreground">
-                      {rValue?.score || sValue?.score || oValue?.score
+                      {testValue
+                        ? `${testValue.score}${testValue.maxScore ? `/${testValue.maxScore}` : ""}`
+                        : "Queued"}
+                    </TableCell>
+                    <TableCell className="text-foreground">
+                      {rValue?.score ||
+                      sValue?.score ||
+                      oValue?.score ||
+                      testValue?.score
                         ? totalScore
                         : "NA"}
                     </TableCell>
@@ -1085,15 +1182,7 @@ const AdminAssignmentTable = ({
                           ) : (
                             <div className="flex items-center gap-2">
                               <Button variant="ghost" size="icon" asChild>
-                                <Link
-                                  href={
-                                    assignment.submissionMode ===
-                                      "HTML_CSS_JS" || isSandboxConfigured
-                                      ? `/playgrounds/sandbox?submissionId=${submission.id}`
-                                      : submission.submissionLink
-                                  }
-                                  target="_blank"
-                                >
+                                <Link href={viewHref} target="_blank">
                                   <FaEye className="h-4 w-4" />
                                 </Link>
                               </Button>

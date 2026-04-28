@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { giteaClient } from "@/lib/gitea";
 import { db } from "@tutly/db";
-import yaml from "js-yaml";
 import { SignJWT } from "jose";
 import { auth } from "@/server/auth";
 
@@ -9,9 +7,20 @@ export const dynamic = "force-dynamic";
 
 interface TutlyConfig {
   version?: number;
-  run?: {
+  setup?: {
     command: string;
     description?: string;
+  };
+  dev?: {
+    command: string;
+    description?: string;
+  };
+  test?: {
+    command: string;
+    description?: string;
+  };
+  preview?: {
+    ports: number[];
   };
   readonly?: string[];
 }
@@ -24,6 +33,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const assignmentId = searchParams.get("assignmentId");
+    const workspaceToken = searchParams.get("workspaceToken") ?? undefined;
 
     if (!assignmentId) {
       return NextResponse.json(
@@ -32,59 +42,43 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get assignment with template repo
     const assignment = await db.attachment.findUnique({
       where: { id: assignmentId },
       select: {
-        gitTemplateRepo: true,
+        workspaceConfig: true,
+        title: true,
       },
     });
 
-    if (!assignment?.gitTemplateRepo) {
+    if (!assignment) {
       return NextResponse.json(
-        { error: "No template repository found" },
+        { error: "Assignment not found" },
         { status: 404 },
       );
     }
 
-    // Parse owner/repo from gitTemplateRepo
-    const [owner, repo] = assignment.gitTemplateRepo.split("/");
-
-    let tutlyConfig: TutlyConfig = {};
-
-    try {
-      // Fetch .tutly/config.yaml from Gitea
-      const configContents = await giteaClient.getContents(
-        owner,
-        repo,
-        ".tutly/config.yaml",
-        "main",
-      );
-
-      if (
-        configContents &&
-        !Array.isArray(configContents) &&
-        configContents.content
-      ) {
-        // Decode base64 content
-        const configYaml = Buffer.from(
-          configContents.content,
-          "base64",
-        ).toString("utf-8");
-
-        // Parse YAML
-        tutlyConfig = yaml.load(configYaml) as TutlyConfig;
-      }
-    } catch (error) {
-      console.warn(
-        "Config file not found in template repository, using default.",
-      );
-    }
+    const workspaceConfig = assignment.workspaceConfig;
+    const tutlyConfig: TutlyConfig = {
+      version: 1,
+      setup: { command: workspaceConfig?.setupCommand ?? "pnpm install" },
+      dev: { command: workspaceConfig?.devCommand ?? "pnpm dev" },
+      test: { command: workspaceConfig?.testCommand ?? "pnpm test" },
+      preview: {
+        ports: workspaceConfig?.previewPorts?.length
+          ? workspaceConfig.previewPorts
+          : [3000, 5173, 4173, 8080],
+      },
+      readonly: workspaceConfig?.readonlyPaths?.length
+        ? workspaceConfig.readonlyPaths
+        : [".tutly/**"],
+    };
 
     const configPayload = {
       mode: "fsrelay",
       assignmentId,
       tutlyConfig,
+      serverUrl: "http://localhost:4242",
+      apiKey: workspaceToken ?? "tutly-dev-key",
       isInstructor,
     };
 

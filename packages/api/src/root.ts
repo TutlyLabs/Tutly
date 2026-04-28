@@ -23,12 +23,16 @@ import { notesRouter } from "./routers/notes";
 import { notificationsRouter } from "./routers/notifications";
 import { oauthRouter } from "./routers/oauth";
 import { pointsRouter } from "./routers/points";
+import { portSessionsRouter } from "./routers/portSessions";
 import { reportRouter } from "./routers/report";
+import { reviewsRouter } from "./routers/reviews";
 import { sandboxRouter } from "./routers/sandbox";
 import { scheduleRouter } from "./routers/schedule";
 import { searchRouter } from "./routers/search";
+import { serviceConnectionsRouter } from "./routers/serviceConnections";
 import { statisticsRouter } from "./routers/statistics";
 import { submissionRouter } from "./routers/submission";
+import { testRunsRouter } from "./routers/testRuns";
 import { usersRouter } from "./routers/users";
 import { vscodeRouter } from "./routers/vscode";
 import { superAdminRouter } from "./routers/superAdmin";
@@ -62,12 +66,16 @@ export const appRouter = createTRPCRouter({
   notifications: notificationsRouter,
   oauth: oauthRouter,
   points: pointsRouter,
+  portSessions: portSessionsRouter,
   report: reportRouter,
+  reviews: reviewsRouter,
   sandbox: sandboxRouter,
   schedule: scheduleRouter,
   search: searchRouter,
+  serviceConnections: serviceConnectionsRouter,
   statistics: statisticsRouter,
   submissions: submissionRouter,
+  testRuns: testRunsRouter,
   users: usersRouter,
   vscode: vscodeRouter,
 });

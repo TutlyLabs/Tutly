@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { Attachment } from "@tutly/db/browser";
 import type { attachmentType, submissionMode } from "@tutly/db/browser";
 import { FileType } from "@tutly/db/browser";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -48,6 +49,12 @@ const formSchema = z.object({
   detailsJson: z.any().optional(),
   dueDate: z.string().optional(),
   maxSubmissions: z.string().optional(),
+  setupCommand: z.string().optional(),
+  devCommand: z.string().optional(),
+  testCommand: z.string().optional(),
+  previewPorts: z.string().optional(),
+  visibleTestCommand: z.string().optional(),
+  hiddenTestCommand: z.string().optional(),
 });
 
 interface NewAttachmentPageProps {
@@ -73,6 +80,12 @@ const NewAttachmentPage = ({
 
   const updateAttachment = api.attachments.updateAttachment.useMutation();
   const createAttachment = api.attachments.createAttachment.useMutation();
+  const updateWorkspaceConfig =
+    api.assignments.updateWorkspaceConfig.useMutation();
+  const createStarterUpload =
+    api.assignments.createWorkspaceStarterUpload.useMutation();
+  const confirmArtifactUpload =
+    api.submissions.confirmWorkspaceArtifactUpload.useMutation();
   const updateFileAssociatingId =
     api.fileupload.updateAssociatingId.useMutation();
 
@@ -82,7 +95,7 @@ const NewAttachmentPage = ({
       title: attachment?.title ?? "",
       link: attachment?.link ?? "",
       attachmentType: attachment?.attachmentType ?? "ASSIGNMENT",
-      submissionMode: attachment?.submissionMode ?? "",
+      submissionMode: attachment?.submissionMode ?? "WORKSPACE",
       class: classId ?? attachment?.classId ?? "",
       courseId: courseId ?? "",
       details: attachment?.details ?? "",
@@ -91,10 +104,18 @@ const NewAttachmentPage = ({
         ? new Date(attachment.dueDate).toISOString().split("T")[0]
         : "",
       maxSubmissions: attachment?.maxSubmissions?.toString() ?? "1",
+      setupCommand: "pnpm install",
+      devCommand: "pnpm dev",
+      testCommand: "pnpm test",
+      previewPorts: "3000,5173,4173,8080",
+      visibleTestCommand: "pnpm test",
+      hiddenTestCommand: "",
     },
   });
 
   const { isSubmitting } = form.formState;
+  const submissionMode = form.watch("submissionMode");
+  const [starterFile, setStarterFile] = useState<File | null>(null);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const dueDate =
@@ -105,8 +126,9 @@ const NewAttachmentPage = ({
     values.title = values.title.trim();
 
     try {
+      let assignmentId = attachment?.id;
       if (isEditing && attachment) {
-        await updateAttachment.mutateAsync({
+        const updated = await updateAttachment.mutateAsync({
           id: attachment.id,
           title: values.title,
           classId: values.class,
@@ -121,9 +143,10 @@ const NewAttachmentPage = ({
             : 1,
           courseId: courseId,
         });
+        assignmentId = updated.data?.id ?? attachment.id;
         toast.success("Assignment updated");
       } else {
-        await createAttachment.mutateAsync({
+        const created = await createAttachment.mutateAsync({
           title: values.title,
           classId: values.class,
           link: values.link,
@@ -137,7 +160,96 @@ const NewAttachmentPage = ({
             : 1,
           courseId: courseId,
         });
+        assignmentId = created.data?.id;
         toast.success("Assignment created");
+      }
+
+      if (values.submissionMode === "WORKSPACE" && assignmentId) {
+        const previewPorts =
+          values.previewPorts
+            ?.split(",")
+            .map((port) => Number(port.trim()))
+            .filter((port) => Number.isInteger(port) && port > 0) ?? [];
+        const testCases = [
+          values.visibleTestCommand
+            ? {
+                title: "Visible tests",
+                visibility: "VISIBLE" as const,
+                command: values.visibleTestCommand,
+                points: 50,
+                timeoutMs: 120000,
+              }
+            : null,
+          values.hiddenTestCommand
+            ? {
+                title: "Hidden tests",
+                visibility: "HIDDEN" as const,
+                command: values.hiddenTestCommand,
+                points: 50,
+                timeoutMs: 180000,
+              }
+            : null,
+        ].filter(Boolean) as Array<{
+          title: string;
+          visibility: "VISIBLE" | "HIDDEN";
+          command: string;
+          points: number;
+          timeoutMs: number;
+        }>;
+
+        await updateWorkspaceConfig.mutateAsync({
+          assignmentId,
+          framework: "web",
+          setupCommand: values.setupCommand || "pnpm install",
+          devCommand: values.devCommand || "pnpm dev",
+          testCommand:
+            values.testCommand || values.visibleTestCommand || "pnpm test",
+          previewPorts: previewPorts.length
+            ? previewPorts
+            : [3000, 5173, 4173, 8080],
+          readonlyPaths: [".tutly/**"],
+          defaultProvider: "LOCAL",
+          testCases,
+          grading: {
+            autoScore: true,
+            hiddenRequiresTrustedRunner: Boolean(values.hiddenTestCommand),
+          },
+          publicTestMetadata: {
+            visibleCommand: values.visibleTestCommand || values.testCommand,
+          },
+        });
+
+        if (starterFile) {
+          const checksum = await sha256Hex(starterFile);
+          const upload = await createStarterUpload.mutateAsync({
+            assignmentId,
+            artifact: {
+              kind: "STARTER",
+              fileName: starterFile.name,
+              mimeType: starterFile.type || "application/zip",
+              sizeBytes: starterFile.size,
+              checksum,
+              manifest: {
+                uploadedFrom: "assignment-editor",
+                uploadedAt: new Date().toISOString(),
+              },
+            },
+          });
+
+          if (upload.data?.uploadUrl && upload.data?.artifact?.id) {
+            await fetch(upload.data.uploadUrl, {
+              method: "PUT",
+              headers: {
+                "Content-Type": starterFile.type || "application/zip",
+              },
+              body: starterFile,
+            });
+            await confirmArtifactUpload.mutateAsync({
+              artifactId: upload.data.artifact.id,
+              checksum,
+            });
+          }
+        }
       }
 
       if (onComplete) {
@@ -267,15 +379,15 @@ const NewAttachmentPage = ({
                   <SelectContent className="bg-popover text-popover-foreground text-base">
                     <SelectItem
                       className="cursor-pointer text-base"
-                      value="HTML_CSS_JS"
+                      value="WORKSPACE"
                     >
-                      HTML CSS JS
+                      Workspace
                     </SelectItem>
                     <SelectItem
                       className="cursor-pointer text-base"
-                      value="GIT"
+                      value="HTML_CSS_JS"
                     >
-                      GIT
+                      HTML CSS JS
                     </SelectItem>
                     <SelectItem
                       className="cursor-pointer text-base"
@@ -370,6 +482,107 @@ const NewAttachmentPage = ({
             </FormItem>
           )}
         />
+        {submissionMode === "WORKSPACE" && (
+          <div className="border-border bg-muted/30 grid gap-4 rounded-lg border p-4 md:grid-cols-2">
+            <FormField
+              name="setupCommand"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Setup command</FormLabel>
+                  <FormControl>
+                    <Input disabled={isSubmitting} {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="devCommand"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Dev command</FormLabel>
+                  <FormControl>
+                    <Input disabled={isSubmitting} {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="testCommand"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">
+                    Default test command
+                  </FormLabel>
+                  <FormControl>
+                    <Input disabled={isSubmitting} {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="previewPorts"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Preview ports</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={isSubmitting}
+                      placeholder="3000,5173"
+                      {...field}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="visibleTestCommand"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">
+                    Visible test command
+                  </FormLabel>
+                  <FormControl>
+                    <Input disabled={isSubmitting} {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="hiddenTestCommand"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">
+                    Hidden test command
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={isSubmitting}
+                      placeholder="Runs only on trusted runner"
+                      {...field}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <div className="space-y-2 md:col-span-2">
+              <FormLabel className="text-base">Starter template ZIP</FormLabel>
+              <Input
+                type="file"
+                accept=".zip,application/zip"
+                disabled={isSubmitting}
+                onChange={(event) =>
+                  setStarterFile(event.target.files?.[0] ?? null)
+                }
+              />
+            </div>
+          </div>
+        )}
         <FormField
           name="details"
           control={form.control}
@@ -428,5 +641,15 @@ const NewAttachmentPage = ({
     </Form>
   );
 };
+
+async function sha256Hex(file: File) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    await file.arrayBuffer(),
+  );
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export default NewAttachmentPage;

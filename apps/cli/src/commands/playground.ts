@@ -1,5 +1,5 @@
 import { promises as fs } from "fs";
-import { createServer, IncomingMessage } from "http";
+import { createServer, request as httpRequest, IncomingMessage } from "http";
 import * as path from "path";
 import type { FSWatcher } from "chokidar";
 import type { IPty } from "node-pty";
@@ -10,6 +10,9 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import * as WebSocket from "ws";
 import { WebSocketServer } from "ws";
+
+import { allowedTestCommands, runVisibleTestCommand } from "../lib/test-runner";
+import { readTutlyConfig } from "../lib/workspace-config";
 
 interface FileEntry {
   name: string;
@@ -22,7 +25,11 @@ interface FileEntry {
 interface TerminalSession {
   id: string;
   pty: IPty;
-  ws: WebSocket.WebSocket;
+  clients: Set<WebSocket.WebSocket>;
+  buffer: string[];
+  createdAt: Date;
+  lastSeenAt: Date;
+  disposeTimer?: NodeJS.Timeout;
 }
 
 export default class Playground extends Command {
@@ -38,12 +45,23 @@ export default class Playground extends Command {
     }),
     host: flags.string({
       description: "Host to bind the server to",
-      default: "0.0.0.0",
+      default: "127.0.0.1",
     }),
     directory: flags.string({
       char: "d",
       description: "Directory to serve (defaults to current directory)",
       default: process.cwd(),
+    }),
+    "api-key": flags.string({
+      description: "API key required by the VS Code web extension",
+      default: process.env.TUTLY_AGENT_KEY ?? "tutly-dev-key",
+    }),
+    "allow-ports": flags.string({
+      description: "Comma-separated preview ports to expose",
+    }),
+    "workspace-token": flags.string({
+      description: "Signed workspace token issued by Tutly",
+      env: "TUTLY_WORKSPACE_TOKEN",
     }),
   };
 
@@ -53,6 +71,10 @@ export default class Playground extends Command {
   private fileWatcher?: FSWatcher;
   private watcherClients: Set<WebSocket.WebSocket> = new Set();
   private terminals: Map<string, TerminalSession> = new Map();
+  private allowedPreviewPorts = new Set<number>();
+  private workspaceDir = process.cwd();
+  private apiKey = "tutly-dev-key";
+  private lastHeartbeatAt = new Date();
 
   async run() {
     const { flags } = this.parse(Playground);
@@ -62,18 +84,51 @@ export default class Playground extends Command {
     this.log(`Port: ${flags.port}`);
     this.log(`Host: ${flags.host}`);
 
+    this.workspaceDir = path.resolve(flags.directory);
+    const workspaceMetadata = await fs
+      .readFile(
+        path.join(this.workspaceDir, ".tutly", "workspace.json"),
+        "utf-8",
+      )
+      .then((value) => JSON.parse(value))
+      .catch(() => null);
+    const workspaceToken =
+      flags["workspace-token"] ?? workspaceMetadata?.workspaceToken ?? null;
+    this.apiKey = workspaceToken || flags["api-key"];
+    const tutlyConfig = await readTutlyConfig(this.workspaceDir);
+    const configuredPorts = flags["allow-ports"]
+      ? flags["allow-ports"]
+          .split(",")
+          .map((port: string) => Number(port.trim()))
+          .filter(
+            (port: number) =>
+              Number.isInteger(port) && port > 0 && port < 65536,
+          )
+      : tutlyConfig.preview?.ports;
+    this.allowedPreviewPorts = new Set(
+      configuredPorts?.length ? configuredPorts : [3000, 5173, 4173, 8080],
+    );
+
     await this.setupServer(flags);
     await this.setupRoutes(flags);
     await this.setupWebSocket();
-    await this.setupFileWatcher(flags.directory);
+    await this.setupFileWatcher(this.workspaceDir);
 
     this.server.listen(flags.port, flags.host, () => {
       this.log(
         `🚀 Tutly playground server running at http://${flags.host}:${flags.port}`,
       );
       this.log(`📁 Serving directory: ${flags.directory}`);
+      this.log(
+        `🔒 Local API auth enabled. Preview ports: ${Array.from(this.allowedPreviewPorts).join(", ")}`,
+      );
       this.log(`\nAPI Endpoints:`);
       this.log(`  GET    /api/health              - Health check`);
+      this.log(
+        `  GET    /api/workspace           - Workspace config and state`,
+      );
+      this.log(`  POST   /api/heartbeat           - Connection heartbeat`);
+      this.log(`  GET    /api/ports               - Preview port status`);
       this.log(`  GET    /api/files               - List directory contents`);
       this.log(
         `  GET    /api/files/*             - Get file content or directory listing`,
@@ -83,7 +138,13 @@ export default class Playground extends Command {
       this.log(`  DELETE /api/files/*             - Delete file or directory`);
       this.log(`\nWebSocket Endpoints:`);
       this.log(`  /ws/files                       - File watching`);
-      this.log(`  /ws/terminal                    - Terminal access`);
+      this.log(
+        `  /ws/terminal?session=<id>       - Reconnectable terminal access`,
+      );
+      this.log(`\nPreview:`);
+      this.log(
+        `  /preview/:port/*                - Allowlisted localhost preview proxy`,
+      );
       this.log(`\nPress Ctrl+C to stop the server`);
     });
 
@@ -106,6 +167,15 @@ export default class Playground extends Command {
     });
 
     // Middleware
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 300,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { error: "Too many requests, please try again later." },
+    });
+    this.app.use(limiter);
+
     const ALLOWED_ORIGINS = [
       /^https?:\/\/localhost(:\d+)?$/,
       /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
@@ -122,9 +192,15 @@ export default class Playground extends Command {
         },
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "x-api-key"],
+        allowedHeaders: ["Content-Type", "x-api-key", "authorization"],
       }),
     );
+    this.app.use((req, res, next) => {
+      if (req.path.startsWith("/preview/")) return next();
+      if (req.method === "OPTIONS") return next();
+      if (this.isAuthorizedRequest(req)) return next();
+      res.status(401).json({ error: "Unauthorized local agent request" });
+    });
     this.app.use(express.json({ limit: "50mb" }));
     this.app.use(
       express.raw({
@@ -150,50 +226,71 @@ export default class Playground extends Command {
       legacyHeaders: false,
     });
 
-    const ALLOWED_RUNNERS: Record<string, { bin: string; baseArgs: string[] }> =
-      {
-        "npm test": { bin: "npm", baseArgs: ["test"] },
-        "pnpm test": { bin: "pnpm", baseArgs: ["test"] },
-        "yarn test": { bin: "yarn", baseArgs: ["test"] },
-        "npx jest": { bin: "npx", baseArgs: ["jest"] },
-        "npx mocha": { bin: "npx", baseArgs: ["mocha"] },
-        "npx vitest": { bin: "npx", baseArgs: ["vitest"] },
-        jest: { bin: "jest", baseArgs: [] },
-        mocha: { bin: "mocha", baseArgs: [] },
-        vitest: { bin: "vitest", baseArgs: [] },
-      };
-    const ALLOWED_EXTRA_ARG_PATTERN = /^[\w\-./@:=,]+$/;
-
-    const resolveTestCommand = (
-      raw: unknown,
-    ): { bin: string; argv: string[] } | { error: string } => {
-      if (typeof raw !== "string") return { error: "command must be a string" };
-      const matchedKey = Object.keys(ALLOWED_RUNNERS)
-        .sort((a, b) => b.length - a.length)
-        .find((k) => raw === k || raw.startsWith(k + " "));
-      if (!matchedKey) {
-        return {
-          error: "Command not allowed",
-        };
-      }
-      const { bin, baseArgs } = ALLOWED_RUNNERS[matchedKey]!;
-      const trailing = raw.slice(matchedKey.length).trim();
-      const extras = trailing.length === 0 ? [] : trailing.split(/\s+/);
-      for (const arg of extras) {
-        if (!ALLOWED_EXTRA_ARG_PATTERN.test(arg)) {
-          return { error: `Invalid argument: ${arg}` };
-        }
-      }
-      return { bin, argv: [...baseArgs, ...extras] };
-    };
-
     this.app.get("/api/health", (req, res) => {
       res.json({
         status: "ok",
         directory: baseDir,
         timestamp: new Date().toISOString(),
         version: this.config.version,
+        allowedPreviewPorts: Array.from(this.allowedPreviewPorts),
+        lastHeartbeatAt: this.lastHeartbeatAt.toISOString(),
       });
+    });
+
+    this.app.get("/api/workspace", fileLimiter, async (req, res) => {
+      try {
+        const config = await readTutlyConfig(baseDir);
+        const metadataPath = path.join(baseDir, ".tutly", "workspace.json");
+        const metadata = await fs
+          .readFile(metadataPath, "utf-8")
+          .then((value) => JSON.parse(value))
+          .catch(() => null);
+        res.json({
+          directory: baseDir,
+          metadata,
+          config,
+          allowedPreviewPorts: Array.from(this.allowedPreviewPorts),
+          terminalSessions: Array.from(this.terminals.values()).map(
+            (session) => ({
+              id: session.id,
+              clients: session.clients.size,
+              createdAt: session.createdAt,
+              lastSeenAt: session.lastSeenAt,
+            }),
+          ),
+        });
+      } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+      }
+    });
+
+    this.app.post("/api/heartbeat", fileLimiter, (req, res) => {
+      this.lastHeartbeatAt = new Date();
+      res.json({
+        status: "ok",
+        timestamp: this.lastHeartbeatAt.toISOString(),
+      });
+    });
+
+    this.app.get("/api/ports", fileLimiter, async (req, res) => {
+      const ports = await Promise.all(
+        Array.from(this.allowedPreviewPorts).map(async (port) => ({
+          port,
+          proxyPath: `/preview/${port}/`,
+          targetUrl: `http://127.0.0.1:${port}`,
+          reachable: await this.isPortReachable(port),
+        })),
+      );
+      res.json({ ports });
+    });
+
+    this.app.use("/preview/:port", (req, res) => {
+      const port = Number(req.params.port);
+      if (!this.allowedPreviewPorts.has(port)) {
+        res.status(403).send(`Port ${port} is not approved for preview.`);
+        return;
+      }
+      this.proxyPreviewRequest(port, req, res);
     });
 
     // List root directory or get file/directory content
@@ -325,68 +422,23 @@ export default class Playground extends Command {
 
     this.app.post("/api/test", fileLimiter, async (req, res) => {
       try {
-        const { execFile } = require("child_process");
-        const { promisify } = require("util");
-        const execFileAsync = promisify(execFile);
-
+        const config = await readTutlyConfig(baseDir);
         const raw: string =
-          req.body?.command || "npm test --silent -- --reporter json";
-        const resolved = resolveTestCommand(raw);
-        if ("error" in resolved) {
+          req.body?.command || config.test?.command || "npm test";
+        const result = await runVisibleTestCommand({
+          command: raw,
+          cwd: baseDir,
+          timeoutMs: req.body?.timeoutMs,
+        });
+
+        if ("error" in result) {
           return res.status(400).json({
-            error: resolved.error,
-            allowedRunners: Object.keys(ALLOWED_RUNNERS),
+            error: result.error,
+            allowedRunners: allowedTestCommands(),
           });
         }
-        this.log(`Running test command: ${raw}`);
 
-        try {
-          const { stdout, stderr } = await execFileAsync(
-            resolved.bin,
-            resolved.argv,
-            {
-              cwd: baseDir,
-              timeout: 120000, // 2 minute timeout
-              maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-            },
-          );
-
-          try {
-            const results = JSON.parse(stdout);
-            res.json(results);
-          } catch {
-            res.json({
-              stats: {
-                suites: 0,
-                tests: 0,
-                passes: 0,
-                failures: 0,
-                pending: 0,
-                duration: 0,
-              },
-              tests: [],
-              failures: [],
-              passes: [],
-              rawOutput: stdout,
-              stderr: stderr,
-            });
-          }
-        } catch (execError: any) {
-          const output = execError.stdout || "";
-          const errorOutput = execError.stderr || "";
-
-          try {
-            const results = JSON.parse(output);
-            res.json(results);
-          } catch {
-            res.status(500).json({
-              error: "Test execution failed",
-              message: execError.message,
-              stdout: output,
-              stderr: errorOutput,
-            });
-          }
-        }
+        res.json(result);
       } catch (error) {
         res.status(500).json({ error: (error as Error).message });
       }
@@ -394,71 +446,15 @@ export default class Playground extends Command {
 
     this.app.get("/api/test/discover", fileLimiter, async (req, res) => {
       try {
-        const { execFile } = require("child_process");
-        const { promisify } = require("util");
-        const execFileAsync = promisify(execFile);
-
+        const config = await readTutlyConfig(baseDir);
         const raw: string =
-          (req.query?.command as string) ||
-          "npm test --silent -- --reporter json --dry-run";
-        const resolved = resolveTestCommand(raw);
-        if ("error" in resolved) {
-          return res.status(400).json({
-            error: resolved.error,
-            allowedRunners: Object.keys(ALLOWED_RUNNERS),
-          });
-        }
-        this.log(`Discovering tests with: ${raw}`);
-
-        try {
-          const { stdout } = await execFileAsync(resolved.bin, resolved.argv, {
-            cwd: baseDir,
-            timeout: 30000,
-            maxBuffer: 10 * 1024 * 1024,
-          });
-
-          const results = JSON.parse(stdout);
-          res.json({
-            stats: results.stats || {
-              suites: 0,
-              tests: results.tests?.length || 0,
-              passes: 0,
-              failures: 0,
-              pending: results.tests?.length || 0,
-              duration: 0,
-            },
-            tests: results.tests || [],
-            passes: [],
-            failures: [],
-            pending: results.tests || [],
-          });
-        } catch (execError: any) {
-          const output = execError.stdout || "";
-          try {
-            const results = JSON.parse(output);
-            res.json({
-              stats: results.stats || {
-                suites: 0,
-                tests: results.tests?.length || 0,
-                passes: 0,
-                failures: 0,
-                pending: results.tests?.length || 0,
-                duration: 0,
-              },
-              tests: results.tests || [],
-              passes: [],
-              failures: [],
-              pending: results.tests || [],
-            });
-          } catch {
-            res.status(500).json({
-              error: "Failed to discover tests",
-              message: execError.message,
-              stdout: output,
-              stderr: execError.stderr || "",
-            });
-          }
-        }
+          (req.query?.command as string) || config.test?.command || "npm test";
+        res.json({
+          command: raw,
+          allowedRunners: allowedTestCommands(),
+          tests: [],
+          message: "Run /api/test for concrete visible test results.",
+        });
       } catch (error) {
         res.status(500).json({ error: (error as Error).message });
       }
@@ -472,11 +468,15 @@ export default class Playground extends Command {
       "connection",
       (ws: WebSocket.WebSocket, req: IncomingMessage) => {
         const url = new URL(req.url!, `http://${req.headers.host}`);
+        if (!this.isAuthorizedWebSocket(url, req)) {
+          ws.close(1008, "Unauthorized local agent websocket");
+          return;
+        }
 
         if (url.pathname === "/ws/files") {
           this.handleFileWatcher(ws);
         } else if (url.pathname === "/ws/terminal") {
-          this.handleTerminal(ws);
+          this.handleTerminal(ws, url.searchParams.get("session") ?? undefined);
         } else {
           ws.close(1000, "Unknown endpoint");
         }
@@ -499,10 +499,11 @@ export default class Playground extends Command {
     );
   }
 
-  private handleTerminal(ws: WebSocket.WebSocket) {
-    const terminalId = `terminal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const { flags } = this.parse(Playground);
-
+  private handleTerminal(ws: WebSocket.WebSocket, requestedId?: string) {
+    const terminalId =
+      requestedId && /^[a-zA-Z0-9_.-]+$/.test(requestedId)
+        ? requestedId
+        : `terminal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     let ptyModule: typeof import("node-pty");
     try {
       ptyModule = require("node-pty");
@@ -519,58 +520,30 @@ export default class Playground extends Command {
     }
 
     try {
-      // Create a new pseudo-terminal
-      const shell = process.platform === "win32" ? "powershell.exe" : "bash";
-      const terminal = ptyModule.spawn(shell, [], {
-        name: "xterm-color",
-        cols: 80,
-        rows: 24,
-        cwd: flags.directory,
-        env: process.env as { [key: string]: string },
-      });
+      const session =
+        this.terminals.get(terminalId) ??
+        this.createTerminalSession(terminalId, ptyModule);
 
-      // Store the terminal session
-      const session: TerminalSession = {
-        id: terminalId,
-        pty: terminal,
-        ws: ws,
-      };
-      this.terminals.set(terminalId, session);
+      if (session.disposeTimer) {
+        clearTimeout(session.disposeTimer);
+        session.disposeTimer = undefined;
+      }
+      session.clients.add(ws);
+      session.lastSeenAt = new Date();
 
       // Send initial connection message
       ws.send(
         JSON.stringify({
           type: "connected",
           terminalId: terminalId,
-          message: "Terminal connected successfully",
+          message: session.buffer.length
+            ? "Terminal reconnected successfully"
+            : "Terminal connected successfully",
         }),
       );
-
-      // Forward terminal output to WebSocket
-      terminal.onData((data: string) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(
-            JSON.stringify({
-              type: "data",
-              data: data,
-            }),
-          );
-        }
-      });
-
-      // Handle terminal exit
-      terminal.onExit((e: { exitCode: number; signal?: number }) => {
-        ws.send(
-          JSON.stringify({
-            type: "exit",
-            exitCode: e.exitCode,
-            signal: e.signal,
-            message: `Terminal exited with code ${e.exitCode}`,
-          }),
-        );
-        this.terminals.delete(terminalId);
-        ws.close();
-      });
+      for (const data of session.buffer) {
+        ws.send(JSON.stringify({ type: "data", data }));
+      }
 
       // Handle WebSocket messages (input from client)
       ws.on("message", (message: string) => {
@@ -580,13 +553,13 @@ export default class Playground extends Command {
           switch (msg.type) {
             case "input":
               // Send input to terminal
-              terminal.write(msg.data);
+              session.pty.write(msg.data);
               break;
 
             case "resize":
               // Resize terminal
               if (msg.cols && msg.rows) {
-                terminal.resize(msg.cols, msg.rows);
+                session.pty.resize(msg.cols, msg.rows);
               }
               break;
 
@@ -610,15 +583,23 @@ export default class Playground extends Command {
 
       // Handle WebSocket close
       ws.on("close", () => {
-        terminal.kill();
-        this.terminals.delete(terminalId);
+        session.clients.delete(ws);
+        session.lastSeenAt = new Date();
+        if (session.clients.size === 0) {
+          session.disposeTimer = setTimeout(
+            () => {
+              session.pty.kill();
+              this.terminals.delete(terminalId);
+            },
+            10 * 60 * 1000,
+          );
+        }
       });
 
       // Handle WebSocket errors
       ws.on("error", (error) => {
         console.error(`Terminal WebSocket error for ${terminalId}:`, error);
-        terminal.kill();
-        this.terminals.delete(terminalId);
+        session.clients.delete(ws);
       });
     } catch (error) {
       console.error("Failed to create terminal:", error);
@@ -629,6 +610,137 @@ export default class Playground extends Command {
         }),
       );
       ws.close();
+    }
+  }
+
+  private createTerminalSession(
+    terminalId: string,
+    ptyModule: typeof import("node-pty"),
+  ): TerminalSession {
+    const shell = process.platform === "win32" ? "powershell.exe" : "bash";
+    const terminal = ptyModule.spawn(shell, [], {
+      name: "xterm-color",
+      cols: 80,
+      rows: 24,
+      cwd: this.workspaceDir,
+      env: process.env as { [key: string]: string },
+    });
+
+    const session: TerminalSession = {
+      id: terminalId,
+      pty: terminal,
+      clients: new Set(),
+      buffer: [],
+      createdAt: new Date(),
+      lastSeenAt: new Date(),
+    };
+
+    terminal.onData((data: string) => {
+      session.buffer.push(data);
+      if (session.buffer.length > 500) session.buffer.shift();
+      const message = JSON.stringify({ type: "data", data });
+      for (const client of session.clients) {
+        if (client.readyState === WebSocket.OPEN) client.send(message);
+      }
+    });
+
+    terminal.onExit((event: { exitCode: number; signal?: number }) => {
+      const message = JSON.stringify({
+        type: "exit",
+        exitCode: event.exitCode,
+        signal: event.signal,
+        message: `Terminal exited with code ${event.exitCode}`,
+      });
+      for (const client of session.clients) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(message);
+          client.close();
+        }
+      }
+      this.terminals.delete(terminalId);
+    });
+
+    this.terminals.set(terminalId, session);
+    return session;
+  }
+
+  private isAuthorizedRequest(req: express.Request) {
+    const headerKey = req.header("x-api-key");
+    const bearer = req.header("authorization")?.replace(/^Bearer\s+/i, "");
+    return headerKey === this.apiKey || bearer === this.apiKey;
+  }
+
+  private isAuthorizedWebSocket(url: URL, req: IncomingMessage) {
+    const queryKey = url.searchParams.get("apiKey");
+    const headerKey = req.headers["x-api-key"];
+    const bearer = String(req.headers.authorization ?? "").replace(
+      /^Bearer\s+/i,
+      "",
+    );
+    return (
+      queryKey === this.apiKey ||
+      headerKey === this.apiKey ||
+      bearer === this.apiKey
+    );
+  }
+
+  private async isPortReachable(port: number) {
+    try {
+      const response = await fetch(`http://127.0.0.1:${port}`, {
+        method: "GET",
+        signal: AbortSignal.timeout(1500),
+      });
+      return response.status < 500;
+    } catch {
+      return false;
+    }
+  }
+
+  private proxyPreviewRequest(
+    port: number,
+    req: express.Request,
+    res: express.Response,
+  ) {
+    const protocol = "http:";
+    const targetPath = req.originalUrl.replace(`/preview/${port}`, "") || "/";
+    const proxyReq = httpRequest(
+      {
+        protocol,
+        hostname: "127.0.0.1",
+        port,
+        path: targetPath,
+        method: req.method,
+        headers: {
+          ...req.headers,
+          host: `127.0.0.1:${port}`,
+        },
+      },
+      (proxyRes) => {
+        res.status(proxyRes.statusCode ?? 502);
+        for (const [key, value] of Object.entries(proxyRes.headers)) {
+          if (value !== undefined) res.setHeader(key, value);
+        }
+        proxyRes.pipe(res);
+      },
+    );
+
+    proxyReq.on("error", (error) => {
+      res
+        .status(502)
+        .send(`Preview port ${port} is not reachable: ${error.message}`);
+    });
+
+    if (req.method === "GET" || req.method === "HEAD") {
+      proxyReq.end();
+      return;
+    }
+
+    if (Buffer.isBuffer(req.body)) {
+      proxyReq.end(req.body);
+    } else if (req.body && Object.keys(req.body).length > 0) {
+      proxyReq.end(JSON.stringify(req.body));
+    } else {
+      req.pipe(proxyReq);
     }
   }
 
@@ -743,8 +855,11 @@ export default class Playground extends Command {
     // Close all terminals
     for (const [id, session] of this.terminals.entries()) {
       this.log(`Closing terminal ${id}`);
+      if (session.disposeTimer) clearTimeout(session.disposeTimer);
       session.pty.kill();
-      session.ws.close();
+      for (const client of session.clients) {
+        client.close();
+      }
     }
     this.terminals.clear();
 

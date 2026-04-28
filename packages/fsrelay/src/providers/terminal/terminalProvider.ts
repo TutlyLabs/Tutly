@@ -2,7 +2,11 @@ import * as vscode from 'vscode';
 
 let terminalCounter = 0;
 
-export function createTutlyPseudoterminal(serverUrl: string = 'ws://localhost:4242'): vscode.Pseudoterminal {
+export function createTutlyPseudoterminal(
+  serverUrl: string = 'ws://localhost:4242',
+  apiKey: string = 'tutly-dev-key',
+  sessionId?: string
+): vscode.Pseudoterminal {
   // Create a WebSocket-based terminal for VS Code Web compatibility
   const writeEmitter = new vscode.EventEmitter<string>();
   const closeEmitter = new vscode.EventEmitter<number | void>();
@@ -19,7 +23,11 @@ export function createTutlyPseudoterminal(serverUrl: string = 'ws://localhost:42
     open: (initialDimensions) => {
       // Connect to the CLI server's WebSocket terminal endpoint
       try {
-        ws = new WebSocket(`${serverUrl}/ws/terminal`);
+        const params = new URLSearchParams({
+          apiKey,
+          session: sessionId || `vscode-${Date.now()}`
+        });
+        ws = new WebSocket(`${serverUrl}/ws/terminal?${params.toString()}`);
 
         ws.onopen = () => {
           isConnected = true;
@@ -121,8 +129,8 @@ export function createTutlyPseudoterminal(serverUrl: string = 'ws://localhost:42
   return pty;
 }
 
-export function createTutlyTerminal(serverUrl?: string): vscode.Terminal {
-  const pty = createTutlyPseudoterminal(serverUrl);
+export function createTutlyTerminal(serverUrl?: string, apiKey?: string, sessionId?: string): vscode.Terminal {
+  const pty = createTutlyPseudoterminal(serverUrl, apiKey, sessionId);
   const options: vscode.ExtensionTerminalOptions = {
     name: `Tutly Terminal ${++terminalCounter}`,
     pty: pty,

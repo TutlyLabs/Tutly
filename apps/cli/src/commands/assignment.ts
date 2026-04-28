@@ -4,6 +4,7 @@ import { Command, flags } from "@oclif/command";
 
 import { createAPIClient } from "../lib/api/client";
 import { getCurrentUser, isAuthenticated } from "../lib/auth/device";
+import { renderTutlyConfigYaml } from "../lib/workspace-config";
 
 export default class Assignment extends Command {
   static description = "Clone template files for an assignment";
@@ -46,48 +47,56 @@ export default class Assignment extends Command {
     try {
       const api = await createAPIClient();
       const user = await getCurrentUser();
-      const type =
-        user?.role === "INSTRUCTOR" || user?.role === "ADMIN"
-          ? "TEMPLATE"
-          : "SUBMISSION";
 
-      // 1. Initialize/Get Submission Repo URL
-      this.log(`  • Initializing workspace (${type.toLowerCase()})...`);
-      const repoInfo = await api.createSubmissionRepo(assignmentId, type);
-
-      if (!repoInfo.repoUrl) {
-        this.log("\n❌ Failed to initialize workspace.");
+      this.log(`  • Starting S3-backed workspace...`);
+      const workspace = await api.startWorkspace(assignmentId);
+      if (workspace.error || !workspace.data?.submission?.id) {
+        this.log(
+          `\n❌ Failed to initialize workspace: ${workspace.error ?? "Unknown error"}`,
+        );
         this.exit(1);
       }
 
-      // 2. Determine Output Directory
-      // We need to fetch assignment details to get the title for the directory name
       const details = await api.getAssignmentDetailsForSubmission(assignmentId);
       const assignmentTitle =
-        details.assignment?.title || `assignment-${assignmentId}`;
+        workspace.data.assignment?.title ??
+        details.assignment?.title ??
+        `assignment-${assignmentId}`;
 
       const outputDir = flags.output || `./${assignmentId}`;
 
       this.log(`  • Downloading files to: ${outputDir}`);
+      await mkdir(outputDir, { recursive: true });
 
-      // 3. Download Archive
-      const cleanRepoUrl = repoInfo.repoUrl.replace(/\.git$/, "");
-      const archiveUrl = `${cleanRepoUrl}/archive/main.zip`;
+      const starterArtifacts = workspace.data.starterArtifacts ?? [];
+      const starterArtifact =
+        starterArtifacts.find((artifact: any) => artifact.kind === "STARTER") ??
+        starterArtifacts[0];
+      if (starterArtifact?.id) {
+        const download = await api.getWorkspaceArtifactDownloadUrl(
+          starterArtifact.id,
+        );
+        if (download.data?.signedUrl) {
+          await api.downloadAndExtractArchive(
+            download.data.signedUrl,
+            outputDir,
+          );
+        }
+      }
 
-      await api.downloadAndExtractArchive(archiveUrl, outputDir);
-
-      // 4. Create .tutly/ directory structure
       const absoluteOutputDir = resolve(outputDir);
       const tutlyDir = join(outputDir, ".tutly");
       await mkdir(tutlyDir, { recursive: true });
 
       const metadata = {
         assignmentId: assignmentId,
+        submissionId: workspace.data.submission.id,
         title: assignmentTitle,
         courseId: details.assignment?.class?.courseId,
         path: absoluteOutputDir,
         clonedAt: new Date().toISOString(),
         userId: user?.id,
+        workspaceToken: workspace.data.workspaceToken,
       };
 
       await writeFile(
@@ -95,6 +104,18 @@ export default class Assignment extends Command {
         JSON.stringify(metadata, null, 2),
       );
       this.log(`  ✓ Created: .tutly/workspace.json`);
+
+      await writeFile(
+        join(tutlyDir, "config.yaml"),
+        renderTutlyConfigYaml({
+          setupCommand: workspace.data.config?.setupCommand,
+          devCommand: workspace.data.config?.devCommand,
+          testCommand: workspace.data.config?.testCommand,
+          previewPorts: workspace.data.config?.previewPorts,
+          readonlyPaths: workspace.data.config?.readonlyPaths,
+        }),
+      );
+      this.log(`  ✓ Created: .tutly/config.yaml`);
 
       this.log(`\n✨ Cloned into ${outputDir}`);
     } catch (error) {

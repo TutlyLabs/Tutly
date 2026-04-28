@@ -66,12 +66,69 @@ enum submissionMode {
   REACT
   EXTERNAL_LINK
   SANDBOX
+  WORKSPACE
+  GIT
 }
 
 enum pointCategory {
   RESPOSIVENESS
   STYLING
   OTHER
+  TESTS
+}
+
+enum WorkspaceProviderType {
+  LOCAL
+  SSH
+}
+
+enum ServiceConnectionStatus {
+  ACTIVE
+  DISABLED
+  ERROR
+}
+
+enum AssignmentArtifactKind {
+  STARTER
+  AUTOSAVE
+  SUBMISSION
+  TEST_REPORT
+  LOG
+  SCREENSHOT
+  MIGRATION
+}
+
+enum AssignmentArtifactStatus {
+  PENDING_UPLOAD
+  STORED
+  FAILED
+}
+
+enum AssignmentTestVisibility {
+  VISIBLE
+  HIDDEN
+}
+
+enum SubmissionTestRunStatus {
+  QUEUED
+  RUNNING
+  PASSED
+  FAILED
+  ERROR
+  CANCELLED
+}
+
+enum PortSessionStatus {
+  OPEN
+  CLOSED
+  STALE
+}
+
+enum SubmissionReviewStatus {
+  NEEDS_REVIEW
+  REVIEWED
+  CHANGES_REQUESTED
+  AUTO_SCORED
 }
 
 enum EventCategory {
@@ -138,6 +195,10 @@ model User {
   uploadedFiles       File[]                @relation("uploadedFiles")
   archivedFiles       File[]                @relation("archivedFiles")
   ScheduleEvent       ScheduleEvent[]
+  serviceConnections  ServiceConnection[]
+  portSessions        PortSession[]
+  submissionReviews   SubmissionReview[]     @relation("SubmissionReviewer")
+  createdArtifacts    AssignmentArtifact[]
   
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
@@ -260,6 +321,11 @@ model Attachment {
   course          Course?        @relation(fields: [courseId], references: [id])
   submissionMode  submissionMode @default(HTML_CSS_JS)
   sandboxTemplate String?        @db.Text
+  workspaceConfig AssignmentConfig?
+  artifacts       AssignmentArtifact[]
+  testCases       AssignmentTestCase[]
+  testRuns        SubmissionTestRun[]
+  reviews         SubmissionReview[]
   dueDate         DateTime?
   
   // Relations
@@ -283,6 +349,9 @@ model submission {
   
   // Relations
   points         Point[]
+  artifacts      AssignmentArtifact[]
+  testRuns       SubmissionTestRun[]
+  review         SubmissionReview?
   
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -293,12 +362,174 @@ model Point {
   category     pointCategory
   feedback     String?
   score        Int           @default(0)
+  maxScore     Int?
+  source       String?
+  metadata     Json?         @default("{}")
+  testRunId    String?
   submissions  submission?   @relation(fields: [submissionId], references: [id])
   submissionId String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   
   @@unique([submissionId, category])
+}
+
+model AssignmentConfig {
+  id             String @id @default(uuid())
+  assignmentId   String @unique
+  assignment     Attachment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  framework      String?
+  setupCommand   String?
+  devCommand     String?
+  testCommand    String?
+  previewPorts   Int[] @default([])
+  readonlyPaths  String[] @default([])
+  grading        Json? @default("{}")
+  publicTestMetadata Json? @default("{}")
+  defaultProvider WorkspaceProviderType @default(LOCAL)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model AssignmentArtifact {
+  id           String @id @default(uuid())
+  assignmentId String?
+  assignment   Attachment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  submissionId String?
+  submission   submission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  kind         AssignmentArtifactKind
+  bucket       String
+  objectKey    String
+  fileName     String?
+  mimeType     String?
+  sizeBytes    BigInt?
+  checksum     String?
+  manifest     Json? @default("{}")
+  version      Int @default(1)
+  isLatest     Boolean @default(true)
+  status       AssignmentArtifactStatus @default(PENDING_UPLOAD)
+  uploadedAt   DateTime?
+  createdById  String?
+  createdBy    User? @relation(fields: [createdById], references: [id])
+  createdAt    DateTime @default(now())
+  testCases    AssignmentTestCase[]
+
+  @@index([assignmentId, kind])
+  @@index([submissionId, kind])
+  @@index([objectKey])
+}
+
+model AssignmentTestCase {
+  id           String @id @default(uuid())
+  assignmentId String
+  assignment   Attachment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  title        String
+  visibility   AssignmentTestVisibility @default(VISIBLE)
+  command      String
+  points       Int @default(1)
+  timeoutMs    Int @default(120000)
+  metadata     Json? @default("{}")
+  artifactId   String?
+  artifact     AssignmentArtifact? @relation(fields: [artifactId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([assignmentId, visibility])
+}
+
+model SubmissionTestRun {
+  id                  String @id @default(uuid())
+  submissionId        String
+  submission          submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  assignmentId        String
+  assignment          Attachment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  serviceConnectionId String?
+  serviceConnection   ServiceConnection? @relation(fields: [serviceConnectionId], references: [id])
+  provider            WorkspaceProviderType @default(LOCAL)
+  status              SubmissionTestRunStatus @default(QUEUED)
+  trigger             String @default("manual")
+  visiblePassed       Int @default(0)
+  visibleTotal        Int @default(0)
+  hiddenPassed        Int @default(0)
+  hiddenTotal         Int @default(0)
+  score               Int @default(0)
+  maxScore            Int @default(0)
+  outputSummary       Json? @default("{}")
+  logsArtifactId      String?
+  reportArtifactId    String?
+  startedAt           DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([assignmentId, status])
+  @@index([submissionId, createdAt])
+}
+
+model ServiceConnection {
+  id                String @id @default(uuid())
+  userId            String
+  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          WorkspaceProviderType
+  name              String
+  status            ServiceConnectionStatus @default(ACTIVE)
+  config            Json? @default("{}")
+  encryptedSecret   String? @db.Text
+  lastCheckedAt     DateTime?
+  lastError         String? @db.Text
+  testRuns          SubmissionTestRun[]
+  portSessions      PortSession[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId, provider])
+}
+
+model PortSession {
+  id                  String @id @default(uuid())
+  userId              String
+  user                User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignmentId        String?
+  assignment          Attachment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  submissionId        String?
+  submission          submission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  serviceConnectionId String?
+  serviceConnection   ServiceConnection? @relation(fields: [serviceConnectionId], references: [id])
+  provider            WorkspaceProviderType @default(LOCAL)
+  port                Int
+  targetUrl           String?
+  proxyPath           String
+  status              PortSessionStatus @default(OPEN)
+  lastHeartbeatAt     DateTime @default(now())
+  expiresAt           DateTime?
+  metadata            Json? @default("{}")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([assignmentId, port])
+}
+
+model SubmissionReview {
+  id           String @id @default(uuid())
+  submissionId String @unique
+  submission   submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  assignmentId String
+  assignment   Attachment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  reviewerId   String?
+  reviewer     User? @relation("SubmissionReviewer", fields: [reviewerId], references: [id])
+  status       SubmissionReviewStatus @default(NEEDS_REVIEW)
+  autoScore    Int?
+  maxScore     Int?
+  manualScore  Int?
+  feedback     String? @db.Text
+  testRunId    String?
+  reviewedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([assignmentId, status])
+  @@index([reviewerId])
 }
 
 model Doubt {
@@ -516,6 +747,13 @@ Key Relationships to Remember:
 4. User -> Doubt -> Response: Users ask doubts, others respond
 5. User -> Notification: Users receive notifications
 6. User -> BookMarks/Notes: Users save bookmarks and notes
+7. Attachment -> AssignmentConfig: Workspace assignments have config (commands, ports, grading)
+8. Attachment -> AssignmentTestCase: Test cases (visible/hidden) for workspace assignments
+9. submission -> AssignmentArtifact: ZIP artifacts (starter, autosave, submission)
+10. submission -> SubmissionTestRun: Test execution records (visible/hidden scores)
+11. submission -> SubmissionReview: Review status (NEEDS_REVIEW, REVIEWED, AUTO_SCORED)
+12. User -> ServiceConnection: Workspace providers (LOCAL, SSH) with encrypted secrets
+13. User -> PortSession: Dev server port forwarding sessions
 
 Common Query Patterns:
 - Find user's enrolled courses: enrolledUsers.some({ username: "user123" })
@@ -523,6 +761,9 @@ Common Query Patterns:
 - Find user's attendance: attendance records by username
 - Find user's doubts: doubt records by userId
 - Find user's notifications: notifications by intendedForId
+- Find workspace config: assignmentConfig via attachment.workspaceConfig
+- Find test runs: submissionTestRun via submission.testRuns or attachment.testRuns
+- Find review queue: submissionReview with status filter, joined with submission/enrollment
 
 Field Types to Remember:
 - IDs are String (UUID)

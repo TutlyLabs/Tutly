@@ -2,20 +2,12 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
-  S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-
-const AWS_BUCKET_NAME = process.env.AWS_BUCKET_NAME ?? "tutly-local";
-const AWS_BUCKET_REGION = process.env.AWS_BUCKET_REGION ?? "us-east-1";
-const AWS_ACCESS_KEY = process.env.AWS_ACCESS_KEY ?? "test";
-const AWS_SECRET_KEY = process.env.AWS_SECRET_KEY ?? "test";
-const AWS_ENDPOINT = process.env.AWS_ENDPOINT ?? "http://localhost:4566";
-const AWS_S3_URL =
-  process.env.AWS_S3_URL ?? "http://localhost:4566/tutly-local";
+import { AWS_BUCKET_NAME, AWS_S3_URL, s3Client } from "../lib/s3";
 
 export const allowedMimeTypes = [
   // Images
@@ -54,18 +46,6 @@ export const allowedMimeTypes = [
   "application/vnd.oasis.opendocument.spreadsheet",
 ];
 
-const s3Client = new S3Client({
-  region: AWS_BUCKET_REGION,
-  credentials: {
-    accessKeyId: AWS_ACCESS_KEY,
-    secretAccessKey: AWS_SECRET_KEY,
-  },
-  // only for dev (localstack)
-  // ...(AWS_ENDPOINT && {
-  //   endpoint: AWS_ENDPOINT,
-  //   forcePathStyle: true,
-  // }),
-});
 
 function getExtension(filename: string): string {
   const parts = filename.split(".");
@@ -91,7 +71,7 @@ export const fileUploadRouter = createTRPCRouter({
       //   throw new Error("Invalid MIME type");
       // }
 
-      const internalName = `${crypto.randomUUID()}_$ {Date.now()}${getExtension(input.name)}`;
+      const internalName = `${crypto.randomUUID()}_${Date.now()}${getExtension(input.name)}`;
 
       const file = await ctx.db.file.create({
         data: {

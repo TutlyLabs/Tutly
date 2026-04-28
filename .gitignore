@@ -73,3 +73,4 @@ apps/web/public/vscode/extensions/*
 apps/web/public/vscode/vscode-web/
 apps/web/public/vscode/tutly-vscode-web/
 apps/cli/lib/
+apps/cli/oclif.manifest.json

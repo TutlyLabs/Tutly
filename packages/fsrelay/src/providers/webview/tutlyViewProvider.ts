@@ -161,9 +161,11 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
     try {
       let serverUrl = 'http://localhost:4242';
       let testCommand = 'npm test --silent -- --reporter json';
+      let apiKey = 'tutly-dev-key';
       try {
         const config = await vscode.commands.executeCommand<any>('tutlyfs.getConfig');
         serverUrl = config?.serverUrl || 'http://localhost:4242';
+        apiKey = config?.apiKey || 'tutly-dev-key';
         const configTestCommand = config?.tutlyConfig?.test?.command;
         if (configTestCommand) {
           testCommand = configTestCommand;
@@ -173,7 +175,7 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
 
       const response = await fetch(`${serverUrl}/api/test`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey || 'tutly-dev-key' },
         body: JSON.stringify({ command: testCommand })
       });
 
@@ -204,15 +206,17 @@ export class TutlyViewProvider implements vscode.WebviewViewProvider {
 
     try {
       let serverUrl = 'http://localhost:4242';
+      let apiKey = 'tutly-dev-key';
       try {
         const config = await vscode.commands.executeCommand<any>('tutlyfs.getConfig');
         serverUrl = config?.serverUrl || 'http://localhost:4242';
+        apiKey = config?.apiKey || 'tutly-dev-key';
       } catch {
       }
 
       const response = await fetch(`${serverUrl}/api/test/discover`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey }
       });
 
       if (response.ok) {

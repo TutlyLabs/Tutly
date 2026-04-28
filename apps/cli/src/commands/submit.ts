@@ -1,11 +1,9 @@
-import { existsSync } from "node:fs";
-import { readdir, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { Command, flags } from "@oclif/command";
-import AdmZip from "adm-zip";
-import ignore, { Ignore } from "ignore";
 
 import { createAPIClient } from "../lib/api/client";
+import { createWorkspaceArchive } from "../lib/archive";
 import { getCurrentUser, isAuthenticated } from "../lib/auth/device";
 import { findAssignmentRoot } from "../lib/utils";
 
@@ -72,33 +70,25 @@ export default class Submit extends Command {
 
       this.log(`\n📤 Preparing submission for: ${metadata.title}...`);
 
-      // 1. Create Zip Archive
-      const zip = new AdmZip();
-
-      // Initialize ignore
-      const ig = ignore();
-      ig.add([
-        ".git",
-        "node_modules",
-        "dist",
-        "build",
-        "coverage",
-        ".tutly/workspace.json",
-        ".DS_Store",
-      ]);
-
-      const gitignorePath = join(submissionDir, ".gitignore");
-      if (existsSync(gitignorePath)) {
-        const gitignoreContent = await readFile(gitignorePath, "utf-8");
-        ig.add(gitignoreContent);
+      const api = await createAPIClient();
+      let submissionId = metadata.submissionId as string | undefined;
+      if (!submissionId) {
+        const started = await api.startWorkspace(assignmentId);
+        if (started.error || !started.data?.submission?.id) {
+          this.log(
+            `\n❌ Submission failed: ${started.error ?? "Unable to start workspace"}\n`,
+          );
+          this.exit(1);
+        }
+        submissionId = started.data.submission.id;
+        metadata.submissionId = submissionId;
+        await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
       }
 
-      // Add files to zip, respecting .gitignore-like rules
-      await this.addDirectoryToZip(zip, submissionDir, submissionDir, ig);
+      const { buffer: zipBuffer, checksum } =
+        await createWorkspaceArchive(submissionDir);
 
-      const zipBuffer = zip.toBuffer();
-
-      if (zipBuffer.length === 0) {
+      if (zipBuffer.length === 0 || !submissionId) {
         this.log("❌ No files found to submit.");
         this.exit(1);
       }
@@ -107,14 +97,21 @@ export default class Submit extends Command {
         `📁 Compressed size: ${(zipBuffer.length / 1024).toFixed(2)} KB`,
       );
 
-      // 2. Upload Submission
-      const api = await createAPIClient();
       this.log(`\n⬆️  Uploading submission...`);
 
-      const result = await api.uploadSubmission(
-        assignmentId,
-        zipBuffer,
-        "SUBMIT",
+      const result = await api.submitWorkspace(
+        { assignmentId, submissionId },
+        {
+          fileName: "submission.zip",
+          mimeType: "application/zip",
+          sizeBytes: zipBuffer.length,
+          checksum,
+          manifest: {
+            assignmentId,
+            title: metadata.title,
+            submittedAt: new Date().toISOString(),
+          },
+        },
       );
 
       if (result.error) {
@@ -122,11 +119,23 @@ export default class Submit extends Command {
         this.exit(1);
       }
 
-      if (result.success) {
+      if (
+        result.success &&
+        result.data?.upload?.uploadUrl &&
+        result.data?.upload?.artifact?.id
+      ) {
+        await api.uploadToSignedUrl(result.data.upload.uploadUrl, zipBuffer);
+        await api.confirmWorkspaceArtifactUpload(
+          result.data.upload.artifact.id,
+          checksum,
+        );
         this.log("\n✨ Submission successful!");
         this.log(`✓ Your work has been submitted for review\n`);
-        if (result.submissionId) {
-          this.log(`📝 Submission ID: ${result.submissionId}\n`);
+        if (result.data?.submission?.id) {
+          this.log(`📝 Submission ID: ${result.data.submission.id}\n`);
+        }
+        if (result.data?.officialRunQueued) {
+          this.log("🧪 Hidden tests were queued on a trusted runner.\n");
         }
       } else {
         this.log(`\n⚠️  Unexpected response from server\n`);
@@ -140,33 +149,6 @@ export default class Submit extends Command {
         this.log(`\n${error.stack}`);
       }
       this.exit(1);
-    }
-  }
-
-  private async addDirectoryToZip(
-    zip: AdmZip,
-    baseDir: string,
-    currentDir: string,
-    ig: Ignore,
-  ) {
-    const entries = await readdir(currentDir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      const fullPath = join(currentDir, entry.name);
-      const relativePath = relative(baseDir, fullPath);
-
-      // Check if ignored
-      // Note: ignore() expects relative paths
-      if (ig.ignores(relativePath)) {
-        continue;
-      }
-
-      if (entry.isDirectory()) {
-        await this.addDirectoryToZip(zip, baseDir, fullPath, ig);
-      } else if (entry.isFile()) {
-        const content = await readFile(fullPath);
-        zip.addFile(relativePath, content);
-      }
     }
   }
 }

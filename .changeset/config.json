@@ -27,7 +27,6 @@
     "@tutly/utils",
     "api",
     "docs",
-    "landing",
-    "tutly"
+    "landing"
   ]
 }

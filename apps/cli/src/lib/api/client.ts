@@ -46,6 +46,14 @@ export interface AssignmentFile {
   content: string;
 }
 
+export interface WorkspaceArtifactUpload {
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  checksum?: string;
+  manifest?: Record<string, unknown>;
+}
+
 export class TutlyAPI {
   private baseUrl: string;
   private accessToken?: string;
@@ -235,6 +243,89 @@ export class TutlyAPI {
     }
 
     return response.json();
+  }
+
+  async startWorkspace(
+    assignmentId: string,
+  ): Promise<{ success?: boolean; error?: string; data?: any }> {
+    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+      "submissions.startWorkspace",
+      { assignmentId, provider: "LOCAL" },
+      "POST",
+    );
+  }
+
+  async saveWorkspaceSnapshot(
+    submissionId: string,
+    artifact: WorkspaceArtifactUpload,
+  ): Promise<{ success?: boolean; error?: string; data?: any }> {
+    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+      "submissions.saveSnapshot",
+      { submissionId, artifact },
+      "POST",
+    );
+  }
+
+  async submitWorkspace(
+    input: { assignmentId?: string; submissionId?: string },
+    artifact: WorkspaceArtifactUpload,
+  ): Promise<{ success?: boolean; error?: string; data?: any }> {
+    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+      "submissions.submitWorkspace",
+      { ...input, artifact },
+      "POST",
+    );
+  }
+
+  async confirmWorkspaceArtifactUpload(
+    artifactId: string,
+    checksum?: string,
+  ): Promise<{ success?: boolean; error?: string; data?: any }> {
+    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+      "submissions.confirmWorkspaceArtifactUpload",
+      { artifactId, checksum },
+      "POST",
+    );
+  }
+
+  async getWorkspaceArtifactDownloadUrl(
+    artifactId: string,
+  ): Promise<{ success?: boolean; error?: string; data?: { signedUrl: string } }> {
+    return this.trpcRequest<{
+      success?: boolean;
+      error?: string;
+      data?: { signedUrl: string };
+    }>("submissions.getWorkspaceArtifactDownloadUrl", { artifactId }, "POST");
+  }
+
+  async runVisibleTests(
+    submissionId: string,
+    results: Array<Record<string, unknown>>,
+  ): Promise<{ success?: boolean; error?: string; data?: any }> {
+    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+      "testRuns.runVisible",
+      { submissionId, provider: "LOCAL", results },
+      "POST",
+    );
+  }
+
+  async uploadToSignedUrl(
+    signedUrl: string,
+    buffer: Buffer,
+    mimeType = "application/zip",
+  ): Promise<void> {
+    const response = await fetch(signedUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": mimeType,
+      },
+      body: new Uint8Array(buffer),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      throw new Error(`Upload failed: ${response.status} ${response.statusText} ${errorText}`);
+    }
   }
 }
 

@@ -17,34 +17,45 @@ services:
       timeout: 5s
       retries: 5
 
-  localstack:
-    image: localstack/localstack:latest
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
     ports:
-      - "4566:4566"
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console (http://localhost:9001)
     environment:
-      - SERVICES=s3
-      - DEFAULT_REGION=us-east-1
-      - AWS_DEFAULT_REGION=us-east-1
-      - EDGE_PORT=4566
-      - LOCALSTACK_HOST=localhost
-      - USE_SSL=0
-      - PERSISTENCE=1
-      - DATA_DIR=/var/lib/localstack
-      - DISABLE_CORS_CHECKS=1
-      - DEBUG=1
+      - MINIO_ROOT_USER=tutlydev
+      - MINIO_ROOT_PASSWORD=tutlydev123
     volumes:
-      - ./data/localstack:/var/lib/localstack
+      - minio_data:/data
     networks:
       - tutly_network
     healthcheck:
-      test: ["CMD-SHELL", "awslocal s3 ls"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 10s
+      retries: 5
+
+  # Auto-creates the default bucket on startup
+  minio-setup:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 tutlydev tutlydev123 &&
+      mc mb --ignore-existing local/tutly-local &&
+      mc anonymous set download local/tutly-local/AVATAR &&
+      mc anonymous set download local/tutly-local/ATTACHMENT &&
+      echo 'Bucket tutly-local ready'
+      "
+    networks:
+      - tutly_network
 
 volumes:
   postgres_data:
+  minio_data:
 
 networks:
   tutly_network:
