@@ -3,6 +3,7 @@
   "displayName": "Tutly File System Provider",
   "description": "A VS Code extension that provides file system and terminal access",
   "version": "0.0.1",
+  "private": true,
   "publisher": "tutly",
   "engines": {
     "vscode": "^1.75.0"

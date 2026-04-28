@@ -1,6 +1,7 @@
 {
   "name": "@tutly/playgrounds",
   "version": "1.0.0",
+  "private": true,
   "description": "Tutly playgrounds which runs entirely on their local",
   "scripts": {
     "setup": "node ./setup.js",

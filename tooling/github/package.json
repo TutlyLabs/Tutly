@@ -1,3 +1,4 @@
 {
-  "name": "@tutly/github"
+  "name": "@tutly/github",
+  "private": true
 }
