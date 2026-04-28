@@ -167,6 +167,15 @@ export default class Playground extends Command {
     });
 
     // Middleware
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 300,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { error: "Too many requests, please try again later." },
+    });
+    this.app.use(limiter);
+
     const ALLOWED_ORIGINS = [
       /^https?:\/\/localhost(:\d+)?$/,
       /^https?:\/\/127\.0\.0\.1(:\d+)?$/,

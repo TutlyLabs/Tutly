@@ -9,11 +9,24 @@ const AWS_ACCESS_KEY = process.env.AWS_ACCESS_KEY ?? "tutlydev";
 const AWS_SECRET_KEY = process.env.AWS_SECRET_KEY ?? "tutlydev123";
 const AWS_ENDPOINT = process.env.AWS_ENDPOINT;
 
+const getEndpointHostname = (endpoint?: string): string | undefined => {
+  if (!endpoint) return undefined;
+  try {
+    return new URL(endpoint).hostname.toLowerCase();
+  } catch {
+    return undefined;
+  }
+};
+
+const endpointHostname = getEndpointHostname(AWS_ENDPOINT);
+
 /** R2 and local MinIO reject this header. */
-export const supportsServerSideEncryption = 
-  !AWS_ENDPOINT?.includes("r2.cloudflarestorage.com") &&
-  !AWS_ENDPOINT?.includes("localhost") &&
-  !AWS_ENDPOINT?.includes("127.0.0.1");
+export const supportsServerSideEncryption =
+  endpointHostname === undefined
+    ? AWS_ENDPOINT === undefined
+    : endpointHostname !== "r2.cloudflarestorage.com" &&
+      endpointHostname !== "localhost" &&
+      endpointHostname !== "127.0.0.1";
 
 export const s3Client = new S3Client({
   region: AWS_BUCKET_REGION,
