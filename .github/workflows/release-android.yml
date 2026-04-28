@@ -2,8 +2,8 @@ name: Release Android APK
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "web@*"
 
 permissions:
   contents: write
@@ -44,40 +44,32 @@ jobs:
           echo "$GOOGLE_SERVICES_JSON" | base64 -d > apps/web/android/app/google-services.json
           echo "Wrote apps/web/android/app/google-services.json ($(wc -c < apps/web/android/app/google-services.json) bytes)"
 
-      - name: Create Release PR or build APK
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          version: pnpm version-packages
-          publish: pnpm -F web release:android
-          commit: "chore: version packages"
-          title: "chore: version packages"
-          createGithubReleases: false
+      - name: Build Android APK
+        run: pnpm -F web release:android
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Create GitHub Release with APK
-        if: steps.changesets.outputs.hasChangesets == 'false'
+      - name: Upload APK to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # The tag that triggered this workflow is in github.ref
+          TAG=${GITHUB_REF#refs/tags/}
           VERSION=$(node -p "require('./apps/web/package.json').version")
-          TAG="tutly-mobile-v${VERSION}"
           APK="apps/web/tutly-${VERSION}.apk"
           if [ ! -f "$APK" ]; then
             echo "No APK at $APK — publish step did not produce one. Skipping release."
             exit 0
           fi
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists. Uploading APK as a new asset (clobber)."
+            echo "Release $TAG already exists. Uploading APK as a new asset."
             gh release upload "$TAG" "$APK" --clobber
-            exit 0
+          else
+            echo "Release $TAG does not exist. (Changesets should have created it)."
+            # We can create it just in case
+            NOTES="$(awk '/^## /{n++} n==1{print} n>1{exit}' apps/web/CHANGELOG.md 2>/dev/null || echo "Tutly Android v${VERSION}")"
+            gh release create "$TAG" "$APK" --title "$TAG" --notes "$NOTES"
           fi
-          NOTES="$(awk '/^## /{n++} n==1{print} n>1{exit}' apps/web/CHANGELOG.md 2>/dev/null || echo "Tutly Android v${VERSION}")"
-          gh release create "$TAG" "$APK" \
-            --title "Tutly Android v${VERSION}" \
-            --notes "$NOTES"

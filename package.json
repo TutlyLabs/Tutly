@@ -21,6 +21,7 @@
     "lint:ws": "pnpm dlx sherif@latest",
     "changeset": "changeset",
     "version-packages": "changeset version",
+    "release": "changeset publish",
     "postinstall": "rm -rf node_modules/wrap-ansi/node_modules/string-width 2>/dev/null; pnpm lint:ws",
     "typecheck": "turbo run typecheck",
     "ui-add": "turbo run ui-add",

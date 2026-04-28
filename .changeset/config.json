@@ -25,8 +25,6 @@
     "@tutly/typescript-config",
     "@tutly/ui",
     "@tutly/utils",
-    "api",
-    "docs",
-    "landing"
+    "docs"
   ]
 }

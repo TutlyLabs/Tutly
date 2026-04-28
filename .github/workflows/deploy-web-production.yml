@@ -2,16 +2,8 @@ name: Deploy Web App to Production
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "apps/web/**"
-      - "packages/**"
-      - "tooling/**"
-      - "turbo/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "turbo.json"
+    tags:
+      - "web@*"
   workflow_dispatch:
 
 jobs:
@@ -43,6 +35,7 @@ jobs:
           tags: |
             type=sha,prefix=
             type=raw,value=latest
+            type=match,pattern=web@(.*),group=1
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6

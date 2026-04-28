@@ -7,16 +7,8 @@ env:
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "apps/api/**"
-      - "packages/**"
-      - "tooling/**"
-      - "turbo/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "turbo.json"
+    tags:
+      - "api@*"
   workflow_dispatch:
 
 jobs:
