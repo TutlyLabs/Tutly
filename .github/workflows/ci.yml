@@ -33,6 +33,9 @@ jobs:
           restore-keys: |
             turbo-${{ runner.os }}-build-
 
+      - name: Build CLI
+        run: pnpm --filter tutly prepack
+
       - name: Build api types
         run: pnpm --filter @tutly/api trpc-api-export
 
