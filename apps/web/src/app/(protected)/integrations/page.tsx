@@ -9,6 +9,7 @@ import { ZoomIntegration } from "./_components/Zoom";
 import { GithubIntegration } from "./_components/Github";
 import { GoogleIntegration } from "./_components/Google";
 import { GeminiIntegration } from "./_components/Gemini";
+import { WorkspaceProvidersIntegration } from "./_components/WorkspaceProviders";
 
 export default function IntegrationsPage() {
   const { user } = useAuthSession();
@@ -40,6 +41,8 @@ export default function IntegrationsPage() {
           Connect your favorite tools and services to Tutly.
         </p>
       </div>
+
+      <WorkspaceProvidersIntegration />
 
       {features.codesandbox && (
         <SandboxIntegration sandbox={accounts?.sandbox} />

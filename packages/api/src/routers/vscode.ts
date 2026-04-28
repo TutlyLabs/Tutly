@@ -17,12 +17,17 @@ export const vscodeRouter = createTRPCRouter({
           const { payload } = await jwtVerify(input.config, secret);
           const decoded = payload as Record<string, unknown> & {
             assignmentId?: string;
-            tutlyConfig?: { run?: { command?: string } };
+            tutlyConfig?: {
+              run?: { command?: string };
+              dev?: { command?: string };
+            };
           };
           if (decoded.assignmentId && !assignmentId) {
             assignmentId = decoded.assignmentId;
           }
-          if (decoded.tutlyConfig?.run?.command) hasRunCommand = true;
+          if (decoded.tutlyConfig?.run?.command || decoded.tutlyConfig?.dev?.command) {
+            hasRunCommand = true;
+          }
         } catch (error) {
           console.error("Failed to verify config param:", error);
           isAuthorized = false;

@@ -82,7 +82,6 @@ export function LocalPlaygroundSetupScreen({
   );
   const [browserSupported, setBrowserSupported] = useState(true);
   const [copiedSteps, setCopiedSteps] = useState<Set<number>>(new Set());
-  const [repoUrl, setRepoUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [updateAvailable, setUpdateAvailable] = useState<{
     current: string;
@@ -104,17 +103,6 @@ export function LocalPlaygroundSetupScreen({
       .catch((err) =>
         console.error("Failed to fetch latest CLI version:", err),
       );
-
-    if (assignmentId) {
-      fetch(`/api/git/create?assignmentId=${assignmentId}&type=SUBMISSION`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.repoUrl) {
-            setRepoUrl(data.repoUrl);
-          }
-        })
-        .catch((err) => console.error("Failed to fetch repo URL:", err));
-    }
   }, [assignmentId]);
 
   useEffect(() => {
@@ -276,10 +264,6 @@ export function LocalPlaygroundSetupScreen({
     }, 2000);
   };
 
-  const getRepoName = (url: string) => {
-    return url.split("/").pop()?.replace(".git", "") || "assignment";
-  };
-
   const setupCommands = assignmentId
     ? [
         {
@@ -289,6 +273,10 @@ export function LocalPlaygroundSetupScreen({
         {
           command: `npx tutly playground --directory ${assignmentId}`,
           label: "Start Server",
+        },
+        {
+          command: `npx tutly doctor --dir ${assignmentId}`,
+          label: "Check Setup",
         },
       ]
     : [

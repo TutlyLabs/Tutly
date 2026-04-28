@@ -1,11 +1,9 @@
-import { existsSync } from "node:fs";
-import { readdir, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { Command, flags } from "@oclif/command";
-import AdmZip from "adm-zip";
-import ignore, { Ignore } from "ignore";
 
 import { createAPIClient } from "../lib/api/client";
+import { createWorkspaceArchive } from "../lib/archive";
 import { getCurrentUser, isAuthenticated } from "../lib/auth/device";
 import { findAssignmentRoot } from "../lib/utils";
 
@@ -72,33 +70,25 @@ export default class Save extends Command {
 
       this.log(`\n💾 Saving work for: ${metadata.title}...`);
 
-      // 1. Create Zip Archive
-      const zip = new AdmZip();
-
-      // Initialize ignore
-      const ig = ignore();
-      ig.add([
-        ".git",
-        "node_modules",
-        "dist",
-        "build",
-        "coverage",
-        ".tutly/workspace.json",
-        ".DS_Store",
-      ]);
-
-      const gitignorePath = join(submissionDir, ".gitignore");
-      if (existsSync(gitignorePath)) {
-        const gitignoreContent = await readFile(gitignorePath, "utf-8");
-        ig.add(gitignoreContent);
+      const api = await createAPIClient();
+      let submissionId = metadata.submissionId as string | undefined;
+      if (!submissionId) {
+        const started = await api.startWorkspace(assignmentId);
+        if (started.error || !started.data?.submission?.id) {
+          this.log(
+            `\n❌ Save failed: ${started.error ?? "Unable to start workspace"}\n`,
+          );
+          this.exit(1);
+        }
+        submissionId = started.data.submission.id;
+        metadata.submissionId = submissionId;
+        await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
       }
 
-      // Add files to zip, respecting .gitignore-like rules
-      await this.addDirectoryToZip(zip, submissionDir, submissionDir, ig);
+      const { buffer: zipBuffer, checksum } =
+        await createWorkspaceArchive(submissionDir);
 
-      const zipBuffer = zip.toBuffer();
-
-      if (zipBuffer.length === 0) {
+      if (zipBuffer.length === 0 || !submissionId) {
         this.log("❌ No files found to save.");
         this.exit(1);
       }
@@ -107,22 +97,35 @@ export default class Save extends Command {
         `📁 Compressed size: ${(zipBuffer.length / 1024).toFixed(2)} KB`,
       );
 
-      // 2. Upload Save
-      const api = await createAPIClient();
       this.log(`\n⬆️  Uploading save...`);
 
-      const result = await api.uploadSubmission(
-        assignmentId,
-        zipBuffer,
-        "SAVE",
-      );
+      const result = await api.saveWorkspaceSnapshot(submissionId, {
+        fileName: "autosave.zip",
+        mimeType: "application/zip",
+        sizeBytes: zipBuffer.length,
+        checksum,
+        manifest: {
+          assignmentId,
+          title: metadata.title,
+          savedAt: new Date().toISOString(),
+        },
+      });
 
       if (result.error) {
         this.log(`\n❌ Save failed: ${result.error}\n`);
         this.exit(1);
       }
 
-      if (result.success) {
+      if (
+        result.success &&
+        result.data?.uploadUrl &&
+        result.data?.artifact?.id
+      ) {
+        await api.uploadToSignedUrl(result.data.uploadUrl, zipBuffer);
+        await api.confirmWorkspaceArtifactUpload(
+          result.data.artifact.id,
+          checksum,
+        );
         this.log("\n✨ Save successful!");
         this.log(`✓ Your work has been saved to the cloud\n`);
       } else {
@@ -137,32 +140,6 @@ export default class Save extends Command {
         this.log(`\n${error.stack}`);
       }
       this.exit(1);
-    }
-  }
-
-  private async addDirectoryToZip(
-    zip: AdmZip,
-    baseDir: string,
-    currentDir: string,
-    ig: Ignore,
-  ) {
-    const entries = await readdir(currentDir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      const fullPath = join(currentDir, entry.name);
-      const relativePath = relative(baseDir, fullPath);
-
-      // Check if ignored
-      if (ig.ignores(relativePath)) {
-        continue;
-      }
-
-      if (entry.isDirectory()) {
-        await this.addDirectoryToZip(zip, baseDir, fullPath, ig);
-      } else if (entry.isFile()) {
-        const content = await readFile(fullPath);
-        zip.addFile(relativePath, content);
-      }
     }
   }
 }

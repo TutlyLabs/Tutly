@@ -36,10 +36,16 @@ const EvaluateSubmission = ({
   const oValue = submission.points.find(
     (point: any) => point.category === "OTHER",
   );
+  const testValue = submission.points.find(
+    (point: any) => point.category === "TESTS",
+  );
 
-  const totalScore = [rValue, sValue, oValue].reduce((acc, currentValue) => {
-    return acc + (currentValue ? currentValue.score : 0);
-  }, 0);
+  const totalScore = [rValue, sValue, oValue, testValue].reduce(
+    (acc, currentValue) => {
+      return acc + (currentValue ? currentValue.score : 0);
+    },
+    0,
+  );
 
   const addPointsMutation = api.points.addPoints.useMutation({
     onSuccess: () => {
@@ -72,6 +78,15 @@ const EvaluateSubmission = ({
       },
     },
   );
+  const updateReviewMutation = api.reviews.updateReview.useMutation({
+    onSuccess: () => {
+      toast.success("Review updated");
+      router.refresh();
+    },
+    onError: () => {
+      toast.error("Failed to update review");
+    },
+  });
 
   const handleFeedback = async (submissionId: string) => {
     try {
@@ -142,6 +157,15 @@ const EvaluateSubmission = ({
     }
   };
 
+  const handleMarkReviewed = async () => {
+    await updateReviewMutation.mutateAsync({
+      submissionId: submission.id,
+      status: "REVIEWED",
+      feedback: feedback ?? undefined,
+      applyManualOverride: false,
+    });
+  };
+
   return (
     <div className="bg-card overflow-x-auto rounded-xl border shadow-sm">
       <table className="text-foreground w-full border-collapse text-center text-sm">
@@ -176,6 +200,12 @@ const EvaluateSubmission = ({
               className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
             >
               Others (/10)
+            </th>
+            <th
+              scope="col"
+              className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
+            >
+              Tests
             </th>
             <th
               scope="col"
@@ -290,7 +320,15 @@ const EvaluateSubmission = ({
                 )}
               </td>
               <td className="px-2 py-1 whitespace-nowrap">
-                {rValue?.score || sValue?.score || oValue?.score
+                {testValue
+                  ? `${testValue.score}${testValue.maxScore ? `/${testValue.maxScore}` : ""}`
+                  : (submission.testRuns?.[0]?.status ?? "NA")}
+              </td>
+              <td className="px-2 py-1 whitespace-nowrap">
+                {rValue?.score ||
+                sValue?.score ||
+                oValue?.score ||
+                testValue?.score
                   ? totalScore
                   : "NA"}
               </td>
@@ -338,6 +376,12 @@ const EvaluateSubmission = ({
                         className="font-semibold text-red-600 hover:text-red-700"
                       >
                         Delete
+                      </button>
+                      <button
+                        onClick={handleMarkReviewed}
+                        className="font-semibold text-emerald-600 hover:text-emerald-700"
+                      >
+                        Reviewed
                       </button>
                     </div>
                   )}

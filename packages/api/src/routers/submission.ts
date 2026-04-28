@@ -5,9 +5,22 @@ import type {
   submission,
   User,
 } from "@tutly/db/browser";
+import { createHmac } from "node:crypto";
 
 import { z } from "zod";
 
+import {
+  buildWorkspaceObjectKey,
+  getArtifactDownloadUrl,
+  getArtifactUploadUrl,
+  workspaceArtifactBucket,
+} from "../lib/workspace-artifacts";
+import { defaultWorkspaceConfig } from "../lib/workspace-config";
+import {
+  getStudentEnrollmentForAssignment,
+  requireAssignmentReadAccess,
+  requireSubmissionReadAccess,
+} from "../lib/workspace-access";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export type AssignmentDetails = {
@@ -33,6 +46,37 @@ export type SubmissionWithDetails = {
   submissionCount?: number;
   submissionIndex?: number;
 } & submission;
+
+const artifactUploadInput = z.object({
+  fileName: z.string().default("workspace.zip"),
+  mimeType: z.string().default("application/zip"),
+  sizeBytes: z.number().int().min(0).optional(),
+  checksum: z.string().optional(),
+  manifest: z.any().optional(),
+});
+
+function signWorkspaceToken(input: {
+  assignmentId: string;
+  submissionId: string;
+  userId: string;
+}) {
+  const expiresAt = Date.now() + 1000 * 60 * 60 * 8;
+  const payload = {
+    assignmentId: input.assignmentId,
+    submissionId: input.submissionId,
+    userId: input.userId,
+    expiresAt,
+  };
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const secret =
+    process.env.WORKSPACE_AGENT_SECRET ??
+    process.env.AUTH_SECRET ??
+    "tutly-development-workspace-agent-secret";
+  const signature = createHmac("sha256", secret)
+    .update(encodedPayload)
+    .digest("base64url");
+  return `${encodedPayload}.${signature}`;
+}
 
 export const submissionRouter = createTRPCRouter({
   createSubmission: protectedProcedure
@@ -165,6 +209,15 @@ export const submissionRouter = createTRPCRouter({
           },
           points: true,
           assignment: true,
+          artifacts: {
+            where: { isLatest: true },
+            orderBy: { createdAt: "desc" },
+          },
+          testRuns: {
+            orderBy: { createdAt: "desc" },
+            take: 3,
+          },
+          review: true,
         },
         orderBy: {
           enrolledUser: {
@@ -240,6 +293,15 @@ export const submissionRouter = createTRPCRouter({
         },
         points: true,
         assignment: true,
+        artifacts: {
+          where: { isLatest: true },
+          orderBy: { createdAt: "desc" },
+        },
+        testRuns: {
+          orderBy: { createdAt: "desc" },
+          take: 3,
+        },
+        review: true,
       },
       orderBy: {
         enrolledUser: {
@@ -482,5 +544,434 @@ export const submissionRouter = createTRPCRouter({
           details: error instanceof Error ? error.message : String(error),
         };
       }
+    }),
+
+  startWorkspace: protectedProcedure
+    .input(
+      z.object({
+        assignmentId: z.string(),
+        provider: z.enum(["LOCAL", "SSH"]).default("LOCAL"),
+        serviceConnectionId: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { user } = ctx.session;
+      const { assignment, enrollment } = await getStudentEnrollmentForAssignment(
+        ctx,
+        input.assignmentId,
+      );
+
+      if (input.serviceConnectionId) {
+        const connection = await ctx.db.serviceConnection.findFirst({
+          where: {
+            id: input.serviceConnectionId,
+            userId: user.id,
+            status: "ACTIVE",
+          },
+        });
+        if (!connection) return { error: "Active service connection not found" };
+      }
+
+      const submittedCount = await ctx.db.submission.count({
+        where: {
+          attachmentId: input.assignmentId,
+          enrolledUserId: enrollment.id,
+          status: "SUBMITTED",
+        },
+      });
+      const maxSubmissions = assignment.maxSubmissions ?? 1;
+      if (submittedCount >= maxSubmissions) {
+        return { error: "Maximum submission limit reached" };
+      }
+
+      const workspaceSubmission =
+        (await ctx.db.submission.findFirst({
+          where: {
+            attachmentId: input.assignmentId,
+            enrolledUserId: enrollment.id,
+            status: "IN_PROGRESS",
+          },
+          include: {
+            artifacts: {
+              where: { isLatest: true },
+              orderBy: { createdAt: "desc" },
+            },
+          },
+        })) ??
+        (await ctx.db.submission.create({
+          data: {
+            attachmentId: input.assignmentId,
+            enrolledUserId: enrollment.id,
+            status: "IN_PROGRESS",
+            data: {
+              provider: input.provider,
+              startedAt: new Date().toISOString(),
+            } as never,
+          },
+          include: {
+            artifacts: {
+              where: { isLatest: true },
+              orderBy: { createdAt: "desc" },
+            },
+          },
+        }));
+
+      const [config, testCases, starterArtifacts] = await Promise.all([
+        ctx.db.assignmentConfig.findUnique({
+          where: { assignmentId: input.assignmentId },
+        }),
+        ctx.db.assignmentTestCase.findMany({
+          where: {
+            assignmentId: input.assignmentId,
+            visibility: "VISIBLE",
+          },
+          orderBy: { createdAt: "asc" },
+        }),
+        ctx.db.assignmentArtifact.findMany({
+          where: {
+            assignmentId: input.assignmentId,
+            submissionId: null,
+            isLatest: true,
+            kind: { in: ["STARTER", "MIGRATION"] },
+          },
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
+      const defaults = defaultWorkspaceConfig();
+
+      return {
+        success: true,
+        data: {
+          submission: workspaceSubmission,
+          config: {
+            ...defaults,
+            ...(config ?? {}),
+            previewPorts: config?.previewPorts?.length
+              ? config.previewPorts
+              : defaults.previewPorts,
+            readonlyPaths: config?.readonlyPaths?.length
+              ? config.readonlyPaths
+              : defaults.readonlyPaths,
+          },
+          testCases,
+          starterArtifacts,
+          workspaceToken: signWorkspaceToken({
+            assignmentId: input.assignmentId,
+            submissionId: workspaceSubmission.id,
+            userId: user.id,
+          }),
+        },
+      };
+    }),
+
+  saveSnapshot: protectedProcedure
+    .input(
+      z.object({
+        submissionId: z.string(),
+        artifact: artifactUploadInput,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const submission = await requireSubmissionReadAccess(ctx, input.submissionId);
+      if (submission.enrolledUser.username !== ctx.session.user.username) {
+        return { error: "Only the enrolled student can save this workspace" };
+      }
+      const objectKey = buildWorkspaceObjectKey({
+        assignmentId: submission.attachmentId,
+        submissionId: submission.id,
+        kind: "AUTOSAVE",
+        fileName: input.artifact.fileName,
+      });
+
+      await ctx.db.assignmentArtifact.updateMany({
+        where: {
+          submissionId: submission.id,
+          kind: "AUTOSAVE",
+          isLatest: true,
+        },
+        data: { isLatest: false },
+      });
+
+      const artifact = await ctx.db.assignmentArtifact.create({
+        data: {
+          assignmentId: submission.attachmentId,
+          submissionId: submission.id,
+          kind: "AUTOSAVE",
+          bucket: workspaceArtifactBucket,
+          objectKey,
+          fileName: input.artifact.fileName,
+          mimeType: input.artifact.mimeType,
+          sizeBytes:
+            input.artifact.sizeBytes === undefined
+              ? null
+              : BigInt(input.artifact.sizeBytes),
+          checksum: input.artifact.checksum ?? null,
+          manifest: input.artifact.manifest ?? {},
+          createdById: ctx.session.user.id,
+        },
+      });
+
+      const uploadUrl = await getArtifactUploadUrl({
+        objectKey,
+        mimeType: input.artifact.mimeType,
+        checksum: input.artifact.checksum,
+      });
+
+      return { success: true, data: { artifact, uploadUrl } };
+    }),
+
+  submitWorkspace: protectedProcedure
+    .input(
+      z.object({
+        assignmentId: z.string().optional(),
+        submissionId: z.string().optional(),
+        artifact: artifactUploadInput.optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!input.assignmentId && !input.submissionId) {
+        return { error: "assignmentId or submissionId is required" };
+      }
+
+      let workspaceSubmission = input.submissionId
+        ? await requireSubmissionReadAccess(ctx, input.submissionId)
+        : null;
+
+      if (!workspaceSubmission && input.assignmentId) {
+        const started = await getStudentEnrollmentForAssignment(ctx, input.assignmentId);
+        const inProgress = await ctx.db.submission.findFirst({
+          where: {
+            attachmentId: input.assignmentId,
+            enrolledUserId: started.enrollment.id,
+            status: "IN_PROGRESS",
+          },
+          include: {
+            enrolledUser: true,
+            assignment: {
+              include: {
+                course: {
+                  include: {
+                    courseAdmins: {
+                      select: { id: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+        workspaceSubmission =
+          inProgress ??
+          (await ctx.db.submission.create({
+            data: {
+              attachmentId: input.assignmentId,
+              enrolledUserId: started.enrollment.id,
+              status: "IN_PROGRESS",
+            },
+            include: {
+              enrolledUser: true,
+              assignment: {
+                include: {
+                  course: {
+                    include: {
+                      courseAdmins: {
+                        select: { id: true },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }));
+      }
+
+      if (!workspaceSubmission) return { error: "Submission not found" };
+      if (workspaceSubmission.enrolledUser.username !== ctx.session.user.username) {
+        return { error: "Only the enrolled student can submit this workspace" };
+      }
+
+      const submittedCount = await ctx.db.submission.count({
+        where: {
+          attachmentId: workspaceSubmission.attachmentId,
+          enrolledUserId: workspaceSubmission.enrolledUserId,
+          status: "SUBMITTED",
+        },
+      });
+      const maxSubmissions = workspaceSubmission.assignment.maxSubmissions ?? 1;
+      if (submittedCount >= maxSubmissions && workspaceSubmission.status !== "SUBMITTED") {
+        return { error: "Maximum submission limit reached" };
+      }
+
+      let upload:
+        | {
+            artifact: unknown;
+            uploadUrl: string;
+          }
+        | null = null;
+
+      if (input.artifact) {
+        const objectKey = buildWorkspaceObjectKey({
+          assignmentId: workspaceSubmission.attachmentId,
+          submissionId: workspaceSubmission.id,
+          kind: "SUBMISSION",
+          fileName: input.artifact.fileName,
+        });
+
+        await ctx.db.assignmentArtifact.updateMany({
+          where: {
+            submissionId: workspaceSubmission.id,
+            kind: "SUBMISSION",
+            isLatest: true,
+          },
+          data: { isLatest: false },
+        });
+
+        const artifact = await ctx.db.assignmentArtifact.create({
+          data: {
+            assignmentId: workspaceSubmission.attachmentId,
+            submissionId: workspaceSubmission.id,
+            kind: "SUBMISSION",
+            bucket: workspaceArtifactBucket,
+            objectKey,
+            fileName: input.artifact.fileName,
+            mimeType: input.artifact.mimeType,
+            sizeBytes:
+              input.artifact.sizeBytes === undefined
+                ? null
+                : BigInt(input.artifact.sizeBytes),
+            checksum: input.artifact.checksum ?? null,
+            manifest: input.artifact.manifest ?? {},
+            createdById: ctx.session.user.id,
+          },
+        });
+        upload = {
+          artifact,
+          uploadUrl: await getArtifactUploadUrl({
+            objectKey,
+            mimeType: input.artifact.mimeType,
+            checksum: input.artifact.checksum,
+          }),
+        };
+      }
+
+      const submitted = await ctx.db.submission.update({
+        where: { id: workspaceSubmission.id },
+        data: {
+          status: "SUBMITTED",
+          submissionDate: new Date(),
+          data: {
+            ...(typeof workspaceSubmission.data === "object" &&
+            workspaceSubmission.data !== null &&
+            !Array.isArray(workspaceSubmission.data)
+              ? workspaceSubmission.data
+              : {}),
+            submittedAt: new Date().toISOString(),
+          } as never,
+        },
+      });
+
+      await ctx.db.submissionReview.upsert({
+        where: { submissionId: submitted.id },
+        create: {
+          submissionId: submitted.id,
+          assignmentId: submitted.attachmentId,
+          status: "NEEDS_REVIEW",
+        },
+        update: {
+          status: "NEEDS_REVIEW",
+        },
+      });
+
+      const hiddenCount = await ctx.db.assignmentTestCase.count({
+        where: {
+          assignmentId: submitted.attachmentId,
+          visibility: "HIDDEN",
+        },
+      });
+      if (hiddenCount > 0) {
+        await ctx.db.submissionTestRun.create({
+          data: {
+            submissionId: submitted.id,
+            assignmentId: submitted.attachmentId,
+            provider: "SSH",
+            trigger: "official",
+            status: "QUEUED",
+            hiddenTotal: hiddenCount,
+            outputSummary: {
+              trustedRunnerRequired: true,
+              reason: "Hidden tests stay server-side and are not sent to local workspaces.",
+            } as never,
+          },
+        });
+      }
+
+      await ctx.db.events.create({
+        data: {
+          eventCategory: "ASSIGNMENT_SUBMISSION",
+          causedById: ctx.session.user.id,
+          eventCategoryDataId: submitted.id,
+        },
+      });
+
+      return {
+        success: true,
+        data: {
+          submission: submitted,
+          upload,
+          officialRunQueued: hiddenCount > 0,
+        },
+      };
+    }),
+
+  confirmWorkspaceArtifactUpload: protectedProcedure
+    .input(
+      z.object({
+        artifactId: z.string(),
+        checksum: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const artifact = await ctx.db.assignmentArtifact.findUnique({
+        where: { id: input.artifactId },
+        include: { submission: true },
+      });
+
+      if (!artifact) return { error: "Artifact not found" };
+      if (artifact.submissionId) {
+        await requireSubmissionReadAccess(ctx, artifact.submissionId);
+      } else if (artifact.assignmentId) {
+        await requireAssignmentReadAccess(ctx, artifact.assignmentId);
+      }
+
+      const updated = await ctx.db.assignmentArtifact.update({
+        where: { id: artifact.id },
+        data: {
+          status: "STORED",
+          uploadedAt: new Date(),
+          checksum: input.checksum ?? artifact.checksum,
+        },
+      });
+
+      return { success: true, data: updated };
+    }),
+
+  getWorkspaceArtifactDownloadUrl: protectedProcedure
+    .input(z.object({ artifactId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const artifact = await ctx.db.assignmentArtifact.findUnique({
+        where: { id: input.artifactId },
+      });
+      if (!artifact) return { error: "Artifact not found" };
+      if (artifact.submissionId) {
+        await requireSubmissionReadAccess(ctx, artifact.submissionId);
+      } else if (artifact.assignmentId) {
+        await requireAssignmentReadAccess(ctx, artifact.assignmentId);
+      }
+
+      const signedUrl = await getArtifactDownloadUrl({
+        objectKey: artifact.objectKey,
+      });
+
+      return { success: true, data: { signedUrl } };
     }),
 });

@@ -15,8 +15,9 @@ let currentMode: FileSystemMode = 'gitfs';
 export async function activate(context: vscode.ExtensionContext) {
   const runCommandInTerminal = (command: string) => {
     const serverUrl = config?.serverUrl || 'http://localhost:4242';
+    const apiKey = config?.apiKey || 'tutly-dev-key';
     const wsUrl = serverUrl.replace('http://', 'ws://').replace('https://', 'wss://');
-    const terminal = createTutlyTerminal(wsUrl);
+    const terminal = createTutlyTerminal(wsUrl, apiKey);
     terminal.show();
     terminal.sendText(command);
   };
@@ -100,8 +101,9 @@ export async function activate(context: vscode.ExtensionContext) {
     provideTerminalProfile(token: vscode.CancellationToken): vscode.ProviderResult<vscode.TerminalProfile> {
       try {
         const serverUrl = config?.serverUrl || 'http://localhost:4242';
+        const apiKey = config?.apiKey || 'tutly-dev-key';
         const wsUrl = serverUrl.replace('http://', 'ws://').replace('https://', 'wss://');
-        const pty = createTutlyPseudoterminal(wsUrl);
+        const pty = createTutlyPseudoterminal(wsUrl, apiKey);
         return new vscode.TerminalProfile({
           name: `Tutly Terminal ${incrementTerminalCounter()}`,
           pty: pty
@@ -223,7 +225,7 @@ async function activateFsRelayMode(context: vscode.ExtensionContext, config?: Ex
     vscode.commands.registerCommand('tutly.createTerminal', () => {
       try {
         const wsUrl = serverUrl!.replace('http://', 'ws://').replace('https://', 'wss://');
-        const terminal = createTutlyTerminal(wsUrl);
+        const terminal = createTutlyTerminal(wsUrl, apiKey);
         terminal.show();
         vscode.window.showInformationMessage(`Created ${terminal.name}`);
       } catch (error) {
@@ -299,7 +301,7 @@ const initializeFsRelayFileSystem = async (serverUrl: string, apiKey: string, co
       // Auto-create terminal
       try {
         const wsUrl = serverUrl.replace('http://', 'ws://').replace('https://', 'wss://');
-        const terminal = createTutlyTerminal(wsUrl);
+        const terminal = createTutlyTerminal(wsUrl, apiKey);
         terminal.show();
       } catch (error) {
         console.error('Failed to create terminal:', error);

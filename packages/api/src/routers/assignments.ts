@@ -1,6 +1,17 @@
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { defaultWorkspaceConfig } from "../lib/workspace-config";
+import {
+  buildWorkspaceObjectKey,
+  getArtifactUploadUrl,
+  workspaceArtifactBucket,
+} from "../lib/workspace-artifacts";
+import {
+  canManageAssignment,
+  requireAssignmentManageAccess,
+  requireAssignmentReadAccess,
+} from "../lib/workspace-access";
 
 import {
   getEnrolledCourseIds,
@@ -21,6 +32,26 @@ export type AssignmentDetails = {
   }>;
   isCourseAdmin: boolean;
 };
+
+const workspaceTestCaseInput = z.object({
+  id: z.string().optional(),
+  title: z.string().min(1),
+  visibility: z.enum(["VISIBLE", "HIDDEN"]).default("VISIBLE"),
+  command: z.string().min(1),
+  points: z.number().int().min(0).default(1),
+  timeoutMs: z.number().int().min(1000).default(120000),
+  metadata: z.any().optional(),
+  artifactId: z.string().nullable().optional(),
+});
+
+const workspaceArtifactUploadInput = z.object({
+  kind: z.enum(["STARTER", "MIGRATION"]).default("STARTER"),
+  fileName: z.string().default("starter.zip"),
+  mimeType: z.string().default("application/zip"),
+  sizeBytes: z.number().int().min(0).optional(),
+  checksum: z.string().optional(),
+  manifest: z.any().optional(),
+});
 
 export const assignmentsRouter = createTRPCRouter({
   getAllAssignedAssignments: protectedProcedure.query(async ({ ctx }) => {
@@ -1813,6 +1844,15 @@ export const assignmentsRouter = createTRPCRouter({
             },
             points: true,
             assignment: true,
+            artifacts: {
+              where: { isLatest: true },
+              orderBy: { createdAt: "desc" },
+            },
+            testRuns: {
+              orderBy: { createdAt: "desc" },
+              take: 5,
+            },
+            review: true,
           },
           orderBy: {
             enrolledUser: {
@@ -2326,4 +2366,201 @@ export const assignmentsRouter = createTRPCRouter({
       };
     }
   }),
+
+  getWorkspaceConfig: protectedProcedure
+    .input(z.object({ assignmentId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const assignment = await requireAssignmentReadAccess(ctx, input.assignmentId);
+      const user = ctx.session.user;
+      const canSeeHidden = canManageAssignment(user, assignment) || user.role === "MENTOR";
+      const defaults = defaultWorkspaceConfig();
+
+      const [config, testCases, artifacts] = await Promise.all([
+        ctx.db.assignmentConfig.findUnique({
+          where: { assignmentId: input.assignmentId },
+        }),
+        ctx.db.assignmentTestCase.findMany({
+          where: {
+            assignmentId: input.assignmentId,
+            ...(canSeeHidden ? {} : { visibility: "VISIBLE" as const }),
+          },
+          orderBy: [{ visibility: "asc" }, { createdAt: "asc" }],
+        }),
+        ctx.db.assignmentArtifact.findMany({
+          where: {
+            assignmentId: input.assignmentId,
+            submissionId: null,
+            isLatest: true,
+            kind: { in: ["STARTER", "MIGRATION"] },
+          },
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
+
+      return {
+        success: true,
+        data: {
+          assignment: {
+            id: assignment.id,
+            title: assignment.title,
+            submissionMode: assignment.submissionMode,
+            dueDate: assignment.dueDate,
+          },
+          config: {
+            ...defaults,
+            ...(config ?? {}),
+            previewPorts: config?.previewPorts?.length
+              ? config.previewPorts
+              : defaults.previewPorts,
+            readonlyPaths: config?.readonlyPaths?.length
+              ? config.readonlyPaths
+              : defaults.readonlyPaths,
+          },
+          testCases,
+          artifacts,
+          canManage: canManageAssignment(user, assignment),
+        },
+      };
+    }),
+
+  updateWorkspaceConfig: protectedProcedure
+    .input(
+      z.object({
+        assignmentId: z.string(),
+        framework: z.string().optional(),
+        setupCommand: z.string().nullable().optional(),
+        devCommand: z.string().nullable().optional(),
+        testCommand: z.string().nullable().optional(),
+        previewPorts: z.array(z.number().int().min(1).max(65535)).optional(),
+        readonlyPaths: z.array(z.string()).optional(),
+        grading: z.any().optional(),
+        publicTestMetadata: z.any().optional(),
+        defaultProvider: z.enum(["LOCAL", "SSH"]).optional(),
+        testCases: z.array(workspaceTestCaseInput).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await requireAssignmentManageAccess(ctx, input.assignmentId);
+      const defaults = defaultWorkspaceConfig();
+
+      const config = await ctx.db.assignmentConfig.upsert({
+        where: { assignmentId: input.assignmentId },
+        create: {
+          assignmentId: input.assignmentId,
+          framework: input.framework ?? defaults.framework,
+          setupCommand: input.setupCommand ?? defaults.setupCommand,
+          devCommand: input.devCommand ?? defaults.devCommand,
+          testCommand: input.testCommand ?? defaults.testCommand,
+          previewPorts: input.previewPorts ?? defaults.previewPorts,
+          readonlyPaths: input.readonlyPaths ?? defaults.readonlyPaths,
+          grading: (input.grading ?? defaults.grading) as never,
+          publicTestMetadata: (input.publicTestMetadata ?? defaults.publicTestMetadata) as never,
+          defaultProvider: input.defaultProvider ?? defaults.defaultProvider,
+        },
+        update: {
+          framework: input.framework,
+          setupCommand: input.setupCommand,
+          devCommand: input.devCommand,
+          testCommand: input.testCommand,
+          previewPorts: input.previewPorts,
+          readonlyPaths: input.readonlyPaths,
+          grading: input.grading === undefined ? undefined : (input.grading as never),
+          publicTestMetadata:
+            input.publicTestMetadata === undefined
+              ? undefined
+              : (input.publicTestMetadata as never),
+          defaultProvider: input.defaultProvider,
+        },
+      });
+
+      await ctx.db.attachment.update({
+        where: { id: input.assignmentId },
+        data: { submissionMode: "WORKSPACE" },
+      });
+
+      if (input.testCases) {
+        await ctx.db.assignmentTestCase.deleteMany({
+          where: { assignmentId: input.assignmentId },
+        });
+        if (input.testCases.length > 0) {
+          await ctx.db.assignmentTestCase.createMany({
+            data: input.testCases.map((testCase) => ({
+              assignmentId: input.assignmentId,
+              title: testCase.title,
+              visibility: testCase.visibility,
+              command: testCase.command,
+              points: testCase.points,
+              timeoutMs: testCase.timeoutMs,
+              metadata: testCase.metadata ?? {},
+              artifactId: testCase.artifactId ?? null,
+            })),
+          });
+        }
+      }
+
+      const testCases = await ctx.db.assignmentTestCase.findMany({
+        where: { assignmentId: input.assignmentId },
+        orderBy: [{ visibility: "asc" }, { createdAt: "asc" }],
+      });
+
+      return {
+        success: true,
+        data: {
+          config,
+          testCases,
+        },
+      };
+    }),
+
+  createWorkspaceStarterUpload: protectedProcedure
+    .input(
+      z.object({
+        assignmentId: z.string(),
+        artifact: workspaceArtifactUploadInput,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await requireAssignmentManageAccess(ctx, input.assignmentId);
+      const objectKey = buildWorkspaceObjectKey({
+        assignmentId: input.assignmentId,
+        kind: input.artifact.kind,
+        fileName: input.artifact.fileName,
+      });
+
+      await ctx.db.assignmentArtifact.updateMany({
+        where: {
+          assignmentId: input.assignmentId,
+          submissionId: null,
+          kind: input.artifact.kind,
+          isLatest: true,
+        },
+        data: { isLatest: false },
+      });
+
+      const artifact = await ctx.db.assignmentArtifact.create({
+        data: {
+          assignmentId: input.assignmentId,
+          kind: input.artifact.kind,
+          bucket: workspaceArtifactBucket,
+          objectKey,
+          fileName: input.artifact.fileName,
+          mimeType: input.artifact.mimeType,
+          sizeBytes:
+            input.artifact.sizeBytes === undefined
+              ? null
+              : BigInt(input.artifact.sizeBytes),
+          checksum: input.artifact.checksum ?? null,
+          manifest: input.artifact.manifest ?? {},
+          createdById: ctx.session.user.id,
+        },
+      });
+
+      const uploadUrl = await getArtifactUploadUrl({
+        objectKey,
+        mimeType: input.artifact.mimeType,
+        checksum: input.artifact.checksum,
+      });
+
+      return { success: true, data: { artifact, uploadUrl } };
+    }),
 });
