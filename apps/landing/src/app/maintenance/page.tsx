@@ -3,11 +3,9 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { GithubButton } from "@/components/ui/gitstar-button";
 
 export default function UnderMaintenance() {
-  redirect("https://learn.tutly.in");
 
   return (
     <div>
