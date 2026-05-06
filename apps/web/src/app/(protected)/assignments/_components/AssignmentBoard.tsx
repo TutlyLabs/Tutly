@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@tutly/ui/card";
 import { Button } from "@tutly/ui/button";
 import { Badge } from "@tutly/ui/badge";
@@ -12,9 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@tutly/ui/select";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   CheckCircle,
+  CheckCircle2,
   ChevronRight,
   Clock,
   Eye,
@@ -24,18 +25,52 @@ import {
 import NoDataFound from "@/components/NoDataFound";
 import { cn } from "@tutly/utils";
 
+const FILTER_VALUES = new Set([
+  "all",
+  "reviewed",
+  "unreviewed",
+  "submitted",
+  "not-submitted",
+]);
+
 export default function MobileResponsiveStudentAssignments({
   courses,
   assignments,
   userId,
 }: any) {
-  const [currentCourse, setCurrentCourse] = useState<string>(courses[0]?.id);
   const router = useRouter();
-  const [filterOption, setFilterOption] = useState<string>("all");
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const courseParam = searchParams.get("course");
+  const filterParam = searchParams.get("filter");
+
+  const initialCourse =
+    courseParam && courses?.some((c: any) => c.id === courseParam)
+      ? courseParam
+      : courses[0]?.id;
+  const initialFilter =
+    filterParam && FILTER_VALUES.has(filterParam) ? filterParam : "all";
+
+  const [currentCourse, setCurrentCourse] = useState<string>(initialCourse);
+  const [filterOption, setFilterOption] = useState<string>(initialFilter);
+
+  // React to URL param changes (e.g. when user navigates back/forward).
+  useEffect(() => {
+    if (courseParam && courses?.some((c: any) => c.id === courseParam)) {
+      setCurrentCourse(courseParam);
+    }
+  }, [courseParam, courses]);
+
+  useEffect(() => {
+    if (filterParam && FILTER_VALUES.has(filterParam)) {
+      setFilterOption(filterParam);
+    }
+  }, [filterParam]);
 
   const filterOptions = [
     { value: "all", label: "All", icon: Eye },
+    { value: "submitted", label: "Submitted", icon: CheckCircle2 },
     { value: "reviewed", label: "Reviewed", icon: CheckCircle },
     { value: "unreviewed", label: "Unreviewed", icon: Clock },
     { value: "not-submitted", label: "Not Submitted", icon: XCircle },
@@ -49,6 +84,8 @@ export default function MobileResponsiveStudentAssignments({
           if (filterOption === "all") return true;
           if (filterOption === "not-submitted")
             return assignment.submissions.length === 0;
+          if (filterOption === "submitted")
+            return assignment.submissions.length > 0;
           if (filterOption === "unreviewed") {
             return (
               assignment.submissions.length > 0 &&
