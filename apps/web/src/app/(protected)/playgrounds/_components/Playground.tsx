@@ -7,7 +7,7 @@ import {
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
 import { useCallback, useState } from "react";
-import { TfiFullscreen } from "react-icons/tfi";
+import { Maximize2, Minimize2, Monitor } from "lucide-react";
 
 import {
   ResizableHandle,
@@ -16,7 +16,6 @@ import {
 } from "@tutly/ui/resizable";
 import { useBundlerUrl } from "@/hooks/use-bundler-url";
 
-import FileExplorer from "./FileExplorer";
 import MonacoEditor from "./MonacoEditor";
 import SandboxConsole from "./SandboxConsole";
 import StaticConsole from "./StaticConsole";
@@ -70,7 +69,7 @@ const Playground = ({
   const startingFiles = initialFiles || defaultFiles;
 
   return (
-    <div className="relative h-[95vh]">
+    <div className="bg-background relative h-[calc(100vh-3.5rem)]">
       <SandpackProvider
         files={startingFiles}
         template={template}
@@ -80,70 +79,80 @@ const Playground = ({
         }}
       >
         {isFullScreen && (
-          <div className="fixed inset-0 z-50 bg-white">
-            <button
-              className="absolute top-1 right-1 z-50 rounded bg-gray-800 p-2 text-white"
-              onClick={() => setIsFullScreen(false)}
-            >
-              Exit Fullscreen
-            </button>
-            {template === "static" ? (
-              <StaticPreview
-                onConsoleLog={handleStaticLog}
-                onClear={handleClearStaticLogs}
-              />
-            ) : (
-              <SandpackPreview
-                showNavigator
-                showOpenInCodeSandbox={false}
-                className="h-[95vh] overflow-y-scroll"
-              />
-            )}
+          <div className="bg-background fixed inset-0 z-50 flex flex-col">
+            <div className="bg-card flex h-10 shrink-0 items-center justify-between border-b px-4">
+              <div className="text-foreground inline-flex items-center gap-2 text-sm font-medium">
+                <Monitor className="h-4 w-4 text-indigo-500" />
+                Preview
+              </div>
+              <button
+                className="hover:bg-accent text-muted-foreground inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium"
+                onClick={() => setIsFullScreen(false)}
+              >
+                <Minimize2 className="h-3.5 w-3.5" />
+                Exit fullscreen
+              </button>
+            </div>
+            <div className="flex-1">
+              {template === "static" ? (
+                <StaticPreview
+                  onConsoleLog={handleStaticLog}
+                  onClear={handleClearStaticLogs}
+                />
+              ) : (
+                <SandpackPreview
+                  showNavigator
+                  showOpenInCodeSandbox={false}
+                  className="h-full"
+                />
+              )}
+            </div>
           </div>
         )}
 
         <ResizablePanelGroup
           direction="horizontal"
-          className="h-[95vh] overflow-y-scroll rounded-lg border"
+          className="bg-card h-full overflow-hidden rounded-xl border shadow-sm"
         >
-          <ResizablePanel defaultSize={14}>
-            <FileExplorer />
-          </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel defaultSize={43}>
+          <ResizablePanel defaultSize={55} minSize={30}>
             <MonacoEditor />
           </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel defaultSize={43}>
-            <ResizablePanelGroup
-              direction="vertical"
-              className="h-[95vh] overflow-y-scroll"
-            >
-              <ResizablePanel defaultSize={70}>
-                <div className="relative h-[95vh] overflow-y-scroll">
-                  <div className="border-b bg-white text-black">
-                    <h1 className="text-center text-xl font-bold">Preview</h1>
-                    <TfiFullscreen
-                      className="absolute top-2 right-2 cursor-pointer"
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={45} minSize={25}>
+            <ResizablePanelGroup direction="vertical">
+              <ResizablePanel defaultSize={70} minSize={30}>
+                <div className="flex h-full flex-col">
+                  <div className="bg-card text-foreground flex h-9 shrink-0 items-center justify-between border-b px-3">
+                    <div className="inline-flex items-center gap-2 text-sm font-medium">
+                      <Monitor className="h-4 w-4 text-indigo-500" />
+                      Preview
+                    </div>
+                    <button
                       onClick={() => setIsFullScreen(true)}
-                    />
+                      className="hover:bg-accent text-muted-foreground rounded-md p-1.5 transition-colors"
+                      aria-label="Fullscreen preview"
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                  {template === "static" ? (
-                    <StaticPreview
-                      onConsoleLog={handleStaticLog}
-                      onClear={handleClearStaticLogs}
-                    />
-                  ) : (
-                    <SandpackPreview
-                      showOpenNewtab
-                      showOpenInCodeSandbox={false}
-                      className="h-[95vh] overflow-y-scroll"
-                    />
-                  )}
+                  <div className="bg-background flex-1 overflow-hidden">
+                    {template === "static" ? (
+                      <StaticPreview
+                        onConsoleLog={handleStaticLog}
+                        onClear={handleClearStaticLogs}
+                      />
+                    ) : (
+                      <SandpackPreview
+                        showOpenNewtab
+                        showOpenInCodeSandbox={false}
+                        className="h-full"
+                      />
+                    )}
+                  </div>
                 </div>
               </ResizablePanel>
               <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={30}>
+              <ResizablePanel defaultSize={30} minSize={10}>
                 {template === "static" ? (
                   <StaticConsole
                     logs={staticLogs}
@@ -157,7 +166,7 @@ const Playground = ({
           </ResizablePanel>
         </ResizablePanelGroup>
         {assignmentId && (
-          <div className="absolute -top-6 left-1/2 z-[60] -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute -top-3 left-1/2 z-[60] -translate-x-1/2 -translate-y-1/2">
             <SubmitAssignment
               currentUser={currentUser}
               assignmentId={assignmentId}

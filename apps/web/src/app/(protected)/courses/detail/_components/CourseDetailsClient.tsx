@@ -280,11 +280,13 @@ export default function CourseDetailsClient({
     return null;
   }, [groups]);
 
+  const assignmentsBasePath =
+    user.role === "STUDENT" ? "/assignments" : "/tutor/assignments";
   const allAssignmentsHref =
-    totalAssignments > 0 ? `/assignments?course=${courseId}` : null;
+    totalAssignments > 0 ? `${assignmentsBasePath}?course=${courseId}` : null;
   const submittedAssignmentsHref =
     isStudent && totalAssignments > 0
-      ? `/assignments?course=${courseId}&filter=submitted`
+      ? `${assignmentsBasePath}?course=${courseId}&filter=submitted`
       : null;
 
   return (

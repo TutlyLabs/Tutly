@@ -60,6 +60,7 @@ import { Skeleton } from "@tutly/ui/skeleton";
 
 import EditClassDialog from "./EditClassDialog";
 import NewAttachmentPage from "./NewAssignments";
+import LinkAssignmentDialog from "./LinkAssignmentDialog";
 import AttendanceIndicator from "./AttendanceIndicator";
 import StudentAttendanceIndicator from "./StudentAttendanceIndicator";
 
@@ -86,6 +87,8 @@ export default function Class({
   const [selectedAttachment, setSelectedAttachment] =
     useState<Attachment | null>(null);
   const [isAddAssignmentDialogOpen, setIsAddAssignmentDialogOpen] =
+    useState(false);
+  const [isLinkAssignmentDialogOpen, setIsLinkAssignmentDialogOpen] =
     useState(false);
   const [isEditAssignmentDialogOpen, setIsEditAssignmentDialogOpen] =
     useState(false);
@@ -663,19 +666,36 @@ export default function Class({
           <div className="h-full w-full">
             {haveAdminAccess && (
               <div className="mb-3 flex w-full justify-end">
-                <Dialog
-                  open={isAddAssignmentDialogOpen}
-                  onOpenChange={setIsAddAssignmentDialogOpen}
-                >
-                  <DialogTrigger asChild>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
                     <Button className="flex items-center gap-2 text-white">
                       Add an assignment
                       <FaPlus />
                     </Button>
-                  </DialogTrigger>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem
+                      onSelect={() => setIsAddAssignmentDialogOpen(true)}
+                    >
+                      <FaPlus className="mr-2 h-3.5 w-3.5" />
+                      Create new assignment
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => setIsLinkAssignmentDialogOpen(true)}
+                    >
+                      <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                      Link existing assignment
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Dialog
+                  open={isAddAssignmentDialogOpen}
+                  onOpenChange={setIsAddAssignmentDialogOpen}
+                >
                   <DialogContent className="max-h-[90vh] min-w-[70vw] overflow-hidden">
                     <DialogHeader>
-                      <DialogTitle>Add Assignment</DialogTitle>
+                      <DialogTitle>Create assignment</DialogTitle>
                       <DialogDescription>
                         Create a new assignment for this class.
                       </DialogDescription>
@@ -689,12 +709,20 @@ export default function Class({
                           setIsAddAssignmentDialogOpen(false);
                         }}
                         onComplete={() => {
+                          setIsAddAssignmentDialogOpen(false);
                           router.refresh();
                         }}
                       />
                     </ScrollArea>
                   </DialogContent>
                 </Dialog>
+
+                <LinkAssignmentDialog
+                  open={isLinkAssignmentDialogOpen}
+                  onOpenChange={setIsLinkAssignmentDialogOpen}
+                  courseId={courseId}
+                  classId={classId}
+                />
               </div>
             )}
 

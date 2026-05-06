@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@tutly/ui/skeleton";
@@ -74,7 +73,7 @@ const AssignmentDashboard = () => {
     <div className="mx-auto w-full max-w-7xl space-y-4">
       <div>
         <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
-          Assignments
+          Submissions
         </h1>
         <p className="text-muted-foreground text-sm">
           Browse student submissions across your courses.
@@ -95,16 +94,6 @@ const AssignmentDashboard = () => {
             </div>
           }
         >
-          <div className="flex justify-end">
-            {currentUser.role !== "STUDENT" && (
-              <Link
-                href="/tutor/assignments/getByAssignment"
-                className="cursor-pointer font-bold text-gray-500 italic"
-              >
-                Get by assignment?
-              </Link>
-            )}
-          </div>
           <MentorAssignmentBoard
             courses={courses}
             students={students as any}

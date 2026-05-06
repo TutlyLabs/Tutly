@@ -81,6 +81,10 @@ const InstructorItems = [
         url: "/tutor/assignments",
       },
       {
+        title: "Submissions",
+        url: "/tutor/assignments/submissions",
+      },
+      {
         title: "Leaderboard",
         url: "/tutor/leaderboard",
       },
@@ -183,6 +187,10 @@ const AdminItems = [
         url: "/tutor/assignments",
       },
       {
+        title: "Submissions",
+        url: "/tutor/assignments/submissions",
+      },
+      {
         title: "Leaderboard",
         url: "/tutor/leaderboard",
       },
@@ -283,6 +291,10 @@ const MentorItems = [
       {
         title: "Assignments",
         url: "/tutor/assignments",
+      },
+      {
+        title: "Submissions",
+        url: "/tutor/assignments/submissions",
       },
       {
         title: "Leaderboard",

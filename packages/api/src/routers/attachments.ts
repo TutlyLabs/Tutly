@@ -18,8 +18,8 @@ export const attachmentsRouter = createTRPCRouter({
           "ZOOM",
           "OTHERS",
         ] as const),
-        courseId: z.string(),
-        classId: z.string(),
+        courseId: z.string().optional(),
+        classId: z.string().optional(),
         maxSubmissions: z.number().optional(),
         submissionMode: z.enum([
           "HTML_CSS_JS",
@@ -41,20 +41,20 @@ export const attachmentsRouter = createTRPCRouter({
         const attachment = await ctx.db.attachment.create({
           data: {
             title: input.title,
-            classId: input.classId,
+            classId: input.classId ?? null,
             link: input.link ?? null,
             details: input.details ?? null,
             detailsJson: input.detailsJson ?? null,
             attachmentType: input.attachmentType as attachmentType,
             submissionMode: input.submissionMode as submissionMode,
             dueDate: input.dueDate ?? null,
-            courseId: input.courseId,
+            courseId: input.courseId ?? null,
             maxSubmissions: input.maxSubmissions ?? null,
           },
         });
 
         // Post activity to course chat group (fire-and-forget)
-        if (input.attachmentType === "ASSIGNMENT") {
+        if (input.attachmentType === "ASSIGNMENT" && input.courseId) {
           const group = await ctx.db.chatGroup.findFirst({
             where: { courseId: input.courseId, type: "COURSE" },
           });
@@ -137,8 +137,8 @@ export const attachmentsRouter = createTRPCRouter({
           "ZOOM",
           "OTHERS",
         ] as const),
-        courseId: z.string(),
-        classId: z.string(),
+        courseId: z.string().optional(),
+        classId: z.string().optional(),
         maxSubmissions: z.number().optional(),
         submissionMode: z.enum([
           "HTML_CSS_JS",
@@ -163,14 +163,14 @@ export const attachmentsRouter = createTRPCRouter({
           },
           data: {
             title: input.title,
-            classId: input.classId,
+            classId: input.classId ?? null,
             link: input.link ?? null,
             details: input.details ?? null,
             detailsJson: input.detailsJson ?? null,
             attachmentType: input.attachmentType as attachmentType,
             submissionMode: input.submissionMode as submissionMode,
             dueDate: input.dueDate ?? null,
-            courseId: input.courseId,
+            courseId: input.courseId ?? null,
             maxSubmissions: input.maxSubmissions ?? null,
           },
         });
@@ -244,6 +244,60 @@ export const attachmentsRouter = createTRPCRouter({
         where: { id },
         data: {
           sandboxTemplate: base64Template,
+        },
+      });
+
+      return { success: true, data: attachment };
+    }),
+
+  getUnlinkedAssignments: protectedProcedure
+    .input(
+      z.object({
+        courseId: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const currentUser = ctx.session.user;
+      if (currentUser.role !== "INSTRUCTOR") {
+        return { success: false, error: "Unauthorized", data: [] };
+      }
+
+      const assignments = await ctx.db.attachment.findMany({
+        where: {
+          attachmentType: "ASSIGNMENT",
+          classId: null,
+          ...(input.courseId
+            ? { OR: [{ courseId: input.courseId }, { courseId: null }] }
+            : {}),
+        },
+        include: {
+          course: { select: { id: true, title: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return { success: true, data: assignments };
+    }),
+
+  linkAssignmentToClass: protectedProcedure
+    .input(
+      z.object({
+        attachmentId: z.string(),
+        classId: z.string(),
+        courseId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const currentUser = ctx.session.user;
+      if (currentUser.role !== "INSTRUCTOR") {
+        return { success: false, error: "Unauthorized" };
+      }
+
+      const attachment = await ctx.db.attachment.update({
+        where: { id: input.attachmentId },
+        data: {
+          classId: input.classId,
+          courseId: input.courseId,
         },
       });
 

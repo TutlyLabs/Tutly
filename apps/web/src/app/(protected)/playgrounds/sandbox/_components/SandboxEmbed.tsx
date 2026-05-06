@@ -7,6 +7,8 @@ import {
 import type { Attachment } from "@tutly/db/browser";
 // @ts-expect-error - sandpack-file-explorer package has incorrect type definitions
 import { SandpackFileExplorer } from "sandpack-file-explorer";
+import { Maximize2, Monitor } from "lucide-react";
+import { useState } from "react";
 
 import {
   ResizableHandle,
@@ -31,58 +33,57 @@ export function SandboxEmbed({
   isEditTemplate,
   config,
 }: SandboxEmbedProps) {
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
   return (
-    <div className="relative h-full w-full">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-black"></div>
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, rgba(30, 30, 30, 0.3) 0%, transparent 70%)",
-        }}
-      ></div>
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at bottom right, rgba(37, 208, 171, 0.02) 0%, transparent 60%)",
-        }}
-      ></div>
+    <div className="bg-background relative h-full min-h-[calc(100vh-3rem)] w-full">
+      {isFullScreen && (
+        <div className="bg-background fixed inset-0 z-50 flex flex-col">
+          <div className="bg-card flex h-10 shrink-0 items-center justify-between border-b px-4">
+            <div className="text-foreground inline-flex items-center gap-2 text-sm font-medium">
+              <Monitor className="h-4 w-4 text-indigo-500" />
+              Preview
+            </div>
+            <button
+              onClick={() => setIsFullScreen(false)}
+              className="hover:bg-accent text-muted-foreground rounded-md px-2 py-1 text-xs"
+            >
+              Exit fullscreen
+            </button>
+          </div>
+          <div className="flex-1">
+            <SandpackPreview
+              showOpenInCodeSandbox={false}
+              showRefreshButton
+              showSandpackErrorOverlay={false}
+              style={{ height: "100%", width: "100%" }}
+            />
+          </div>
+        </div>
+      )}
 
       <ResizablePanelGroup
         direction="horizontal"
-        className="relative z-10 h-full min-h-[calc(100vh-3rem)] w-full"
+        className="bg-card relative h-full min-h-[calc(100vh-3rem)] w-full overflow-hidden rounded-xl border shadow-sm"
       >
-        {/* Assignment Panel - Only show if assignment exists */}
         {assignment && (
           <>
-            <ResizablePanel defaultSize={isEditTemplate ? 20 : 35} minSize={1}>
+            <ResizablePanel defaultSize={isEditTemplate ? 20 : 30} minSize={1}>
               <AssignmentPreview assignment={assignment} />
             </ResizablePanel>
-
-            <ResizableHandle
-              style={{ backgroundColor: "rgba(100, 100, 100, 0.2)" }}
-              className="transition-opacity hover:opacity-80"
-            />
+            <ResizableHandle withHandle />
           </>
         )}
 
-        {/* Sandbox Panel */}
-        <ResizablePanel defaultSize={assignment ? 65 : 100}>
+        <ResizablePanel defaultSize={assignment ? 70 : 100}>
           <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-            {/* File Explorer  */}
             {config.fileExplorer && (
               <>
-                <ResizablePanel defaultSize={18} minSize={1}>
-                  <div
-                    className="flex h-full w-full flex-col border-r shadow-2xl backdrop-blur-xl"
-                    style={{
-                      background:
-                        "linear-gradient(180deg, rgba(35, 35, 35, 1) 0%, rgba(25, 25, 25, 1) 50%, rgba(20, 20, 20, 1) 100%)",
-                      borderColor: "rgba(100, 100, 100, 0.2)",
-                    }}
-                  >
+                <ResizablePanel defaultSize={16} minSize={1}>
+                  <div className="bg-card flex h-full w-full flex-col border-r">
+                    <div className="bg-card text-foreground flex h-9 shrink-0 items-center border-b px-3 text-sm font-medium">
+                      Files
+                    </div>
                     <div
                       className="file-explorer flex-1 overflow-y-auto"
                       style={
@@ -96,25 +97,14 @@ export function SandboxEmbed({
                     </div>
                   </div>
                 </ResizablePanel>
-
-                <ResizableHandle
-                  style={{ backgroundColor: "rgba(100, 100, 100, 0.2)" }}
-                  className="transition-opacity hover:opacity-80"
-                />
+                <ResizableHandle withHandle />
               </>
             )}
 
-            {/* Editor and Preview */}
-            <ResizablePanel defaultSize={config.fileExplorer ? 82 : 100}>
+            <ResizablePanel defaultSize={config.fileExplorer ? 84 : 100}>
               <ResizablePanelGroup direction="horizontal" className="h-full">
-                {/* Editor */}
-                <ResizablePanel defaultSize={50} minSize={1}>
-                  <div
-                    className="flex h-full flex-col shadow-2xl backdrop-blur-xl"
-                    style={{
-                      backgroundColor: "rgba(0, 0, 0, 1)",
-                    }}
-                  >
+                <ResizablePanel defaultSize={55} minSize={1}>
+                  <div className="bg-card flex h-full flex-col">
                     <SandpackCodeEditor
                       showTabs
                       showLineNumbers
@@ -130,75 +120,41 @@ export function SandboxEmbed({
                   </div>
                 </ResizablePanel>
 
-                <ResizableHandle
-                  style={{ backgroundColor: "rgba(100, 100, 100, 0.2)" }}
-                  className="transition-opacity hover:opacity-80"
-                />
+                <ResizableHandle withHandle />
 
-                {/* Preview and Bottom Tabs */}
-                <ResizablePanel defaultSize={50} minSize={10}>
+                <ResizablePanel defaultSize={45} minSize={10}>
                   <ResizablePanelGroup direction="vertical" className="h-full">
-                    {/* Preview */}
                     <ResizablePanel defaultSize={70} minSize={10}>
-                      <div
-                        className="flex h-full flex-col border-l shadow-2xl backdrop-blur-xl"
-                        style={{
-                          borderColor: "rgba(100, 100, 100, 0.2)",
-                          backgroundColor: "rgba(0, 0, 0, 0.95)",
-                        }}
-                      >
-                        <div
-                          className="flex h-[42px] flex-shrink-0 items-center border-b px-4 backdrop-blur-xl"
-                          style={{
-                            borderColor: "rgba(100, 100, 100, 0.2)",
-                            background:
-                              "linear-gradient(90deg, rgba(20, 20, 20, 0.9) 0%, rgba(40, 40, 40, 0.8) 100%)",
-                          }}
-                        >
-                          <div
-                            className="flex items-center text-sm font-semibold"
-                            style={{ color: "#ffffff" }}
-                          >
-                            <span
-                              className="mr-2 h-2 w-2 animate-pulse rounded-full shadow-sm"
-                              style={{
-                                backgroundColor: "#f59e0b",
-                                boxShadow: "0 0 4px rgba(245, 158, 11, 0.5)",
-                              }}
-                            ></span>
+                      <div className="bg-card flex h-full flex-col border-l">
+                        <div className="bg-card text-foreground flex h-9 shrink-0 items-center justify-between border-b px-3">
+                          <div className="inline-flex items-center gap-2 text-sm font-medium">
+                            <Monitor className="h-4 w-4 text-indigo-500" />
                             Preview
                           </div>
+                          <button
+                            onClick={() => setIsFullScreen(true)}
+                            className="hover:bg-accent text-muted-foreground rounded-md p-1.5 transition-colors"
+                            aria-label="Fullscreen preview"
+                          >
+                            <Maximize2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
-                        <div className="flex-1">
+                        <div className="bg-background flex-1">
                           <SandpackPreview
                             showOpenInCodeSandbox={false}
                             showRefreshButton
                             showSandpackErrorOverlay={false}
                             showOpenNewtab
-                            style={{
-                              height: "100%",
-                              width: "100%",
-                            }}
+                            style={{ height: "100%", width: "100%" }}
                           />
                         </div>
                       </div>
                     </ResizablePanel>
 
-                    <ResizableHandle
-                      style={{ backgroundColor: "rgba(100, 100, 100, 0.2)" }}
-                      className="transition-opacity hover:opacity-80"
-                    />
+                    <ResizableHandle withHandle />
 
-                    {/* Bottom Tabs (Console and Tests) */}
                     <ResizablePanel defaultSize={30} minSize={10}>
-                      <div
-                        className="flex h-full flex-col rounded-br-xl border-l shadow-2xl backdrop-blur-xl"
-                        style={{
-                          borderColor: "rgba(100, 100, 100, 0.2)",
-                          background:
-                            "linear-gradient(180deg, rgba(35, 35, 35, 1) 0%, rgba(25, 25, 25, 1) 50%, rgba(20, 20, 20, 1) 100%)",
-                        }}
-                      >
+                      <div className="bg-card flex h-full flex-col border-l border-t">
                         <BottomTabs />
                       </div>
                     </ResizablePanel>

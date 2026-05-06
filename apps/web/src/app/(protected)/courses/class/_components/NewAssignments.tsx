@@ -38,9 +38,7 @@ const formSchema = z.object({
   attachmentType: z.string().min(1, {
     message: "Type is required",
   }),
-  class: z.string().min(1, {
-    message: "class is required",
-  }),
+  class: z.string().optional(),
   submissionMode: z.string().min(1, {
     message: "Submission mode is required",
   }),
@@ -58,9 +56,9 @@ const formSchema = z.object({
 });
 
 interface NewAttachmentPageProps {
-  classes: any;
-  courseId: string;
-  classId: string;
+  classes?: any;
+  courseId?: string;
+  classId?: string;
   isEditing?: boolean;
   attachment?: Attachment;
   onCancel?: () => void;
@@ -95,7 +93,7 @@ const NewAttachmentPage = ({
       title: attachment?.title ?? "",
       link: attachment?.link ?? "",
       attachmentType: attachment?.attachmentType ?? "ASSIGNMENT",
-      submissionMode: attachment?.submissionMode ?? "WORKSPACE",
+      submissionMode: attachment?.submissionMode ?? "SANDBOX",
       class: classId ?? attachment?.classId ?? "",
       courseId: courseId ?? "",
       details: attachment?.details ?? "",
@@ -126,12 +124,15 @@ const NewAttachmentPage = ({
     values.title = values.title.trim();
 
     try {
+      const classIdValue = values.class && values.class.length > 0 ? values.class : undefined;
+      const courseIdValue = courseId && courseId.length > 0 ? courseId : undefined;
+
       let assignmentId = attachment?.id;
       if (isEditing && attachment) {
         const updated = await updateAttachment.mutateAsync({
           id: attachment.id,
           title: values.title,
-          classId: values.class,
+          classId: classIdValue,
           link: values.link,
           attachmentType: values.attachmentType as attachmentType,
           submissionMode: values.submissionMode as submissionMode,
@@ -141,14 +142,14 @@ const NewAttachmentPage = ({
           maxSubmissions: values?.maxSubmissions
             ? parseInt(values.maxSubmissions)
             : 1,
-          courseId: courseId,
+          courseId: courseIdValue,
         });
         assignmentId = updated.data?.id ?? attachment.id;
         toast.success("Assignment updated");
       } else {
         const created = await createAttachment.mutateAsync({
           title: values.title,
-          classId: values.class,
+          classId: classIdValue,
           link: values.link,
           attachmentType: values.attachmentType as attachmentType,
           submissionMode: values.submissionMode as submissionMode,
@@ -158,7 +159,7 @@ const NewAttachmentPage = ({
           maxSubmissions: values?.maxSubmissions
             ? parseInt(values.maxSubmissions)
             : 1,
-          courseId: courseId,
+          courseId: courseIdValue,
         });
         assignmentId = created.data?.id;
         toast.success("Assignment created");
@@ -379,9 +380,9 @@ const NewAttachmentPage = ({
                   <SelectContent className="bg-popover text-popover-foreground text-base">
                     <SelectItem
                       className="cursor-pointer text-base"
-                      value="WORKSPACE"
+                      value="SANDBOX"
                     >
-                      Workspace
+                      Sandbox
                     </SelectItem>
                     <SelectItem
                       className="cursor-pointer text-base"
@@ -391,15 +392,15 @@ const NewAttachmentPage = ({
                     </SelectItem>
                     <SelectItem
                       className="cursor-pointer text-base"
-                      value="SANDBOX"
+                      value="WORKSPACE"
                     >
-                      SANDBOX
+                      Workspace
                     </SelectItem>
                     <SelectItem
                       className="cursor-pointer text-base"
                       value="EXTERNAL_LINK"
                     >
-                      EXTERNAL LINK
+                      External link
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -433,11 +434,14 @@ const NewAttachmentPage = ({
             name="class"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-base">Assign a class</FormLabel>
+                <FormLabel className="text-base">
+                  Assign a class{" "}
+                  <span className="text-sm opacity-80">(optional)</span>
+                </FormLabel>
                 <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  value={field.value}
+                  onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                  defaultValue={field.value || "__none__"}
+                  value={field.value || "__none__"}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -448,6 +452,12 @@ const NewAttachmentPage = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-popover text-popover-foreground text-base">
+                    <SelectItem
+                      value="__none__"
+                      className="text-muted-foreground cursor-pointer text-base"
+                    >
+                      No class — link later
+                    </SelectItem>
                     {(classes || []).map((c: any) => (
                       <SelectItem
                         key={c.id}

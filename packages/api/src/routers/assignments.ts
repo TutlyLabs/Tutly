@@ -1370,6 +1370,29 @@ export const assignmentsRouter = createTRPCRouter({
       const courses =
         currentUser.role === "INSTRUCTOR" ? coursesData : publishedCourses;
 
+      const isInstructorScope = currentUser.role !== "STUDENT";
+
+      const submissionWhere = isInstructorScope
+        ? { status: "SUBMITTED" as const }
+        : {
+            status: "SUBMITTED" as const,
+            enrolledUser: { username: currentUser.username },
+          };
+      const submissionSelect = isInstructorScope
+        ? {
+            id: true,
+            points: { select: { id: true } },
+          }
+        : {
+            id: true,
+            submissionLink: true,
+            submissionDate: true,
+            overallFeedback: true,
+            points: {
+              select: { id: true, score: true, category: true },
+            },
+          };
+
       const assignments = await ctx.db.course.findMany({
         where: {
           enrolledUsers: {
@@ -1389,15 +1412,8 @@ export const assignmentsRouter = createTRPCRouter({
                 include: {
                   class: true,
                   submissions: {
-                    where: {
-                      enrolledUser: {
-                        username: currentUser.username,
-                      },
-                      status: "SUBMITTED",
-                    },
-                    include: {
-                      points: true,
-                    },
+                    where: submissionWhere,
+                    select: submissionSelect,
                   },
                 },
               },
@@ -1409,11 +1425,53 @@ export const assignmentsRouter = createTRPCRouter({
         },
       });
 
+      // Course-scoped assignments without a class link (orphans).
+      const courseIds = courses.map((c) => c.id);
+      const orphanAttachments =
+        courseIds.length > 0
+          ? await ctx.db.attachment.findMany({
+              where: {
+                attachmentType: "ASSIGNMENT",
+                classId: null,
+                courseId: { in: courseIds },
+              },
+              include: {
+                class: true,
+                submissions: {
+                  where: submissionWhere,
+                  select: submissionSelect,
+                },
+              },
+            })
+          : [];
+
+      // Inject orphans into their course as a synthetic class entry so the
+      // existing UI shape stays compatible.
+      const orphansByCourse = new Map<string, typeof orphanAttachments>();
+      orphanAttachments.forEach((a) => {
+        if (!a.courseId) return;
+        const list = orphansByCourse.get(a.courseId) ?? [];
+        list.push(a);
+        orphansByCourse.set(a.courseId, list);
+      });
+
+      const assignmentsWithOrphans = assignments.map((course) => {
+        const orphans = orphansByCourse.get(course.id) ?? [];
+        if (orphans.length === 0) return course;
+        return {
+          ...course,
+          classes: [
+            ...course.classes,
+            { attachments: orphans },
+          ],
+        };
+      });
+
       return {
         success: true,
         data: {
           courses,
-          assignments,
+          assignments: assignmentsWithOrphans,
         },
       };
     } catch (error) {
@@ -2105,161 +2163,6 @@ export const assignmentsRouter = createTRPCRouter({
         };
       }
     }),
-
-  getByAssignmentPageData: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
-
-      // Check if current user is a student (should redirect)
-      if (currentUser.role === "STUDENT") {
-        return {
-          success: false,
-          error: "Students cannot access this page",
-          redirectTo: "/assignments",
-        };
-      }
-
-      // Fetch simple courses for the user
-      const courses = await ctx.db.course.findMany({
-        where: {
-          enrolledUsers: {
-            some: {
-              username: currentUser.username,
-            },
-          },
-        },
-        select: {
-          id: true,
-          title: true,
-        },
-      });
-
-      // Fetch courses with assignments based on role
-      const coursesWithAssignments = await ctx.db.course.findMany({
-        where: {
-          id: {
-            in: courses.map((course) => course.id),
-          },
-          ...(currentUser.role === "MENTOR" && {
-            classes: {
-              some: {
-                attachments: {
-                  some: {
-                    submissions: {
-                      some: {
-                        status: "SUBMITTED",
-                        enrolledUser: {
-                          mentorUsername: currentUser.username,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          }),
-        },
-        select: {
-          id: true,
-          title: true,
-          image: true,
-          startDate: true,
-          endDate: true,
-          isPublished: true,
-          createdAt: true,
-          updatedAt: true,
-          createdById: true,
-          classes: {
-            select: {
-              id: true,
-              createdAt: true,
-              attachments: {
-                where: {
-                  attachmentType: "ASSIGNMENT",
-                  ...(currentUser.role === "MENTOR" && {
-                    submissions: {
-                      some: {
-                        status: "SUBMITTED",
-                        enrolledUser: {
-                          mentorUsername: currentUser.username,
-                        },
-                      },
-                    },
-                  }),
-                },
-                select: {
-                  id: true,
-                  title: true,
-                  class: {
-                    select: {
-                      title: true,
-                    },
-                  },
-                  submissions: {
-                    where: {
-                      status: "SUBMITTED",
-                      ...(currentUser.role === "MENTOR" && {
-                        enrolledUser: {
-                          mentorUsername: currentUser.username,
-                        },
-                      }),
-                    },
-                    select: {
-                      id: true,
-                      points: {
-                        select: {
-                          id: true,
-                        },
-                      },
-                      enrolledUser: {
-                        select: {
-                          mentorUsername: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            orderBy: {
-              createdAt: "asc",
-            },
-          },
-        },
-      });
-
-      // Sort assignments
-      const sortedAssignments = coursesWithAssignments.map((course) => ({
-        ...course,
-        classes: course.classes
-          .map((cls) => ({
-            ...cls,
-            attachments: cls.attachments.sort((a, b) =>
-              a.title.localeCompare(b.title),
-            ),
-          }))
-          .sort(
-            (a, b) =>
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-          ),
-      }));
-
-      return {
-        success: true,
-        data: {
-          courses,
-          sortedAssignments,
-        },
-      };
-    } catch (error) {
-      console.error("Error fetching getByAssignment page data:", error);
-      return {
-        success: false,
-        error: "Failed to fetch getByAssignment page data",
-        details: error instanceof Error ? error.message : String(error),
-      };
-    }
-  }),
 
   getAssignmentsDashboardData: protectedProcedure.query(async ({ ctx }) => {
     try {
