@@ -178,10 +178,16 @@ export default function CourseDetailsClient({
       ? assignmentRows.filter((a) => a.submitted).length
       : 0;
 
-    // Build folder groups in the order folders first appear among classes
+    // Folder order: latest class within each folder wins; folders ranked by
+    // their newest class so the most recent unit shows first.
+    const classesNewestFirst = [...classes].sort(
+      (a, b) =>
+        new Date(b.createdAt as unknown as string).getTime() -
+        new Date(a.createdAt as unknown as string).getTime(),
+    );
     const folderOrder: string[] = [];
     const folderTitles = new Map<string, string>();
-    classes.forEach((c) => {
+    classesNewestFirst.forEach((c) => {
       if (c.folderId && !folderOrder.includes(c.folderId)) {
         folderOrder.push(c.folderId);
         folderTitles.set(c.folderId, c.Folder?.title ?? "Folder");
@@ -191,18 +197,18 @@ export default function CourseDetailsClient({
     const folderGroups: FolderGroup[] = folderOrder.map((fid) => {
       const folderClasses = classRows
         .filter((c) => c.folderId === fid)
-        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       const rows: Row[] = [];
       folderClasses.forEach((c) => {
         rows.push(c);
         const linkedAssignments = assignmentRows
           .filter((a) => a.classId === c.id)
-          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         rows.push(...linkedAssignments);
       });
       const orphanFolderAssignments = assignmentRows
         .filter((a) => a.folderId === fid && !a.classId)
-        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       rows.push(...orphanFolderAssignments);
       return {
         id: fid,
@@ -211,18 +217,18 @@ export default function CourseDetailsClient({
       };
     });
 
-    // Classes without a folder
-    const unfolderedClasses = classRows.filter((c) => !c.folderId);
+    // Classes without a folder — show as a "Lessons" group, latest first.
+    const unfolderedClasses = classRows
+      .filter((c) => !c.folderId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     const unfolderedRows: Row[] = [];
-    unfolderedClasses
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-      .forEach((c) => {
-        unfolderedRows.push(c);
-        const linked = assignmentRows
-          .filter((a) => a.classId === c.id)
-          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-        unfolderedRows.push(...linked);
-      });
+    unfolderedClasses.forEach((c) => {
+      unfolderedRows.push(c);
+      const linked = assignmentRows
+        .filter((a) => a.classId === c.id)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      unfolderedRows.push(...linked);
+    });
     if (unfolderedRows.length > 0) {
       folderGroups.unshift({
         id: "__unfoldered__",
@@ -231,10 +237,10 @@ export default function CourseDetailsClient({
       });
     }
 
-    // Course-level assignments (no class, no folder)
+    // Course-level assignments (no class, no folder) — push to the end.
     const courseLevelAssignments = assignmentRows
       .filter((a) => !a.classId && !a.folderId)
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     if (courseLevelAssignments.length > 0) {
       folderGroups.push({
         id: "__course_assignments__",

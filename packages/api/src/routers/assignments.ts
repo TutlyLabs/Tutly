@@ -2014,6 +2014,31 @@ export const assignmentsRouter = createTRPCRouter({
           };
         }
 
+        // Fetch student profile
+        const student = await ctx.db.user.findUnique({
+          where: { username: userId },
+          select: {
+            username: true,
+            name: true,
+            image: true,
+            email: true,
+            enrolledUsers: {
+              select: {
+                courseId: true,
+                mentorUsername: true,
+              },
+            },
+          },
+        });
+
+        if (!student) {
+          return {
+            success: false,
+            error: "Student not found",
+            redirectTo: "/tutor/assignments/submissions",
+          };
+        }
+
         // Fetch simple courses for the user
         const courses = await ctx.db.course.findMany({
           where: {
@@ -2085,8 +2110,11 @@ export const assignmentsRouter = createTRPCRouter({
                   select: {
                     id: true,
                     title: true,
+                    submissionMode: true,
+                    dueDate: true,
                     class: {
                       select: {
+                        id: true,
                         title: true,
                       },
                     },
@@ -2106,6 +2134,7 @@ export const assignmentsRouter = createTRPCRouter({
                       },
                       select: {
                         id: true,
+                        submissionDate: true,
                         points: {
                           select: {
                             id: true,
@@ -2152,6 +2181,7 @@ export const assignmentsRouter = createTRPCRouter({
             courses,
             sortedAssignments,
             userId,
+            student,
           },
         };
       } catch (error) {
@@ -2160,6 +2190,86 @@ export const assignmentsRouter = createTRPCRouter({
           success: false,
           error: "Failed to fetch tutor student assignments data",
           details: error instanceof Error ? error.message : String(error),
+        };
+      }
+    }),
+
+  getCourseStudentStats: protectedProcedure
+    .input(z.object({ courseId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const currentUser = ctx.session.user;
+        if (currentUser.role === "STUDENT") {
+          return { success: false, error: "Unauthorized", data: null };
+        }
+
+        const totalAssignments = await ctx.db.attachment.count({
+          where: {
+            attachmentType: "ASSIGNMENT",
+            OR: [
+              { courseId: input.courseId },
+              { class: { courseId: input.courseId } },
+            ],
+          },
+        });
+
+        const enrolledUserFilter =
+          currentUser.role === "MENTOR"
+            ? {
+                courseId: input.courseId,
+                mentorUsername: currentUser.username,
+              }
+            : { courseId: input.courseId };
+
+        const submissions = await ctx.db.submission.findMany({
+          where: {
+            status: "SUBMITTED",
+            enrolledUser: enrolledUserFilter,
+          },
+          select: {
+            id: true,
+            enrolledUser: { select: { username: true } },
+            points: { select: { id: true } },
+            attachmentId: true,
+          },
+        });
+
+        const byUser = new Map<
+          string,
+          { submitted: Set<string>; evaluated: Set<string> }
+        >();
+        submissions.forEach((s) => {
+          const u = s.enrolledUser.username;
+          const cur = byUser.get(u) ?? {
+            submitted: new Set<string>(),
+            evaluated: new Set<string>(),
+          };
+          cur.submitted.add(s.attachmentId);
+          if (s.points.length > 0) cur.evaluated.add(s.attachmentId);
+          byUser.set(u, cur);
+        });
+
+        const stats: Record<
+          string,
+          { submitted: number; evaluated: number }
+        > = {};
+        byUser.forEach((v, k) => {
+          stats[k] = { submitted: v.submitted.size, evaluated: v.evaluated.size };
+        });
+
+        return {
+          success: true,
+          data: {
+            totalAssignments,
+            stats,
+          },
+        };
+      } catch (error) {
+        console.error("Error fetching course student stats:", error);
+        return {
+          success: false,
+          error: "Failed to fetch course student stats",
+          data: null,
         };
       }
     }),
