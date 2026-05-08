@@ -159,7 +159,9 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
       }
     }
     if (classType === "RECORDED" && videoType === "HLS" && !uploadedVideoId) {
-      toast.error("Please finish uploading the video before creating the class");
+      toast.error(
+        "Please finish uploading the video before creating the class",
+      );
       return;
     }
 

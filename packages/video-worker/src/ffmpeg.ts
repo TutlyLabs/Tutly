@@ -70,7 +70,7 @@ export async function transcodeRendition(
   outDir: string,
   r: Rendition,
   durationSeconds: number,
-  onProgress?: (fraction: number) => void,
+  onProgress?: (_fraction: number) => void,
 ): Promise<void> {
   const renditionDir = path.join(outDir, r.name);
   await mkdir(renditionDir, { recursive: true });

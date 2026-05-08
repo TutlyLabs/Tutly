@@ -1,0 +1,36 @@
+**/node_modules
+**/dist
+**/build
+**/.next
+**/.turbo
+**/.cache
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+
+.git
+.github
+.vscode
+.idea
+.DS_Store
+
+# Apps not built in any docker image
+apps/cli
+apps/api
+apps/landing
+apps/extension
+apps/api-server
+
+# Big native artifacts
+android/
+ios/
+**/.gradle
+**/.xcode
+
+**/*.log
+**/*.tsbuildinfo
+
+# Local-only state
+docker-compose.local.yml
+**/.local

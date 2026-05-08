@@ -14,7 +14,9 @@ export default function StudentAssignmentsPage() {
 
   if (q.isLoading) return <PageLoader />;
   if (q.data?.success === false) {
-    return <Navigate to={q.data.redirectTo ?? "/tutor/assignments/submissions"} />;
+    return (
+      <Navigate to={q.data.redirectTo ?? "/tutor/assignments/submissions"} />
+    );
   }
   if (!q.data?.success || !q.data.data) {
     return (

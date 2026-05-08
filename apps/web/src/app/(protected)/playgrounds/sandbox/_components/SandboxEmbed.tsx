@@ -154,7 +154,7 @@ export function SandboxEmbed({
                     <ResizableHandle withHandle />
 
                     <ResizablePanel defaultSize={30} minSize={10}>
-                      <div className="bg-card flex h-full flex-col border-l border-t">
+                      <div className="bg-card flex h-full flex-col border-t border-l">
                         <BottomTabs />
                       </div>
                     </ResizablePanel>

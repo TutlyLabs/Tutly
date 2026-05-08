@@ -343,9 +343,7 @@ export default function CourseDetailsClient({
 
             {isLoading && <ContentSkeleton />}
 
-            {!isLoading && groups.length === 0 && (
-              <EmptyState />
-            )}
+            {!isLoading && groups.length === 0 && <EmptyState />}
 
             {!isLoading && groups.length > 0 && (
               <div className="space-y-3">
@@ -374,7 +372,7 @@ export default function CourseDetailsClient({
             {courseGroup && (
               <Link
                 href={`/community?g=${courseGroup.groupId}`}
-                className="bg-card hover:border-sky-500/40 hover:bg-sky-500/5 group block rounded-xl border p-4 transition-all"
+                className="bg-card group block rounded-xl border p-4 transition-all hover:border-sky-500/40 hover:bg-sky-500/5"
               >
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-300">
@@ -517,9 +515,7 @@ function StatLink({
   children: ReactNode;
 }) {
   if (!href) {
-    return (
-      <span className="inline-flex items-center gap-1.5">{children}</span>
-    );
+    return <span className="inline-flex items-center gap-1.5">{children}</span>;
   }
   return (
     <Link
@@ -673,7 +669,7 @@ function ItemRow({
                   {row.classType === "LIVE" ? "Live class" : "Recorded lesson"}
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <CalendarDays className="h-3 w-3 text-muted-foreground/70" />
+                  <CalendarDays className="text-muted-foreground/70 h-3 w-3" />
                   {row.createdAt.toLocaleDateString(undefined, {
                     month: "short",
                     day: "numeric",

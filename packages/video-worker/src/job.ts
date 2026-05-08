@@ -39,7 +39,7 @@ const WEIGHTS = {
   upload: 8,
 };
 
-type ProgressUpdater = (overallPct: number, step: string) => Promise<void>;
+type ProgressUpdater = (_overallPct: number, _step: string) => Promise<void>;
 
 function buildProgressUpdater(
   videoId: string,

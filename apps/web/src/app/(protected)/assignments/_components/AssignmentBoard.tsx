@@ -137,20 +137,13 @@ function getModeMeta(mode?: string) {
 
 function Dot() {
   return (
-    <span
-      aria-hidden
-      className="text-muted-foreground/40 mx-2 select-none"
-    >
+    <span aria-hidden className="text-muted-foreground/40 mx-2 select-none">
       ·
     </span>
   );
 }
 
-export default function AssignmentBoard({
-  courses,
-  assignments,
-  userId,
-}: any) {
+export default function AssignmentBoard({ courses, assignments, userId }: any) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -294,7 +287,7 @@ export default function AssignmentBoard({
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-5">
       {/* Hero band */}
       <div className="bg-card relative overflow-hidden rounded-2xl border p-5 shadow-sm sm:p-6">
-        <div className="bg-linear-to-br pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full from-indigo-500/10 via-violet-500/10 to-transparent blur-2xl" />
+        <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-linear-to-br from-indigo-500/10 via-violet-500/10 to-transparent blur-2xl" />
         <div className="flex flex-col gap-4">
           <div className="flex items-end justify-between gap-3">
             <div className="min-w-0">
@@ -305,7 +298,7 @@ export default function AssignmentBoard({
               <h1 className="text-foreground mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
                 {currentCourse === ALL_COURSES_VALUE
                   ? "All assignments"
-                  : courseTitleById.get(currentCourse) ?? "Assignments"}
+                  : (courseTitleById.get(currentCourse) ?? "Assignments")}
               </h1>
               <p className="text-muted-foreground mt-0.5 text-sm">
                 {visibleAttachments.length}{" "}
@@ -547,7 +540,8 @@ export default function AssignmentBoard({
                               </Badge>
                             )}
                             <Badge className="bg-muted text-muted-foreground hover:bg-muted/80 h-6 gap-1 rounded-full text-[11px] font-medium">
-                              {total} {total === 1 ? "submission" : "submissions"}
+                              {total}{" "}
+                              {total === 1 ? "submission" : "submissions"}
                             </Badge>
                           </>
                         );

@@ -74,7 +74,7 @@ export default function DownloadsPage() {
           </div>
           {items.length > 0 && (
             <div className="bg-muted/60 text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium">
-              <span className="bg-emerald-500 h-1.5 w-1.5 rounded-full" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               {items.length} saved · {formatBytes(totalBytes)}
             </div>
           )}
@@ -119,7 +119,10 @@ export default function DownloadsPage() {
         </ul>
       )}
 
-      <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
+      <AlertDialog
+        open={!!confirm}
+        onOpenChange={(o) => !o && setConfirm(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove offline copy?</AlertDialogTitle>
@@ -163,7 +166,11 @@ function DownloadRow({
       >
         {item.thumbnailUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+          <img
+            src={item.thumbnailUrl}
+            alt=""
+            className="h-full w-full object-cover"
+          />
         ) : (
           <PlayCircle className="text-muted-foreground h-6 w-6" />
         )}
@@ -174,7 +181,7 @@ function DownloadRow({
 
       <div className="min-w-0 flex-1">
         {courseLine && (
-          <p className="text-muted-foreground truncate text-[10px] font-medium uppercase tracking-wide">
+          <p className="text-muted-foreground truncate text-[10px] font-medium tracking-wide uppercase">
             {courseLine}
           </p>
         )}

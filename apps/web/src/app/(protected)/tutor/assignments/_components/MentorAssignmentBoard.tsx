@@ -194,7 +194,7 @@ const MentorAssignmentBoard = ({
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-5">
       {/* Hero band */}
       <div className="bg-card relative overflow-hidden rounded-2xl border p-5 shadow-sm sm:p-6">
-        <div className="bg-linear-to-br pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full from-emerald-500/10 via-sky-500/10 to-transparent blur-2xl" />
+        <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-linear-to-br from-emerald-500/10 via-sky-500/10 to-transparent blur-2xl" />
         <div className="flex flex-col gap-4">
           <div className="flex items-end justify-between gap-3">
             <div className="min-w-0">
@@ -262,9 +262,7 @@ const MentorAssignmentBoard = ({
               .map((course) => (
                 <Button
                   key={course.id}
-                  variant={
-                    currentCourse === course.id ? "default" : "outline"
-                  }
+                  variant={currentCourse === course.id ? "default" : "outline"}
                   size="sm"
                   onClick={() => setCurrentCourse(course.id)}
                   className="h-8 shrink-0 rounded-full whitespace-nowrap"
@@ -293,8 +291,7 @@ const MentorAssignmentBoard = ({
                 size="icon"
                 className={cn(
                   "relative h-9 w-9 shrink-0 rounded-full",
-                  filterBy !== "all" &&
-                    "border-primary/40 text-primary",
+                  filterBy !== "all" && "border-primary/40 text-primary",
                 )}
                 aria-label="Filter"
               >
@@ -372,7 +369,8 @@ const MentorAssignmentBoard = ({
                 }
                 className="text-muted-foreground text-[11px]"
               >
-                Toggle order ({sortOrder === "asc" ? "ascending" : "descending"})
+                Toggle order ({sortOrder === "asc" ? "ascending" : "descending"}
+                )
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

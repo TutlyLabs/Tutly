@@ -1,5 +1,5 @@
 import { Queue, Worker } from "bullmq";
-import IORedis from "ioredis";
+import { Redis } from "ioredis";
 
 import { env } from "./env.js";
 import { processVideoJob, type VideoJobData } from "./job.js";
@@ -7,7 +7,7 @@ import { logger } from "./logger.js";
 
 const QUEUE_NAME = "video-transcode";
 
-export const connection = new IORedis(env.REDIS_URL, {
+export const connection = new Redis(env.REDIS_URL, {
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
 });

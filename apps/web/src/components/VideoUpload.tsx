@@ -28,7 +28,13 @@ const ALLOWED_MIMES = [
 ];
 const MAX_BYTES = 5 * 1024 * 1024 * 1024;
 
-type Phase = "idle" | "probing" | "uploading" | "finalizing" | "ready" | "error";
+type Phase =
+  | "idle"
+  | "probing"
+  | "uploading"
+  | "finalizing"
+  | "ready"
+  | "error";
 
 interface FileMeta {
   durationSec: number | null;
@@ -49,7 +55,12 @@ async function probeFile(file: File): Promise<FileMeta> {
     const cleanup = () => URL.revokeObjectURL(url);
     const fail = () => {
       cleanup();
-      resolve({ durationSec: null, posterDataUrl: null, width: null, height: null });
+      resolve({
+        durationSec: null,
+        posterDataUrl: null,
+        width: null,
+        height: null,
+      });
     };
 
     video.onloadedmetadata = () => {
@@ -70,10 +81,20 @@ async function probeFile(file: File): Promise<FileMeta> {
           if (ctx) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           const data = canvas.toDataURL("image/jpeg", 0.82);
           cleanup();
-          resolve({ durationSec: dur, posterDataUrl: data, width: w, height: h });
+          resolve({
+            durationSec: dur,
+            posterDataUrl: data,
+            width: w,
+            height: h,
+          });
         } catch {
           cleanup();
-          resolve({ durationSec: dur, posterDataUrl: null, width: w, height: h });
+          resolve({
+            durationSec: dur,
+            posterDataUrl: null,
+            width: w,
+            height: h,
+          });
         }
       };
     };
@@ -107,10 +128,12 @@ function uploadWithProgress(
     };
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) resolve();
-      else reject(new Error(`Upload failed: ${xhr.status} ${xhr.responseText}`));
+      else
+        reject(new Error(`Upload failed: ${xhr.status} ${xhr.responseText}`));
     };
     xhr.onerror = () => reject(new Error("Network error during upload"));
-    xhr.onabort = () => reject(new DOMException("Upload aborted", "AbortError"));
+    xhr.onabort = () =>
+      reject(new DOMException("Upload aborted", "AbortError"));
     if (signal) {
       if (signal.aborted) {
         xhr.abort();
@@ -187,14 +210,15 @@ export function VideoUpload({
       const probePromise = probeFile(picked);
 
       try {
-        const [{ videoId: newVideoId, uploadUrl }, fileMeta] = await Promise.all([
-          requestUpload.mutateAsync({
-            fileName: picked.name,
-            fileSize: picked.size,
-            mimeType: picked.type,
-          }),
-          probePromise,
-        ]);
+        const [{ videoId: newVideoId, uploadUrl }, fileMeta] =
+          await Promise.all([
+            requestUpload.mutateAsync({
+              fileName: picked.name,
+              fileSize: picked.size,
+              mimeType: picked.type,
+            }),
+            probePromise,
+          ]);
 
         setMeta(fileMeta);
         setInternalVideoId(newVideoId);
@@ -208,7 +232,9 @@ export function VideoUpload({
           (l, _t, inst) => {
             setLoaded(l);
             // EMA smoothing — alpha 0.3
-            setBpsSmoothed((prev) => (prev === 0 ? inst : prev * 0.7 + inst * 0.3));
+            setBpsSmoothed((prev) =>
+              prev === 0 ? inst : prev * 0.7 + inst * 0.3,
+            );
           },
           ac.signal,
         );
@@ -288,10 +314,13 @@ export function VideoUpload({
         </div>
         <div>
           <p className="text-foreground text-sm font-medium">
-            {isDragging ? "Drop to upload" : "Drop a video here, or click to browse"}
+            {isDragging
+              ? "Drop to upload"
+              : "Drop a video here, or click to browse"}
           </p>
           <p className="text-muted-foreground mt-1 text-[11px]">
-            MP4 · MOV · MKV · WebM &nbsp;·&nbsp; up to {formatBytes(MAX_BYTES)} &nbsp;·&nbsp; transcoded to HLS automatically
+            MP4 · MOV · MKV · WebM &nbsp;·&nbsp; up to {formatBytes(MAX_BYTES)}{" "}
+            &nbsp;·&nbsp; transcoded to HLS automatically
           </p>
         </div>
         <Button
@@ -315,7 +344,9 @@ export function VideoUpload({
           }}
         />
         {error && (
-          <p className="text-destructive mt-1 text-[11px] font-medium">{error}</p>
+          <p className="text-destructive mt-1 text-[11px] font-medium">
+            {error}
+          </p>
         )}
       </div>
     );
@@ -396,7 +427,9 @@ export function VideoUpload({
                 className="text-muted-foreground hover:text-destructive shrink-0 gap-1 rounded-full px-2.5 text-[11px]"
               >
                 <X className="h-3 w-3" />
-                {phase === "uploading" || phase === "probing" ? "Cancel" : "Remove"}
+                {phase === "uploading" || phase === "probing"
+                  ? "Cancel"
+                  : "Remove"}
               </Button>
             )}
           </div>
@@ -418,7 +451,11 @@ export function VideoUpload({
                   )}
                   style={{
                     width: `${
-                      phase === "finalizing" ? 100 : phase === "probing" ? 100 : pct
+                      phase === "finalizing"
+                        ? 100
+                        : phase === "probing"
+                          ? 100
+                          : pct
                     }%`,
                   }}
                 />

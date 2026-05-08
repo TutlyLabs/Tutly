@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 
-import {
-  MediaPlayer,
-  MediaProvider,
-} from "@vidstack/react";
+import { MediaPlayer, MediaProvider } from "@vidstack/react";
 import {
   PlyrLayout,
   plyrLayoutIcons,
@@ -53,7 +50,9 @@ export default function OfflinePlayerPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-foreground text-sm font-medium">Offline playback</h1>
+        <h1 className="text-foreground text-sm font-medium">
+          Offline playback
+        </h1>
       </div>
       <div className="flex flex-1 items-center justify-center p-4">
         {error ? (

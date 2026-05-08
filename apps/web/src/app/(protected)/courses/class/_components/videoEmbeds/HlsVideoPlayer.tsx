@@ -12,11 +12,7 @@ import {
   WifiOff,
 } from "lucide-react";
 
-import {
-  MediaPlayer,
-  MediaProvider,
-  Poster,
-} from "@vidstack/react";
+import { MediaPlayer, MediaProvider, Poster } from "@vidstack/react";
 import {
   PlyrLayout,
   plyrLayoutIcons,
@@ -28,10 +24,7 @@ import { cn, formatDurationSeconds } from "@tutly/utils";
 
 import { api } from "@/trpc/react";
 import { isNative } from "@/lib/native";
-import {
-  getOfflineVideo,
-  type OfflineVideoMeta,
-} from "@/lib/offline-video";
+import { getOfflineVideo, type OfflineVideoMeta } from "@/lib/offline-video";
 import { OfflineDownloadButton } from "@/components/OfflineDownloadButton";
 
 type Status = "UPLOADING" | "PROCESSING" | "READY" | "FAILED";
@@ -119,7 +112,8 @@ export default function HlsVideoPlayer({
     if (lastSeenStatus.current === next) return;
     lastSeenStatus.current = next;
     if (next === "READY" || next === "FAILED") {
-      if (classId) void utils.classes.getClassDetails.invalidate({ id: classId });
+      if (classId)
+        void utils.classes.getClassDetails.invalidate({ id: classId });
       router.refresh();
     }
   }, [current?.status, classId, router, utils]);
@@ -140,13 +134,18 @@ export default function HlsVideoPlayer({
     );
   }
 
-  if (liveStatus === "PROCESSING" || (!playlistUrl && liveStatus !== "FAILED")) {
+  if (
+    liveStatus === "PROCESSING" ||
+    (!playlistUrl && liveStatus !== "FAILED")
+  ) {
     return (
       <ProcessingCard
         accent="primary"
         icon={<Sparkles className="h-5 w-5" />}
         eyebrow={isStaff ? "Transcoding" : "Almost ready"}
-        title={isStaff ? "Preparing your video" : "We're getting this video ready"}
+        title={
+          isStaff ? "Preparing your video" : "We're getting this video ready"
+        }
         message={
           isStaff
             ? "Generating adaptive HLS at 480p · 720p · 1080p — typically 10–30 minutes for a full class."
@@ -260,7 +259,11 @@ export default function HlsVideoPlayer({
       >
         <MediaProvider>
           {thumbnailUrl ? (
-            <Poster className="vds-poster" src={thumbnailUrl} alt={classTitle ?? ""} />
+            <Poster
+              className="vds-poster"
+              src={thumbnailUrl}
+              alt={classTitle ?? ""}
+            />
           ) : null}
         </MediaProvider>
         <PlyrLayout icons={plyrLayoutIcons} />
@@ -385,7 +388,7 @@ function ProcessingCard({
         <div className="max-w-md">
           <p
             className={cn(
-              "text-[10px] font-semibold uppercase tracking-[0.14em]",
+              "text-[10px] font-semibold tracking-[0.14em] uppercase",
               ACCENT_BG[accent].split(" ")[1],
             )}
           >
@@ -424,7 +427,9 @@ function ProcessingCard({
             <div className="text-muted-foreground mt-2 flex items-center justify-between font-mono text-[11px]">
               <span>{step ?? "Preparing…"}</span>
               <span className="tabular-nums">
-                {progress < 100 ? <Loader2 className="mr-1 inline h-3 w-3 animate-spin" /> : null}
+                {progress < 100 ? (
+                  <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />
+                ) : null}
                 {progress}%
               </span>
             </div>

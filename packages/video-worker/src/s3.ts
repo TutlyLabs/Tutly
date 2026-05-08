@@ -1,5 +1,6 @@
 import { createReadStream, createWriteStream } from "node:fs";
 import { stat } from "node:fs/promises";
+import type { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 import {
@@ -27,7 +28,7 @@ export async function downloadObject(key: string, destPath: string): Promise<num
     new GetObjectCommand({ Bucket: env.AWS_BUCKET_NAME, Key: key }),
   );
   if (!res.Body) throw new Error(`Empty body for s3 object ${key}`);
-  const body = res.Body as NodeJS.ReadableStream;
+  const body = res.Body as Readable;
   await pipeline(body, createWriteStream(destPath));
   const s = await stat(destPath);
   return s.size;

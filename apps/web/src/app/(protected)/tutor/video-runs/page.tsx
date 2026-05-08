@@ -120,16 +120,16 @@ export default function VideoRunsPage() {
     <div className="mx-auto w-full max-w-5xl space-y-4 p-4 sm:p-6">
       {/* Hero */}
       <div className="bg-card relative overflow-hidden rounded-2xl border p-5 shadow-sm">
-        <div className="bg-amber-500/10 pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full blur-3xl" />
+        <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
         <div className="relative flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-foreground inline-flex items-center gap-2 text-xl font-semibold">
-                <Activity className="text-amber-500 h-5 w-5" />
+                <Activity className="h-5 w-5 text-amber-500" />
                 Video runs
               </h1>
               {(counts.PROCESSING > 0 || counts.UPLOADING > 0) && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-amber-700 uppercase dark:text-amber-400">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
@@ -228,7 +228,9 @@ export default function VideoRunsPage() {
               key={run.id}
               run={run}
               onRetry={() => retry.mutate({ videoId: run.id })}
-              isRetrying={retry.isPending && retry.variables?.videoId === run.id}
+              isRetrying={
+                retry.isPending && retry.variables?.videoId === run.id
+              }
             />
           ))
         )}
@@ -259,7 +261,7 @@ function CountChip({
         cls,
       )}
     >
-      <span className="bg-current h-1.5 w-1.5 rounded-full" />
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {value} {label}
     </span>
   );
@@ -340,7 +342,7 @@ function RunRow({
           </p>
           <span
             className={cn(
-              "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+              "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase",
               meta.pill,
             )}
           >
@@ -379,9 +381,7 @@ function RunRow({
               <div
                 className={cn(
                   "h-full transition-[width] duration-700 ease-out",
-                  run.status === "PROCESSING"
-                    ? "bg-amber-500"
-                    : "bg-blue-500",
+                  run.status === "PROCESSING" ? "bg-amber-500" : "bg-blue-500",
                 )}
                 style={{ width: `${run.progress}%` }}
               />
@@ -411,8 +411,12 @@ function RunRow({
 
       <style jsx global>{`
         @keyframes tutly-shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(200%);
+          }
         }
       `}</style>
 
@@ -426,9 +430,7 @@ function RunRow({
             disabled={isRetrying}
             className="h-8 rounded-full px-3 text-xs"
             title={
-              run.status === "FAILED"
-                ? "Retry processing"
-                : "Force re-enqueue"
+              run.status === "FAILED" ? "Retry processing" : "Force re-enqueue"
             }
           >
             {isRetrying ? (
@@ -469,7 +471,8 @@ function ElapsedSince({ date }: { date: Date | string }) {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  const start = typeof date === "string" ? new Date(date).getTime() : date.getTime();
+  const start =
+    typeof date === "string" ? new Date(date).getTime() : date.getTime();
   return (
     <span className="inline-flex items-center gap-1">
       <Clock className="h-2.5 w-2.5" />

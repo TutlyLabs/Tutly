@@ -124,8 +124,10 @@ const NewAttachmentPage = ({
     values.title = values.title.trim();
 
     try {
-      const classIdValue = values.class && values.class.length > 0 ? values.class : undefined;
-      const courseIdValue = courseId && courseId.length > 0 ? courseId : undefined;
+      const classIdValue =
+        values.class && values.class.length > 0 ? values.class : undefined;
+      const courseIdValue =
+        courseId && courseId.length > 0 ? courseId : undefined;
 
       let assignmentId = attachment?.id;
       if (isEditing && attachment) {
@@ -439,7 +441,9 @@ const NewAttachmentPage = ({
                   <span className="text-sm opacity-80">(optional)</span>
                 </FormLabel>
                 <Select
-                  onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                  onValueChange={(v) =>
+                    field.onChange(v === "__none__" ? "" : v)
+                  }
                   defaultValue={field.value || "__none__"}
                   value={field.value || "__none__"}
                 >

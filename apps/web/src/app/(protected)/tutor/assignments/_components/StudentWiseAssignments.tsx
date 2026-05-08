@@ -204,7 +204,7 @@ export default function StudentWiseAssignments({
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-5">
       {/* Hero band */}
       <div className="bg-card relative overflow-hidden rounded-2xl border p-5 shadow-sm sm:p-6">
-        <div className="bg-linear-to-br pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full from-emerald-500/10 via-sky-500/10 to-transparent blur-2xl" />
+        <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-linear-to-br from-emerald-500/10 via-sky-500/10 to-transparent blur-2xl" />
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-start gap-4">
@@ -277,7 +277,9 @@ export default function StudentWiseAssignments({
             <div className="flex flex-wrap gap-1.5">
               <span className="bg-muted/60 text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium">
                 <CheckCircle className="h-3 w-3 text-emerald-500" />
-                <span className="text-foreground">{aggregate.reviewed}</span>{" "}
+                <span className="text-foreground">
+                  {aggregate.reviewed}
+                </span>{" "}
                 reviewed
               </span>
               <span className="bg-muted/60 text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium">

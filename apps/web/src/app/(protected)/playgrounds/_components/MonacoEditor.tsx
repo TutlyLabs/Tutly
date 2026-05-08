@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useActiveCode,
-  useSandpack,
-} from "@codesandbox/sandpack-react";
+import { useActiveCode, useSandpack } from "@codesandbox/sandpack-react";
 import Editor from "@monaco-editor/react";
 import { Code2, FilePlus, Trash2 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -108,7 +105,7 @@ export default function MonacoEditor() {
                 <button
                   type="button"
                   onClick={() => sandpack.openFile(file)}
-                  className="inline-flex h-full items-center gap-1.5 pl-3 pr-2"
+                  className="inline-flex h-full items-center gap-1.5 pr-2 pl-3"
                 >
                   <Code2 className={cn("h-3 w-3", EXT_COLORS[fileExt] ?? "")} />
                   {label}
