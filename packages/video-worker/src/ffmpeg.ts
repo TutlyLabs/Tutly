@@ -46,15 +46,31 @@ export const RENDITIONS: Rendition[] = [
   },
 ];
 
-export async function probeDuration(filePath: string): Promise<number> {
+export interface ProbeResult {
+  duration: number;
+  width: number | null;
+  height: number | null;
+}
+
+export async function probeSource(filePath: string): Promise<ProbeResult> {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(filePath, (err, data) => {
       if (err) return reject(err);
       const dur = data?.format?.duration;
       if (!dur) return reject(new Error("Could not probe duration"));
-      resolve(Math.round(dur));
+      const videoStream = data.streams?.find((s) => s.codec_type === "video");
+      resolve({
+        duration: Math.round(dur),
+        width: videoStream?.width ?? null,
+        height: videoStream?.height ?? null,
+      });
     });
   });
+}
+
+export async function probeDuration(filePath: string): Promise<number> {
+  const r = await probeSource(filePath);
+  return r.duration;
 }
 
 /**
@@ -166,9 +182,9 @@ export async function generateThumbnail(
   });
 }
 
-export function masterPlaylist(): string {
+export function masterPlaylist(renditions: Rendition[] = RENDITIONS): string {
   const lines: string[] = ["#EXTM3U", "#EXT-X-VERSION:3"];
-  for (const r of RENDITIONS) {
+  for (const r of renditions) {
     lines.push(
       `#EXT-X-STREAM-INF:BANDWIDTH=${r.bandwidth},RESOLUTION=${r.width}x${r.height},NAME="${r.name}"`,
     );

@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { mkdir, rm } from "node:fs/promises";
 
 import express from "express";
@@ -8,6 +9,13 @@ import { ExpressAdapter } from "@bull-board/express";
 import { env } from "./env.js";
 import { logger } from "./logger.js";
 import { enqueueVideoJob, startWorker, videoQueue } from "./queue.js";
+
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
 
 // Clean any stale temp directories left over from killed jobs before we start.
 await rm(env.WORK_DIR, { recursive: true, force: true }).catch(() => undefined);
@@ -23,7 +31,7 @@ function checkSecret(
   next: express.NextFunction,
 ) {
   const got = req.header("x-worker-secret");
-  if (got !== env.WORKER_SECRET) {
+  if (typeof got !== "string" || !safeEqual(got, env.WORKER_SECRET)) {
     res.status(401).json({ error: "unauthorized" });
     return;
   }
@@ -39,7 +47,7 @@ function basicAuth(
   if (header?.startsWith("Basic ")) {
     const decoded = Buffer.from(header.slice(6), "base64").toString("utf8");
     const [, password] = decoded.split(":");
-    if (password === env.WORKER_SECRET) {
+    if (password && safeEqual(password, env.WORKER_SECRET)) {
       next();
       return;
     }

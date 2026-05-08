@@ -46,7 +46,7 @@ RUN adduser --system --uid 1001 worker
 # and the prisma generated client lives at packages/db/prisma/generated.
 COPY --from=installer --chown=worker:nodejs /app /app
 
-# WORK_DIR is where ffmpeg writes during a job; volume-mounted in Coolify
+# WORK_DIR is where ffmpeg writes during a job; mount a volume here.
 RUN mkdir -p /data/work && chown -R worker:nodejs /data
 ENV WORK_DIR=/data/work
 

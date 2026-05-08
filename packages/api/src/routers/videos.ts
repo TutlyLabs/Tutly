@@ -1,4 +1,8 @@
-import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import {
+  PutObjectCommand,
+  DeleteObjectCommand,
+  HeadObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -27,10 +31,9 @@ function extOf(filename: string): string {
 
 async function enqueueWorker(videoId: string, rawObjectKey: string) {
   if (!VIDEO_WORKER_URL || !VIDEO_WORKER_SECRET) {
-    console.warn(
-      "[videos] VIDEO_WORKER_URL or VIDEO_WORKER_SECRET not set — skipping enqueue (video will stay PROCESSING).",
+    throw new Error(
+      "Video worker not configured (VIDEO_WORKER_URL / VIDEO_WORKER_SECRET missing).",
     );
-    return;
   }
   const res = await fetch(`${VIDEO_WORKER_URL}/enqueue`, {
     method: "POST",
@@ -85,6 +88,8 @@ export const videosRouter = createTRPCRouter({
         Bucket: AWS_BUCKET_NAME,
         Key: rawObjectKey,
         ContentType: input.mimeType,
+        // Raw uploads are transient; never cache through CDN.
+        CacheControl: "private, no-store",
       });
 
       const uploadUrl = await getSignedUrl(s3Client, command, {
@@ -122,6 +127,47 @@ export const videosRouter = createTRPCRouter({
         });
       }
 
+      // Authoritative size check: trust S3, not the client.
+      let head;
+      try {
+        head = await s3Client.send(
+          new HeadObjectCommand({
+            Bucket: AWS_BUCKET_NAME,
+            Key: video.rawObjectKey,
+          }),
+        );
+      } catch {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Upload not found in storage",
+        });
+      }
+      const actualSize = head.ContentLength ?? 0;
+      if (actualSize <= 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Empty upload",
+        });
+      }
+      if (actualSize > MAX_VIDEO_BYTES) {
+        await s3Client
+          .send(
+            new DeleteObjectCommand({
+              Bucket: AWS_BUCKET_NAME,
+              Key: video.rawObjectKey,
+            }),
+          )
+          .catch(() => undefined);
+        await ctx.db.video.update({
+          where: { id: input.videoId },
+          data: { status: "FAILED", errorMessage: "Upload exceeds size limit" },
+        });
+        throw new TRPCError({
+          code: "PAYLOAD_TOO_LARGE",
+          message: "Upload exceeds size limit",
+        });
+      }
+
       await ctx.db.video.update({
         where: { id: input.videoId },
         data: { status: "PROCESSING", errorMessage: null },
@@ -150,6 +196,7 @@ export const videosRouter = createTRPCRouter({
   getStatus: protectedProcedure
     .input(z.object({ videoId: z.string() }))
     .query(async ({ ctx, input }) => {
+      const user = ctx.session.user;
       const video = await ctx.db.video.findUnique({
         where: { id: input.videoId },
         select: {
@@ -164,12 +211,49 @@ export const videosRouter = createTRPCRouter({
           progressStep: true,
           processStartedAt: true,
           processEndedAt: true,
+          uploadedById: true,
+          class: { select: { courseId: true } },
         },
       });
       if (!video) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
-      return video;
+
+      const isStaff =
+        user.role === "INSTRUCTOR" ||
+        user.role === "ADMIN" ||
+        user.role === "SUPER_ADMIN";
+      const isUploader = video.uploadedById === user.id;
+      let allowed = isStaff || isUploader;
+
+      if (!allowed && video.class.length > 0) {
+        const courseIds = video.class.map((c) => c.courseId).filter(Boolean) as string[];
+        if (courseIds.length > 0) {
+          const adminCourseIds = (user.adminForCourses ?? []).map(
+            (c: { id: string }) => c.id,
+          );
+          if (courseIds.some((id) => adminCourseIds.includes(id))) {
+            allowed = true;
+          } else {
+            const enrollment = await ctx.db.enrolledUsers.findFirst({
+              where: {
+                username: user.username,
+                courseId: { in: courseIds },
+              },
+              select: { id: true },
+            });
+            if (enrollment) allowed = true;
+          }
+        }
+      }
+
+      if (!allowed) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      // Strip internal fields from the wire response.
+      const { uploadedById: _u, class: _c, ...rest } = video;
+      return rest;
     }),
 
   retry: protectedProcedure

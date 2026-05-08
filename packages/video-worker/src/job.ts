@@ -10,8 +10,9 @@ import {
   generateThumbnail,
   listSegments,
   masterPlaylist,
-  probeDuration,
+  probeSource,
   transcodeRendition,
+  type Rendition,
 } from "./ffmpeg.js";
 import { logger } from "./logger.js";
 import {
@@ -58,7 +59,6 @@ function buildProgressUpdater(
       pct !== lastPct ||
       now - lastWriteAt >= 1500;
     if (!shouldFlush) return;
-    if (pct === lastPct && step === lastStep && now - lastWriteAt < 500) return;
     lastWriteAt = now;
     lastPct = pct;
     lastStep = step;
@@ -111,20 +111,29 @@ export async function processVideoJob(
     await setProgress(WEIGHTS.download, "Downloaded source");
     log.info({ size }, "raw downloaded");
 
-    const duration = await probeDuration(rawPath);
-    log.info({ duration }, "probed duration");
+    const probe = await probeSource(rawPath);
+    const { duration } = probe;
+    log.info({ probe }, "probed source");
+
+    // Skip renditions taller than the source so we never upscale.
+    const sourceHeight = probe.height ?? Infinity;
+    const ladder: { r: Rendition; weight: number }[] = [
+      { r: RENDITIONS[0]!, weight: WEIGHTS.encode480 },
+      { r: RENDITIONS[1]!, weight: WEIGHTS.encode720 },
+      { r: RENDITIONS[2]!, weight: WEIGHTS.encode1080 },
+    ].filter((x) => x.r.height <= sourceHeight);
+    if (ladder.length === 0) {
+      ladder.push({ r: RENDITIONS[0]!, weight: WEIGHTS.encode480 });
+    }
+    const activeRenditions = ladder.map((x) => x.r);
+    log.info(
+      { active: activeRenditions.map((r) => r.name) },
+      "selected rendition ladder",
+    );
 
     // 2. Encode each rendition
     let cumulative = WEIGHTS.download;
-    const renditionWeights = [
-      WEIGHTS.encode480,
-      WEIGHTS.encode720,
-      WEIGHTS.encode1080,
-    ];
-
-    for (let i = 0; i < RENDITIONS.length; i++) {
-      const r = RENDITIONS[i]!;
-      const w = renditionWeights[i] ?? 0;
+    for (const { r, weight: w } of ladder) {
       const start = cumulative;
       log.info({ rendition: r.name }, "transcoding rendition");
 
@@ -138,7 +147,7 @@ export async function processVideoJob(
 
     // 3. Master playlist
     const masterPath = path.join(outDir, "master.m3u8");
-    await writeFile(masterPath, masterPlaylist(), "utf8");
+    await writeFile(masterPath, masterPlaylist(activeRenditions), "utf8");
 
     // 4. Thumbnail
     const thumbPath = path.join(outDir, "thumbnail.jpg");
@@ -168,7 +177,7 @@ export async function processVideoJob(
     // Count total upload units for progress increments inside the upload phase
     const allUploadItems: { key: string; localPath: string; isPlaylist: boolean }[] =
       [];
-    for (const r of RENDITIONS) {
+    for (const r of activeRenditions) {
       const renditionDir = path.join(outDir, r.name);
       const items = await listSegments(renditionDir);
       for (const name of items) {
@@ -199,9 +208,10 @@ export async function processVideoJob(
 
     let thumbnailUrl: string | undefined;
     try {
+      // URL is content-addressed by videoId; thumbnail body never changes.
       await uploadFile(`${hlsPrefix}/thumbnail.jpg`, thumbPath, {
         contentType: "image/jpeg",
-        cacheControl: "public, max-age=2592000",
+        cacheControl: "public, max-age=2592000, immutable",
       });
       thumbnailUrl = publicUrl(`${hlsPrefix}/thumbnail.jpg`);
     } catch (e) {
@@ -242,6 +252,8 @@ export async function processVideoJob(
         processEndedAt: new Date(),
       },
     });
+    // Failed jobs should not leave raw uploads orphaned in R2.
+    await deleteObject(rawObjectKey).catch(() => undefined);
     throw err;
   } finally {
     await rm(workDir, { recursive: true, force: true }).catch(() => undefined);
