@@ -48,10 +48,23 @@ services:
       mc mb --ignore-existing local/tutly-local &&
       mc anonymous set download local/tutly-local/AVATAR &&
       mc anonymous set download local/tutly-local/ATTACHMENT &&
+      mc anonymous set download local/tutly-local/videos &&
       echo 'Bucket tutly-local ready'
       "
     networks:
       - tutly_network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - tutly_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

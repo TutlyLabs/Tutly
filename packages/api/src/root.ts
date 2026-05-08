@@ -34,6 +34,7 @@ import { statisticsRouter } from "./routers/statistics";
 import { submissionRouter } from "./routers/submission";
 import { testRunsRouter } from "./routers/testRuns";
 import { usersRouter } from "./routers/users";
+import { videosRouter } from "./routers/videos";
 import { vscodeRouter } from "./routers/vscode";
 import { superAdminRouter } from "./routers/superAdmin";
 
@@ -77,6 +78,7 @@ export const appRouter = createTRPCRouter({
   submissions: submissionRouter,
   testRuns: testRunsRouter,
   users: usersRouter,
+  videos: videosRouter,
   vscode: vscodeRouter,
 });
 

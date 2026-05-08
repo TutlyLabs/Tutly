@@ -594,6 +594,14 @@ enum VideoType {
   DRIVE
   YOUTUBE
   ZOOM
+  HLS
+}
+
+enum VideoStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
 }
 
 model Video {
@@ -602,6 +610,19 @@ model Video {
   videoType  VideoType
   timeStamps Json?
   class      Class[]
+
+  // HLS pipeline fields (used only when videoType = HLS)
+  status         VideoStatus @default(READY)
+  hlsPlaylistUrl String?
+  thumbnailUrl   String?
+  duration       Int?
+  errorMessage   String?
+  rawObjectKey   String?
+  uploadedById   String?
+  progress       Int         @default(0) // 0–100, refreshed by worker during PROCESSING
+  progressStep   String?                  // human label, e.g. "Encoding 720p"
+  processStartedAt DateTime?              // PROCESSING start; for elapsed time
+  processEndedAt   DateTime?              // READY or FAILED end
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

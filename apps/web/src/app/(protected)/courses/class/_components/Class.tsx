@@ -25,6 +25,7 @@ import { useDebounce } from "use-debounce";
 import { useRouter } from "next/navigation";
 
 import VideoPlayer from "./videoEmbeds/VideoPlayer";
+import HlsVideoPlayer from "./videoEmbeds/HlsVideoPlayer";
 import LiveClassBanner from "./LiveClassBanner";
 import RichTextEditor from "@/components/editor/RichTextEditor";
 import {
@@ -341,6 +342,22 @@ export default function Class({
   };
 
   const renderVideo = () => {
+    if (videoType === "HLS" && video) {
+      return (
+        <HlsVideoPlayer
+          videoId={video.id}
+          initialStatus={video.status ?? null}
+          initialPlaylistUrl={video.hlsPlaylistUrl ?? null}
+          initialThumbnailUrl={video.thumbnailUrl ?? null}
+          initialDuration={video.duration ?? null}
+          classTitle={title}
+          classId={classId}
+          courseId={courseId}
+          isStaff={haveAdminAccess}
+        />
+      );
+    }
+
     if (!videoId) {
       return (
         <span className="text-muted-foreground flex h-full items-center justify-center text-sm">

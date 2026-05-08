@@ -6,6 +6,7 @@ import {
   Brain,
   Building2,
   Calendar,
+  Download,
   ClipboardList,
   Code2,
   Globe,
@@ -92,6 +93,10 @@ const InstructorItems = [
         title: "Attendance",
         url: "/tutor/attendance",
       },
+      {
+        title: "Video runs",
+        url: "/tutor/video-runs",
+      },
     ],
   },
   {
@@ -138,6 +143,11 @@ const InstructorItems = [
     title: "Bookmarks",
     url: "/bookmarks",
     icon: Bookmark,
+  },
+  {
+    title: "Downloads",
+    url: "/downloads",
+    icon: Download,
   },
   {
     title: "Playgrounds",
@@ -198,6 +208,10 @@ const AdminItems = [
         title: "Attendance",
         url: "/tutor/attendance",
       },
+      {
+        title: "Video runs",
+        url: "/tutor/video-runs",
+      },
     ],
   },
   {
@@ -244,6 +258,11 @@ const AdminItems = [
     title: "Bookmarks",
     url: "/bookmarks",
     icon: Bookmark,
+  },
+  {
+    title: "Downloads",
+    url: "/downloads",
+    icon: Download,
   },
   {
     title: "Playgrounds",
@@ -304,6 +323,10 @@ const MentorItems = [
         title: "Attendance",
         url: "/tutor/attendance",
       },
+      {
+        title: "Video runs",
+        url: "/tutor/video-runs",
+      },
     ],
   },
   {
@@ -350,6 +373,11 @@ const MentorItems = [
     title: "Bookmarks",
     url: "/bookmarks",
     icon: Bookmark,
+  },
+  {
+    title: "Downloads",
+    url: "/downloads",
+    icon: Download,
   },
   {
     title: "Playgrounds",
@@ -433,6 +461,11 @@ const StudentItems = [
     title: "Bookmarks",
     url: "/bookmarks",
     icon: Bookmark,
+  },
+  {
+    title: "Downloads",
+    url: "/downloads",
+    icon: Download,
   },
   {
     title: "Playgrounds",

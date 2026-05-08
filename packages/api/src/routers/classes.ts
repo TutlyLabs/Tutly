@@ -21,7 +21,8 @@ export const classesRouter = createTRPCRouter({
           message: "Title is required",
         }),
         videoLink: z.string().nullable(),
-        videoType: z.enum(["DRIVE", "YOUTUBE", "ZOOM"]),
+        videoType: z.enum(["DRIVE", "YOUTUBE", "ZOOM", "HLS"]),
+        videoId: z.string().optional(),
         courseId: z.string().trim().min(1),
         createdAt: z.string().optional(),
         folderId: z.string().optional(),
@@ -38,15 +39,22 @@ export const classesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        if (input.videoType === "HLS" && !input.videoId) {
+          throw new Error("HLS class requires a pre-created videoId");
+        }
+
         const classData = {
           title: input.classTitle,
           createdAt: input.createdAt ? new Date(input.createdAt) : new Date(),
-          video: {
-            create: {
-              videoLink: input.videoLink ?? null,
-              videoType: input.videoType,
-            },
-          },
+          video:
+            input.videoId
+              ? { connect: { id: input.videoId } }
+              : {
+                  create: {
+                    videoLink: input.videoLink ?? null,
+                    videoType: input.videoType,
+                  },
+                },
           course: {
             connect: {
               id: input.courseId,
@@ -116,7 +124,8 @@ export const classesRouter = createTRPCRouter({
         courseId: z.string(),
         classTitle: z.string(),
         videoLink: z.string().nullable(),
-        videoType: z.enum(["DRIVE", "YOUTUBE", "ZOOM"]),
+        videoType: z.enum(["DRIVE", "YOUTUBE", "ZOOM", "HLS"]),
+        videoId: z.string().optional(),
         folderId: z.string().optional(),
         folderName: z.string().optional(),
         createdAt: z.string().optional(),
@@ -151,14 +160,30 @@ export const classesRouter = createTRPCRouter({
           throw new Error("Class not found");
         }
 
-        // Update video
-        await ctx.db.video.update({
-          where: { id: existingClass.video.id },
-          data: {
-            videoLink: input.videoLink ?? null,
-            videoType: input.videoType,
-          },
-        });
+        const switchingToHls =
+          input.videoType === "HLS" && existingClass.video.videoType !== "HLS";
+        if (switchingToHls && !input.videoId) {
+          throw new Error(
+            "Switching to HLS requires uploading a new video first.",
+          );
+        }
+
+        // Update video — for HLS, the upload flow already created the new Video row
+        // and we re-point Class.videoId to it. For other types, mutate existing Video in place.
+        if (input.videoType === "HLS" && input.videoId && input.videoId !== existingClass.video.id) {
+          await ctx.db.class.update({
+            where: { id: input.classId },
+            data: { video: { connect: { id: input.videoId } } },
+          });
+        } else if (input.videoType !== "HLS") {
+          await ctx.db.video.update({
+            where: { id: existingClass.video.id },
+            data: {
+              videoLink: input.videoLink ?? null,
+              videoType: input.videoType,
+            },
+          });
+        }
 
         // Handle folder logic
         let finalFolderId: string | null = null;

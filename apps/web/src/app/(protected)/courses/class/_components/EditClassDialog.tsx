@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Plus, Video, Phone, Radio } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { VideoUpload } from "@/components/VideoUpload";
 import { Button } from "@tutly/ui/button";
 import {
   Dialog,
@@ -102,6 +103,8 @@ const EditClassDialog = ({
   const [classType, setClassType] = useState<"RECORDED" | "LIVE">("RECORDED");
   const [videoLink, setVideoLink] = useState("");
   const [videoType, setVideoType] = useState("DRIVE");
+  const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null);
+  const [uploadActive, setUploadActive] = useState(false);
   const [liveProvider, setLiveProvider] = useState<"ZOOM" | "GOOGLE_MEET">(
     "ZOOM",
   );
@@ -120,6 +123,7 @@ const EditClassDialog = ({
       setClassTitle(classDetails.title ?? "");
       setVideoLink(classDetails.video?.videoLink ?? "");
       setVideoType(classDetails.video?.videoType ?? "DRIVE");
+      setUploadedVideoId(null);
       setCreatedAt(
         new Date(classDetails.createdAt).toISOString().split("T")[0],
       );
@@ -173,6 +177,15 @@ const EditClassDialog = ({
         return;
       }
     }
+    if (
+      classType === "RECORDED" &&
+      videoType === "HLS" &&
+      videoType !== classDetails.video?.videoType &&
+      !uploadedVideoId
+    ) {
+      toast.error("Please finish uploading the video before saving");
+      return;
+    }
 
     setTextValue("Updating...");
     try {
@@ -181,11 +194,19 @@ const EditClassDialog = ({
         courseId,
         classTitle: classTitle.trim(),
         videoLink:
-          classType === "RECORDED" ? videoLink || null : meetingUrl || null,
+          classType === "LIVE"
+            ? meetingUrl || null
+            : videoType === "HLS"
+              ? null
+              : videoLink || null,
         videoType:
           classType === "LIVE"
             ? "ZOOM"
-            : (videoType as "DRIVE" | "ZOOM" | "YOUTUBE"),
+            : (videoType as "DRIVE" | "ZOOM" | "YOUTUBE" | "HLS"),
+        videoId:
+          classType === "RECORDED" && videoType === "HLS" && uploadedVideoId
+            ? uploadedVideoId
+            : undefined,
         createdAt,
         folderId:
           selectedFolder === "none"
@@ -213,8 +234,18 @@ const EditClassDialog = ({
     }
   };
 
+  const handleOpenChange = (next: boolean) => {
+    if (!next && uploadActive) {
+      const ok = window.confirm(
+        "An upload is still in progress. Close this dialog and discard it?",
+      );
+      if (!ok) return;
+    }
+    onOpenChange(next);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Edit Class</DialogTitle>
@@ -266,17 +297,34 @@ const EditClassDialog = ({
                   <SelectValue placeholder="Video type" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="HLS">Upload video (HLS)</SelectItem>
                   <SelectItem value="DRIVE">Drive</SelectItem>
                   <SelectItem value="YOUTUBE">YouTube</SelectItem>
                   <SelectItem value="ZOOM">Zoom Recording</SelectItem>
                 </SelectContent>
               </Select>
-              <Input
-                type="text"
-                placeholder="Video link"
-                value={videoLink}
-                onChange={(e) => setVideoLink(e.target.value)}
-              />
+              {videoType === "HLS" ? (
+                classDetails.video?.videoType === "HLS" && !uploadedVideoId ? (
+                  <p className="text-muted-foreground rounded-md border border-dashed px-3 py-2 text-xs">
+                    HLS video already uploaded. To replace it, pick a new file:
+                  </p>
+                ) : null
+              ) : null}
+              {videoType === "HLS" ? (
+                <VideoUpload
+                  videoId={uploadedVideoId}
+                  onUploaded={setUploadedVideoId}
+                  onCleared={() => setUploadedVideoId(null)}
+                  onActiveChange={setUploadActive}
+                />
+              ) : (
+                <Input
+                  type="text"
+                  placeholder="Video link"
+                  value={videoLink}
+                  onChange={(e) => setVideoLink(e.target.value)}
+                />
+              )}
             </>
           )}
 
@@ -404,8 +452,24 @@ const EditClassDialog = ({
             />
           )}
 
+          {classType === "RECORDED" &&
+            videoType === "HLS" &&
+            classDetails.video?.videoType !== "HLS" &&
+            !uploadedVideoId && (
+              <p className="text-muted-foreground -mt-1 text-[11px]">
+                Upload a video file above before saving.
+              </p>
+            )}
+
           <Button
-            disabled={!classTitle || textValue === "Updating..."}
+            disabled={
+              !classTitle ||
+              textValue === "Updating..." ||
+              (classType === "RECORDED" &&
+                videoType === "HLS" &&
+                classDetails.video?.videoType !== "HLS" &&
+                !uploadedVideoId)
+            }
             className="w-full cursor-pointer gap-2"
             onClick={handleUpdateClass}
           >
