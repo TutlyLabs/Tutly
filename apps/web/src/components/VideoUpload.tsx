@@ -145,6 +145,133 @@ function uploadWithProgress(
   });
 }
 
+const PART_SIZE = 16 * 1024 * 1024;
+const PART_PARALLELISM = 4;
+const PART_RETRIES = 3;
+const MULTIPART_THRESHOLD = 50 * 1024 * 1024;
+
+interface SignedPart {
+  partNumber: number;
+  url: string;
+}
+
+interface UploadedPart {
+  partNumber: number;
+  etag: string;
+}
+
+function putPart(
+  url: string,
+  body: Blob,
+  onChunk: (loaded: number) => void,
+  signal?: AbortSignal,
+): Promise<{ etag: string }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url, true);
+    let lastLoaded = 0;
+    xhr.upload.onprogress = (e) => {
+      if (!e.lengthComputable) return;
+      onChunk(e.loaded - lastLoaded);
+      lastLoaded = e.loaded;
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const etag = xhr.getResponseHeader("ETag") ?? "";
+        resolve({ etag: etag.replace(/^"|"$/g, "") });
+      } else {
+        reject(new Error(`HTTP ${xhr.status}: ${xhr.responseText}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.onabort = () =>
+      reject(new DOMException("Upload aborted", "AbortError"));
+    if (signal) {
+      if (signal.aborted) {
+        xhr.abort();
+        return;
+      }
+      signal.addEventListener("abort", () => xhr.abort());
+    }
+    xhr.send(body);
+  });
+}
+
+interface MultipartHandlers {
+  signParts: (partNumbers: number[]) => Promise<SignedPart[]>;
+}
+
+async function uploadFileMultipart(
+  file: File,
+  handlers: MultipartHandlers,
+  onProgress: (loaded: number, total: number, bytesPerSec: number) => void,
+  signal?: AbortSignal,
+): Promise<UploadedPart[]> {
+  const totalParts = Math.max(1, Math.ceil(file.size / PART_SIZE));
+  const partNumbers = Array.from({ length: totalParts }, (_, i) => i + 1);
+
+  const signed = await handlers.signParts(partNumbers);
+  const urlByPart = new Map(signed.map((s) => [s.partNumber, s.url]));
+
+  let totalLoaded = 0;
+  let lastTs = Date.now();
+  let lastLoaded = 0;
+  const tick = (chunkBytes: number) => {
+    totalLoaded += chunkBytes;
+    const now = Date.now();
+    const dt = (now - lastTs) / 1000;
+    if (dt >= 0.25) {
+      const inst = dt > 0 ? (totalLoaded - lastLoaded) / dt : 0;
+      onProgress(totalLoaded, file.size, inst);
+      lastTs = now;
+      lastLoaded = totalLoaded;
+    }
+  };
+
+  const queue: number[] = [...partNumbers];
+  const results: UploadedPart[] = new Array(totalParts);
+
+  async function worker(): Promise<void> {
+    while (queue.length > 0) {
+      if (signal?.aborted)
+        throw new DOMException("Upload aborted", "AbortError");
+      const partNumber = queue.shift()!;
+      const url = urlByPart.get(partNumber);
+      if (!url) throw new Error(`Missing presigned URL for part ${partNumber}`);
+      const start = (partNumber - 1) * PART_SIZE;
+      const end = Math.min(file.size, start + PART_SIZE);
+      const blob = file.slice(start, end);
+
+      let attempt = 0;
+      while (true) {
+        try {
+          const { etag } = await putPart(url, blob, tick, signal);
+          results[partNumber - 1] = { partNumber, etag };
+          break;
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "AbortError")
+            throw err;
+          attempt += 1;
+          if (attempt > PART_RETRIES) throw err;
+          await new Promise((r) =>
+            setTimeout(r, 500 * 2 ** (attempt - 1) + Math.random() * 250),
+          );
+        }
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(PART_PARALLELISM, totalParts) }, () =>
+      worker(),
+    ),
+  );
+
+  // Final progress flush.
+  onProgress(file.size, file.size, 0);
+  return results.filter(Boolean);
+}
+
 interface VideoUploadProps {
   videoId: string | null;
   onUploaded: (videoId: string) => void;
@@ -174,6 +301,10 @@ export function VideoUpload({
   const requestUpload = api.videos.requestUpload.useMutation();
   const uploadComplete = api.videos.uploadComplete.useMutation();
   const abandon = api.videos.abandon.useMutation();
+  const startMultipart = api.videos.startMultipartUpload.useMutation();
+  const signMultipartParts = api.videos.signMultipartParts.useMutation();
+  const completeMultipart = api.videos.completeMultipartUpload.useMutation();
+  const abortMultipart = api.videos.abortMultipartUpload.useMutation();
 
   // Notify parent when an upload is in flight + warn on tab close
   useEffect(() => {
@@ -226,18 +357,60 @@ export function VideoUpload({
 
         const ac = new AbortController();
         abortRef.current = ac;
-        await uploadWithProgress(
-          uploadUrl,
-          picked,
-          (l, _t, inst) => {
-            setLoaded(l);
-            // EMA smoothing — alpha 0.3
-            setBpsSmoothed((prev) =>
-              prev === 0 ? inst : prev * 0.7 + inst * 0.3,
+        const onUploadProgress = (l: number, _t: number, inst: number) => {
+          setLoaded(l);
+          // EMA smoothing — alpha 0.3
+          setBpsSmoothed((prev) =>
+            prev === 0 ? inst : prev * 0.7 + inst * 0.3,
+          );
+        };
+
+        if (picked.size >= MULTIPART_THRESHOLD) {
+          const { uploadId } = await startMultipart.mutateAsync({
+            videoId: newVideoId,
+            mimeType: picked.type,
+          });
+          try {
+            const parts = await uploadFileMultipart(
+              picked,
+              {
+                signParts: async (partNumbers) => {
+                  // Sign in batches of 100 to avoid huge payloads.
+                  const out: SignedPart[] = [];
+                  for (let i = 0; i < partNumbers.length; i += 100) {
+                    const chunk = partNumbers.slice(i, i + 100);
+                    const r = await signMultipartParts.mutateAsync({
+                      videoId: newVideoId,
+                      uploadId,
+                      partNumbers: chunk,
+                    });
+                    out.push(...r.urls);
+                  }
+                  return out;
+                },
+              },
+              onUploadProgress,
+              ac.signal,
             );
-          },
-          ac.signal,
-        );
+            await completeMultipart.mutateAsync({
+              videoId: newVideoId,
+              uploadId,
+              parts,
+            });
+          } catch (err) {
+            await abortMultipart
+              .mutateAsync({ videoId: newVideoId, uploadId })
+              .catch(() => undefined);
+            throw err;
+          }
+        } else {
+          await uploadWithProgress(
+            uploadUrl,
+            picked,
+            onUploadProgress,
+            ac.signal,
+          );
+        }
 
         setPhase("finalizing");
         await uploadComplete.mutateAsync({ videoId: newVideoId });

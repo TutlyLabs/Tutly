@@ -9,6 +9,7 @@ import { ExpressAdapter } from "@bull-board/express";
 import { env } from "./env.js";
 import { logger } from "./logger.js";
 import { enqueueVideoJob, startWorker, videoQueue } from "./queue.js";
+import { startWatchdog, stopWatchdog } from "./watchdog.js";
 
 function safeEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a, "utf8");
@@ -92,6 +93,7 @@ app.post("/enqueue", checkSecret, async (req, res) => {
 });
 
 const worker = startWorker();
+startWatchdog();
 
 const server = app.listen(env.PORT, () => {
   logger.info({ port: env.PORT }, "video-worker http listening");
@@ -99,6 +101,7 @@ const server = app.listen(env.PORT, () => {
 
 async function shutdown() {
   logger.info("shutting down…");
+  stopWatchdog();
   await worker.close();
   server.close();
   process.exit(0);

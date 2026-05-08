@@ -15,6 +15,7 @@ import "@vidstack/react/player/styles/plyr/theme.css";
 import { Button } from "@tutly/ui/button";
 
 import { getOfflineVideo, type OfflineVideoMeta } from "@/lib/offline-video";
+import { PlayerWatermark } from "@/components/PlayerWatermark";
 
 export default function OfflinePlayerPage() {
   const router = useRouter();
@@ -67,7 +68,7 @@ export default function OfflinePlayerPage() {
           <div className="text-muted-foreground text-sm">Loading…</div>
         ) : (
           <div
-            className="aspect-video w-full max-w-5xl overflow-hidden rounded-xl bg-black shadow-lg"
+            className="relative aspect-video w-full max-w-5xl overflow-hidden rounded-xl bg-black shadow-lg"
             style={
               {
                 "--plyr-color-main": "var(--primary)",
@@ -91,6 +92,9 @@ export default function OfflinePlayerPage() {
               <MediaProvider />
               <PlyrLayout icons={plyrLayoutIcons} />
             </MediaPlayer>
+            {meta.viewerLabel ? (
+              <PlayerWatermark label={meta.viewerLabel} />
+            ) : null}
           </div>
         )}
       </div>

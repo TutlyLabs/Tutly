@@ -2,6 +2,10 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
+  CompleteMultipartUploadCommand,
+  AbortMultipartUploadCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
@@ -205,6 +209,7 @@ export const videosRouter = createTRPCRouter({
           videoType: true,
           hlsPlaylistUrl: true,
           thumbnailUrl: true,
+          captionsUrl: true,
           duration: true,
           errorMessage: true,
           progress: true,
@@ -417,6 +422,257 @@ export const videosRouter = createTRPCRouter({
 
       await ctx.db.video.delete({ where: { id: input.videoId } });
       return { success: true as const };
+    }),
+
+  saveProgress: protectedProcedure
+    .input(
+      z.object({
+        videoId: z.string(),
+        positionSec: z.number().int().min(0),
+        durationSec: z.number().int().min(0).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      await ctx.db.videoProgress.upsert({
+        where: {
+          userId_videoId: { userId, videoId: input.videoId },
+        },
+        create: {
+          userId,
+          videoId: input.videoId,
+          positionSec: input.positionSec,
+          durationSec: input.durationSec ?? null,
+        },
+        update: {
+          positionSec: input.positionSec,
+          ...(input.durationSec !== undefined
+            ? { durationSec: input.durationSec }
+            : {}),
+        },
+      });
+      return { success: true };
+    }),
+
+  getProgress: protectedProcedure
+    .input(z.object({ videoId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const row = await ctx.db.videoProgress.findUnique({
+        where: {
+          userId_videoId: {
+            userId: ctx.session.user.id,
+            videoId: input.videoId,
+          },
+        },
+        select: { positionSec: true, durationSec: true, updatedAt: true },
+      });
+      return row;
+    }),
+
+  setCaptions: protectedProcedure
+    .input(z.object({ videoId: z.string(), captionsUrl: z.string().url().nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.session.user;
+      if (user.role !== "INSTRUCTOR" && user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      const video = await ctx.db.video.findUnique({
+        where: { id: input.videoId },
+        select: { uploadedById: true },
+      });
+      if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+      const isStaff =
+        user.role === "INSTRUCTOR" || user.role === "ADMIN";
+      if (!isStaff && video.uploadedById !== user.id) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      await ctx.db.video.update({
+        where: { id: input.videoId },
+        data: { captionsUrl: input.captionsUrl },
+      });
+      return { success: true };
+    }),
+
+  startMultipartUpload: protectedProcedure
+    .input(
+      z.object({
+        videoId: z.string(),
+        mimeType: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.session.user;
+      if (user.role !== "INSTRUCTOR" && user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      if (!ALLOWED_VIDEO_MIME.has(input.mimeType)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Unsupported video MIME type: ${input.mimeType}`,
+        });
+      }
+      const video = await ctx.db.video.findUnique({
+        where: { id: input.videoId },
+        select: { uploadedById: true, rawObjectKey: true },
+      });
+      if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+      if (video.uploadedById && video.uploadedById !== user.id) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      if (!video.rawObjectKey) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Video has no raw upload key",
+        });
+      }
+      const out = await s3Client.send(
+        new CreateMultipartUploadCommand({
+          Bucket: AWS_BUCKET_NAME,
+          Key: video.rawObjectKey,
+          ContentType: input.mimeType,
+          CacheControl: "private, no-store",
+        }),
+      );
+      if (!out.UploadId) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "S3 did not return an UploadId",
+        });
+      }
+      return { uploadId: out.UploadId, key: video.rawObjectKey };
+    }),
+
+  signMultipartParts: protectedProcedure
+    .input(
+      z.object({
+        videoId: z.string(),
+        uploadId: z.string(),
+        partNumbers: z.array(z.number().int().min(1).max(10000)).min(1).max(100),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.session.user;
+      const video = await ctx.db.video.findUnique({
+        where: { id: input.videoId },
+        select: { uploadedById: true, rawObjectKey: true },
+      });
+      if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+      if (video.uploadedById && video.uploadedById !== user.id) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      if (!video.rawObjectKey) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+      const urls = await Promise.all(
+        input.partNumbers.map(async (n) => {
+          const cmd = new UploadPartCommand({
+            Bucket: AWS_BUCKET_NAME,
+            Key: video.rawObjectKey!,
+            UploadId: input.uploadId,
+            PartNumber: n,
+          });
+          const url = await getSignedUrl(s3Client, cmd, { expiresIn: 3600 });
+          return { partNumber: n, url };
+        }),
+      );
+      return { urls };
+    }),
+
+  completeMultipartUpload: protectedProcedure
+    .input(
+      z.object({
+        videoId: z.string(),
+        uploadId: z.string(),
+        parts: z
+          .array(
+            z.object({
+              partNumber: z.number().int().min(1).max(10000),
+              etag: z.string().min(1),
+            }),
+          )
+          .min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.session.user;
+      const video = await ctx.db.video.findUnique({
+        where: { id: input.videoId },
+        select: { uploadedById: true, rawObjectKey: true },
+      });
+      if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+      if (video.uploadedById && video.uploadedById !== user.id) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      if (!video.rawObjectKey) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+      const sorted = [...input.parts].sort(
+        (a, b) => a.partNumber - b.partNumber,
+      );
+      await s3Client.send(
+        new CompleteMultipartUploadCommand({
+          Bucket: AWS_BUCKET_NAME,
+          Key: video.rawObjectKey,
+          UploadId: input.uploadId,
+          MultipartUpload: {
+            Parts: sorted.map((p) => ({
+              PartNumber: p.partNumber,
+              ETag: p.etag,
+            })),
+          },
+        }),
+      );
+      return { success: true };
+    }),
+
+  abortMultipartUpload: protectedProcedure
+    .input(z.object({ videoId: z.string(), uploadId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.session.user;
+      const video = await ctx.db.video.findUnique({
+        where: { id: input.videoId },
+        select: { uploadedById: true, rawObjectKey: true },
+      });
+      if (!video) return { success: true };
+      if (video.uploadedById && video.uploadedById !== user.id) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      if (!video.rawObjectKey) return { success: true };
+      await s3Client
+        .send(
+          new AbortMultipartUploadCommand({
+            Bucket: AWS_BUCKET_NAME,
+            Key: video.rawObjectKey,
+            UploadId: input.uploadId,
+          }),
+        )
+        .catch(() => undefined);
+      return { success: true };
+    }),
+
+  requestCaptionsUpload: protectedProcedure
+    .input(z.object({ videoId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.session.user;
+      if (user.role !== "INSTRUCTOR" && user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      const video = await ctx.db.video.findUnique({
+        where: { id: input.videoId },
+        select: { uploadedById: true },
+      });
+      if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+      const captionsKey = `videos/captions/${input.videoId}.vtt`;
+      const command = new PutObjectCommand({
+        Bucket: AWS_BUCKET_NAME,
+        Key: captionsKey,
+        ContentType: "text/vtt",
+        CacheControl: "public, max-age=300",
+      });
+      const uploadUrl = await getSignedUrl(s3Client, command, {
+        expiresIn: 600,
+      });
+      return { uploadUrl, captionsKey };
     }),
 });
 

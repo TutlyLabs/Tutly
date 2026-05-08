@@ -36,6 +36,8 @@ interface Folder {
 
 interface NewClassDialogProps {
   courseId: string;
+  /** Replace the default icon trigger; useful for prominent CTAs on empty pages. */
+  trigger?: React.ReactNode;
 }
 
 /** Extract meeting ID and passcode from a Zoom URL */
@@ -64,7 +66,7 @@ function parseZoomUrl(url: string): {
   return result;
 }
 
-const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
+const NewClassDialog = ({ courseId, trigger }: NewClassDialogProps) => {
   const [classTitle, setClassTitle] = useState("");
   const [textValue, setTextValue] = useState("Create Class");
   const [folderName, setFolderName] = useState("");
@@ -223,13 +225,15 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button
-          size="icon"
-          variant="outline"
-          className="h-8 w-8 cursor-pointer"
-        >
-          <MdOndemandVideo className="h-4 w-4" />
-        </Button>
+        {trigger ?? (
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-8 w-8 cursor-pointer"
+          >
+            <MdOndemandVideo className="h-4 w-4" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>

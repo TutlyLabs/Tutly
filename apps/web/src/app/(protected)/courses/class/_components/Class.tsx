@@ -354,6 +354,7 @@ export default function Class({
           classId={classId}
           courseId={courseId}
           isStaff={haveAdminAccess}
+          viewerLabel={currentUser.username}
         />
       );
     }

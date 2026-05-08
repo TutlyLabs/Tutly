@@ -17,6 +17,7 @@ import {
   NotebookPen,
   PenSquare,
   Play,
+  Plus,
   Radio,
   Sparkles,
   UserCheck,
@@ -38,6 +39,8 @@ import {
 } from "@tutly/ui/tooltip";
 import { cn } from "@tutly/utils";
 import { api } from "@/trpc/react";
+
+import NewClassDialog from "@/app/(protected)/courses/class/_components/newClass";
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes}m`;
@@ -89,6 +92,10 @@ export default function CourseDetailsClient({
 }) {
   const router = useRouter();
   const isStudent = user.role === "STUDENT";
+  const isCourseAdmin =
+    user.adminForCourses?.some((c) => c.id === courseId) ?? false;
+  const canAddClass =
+    user.role === "INSTRUCTOR" || user.role === "ADMIN" || isCourseAdmin;
 
   const { data: courseResp, isLoading: courseLoading } =
     api.courses.getCourseByCourseId.useQuery({ id: courseId });
@@ -339,11 +346,38 @@ export default function CourseDetailsClient({
                   {totalAssignments === 1 ? "assignment" : "assignments"}
                 </p>
               </div>
+              {canAddClass && (
+                <NewClassDialog
+                  courseId={courseId}
+                  trigger={
+                    <Button size="sm" className="gap-1.5">
+                      <Plus className="h-3.5 w-3.5" />
+                      Add class
+                    </Button>
+                  }
+                />
+              )}
             </div>
 
             {isLoading && <ContentSkeleton />}
 
-            {!isLoading && groups.length === 0 && <EmptyState />}
+            {!isLoading && groups.length === 0 && (
+              <EmptyState
+                cta={
+                  canAddClass ? (
+                    <NewClassDialog
+                      courseId={courseId}
+                      trigger={
+                        <Button size="sm" className="mt-4 gap-1.5">
+                          <Plus className="h-3.5 w-3.5" />
+                          Add your first class
+                        </Button>
+                      }
+                    />
+                  ) : null
+                }
+              />
+            )}
 
             {!isLoading && groups.length > 0 && (
               <div className="space-y-3">
@@ -976,7 +1010,7 @@ function ContentSkeleton() {
   );
 }
 
-function EmptyState() {
+function EmptyState({ cta }: { cta?: ReactNode }) {
   return (
     <div className="bg-card rounded-xl border p-10 text-center shadow-sm">
       <div className="bg-primary/5 text-primary border-primary/15 mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border">
@@ -986,8 +1020,11 @@ function EmptyState() {
         Nothing here yet
       </p>
       <p className="text-muted-foreground mt-1 text-sm">
-        Lessons and assignments will appear here once they&apos;re added.
+        {cta
+          ? "Add a class to start filling out this course."
+          : "Lessons and assignments will appear here once they're added."}
       </p>
+      {cta}
     </div>
   );
 }

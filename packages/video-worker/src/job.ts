@@ -15,6 +15,7 @@ import {
   type Rendition,
 } from "./ffmpeg.js";
 import { logger } from "./logger.js";
+import { notifyUploader } from "./notify.js";
 import {
   deleteObject,
   downloadObject,
@@ -239,6 +240,7 @@ export async function processVideoJob(
     log.info({ hlsPlaylistUrl, duration }, "video ready");
 
     await deleteObject(rawObjectKey).catch(() => undefined);
+    await notifyUploader(videoId, "READY");
   } catch (err) {
     log.error({ err }, "video job failed");
     const raw = err instanceof Error ? err.message : String(err);
@@ -254,6 +256,7 @@ export async function processVideoJob(
     });
     // Failed jobs should not leave raw uploads orphaned in R2.
     await deleteObject(rawObjectKey).catch(() => undefined);
+    await notifyUploader(videoId, "FAILED", errorMessage);
     throw err;
   } finally {
     await rm(workDir, { recursive: true, force: true }).catch(() => undefined);

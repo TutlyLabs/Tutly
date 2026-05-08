@@ -12,7 +12,11 @@ import {
   WifiOff,
 } from "lucide-react";
 
-import { MediaPlayer, MediaProvider, Poster } from "@vidstack/react";
+import {
+  MediaPlayer,
+  MediaProvider,
+  type MediaPlayerInstance,
+} from "@vidstack/react";
 import {
   PlyrLayout,
   plyrLayoutIcons,
@@ -40,6 +44,8 @@ interface HlsVideoPlayerProps {
   courseId?: string;
   /** True for instructors/admins — shows "View runs" link in placeholders. */
   isStaff?: boolean;
+  /** Identifying label rendered as a low-opacity watermark over the video. */
+  viewerLabel?: string;
 }
 
 export default function HlsVideoPlayer({
@@ -52,11 +58,22 @@ export default function HlsVideoPlayer({
   classId,
   courseId,
   isStaff = false,
+  viewerLabel,
 }: HlsVideoPlayerProps) {
   const [offline, setOffline] = useState<OfflineVideoMeta | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const router = useRouter();
   const utils = api.useUtils();
+  const playerRef = useRef<MediaPlayerInstance | null>(null);
+  const lastSavedPositionRef = useRef(0);
+  const lastSaveAtRef = useRef(0);
+  const restoredRef = useRef(false);
+
+  const savedProgressQuery = api.videos.getProgress.useQuery(
+    { videoId },
+    { staleTime: 60_000 },
+  );
+  const saveProgress = api.videos.saveProgress.useMutation();
 
   useEffect(() => {
     let mounted = true;
@@ -117,6 +134,42 @@ export default function HlsVideoPlayer({
       router.refresh();
     }
   }, [current?.status, classId, router, utils]);
+
+  const savedProgressData = savedProgressQuery.data;
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    const unsub = player.subscribe(({ currentTime, duration }) => {
+      if (!restoredRef.current && duration > 0) {
+        const saved = savedProgressData?.positionSec ?? 0;
+        if (saved > 3 && saved < duration - 3) {
+          player.currentTime = saved;
+        }
+        restoredRef.current = true;
+      }
+
+      const pos = Math.floor(currentTime);
+      const now = Date.now();
+      if (
+        pos > 0 &&
+        Math.abs(pos - lastSavedPositionRef.current) >= 5 &&
+        now - lastSaveAtRef.current >= 10_000
+      ) {
+        lastSavedPositionRef.current = pos;
+        lastSaveAtRef.current = now;
+        const dur =
+          duration && Number.isFinite(duration)
+            ? Math.floor(duration)
+            : undefined;
+        saveProgress.mutate({
+          videoId,
+          positionSec: pos,
+          ...(dur !== undefined ? { durationSec: dur } : {}),
+        });
+      }
+    });
+    return () => unsub();
+  }, [savedProgressData, saveProgress, videoId]);
 
   if (liveStatus === "UPLOADING") {
     return (
@@ -247,8 +300,10 @@ export default function HlsVideoPlayer({
       }
     >
       <MediaPlayer
+        ref={playerRef}
         src={{ src: sourceSrc, type: "application/x-mpegurl" }}
         title={classTitle}
+        poster={thumbnailUrl ?? ""}
         crossOrigin={useOffline ? undefined : true}
         playsInline
         load="visible"
@@ -257,15 +312,7 @@ export default function HlsVideoPlayer({
         storage="tutly-player"
         className="h-full w-full"
       >
-        <MediaProvider>
-          {thumbnailUrl ? (
-            <Poster
-              className="vds-poster"
-              src={thumbnailUrl}
-              alt={classTitle ?? ""}
-            />
-          ) : null}
-        </MediaProvider>
+        <MediaProvider />
         <PlyrLayout icons={plyrLayoutIcons} />
       </MediaPlayer>
 
@@ -278,8 +325,24 @@ export default function HlsVideoPlayer({
           courseId={courseId}
           thumbnailUrl={thumbnailUrl}
           durationSec={current?.duration ?? initialDuration ?? null}
+          viewerLabel={viewerLabel}
         />
       </div>
+
+      <style jsx global>{`
+        [data-media-player][data-layout="plyr"] [data-media-provider] {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+        }
+        [data-media-player][data-layout="plyr"] [data-media-provider] video {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+      `}</style>
     </div>
   );
 }
