@@ -15,6 +15,10 @@
     "./dayjs": {
       "types": "./src/dayjs.ts",
       "default": "./src/dayjs.ts"
+    },
+    "./format": {
+      "types": "./src/format.ts",
+      "default": "./src/format.ts"
     }
   },
   "scripts": {

@@ -238,6 +238,23 @@ export const attendanceRouter = createTRPCRouter({
       };
     }),
 
+  getMyCourseAttendance: protectedProcedure
+    .input(z.object({ courseId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const records = await ctx.db.attendance.findMany({
+        where: {
+          username: ctx.session.user.username,
+          class: { courseId: input.courseId },
+        },
+        select: {
+          classId: true,
+          attended: true,
+          attendedDuration: true,
+        },
+      });
+      return { success: true, data: records };
+    }),
+
   getAttendanceOfStudent: protectedProcedure
     .input(
       z.object({

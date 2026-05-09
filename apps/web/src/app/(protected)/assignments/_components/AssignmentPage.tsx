@@ -331,9 +331,9 @@ export default function AssignmentPage({
                 </DialogHeader>
                 {assignment && (
                   <NewAttachmentPage
-                    classes={assignment.course.classes}
-                    courseId={assignment.courseId}
-                    classId={assignment.classId}
+                    classes={assignment.course?.classes ?? []}
+                    courseId={assignment.courseId ?? ""}
+                    classId={assignment.classId ?? ""}
                     isEditing={true}
                     attachment={assignment}
                     onCancel={() => setIsEditClassDialogOpen(false)}

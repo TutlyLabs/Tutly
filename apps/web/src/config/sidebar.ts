@@ -6,6 +6,7 @@ import {
   Brain,
   Building2,
   Calendar,
+  Download,
   ClipboardList,
   Code2,
   Globe,
@@ -81,12 +82,20 @@ const InstructorItems = [
         url: "/tutor/assignments",
       },
       {
+        title: "Submissions",
+        url: "/tutor/assignments/submissions",
+      },
+      {
         title: "Leaderboard",
         url: "/tutor/leaderboard",
       },
       {
         title: "Attendance",
         url: "/tutor/attendance",
+      },
+      {
+        title: "Video runs",
+        url: "/tutor/video-runs",
       },
     ],
   },
@@ -134,6 +143,11 @@ const InstructorItems = [
     title: "Bookmarks",
     url: "/bookmarks",
     icon: Bookmark,
+  },
+  {
+    title: "Downloads",
+    url: "/downloads",
+    icon: Download,
   },
   {
     title: "Playgrounds",
@@ -183,12 +197,20 @@ const AdminItems = [
         url: "/tutor/assignments",
       },
       {
+        title: "Submissions",
+        url: "/tutor/assignments/submissions",
+      },
+      {
         title: "Leaderboard",
         url: "/tutor/leaderboard",
       },
       {
         title: "Attendance",
         url: "/tutor/attendance",
+      },
+      {
+        title: "Video runs",
+        url: "/tutor/video-runs",
       },
     ],
   },
@@ -236,6 +258,11 @@ const AdminItems = [
     title: "Bookmarks",
     url: "/bookmarks",
     icon: Bookmark,
+  },
+  {
+    title: "Downloads",
+    url: "/downloads",
+    icon: Download,
   },
   {
     title: "Playgrounds",
@@ -285,12 +312,20 @@ const MentorItems = [
         url: "/tutor/assignments",
       },
       {
+        title: "Submissions",
+        url: "/tutor/assignments/submissions",
+      },
+      {
         title: "Leaderboard",
         url: "/tutor/leaderboard",
       },
       {
         title: "Attendance",
         url: "/tutor/attendance",
+      },
+      {
+        title: "Video runs",
+        url: "/tutor/video-runs",
       },
     ],
   },
@@ -338,6 +373,11 @@ const MentorItems = [
     title: "Bookmarks",
     url: "/bookmarks",
     icon: Bookmark,
+  },
+  {
+    title: "Downloads",
+    url: "/downloads",
+    icon: Download,
   },
   {
     title: "Playgrounds",
@@ -421,6 +461,11 @@ const StudentItems = [
     title: "Bookmarks",
     url: "/bookmarks",
     icon: Bookmark,
+  },
+  {
+    title: "Downloads",
+    url: "/downloads",
+    icon: Download,
   },
   {
     title: "Playgrounds",

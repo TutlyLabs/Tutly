@@ -268,10 +268,22 @@ export function AppSidebar({
                     if (!url || url === "#") return false;
                     return pathname === url || pathname.startsWith(url + "/");
                   };
+                  // Most-specific sub-item wins so a child path like
+                  // /tutor/assignments/submissions doesn't also light up the
+                  // parent /tutor/assignments entry.
+                  const activeSubUrl: string | null = (() => {
+                    if (!item.items) return null;
+                    let best: string | null = null;
+                    for (const sub of item.items) {
+                      if (sub.url && matchPath(sub.url)) {
+                        if (!best || sub.url.length > best.length)
+                          best = sub.url;
+                      }
+                    }
+                    return best;
+                  })();
                   const isItemActive = matchPath(item.url);
-                  const isSubItemActive =
-                    item.items?.some((subItem) => matchPath(subItem.url)) ??
-                    false;
+                  const isSubItemActive = activeSubUrl !== null;
                   return (
                     <Collapsible
                       key={item.title}
@@ -358,7 +370,7 @@ export function AppSidebar({
                                       <SidebarMenuSubButton
                                         asChild
                                         className={cn(
-                                          matchPath(subItem.url)
+                                          subItem.url === activeSubUrl
                                             ? "bg-primary text-primary-foreground"
                                             : "",
                                           "hover:bg-primary/90 hover:text-primary-foreground m-auto flex cursor-pointer items-center gap-4 rounded px-5 py-5 text-base",

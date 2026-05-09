@@ -6,6 +6,7 @@ import { Plus, Video, Phone, Radio } from "lucide-react";
 import { MdOndemandVideo } from "react-icons/md";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { VideoUpload } from "@/components/VideoUpload";
 import { Button } from "@tutly/ui/button";
 import {
   Dialog,
@@ -35,6 +36,8 @@ interface Folder {
 
 interface NewClassDialogProps {
   courseId: string;
+  /** Replace the default icon trigger; useful for prominent CTAs on empty pages. */
+  trigger?: React.ReactNode;
 }
 
 /** Extract meeting ID and passcode from a Zoom URL */
@@ -63,7 +66,7 @@ function parseZoomUrl(url: string): {
   return result;
 }
 
-const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
+const NewClassDialog = ({ courseId, trigger }: NewClassDialogProps) => {
   const [classTitle, setClassTitle] = useState("");
   const [textValue, setTextValue] = useState("Create Class");
   const [folderName, setFolderName] = useState("");
@@ -75,7 +78,9 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [classType, setClassType] = useState<"RECORDED" | "LIVE">("RECORDED");
   const [videoLink, setVideoLink] = useState("");
-  const [videoType, setVideoType] = useState("DRIVE");
+  const [videoType, setVideoType] = useState("HLS");
+  const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null);
+  const [uploadActive, setUploadActive] = useState(false);
   const [liveProvider, setLiveProvider] = useState<"ZOOM" | "GOOGLE_MEET">(
     "ZOOM",
   );
@@ -123,7 +128,8 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
   const resetForm = () => {
     setClassTitle("");
     setVideoLink("");
-    setVideoType("DRIVE");
+    setVideoType("HLS");
+    setUploadedVideoId(null);
     setSelectedFolder("");
     setFolderName("");
     setClassType("RECORDED");
@@ -154,16 +160,31 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
         return;
       }
     }
+    if (classType === "RECORDED" && videoType === "HLS" && !uploadedVideoId) {
+      toast.error(
+        "Please finish uploading the video before creating the class",
+      );
+      return;
+    }
 
     setTextValue("Creating...");
     try {
       const result = await createClass.mutateAsync({
         classTitle,
-        videoLink: classType === "RECORDED" ? videoLink : meetingUrl,
+        videoLink:
+          classType === "LIVE"
+            ? meetingUrl
+            : videoType === "HLS"
+              ? null
+              : videoLink,
         videoType:
           classType === "LIVE"
             ? "ZOOM"
-            : (videoType as "DRIVE" | "ZOOM" | "YOUTUBE"),
+            : (videoType as "DRIVE" | "ZOOM" | "YOUTUBE" | "HLS"),
+        videoId:
+          classType === "RECORDED" && videoType === "HLS" && uploadedVideoId
+            ? uploadedVideoId
+            : undefined,
         courseId,
         createdAt,
         folderId: selectedFolder !== "new" ? selectedFolder : undefined,
@@ -191,16 +212,28 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
     }
   };
 
+  const handleOpenChange = (next: boolean) => {
+    if (!next && uploadActive) {
+      const ok = window.confirm(
+        "An upload is still in progress. Close this dialog and discard it?",
+      );
+      if (!ok) return;
+    }
+    setIsOpen(next);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button
-          size="icon"
-          variant="outline"
-          className="h-8 w-8 cursor-pointer"
-        >
-          <MdOndemandVideo className="h-4 w-4" />
-        </Button>
+        {trigger ?? (
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-8 w-8 cursor-pointer"
+          >
+            <MdOndemandVideo className="h-4 w-4" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
@@ -254,17 +287,27 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
                   <SelectValue placeholder="Video type" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="HLS">Upload video (HLS)</SelectItem>
                   <SelectItem value="DRIVE">Drive</SelectItem>
                   <SelectItem value="YOUTUBE">YouTube</SelectItem>
                   <SelectItem value="ZOOM">Zoom Recording</SelectItem>
                 </SelectContent>
               </Select>
-              <Input
-                type="text"
-                placeholder="Video link"
-                value={videoLink}
-                onChange={(e) => setVideoLink(e.target.value)}
-              />
+              {videoType === "HLS" ? (
+                <VideoUpload
+                  videoId={uploadedVideoId}
+                  onUploaded={setUploadedVideoId}
+                  onCleared={() => setUploadedVideoId(null)}
+                  onActiveChange={setUploadActive}
+                />
+              ) : (
+                <Input
+                  type="text"
+                  placeholder="Video link"
+                  value={videoLink}
+                  onChange={(e) => setVideoLink(e.target.value)}
+                />
+              )}
             </>
           )}
 
@@ -392,8 +435,22 @@ const NewClassDialog = ({ courseId }: NewClassDialogProps) => {
             />
           )}
 
+          {classType === "RECORDED" &&
+            videoType === "HLS" &&
+            !uploadedVideoId && (
+              <p className="text-muted-foreground -mt-1 text-[11px]">
+                Upload a video file above to enable Create.
+              </p>
+            )}
+
           <Button
-            disabled={!classTitle || textValue === "Creating..."}
+            disabled={
+              !classTitle ||
+              textValue === "Creating..." ||
+              (classType === "RECORDED" &&
+                videoType === "HLS" &&
+                !uploadedVideoId)
+            }
             className="w-full cursor-pointer gap-2"
             onClick={handleCreateClass}
           >

@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@tutly/ui/skeleton";
@@ -70,50 +69,35 @@ const AssignmentDashboard = () => {
     return <div className="text-center">Sign in to view assignments!</div>;
   }
 
-  return (
-    <div className="mx-auto w-full max-w-7xl space-y-4">
-      <div>
-        <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
-          Assignments
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Browse student submissions across your courses.
-        </p>
+  if (courses === null || courses.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-7xl py-12 text-center font-semibold">
+        No courses available!
       </div>
-      {courses === null || courses.length === 0 ? (
-        <div className="text-center">No courses available!</div>
-      ) : (
-        <Suspense
-          fallback={
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-48" />
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
-            </div>
-          }
-        >
-          <div className="flex justify-end">
-            {currentUser.role !== "STUDENT" && (
-              <Link
-                href="/tutor/assignments/getByAssignment"
-                className="cursor-pointer font-bold text-gray-500 italic"
-              >
-                Get by assignment?
-              </Link>
-            )}
+    );
+  }
+
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto w-full max-w-7xl space-y-4">
+          <Skeleton className="h-24 w-full rounded-2xl" />
+          <Skeleton className="h-8 w-48" />
+          <div className="bg-card rounded-xl border shadow-sm">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="m-3 h-12 w-[calc(100%-1.5rem)]" />
+            ))}
           </div>
-          <MentorAssignmentBoard
-            courses={courses}
-            students={students as any}
-            role={currentUser.role}
-            currentUser={currentUser}
-          />
-        </Suspense>
-      )}
-    </div>
+        </div>
+      }
+    >
+      <MentorAssignmentBoard
+        courses={courses}
+        students={students as any}
+        role={currentUser.role}
+        currentUser={currentUser}
+      />
+    </Suspense>
   );
 };
 

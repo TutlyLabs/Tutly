@@ -6,7 +6,6 @@ import Link from "next/link";
 import { GithubButton } from "@/components/ui/gitstar-button";
 
 export default function UnderMaintenance() {
-
   return (
     <div>
       {maintenanceNavbar()}
