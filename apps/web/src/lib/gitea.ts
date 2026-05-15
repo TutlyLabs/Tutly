@@ -452,7 +452,7 @@ export const giteaClient = {
 
           results.push({ path: file.path, success: true });
         } catch (error) {
-          console.error(`Error committing ${file.path}:`, error);
+          console.error("Error committing %s:", file.path, error);
           throw error; // Fail fast - if any file fails, abort
         }
       }

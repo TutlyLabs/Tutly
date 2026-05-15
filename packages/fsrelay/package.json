@@ -205,7 +205,7 @@
     "buffer": "^6.0.3",
     "js-yaml": "^4.1.1",
     "jszip": "^3.10.1",
-    "minimatch": "^10.1.1",
+    "minimatch": "^10.2.5",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   }
