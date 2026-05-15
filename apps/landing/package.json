@@ -18,7 +18,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "motion": "^12.23.26",
-    "next": "^16.0.10",
+    "next": "^16.1.7",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tailwind-merge": "^3.4.0"
@@ -32,7 +32,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.2",
-    "eslint-config-next": "^16.0.10",
+    "eslint-config-next": "^16.1.7",
     "tailwindcss": "^4.1.18",
     "typescript": "5.9.3"
   }
