@@ -38,6 +38,7 @@ COPY --from=sandpack /www ./apps/web/public/sandpack
 ENV SKIP_ENV_VALIDATION=1
 
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_SANDPACK_BUNDLER_URL=/sandpack
 
 WORKDIR /app/packages/db
 RUN pnpm prisma generate
