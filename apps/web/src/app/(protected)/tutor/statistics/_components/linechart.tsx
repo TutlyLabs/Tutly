@@ -11,7 +11,7 @@ import {
 import { api } from "@/trpc/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@tutly/ui/card";
 import type { ChartConfig } from "@tutly/ui/chart";
-import { ChartContainer } from "@tutly/ui/chart";
+import { ChartContainer, ChartTooltip } from "@tutly/ui/chart";
 import { InboxIcon } from "lucide-react";
 
 const chartConfig = {
@@ -20,6 +20,45 @@ const chartConfig = {
     color: "var(--color-chart-1)",
   },
 } satisfies ChartConfig;
+
+function AttendanceTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload as {
+    class: string;
+    title?: string;
+    attendees: number;
+    absentees: number;
+    totalEligible: number;
+  };
+  const rate = d.totalEligible
+    ? Math.round((d.attendees / d.totalEligible) * 100)
+    : 0;
+  return (
+    <div className="bg-popover text-popover-foreground rounded-md border px-3 py-2 text-xs shadow-md">
+      {d.title && (
+        <div className="text-foreground font-semibold">{d.title}</div>
+      )}
+      <div className="text-muted-foreground mt-0.5">{d.class}</div>
+      <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-0.5">
+        <span className="text-muted-foreground">Present</span>
+        <span className="text-foreground text-right font-medium tabular-nums">
+          {d.attendees}
+        </span>
+        <span className="text-muted-foreground">Absent</span>
+        <span className="text-foreground text-right font-medium tabular-nums">
+          {d.absentees}
+        </span>
+        <span className="text-muted-foreground">Eligible</span>
+        <span className="text-foreground text-right font-medium tabular-nums">
+          {d.totalEligible}
+        </span>
+      </div>
+      <div className="text-muted-foreground mt-2 border-t pt-1.5 text-[11px]">
+        Attendance rate · {rate}%
+      </div>
+    </div>
+  );
+}
 
 export function Linechart({
   courseId,
@@ -40,7 +79,7 @@ export function Linechart({
 
   if (data.length === 0) {
     return (
-      <Card className="h-[300px] w-full">
+      <Card className="h-[300px] w-full shadow-sm">
         <CardHeader>
           <CardTitle>Attendance</CardTitle>
         </CardHeader>
@@ -55,7 +94,7 @@ export function Linechart({
   }
 
   return (
-    <Card className="h-[300px] w-full">
+    <Card className="h-[300px] w-full shadow-sm">
       <CardHeader>
         <CardTitle>Attendance</CardTitle>
       </CardHeader>
@@ -78,6 +117,10 @@ export function Linechart({
               tickMargin={8}
             />
             <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+            <ChartTooltip
+              cursor={{ fill: "var(--muted)", opacity: 0.4 }}
+              content={<AttendanceTooltip />}
+            />
             <Bar
               dataKey="attendees"
               fill="var(--color-attendees)"
@@ -87,7 +130,7 @@ export function Linechart({
               <LabelList
                 dataKey="attendees"
                 position="top"
-                fill="hsl(var(--foreground))"
+                className="fill-foreground"
                 fontSize={12}
               />
             </Bar>

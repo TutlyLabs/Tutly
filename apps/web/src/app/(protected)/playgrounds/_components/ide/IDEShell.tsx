@@ -29,6 +29,7 @@ import SearchPanel from "./SearchPanel";
 import SettingsPanel from "./SettingsPanel";
 import StatusBar from "./StatusBar";
 import { useLocalSync } from "./useLocalSync";
+import { AssignmentPreview } from "../../sandbox/_components/AssignmentPreview";
 
 type LogEntry = { type: string; args: unknown[]; id: string };
 
@@ -38,12 +39,16 @@ export default function IDEShell({
   closableTabs = true,
   editableScope,
   projectName,
+  assignment,
+  restrictFiles = false,
 }: {
   template?: SandpackPredefinedTemplate;
   topBar?: React.ReactNode;
   closableTabs?: boolean;
   editableScope?: EditableScope;
   projectName?: string;
+  assignment?: any | null;
+  restrictFiles?: boolean;
 }) {
   const {
     state,
@@ -165,7 +170,10 @@ export default function IDEShell({
         <div className="bg-background text-foreground flex h-full min-h-0 w-full flex-col overflow-hidden">
           {topBar}
           <div className="flex min-h-0 flex-1">
-            <ActivityBar />
+            <ActivityBar
+              hasAssignment={Boolean(assignment)}
+              restrictFiles={restrictFiles}
+            />
             <div className="flex min-h-0 min-w-0 flex-1">
               <ResizablePanelGroup
                 direction="horizontal"
@@ -178,11 +186,13 @@ export default function IDEShell({
                     key="sidebar"
                     id="ide-sidebar"
                     order={1}
-                    defaultSize={18}
+                    defaultSize={
+                      state.sidebar.active === "assignment" ? 26 : 18
+                    }
                     minSize={10}
-                    maxSize={35}
+                    maxSize={40}
                   >
-                    <SidebarBody />
+                    <SidebarBody assignment={assignment ?? null} />
                   </ResizablePanel>,
                   <ResizableHandle key="sidebar-handle" />,
                 ]}
@@ -301,10 +311,13 @@ export default function IDEShell({
   );
 }
 
-function SidebarBody() {
+function SidebarBody({ assignment }: { assignment: any | null }) {
   const { state } = useIDE();
   return (
     <div className="bg-muted/10 flex h-full min-h-0 flex-col border-r">
+      {state.sidebar.active === "assignment" && assignment && (
+        <AssignmentPreview assignment={assignment} />
+      )}
       {state.sidebar.active === "files" && <FileTree />}
       {state.sidebar.active === "search" && <SearchPanel />}
       {state.sidebar.active === "settings" && <SettingsPanel />}

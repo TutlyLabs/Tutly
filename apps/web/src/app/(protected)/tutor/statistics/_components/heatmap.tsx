@@ -139,7 +139,7 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({
         </div>
       </div>
 
-      <div className="relative my-2 w-full max-w-5xl">
+      <div className="relative my-2 w-full">
         {/* months */}
         <div className="ms-16 mb-2 grid grid-cols-12 gap-1">
           {months.map((month) => (

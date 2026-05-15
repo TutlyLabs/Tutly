@@ -7,20 +7,12 @@ import {
 import type { Attachment } from "@tutly/db/browser";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@tutly/ui/resizable";
-
 import IDEShell from "@/app/(protected)/playgrounds/_components/ide/IDEShell";
 import type { EditableScope } from "@/app/(protected)/playgrounds/_components/ide/ideOptions";
 import {
   IDEProvider,
   useIDE,
 } from "@/app/(protected)/playgrounds/_components/ide/ideStore";
-
-import { AssignmentPreview } from "./AssignmentPreview";
 
 interface SandboxEmbedProps {
   assignment?: Attachment | null;
@@ -29,6 +21,8 @@ interface SandboxEmbedProps {
   config: {
     fileExplorer: boolean;
     closableTabs: boolean;
+    /** Hide the Files & Search activity items in the IDE sidebar. */
+    restrictFiles?: boolean;
   };
 }
 
@@ -85,40 +79,36 @@ function SandboxEmbedInner({
     };
   }, [assignment, isEditTemplate, initialPaths]);
 
+  const restrictFiles =
+    config.restrictFiles ?? (Boolean(assignment) && !isEditTemplate);
+
   return (
     <>
       <AutoOpenInitial />
-      {!config.fileExplorer && <HideSidebarOnMount />}
+      {assignment && <DefaultToAssignmentTab />}
 
       <div className="bg-background relative h-full min-h-0 w-full overflow-hidden">
-        <ResizablePanelGroup
-          direction="horizontal"
-          className="relative z-10 h-full min-h-0 w-full"
-        >
-          {assignment && (
-            <>
-              <ResizablePanel
-                defaultSize={isEditTemplate ? 22 : 32}
-                minSize={15}
-                order={1}
-              >
-                <AssignmentPreview assignment={assignment} />
-              </ResizablePanel>
-              <ResizableHandle />
-            </>
-          )}
-          <ResizablePanel defaultSize={assignment ? 68 : 100} order={2}>
-            <IDEShell
-              template={template as SandpackPredefinedTemplate | undefined}
-              closableTabs={config.closableTabs}
-              editableScope={editableScope}
-              projectName={assignment?.title ?? undefined}
-            />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        <IDEShell
+          template={template as SandpackPredefinedTemplate | undefined}
+          closableTabs={config.closableTabs}
+          editableScope={editableScope}
+          projectName={assignment?.title ?? undefined}
+          assignment={assignment ?? null}
+          restrictFiles={restrictFiles}
+        />
       </div>
     </>
   );
+}
+
+function DefaultToAssignmentTab() {
+  const { setSidebarActive, state, setSidebarVisible } = useIDE();
+  useEffect(() => {
+    setSidebarActive("assignment");
+    if (!state.sidebar.visible) setSidebarVisible(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
 }
 
 function AutoOpenInitial() {
@@ -160,13 +150,5 @@ function AutoOpenInitial() {
     if (pick) openFile(pick);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return null;
-}
-
-function HideSidebarOnMount() {
-  const { setSidebarVisible } = useIDE();
-  useEffect(() => {
-    setSidebarVisible(false);
-  }, [setSidebarVisible]);
   return null;
 }

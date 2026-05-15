@@ -1,6 +1,7 @@
 "use client";
 
 import day from "dayjs";
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { FaSearch } from "react-icons/fa";
@@ -42,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@tutly/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@tutly/ui/tooltip";
 import { useRouter, useSearchParams } from "next/navigation";
 import NewAttachmentPage from "@/app/(protected)/courses/class/_components/NewAssignments";
 import { api } from "@/trpc/react";
@@ -356,7 +358,7 @@ export default function AssignmentPage({
         />
       </div>
 
-      <div className="my-4 flex flex-col gap-4 text-black">
+      <div className="text-foreground my-4 flex flex-col gap-4">
         <div>
           <Link
             target="_blank"
@@ -804,6 +806,46 @@ const WorkspaceSubmissionSection = ({ assignment }: { assignment: any }) => {
   );
 };
 
+function FeedbackCell({ value }: { value?: string | null }) {
+  const ref = React.useRef<HTMLDivElement | null>(null);
+  const [isTruncated, setIsTruncated] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => setIsTruncated(el.scrollHeight - el.clientHeight > 1);
+    check();
+    const obs = new ResizeObserver(check);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [value]);
+
+  if (!value) return <span className="text-muted-foreground text-xs">NA</span>;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          ref={ref}
+          className={`line-clamp-3 max-w-[220px] text-xs leading-snug whitespace-pre-wrap ${
+            isTruncated ? "cursor-help" : ""
+          }`}
+        >
+          {value}
+        </div>
+      </TooltipTrigger>
+      {isTruncated && (
+        <TooltipContent
+          side="top"
+          className="max-w-sm text-xs whitespace-pre-wrap"
+        >
+          {value}
+        </TooltipContent>
+      )}
+    </Tooltip>
+  );
+}
+
 type Scores = {
   responsiveness: number;
   styling: number;
@@ -1163,7 +1205,7 @@ const AdminAssignmentTable = ({
                           className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                         />
                       ) : (
-                        submission.overallFeedback || "NA"
+                        <FeedbackCell value={submission.overallFeedback} />
                       )}
                     </TableCell>
                     {currentUser.role !== "STUDENT" && (

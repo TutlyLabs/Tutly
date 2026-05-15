@@ -29,6 +29,7 @@ function SubmissionSandbox({
   const config = {
     fileExplorer: false,
     closableTabs: false,
+    restrictFiles: false,
   };
 
   const sandpackProps = useMemo(() => {
@@ -52,7 +53,7 @@ function SubmissionSandbox({
     <SandpackProvider {...sandpackProps}>
       <div className="h-full w-full">
         <SandboxEmbed
-          assignment={null}
+          assignment={assignment ?? null}
           isEditTemplate={false}
           config={config}
         />

@@ -56,50 +56,32 @@ export default function StatisticsDetailPage() {
         </Suspense>
       ) : (
         <>
-          <div className="mt-4 flex flex-col gap-4 md:gap-6">
-            <div className="flex flex-col gap-4 md:gap-6 lg:flex-row">
-              <div className="w-full rounded-xl shadow-xl shadow-blue-500/5 lg:w-[350px]">
-                <Suspense fallback={<PiechartLoadingSkeleton />}>
-                  <Piechart courseId={id} mentorUsername={mentor} />
-                </Suspense>
-              </div>
-              <div className="flex w-full flex-col gap-2 rounded-xl shadow-xl shadow-blue-500/5 md:flex-row lg:w-3/4">
-                <div className="text-muted-foreground flex w-full flex-col gap-4 p-4 md:w-1/3 md:gap-6 md:p-6">
-                  <div className="border-border relative rounded-xl border-2 p-4">
-                    <h1 className="bg-background absolute -top-3 px-1 text-sm md:text-base">
-                      Total Students
-                    </h1>
-                    <h1 className="text-primary flex items-baseline justify-between text-2xl font-bold tabular-nums md:text-4xl">
-                      <MenteeCount courseId={id} mentorUsername={mentor} />
-                    </h1>
-                  </div>
-                  <div className="border-border relative rounded-xl border-2 p-4">
-                    <h1 className="bg-background absolute -top-3 px-1 text-sm md:text-base">
-                      Total Sessions
-                    </h1>
-                    <h1 className="text-primary text-2xl font-bold tabular-nums md:text-4xl">
-                      13
-                    </h1>
-                  </div>
-                </div>
-                <div className="w-full md:w-[600px]">
-                  <Suspense fallback={<LinechartLoadingSkeleton />}>
-                    <Linechart courseId={id} mentorUsername={mentor} />
-                  </Suspense>
-                </div>
-              </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <Suspense fallback={<PiechartLoadingSkeleton />}>
+                <Piechart courseId={id} mentorUsername={mentor} />
+              </Suspense>
             </div>
-            <div className="flex flex-col gap-4 md:gap-6 lg:flex-row">
-              <div className="max-h-[300px] w-full rounded-xl shadow-xl shadow-blue-500/5 lg:w-3/4">
-                <Suspense fallback={<BarchartLoadingSkeleton />}>
-                  <Barchart courseId={id} mentorUsername={mentor} />
-                </Suspense>
-              </div>
-              <div className="w-full lg:w-1/4">
-                <Suspense fallback={<EvaluationLoadingSkeleton />}>
-                  <EvaluationStats courseId={id} mentorUsername={mentor} />
-                </Suspense>
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
+              <MetricCard label="Total Students">
+                <MenteeCount courseId={id} mentorUsername={mentor} />
+              </MetricCard>
+              <MetricCard label="Total Sessions">13</MetricCard>
+            </div>
+            <div className="lg:col-span-6">
+              <Suspense fallback={<LinechartLoadingSkeleton />}>
+                <Linechart courseId={id} mentorUsername={mentor} />
+              </Suspense>
+            </div>
+            <div className="lg:col-span-8">
+              <Suspense fallback={<BarchartLoadingSkeleton />}>
+                <Barchart courseId={id} mentorUsername={mentor} />
+              </Suspense>
+            </div>
+            <div className="lg:col-span-4">
+              <Suspense fallback={<EvaluationLoadingSkeleton />}>
+                <EvaluationStats courseId={id} mentorUsername={mentor} />
+              </Suspense>
             </div>
           </div>
           <div className="mt-8">
@@ -115,6 +97,25 @@ export default function StatisticsDetailPage() {
         </>
       )}
     </>
+  );
+}
+
+function MetricCard({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-card flex h-full flex-col justify-between rounded-xl border p-4 shadow-sm">
+      <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        {label}
+      </span>
+      <span className="text-foreground text-3xl font-semibold tabular-nums">
+        {children}
+      </span>
+    </div>
   );
 }
 

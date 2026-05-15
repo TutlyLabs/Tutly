@@ -19,6 +19,9 @@ export default function IntegrationsPage() {
   const aiEnabledQ = api.featureFlags.isEnabled.useQuery({
     key: "ai_assistant",
   });
+  const workspaceProvidersEnabledQ = api.featureFlags.isEnabled.useQuery({
+    key: "workspace_providers",
+  });
   const featuresQ = api.oauth.getFlagPayload.useQuery({
     key: "integrations_tab",
   });
@@ -42,7 +45,7 @@ export default function IntegrationsPage() {
         </p>
       </div>
 
-      <WorkspaceProvidersIntegration />
+      {workspaceProvidersEnabledQ.data && <WorkspaceProvidersIntegration />}
 
       {features.codesandbox && (
         <SandboxIntegration sandbox={accounts?.sandbox} />

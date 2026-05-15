@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ClipboardList,
   Files,
   PanelBottom,
   PanelLeft,
@@ -15,7 +16,13 @@ import { cn } from "@tutly/utils";
 
 import { useIDE } from "./ideStore";
 
-export default function ActivityBar() {
+export default function ActivityBar({
+  hasAssignment = false,
+  restrictFiles = false,
+}: {
+  hasAssignment?: boolean;
+  restrictFiles?: boolean;
+}) {
   const {
     state,
     setSidebarActive,
@@ -27,24 +34,40 @@ export default function ActivityBar() {
   return (
     <div className="bg-muted/30 flex h-full w-11 flex-col items-center justify-between border-r py-2">
       <div className="flex flex-col items-center gap-1">
-        <ActivityItem
-          tooltip="Explorer"
-          shortcut="⌘B"
-          active={state.sidebar.visible && state.sidebar.active === "files"}
-          onClick={() => setSidebarActive("files")}
-          variant="primary"
-        >
-          <Files className="h-5 w-5" />
-        </ActivityItem>
-        <ActivityItem
-          tooltip="Search"
-          shortcut="⌘⇧F"
-          active={state.sidebar.visible && state.sidebar.active === "search"}
-          onClick={() => setSidebarActive("search")}
-          variant="primary"
-        >
-          <Search className="h-5 w-5" />
-        </ActivityItem>
+        {hasAssignment && (
+          <ActivityItem
+            tooltip="Assignment"
+            active={
+              state.sidebar.visible && state.sidebar.active === "assignment"
+            }
+            onClick={() => setSidebarActive("assignment")}
+            variant="primary"
+          >
+            <ClipboardList className="h-5 w-5" />
+          </ActivityItem>
+        )}
+        {!restrictFiles && (
+          <ActivityItem
+            tooltip="Explorer"
+            shortcut="⌘B"
+            active={state.sidebar.visible && state.sidebar.active === "files"}
+            onClick={() => setSidebarActive("files")}
+            variant="primary"
+          >
+            <Files className="h-5 w-5" />
+          </ActivityItem>
+        )}
+        {!restrictFiles && (
+          <ActivityItem
+            tooltip="Search"
+            shortcut="⌘⇧F"
+            active={state.sidebar.visible && state.sidebar.active === "search"}
+            onClick={() => setSidebarActive("search")}
+            variant="primary"
+          >
+            <Search className="h-5 w-5" />
+          </ActivityItem>
+        )}
       </div>
       <div className="flex flex-col items-center gap-1">
         <ActivityItem

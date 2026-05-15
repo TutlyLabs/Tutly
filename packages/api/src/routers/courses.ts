@@ -896,13 +896,29 @@ export const coursesRouter = createTRPCRouter({
           where: {
             organizationId: currentUser.organizationId,
           },
-          include: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            email: true,
+            role: true,
+            image: true,
             enrolledUsers: {
-              where: {
-                courseId: input.courseId,
+              where: { courseId: input.courseId },
+              select: {
+                id: true,
+                courseId: true,
+                mentorUsername: true,
+                username: true,
+                startDate: true,
+                endDate: true,
               },
             },
           },
+          orderBy: [
+            { role: "asc" },
+            { username: "asc" },
+          ],
         });
 
         return {

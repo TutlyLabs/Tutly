@@ -73,7 +73,7 @@ export default function AttendanceClient({
   const [currentClass, setCurrentClass] = useState<any>(null);
   const [users, setUsers] = useState<any>([]);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
-  const [showOverallAttendance, setShowOverallAttendance] = useState(false);
+  const [showOverallAttendance, setShowOverallAttendance] = useState(true);
 
   useEffect(() => {
     if (courseIdFromUrl && courses.length > 0) {
@@ -400,22 +400,21 @@ export default function AttendanceClient({
   const [maxInstructionDuration, setMaxInstructionDuration] = useState(0);
 
   return (
-    <div className="p-2 text-center sm:p-4">
-      <div>
-        <h1 className="text-primary mx-auto mt-4 mb-2 bg-gradient-to-r text-3xl font-black uppercase sm:text-4xl">
-          Attendance
-        </h1>
-      </div>
-      <h1 className="sm:text-md text-secondary-foreground text-center text-sm font-semibold tracking-widest">
-        {" "}
-        ~ Mark and Monitor Students Attendance
-      </h1>
-      <div className="mb-4 flex items-center justify-end">
+    <div className="p-2 sm:p-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl">
+            Attendance
+          </h1>
+          <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+            Mark and monitor students attendance
+          </p>
+        </div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowOverallAttendance(!showOverallAttendance)}
-          className="gap-1 text-xs sm:gap-2 sm:text-sm"
+          className="gap-1 self-start text-xs sm:gap-2 sm:self-auto sm:text-sm"
         >
           {showOverallAttendance ? (
             <>

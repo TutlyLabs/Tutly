@@ -147,36 +147,36 @@ export const statisticsRouter = createTRPCRouter({
             },
           });
         }
-        const getAllClasses = await ctx.db.class.findMany({
-          where: {
-            courseId: input.courseId,
-          },
-          select: {
-            id: true,
-            createdAt: true,
-          },
-          orderBy: {
-            createdAt: "asc",
-          },
+        const eligibleWhere =
+          currentUser.role === "MENTOR" || input.mentorUsername
+            ? {
+                courseId: input.courseId,
+                mentorUsername:
+                  input.mentorUsername ?? currentUser.username,
+              }
+            : { courseId: input.courseId };
+
+        const [getAllClasses, totalEligible] = await Promise.all([
+          ctx.db.class.findMany({
+            where: { courseId: input.courseId },
+            select: { id: true, title: true, createdAt: true },
+            orderBy: { createdAt: "asc" },
+          }),
+          ctx.db.enrolledUsers.count({ where: eligibleWhere }),
+        ]);
+
+        return getAllClasses.map((classData) => {
+          const attendees = attendance.filter(
+            (a) => a.classId === classData.id,
+          ).length;
+          return {
+            class: classData.createdAt.toISOString().split("T")[0] ?? "",
+            title: classData.title,
+            attendees,
+            absentees: Math.max(0, totalEligible - attendees),
+            totalEligible,
+          };
         });
-        const classes: Array<string> = [];
-        const attendanceInEachClass: Array<number> = [];
-        getAllClasses.forEach((classData) => {
-          classes.push(classData.createdAt.toISOString().split("T")[0] ?? "");
-          const tem = attendance.filter(
-            (attendanceData) => attendanceData.classId === classData.id,
-          );
-          attendanceInEachClass.push(tem.length);
-        });
-        const linechartData = [];
-        for (let i = 0; i < classes.length; i++) {
-          linechartData.push({
-            class: classes[i],
-            attendees: attendanceInEachClass[i] ?? 0,
-            absentees: input.menteesCount - (attendanceInEachClass[i] ?? 0),
-          });
-        }
-        return linechartData;
       } catch (e) {
         return { error: "Failed to fetch linechart data", details: String(e) };
       }
@@ -192,60 +192,72 @@ export const statisticsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       try {
-        let submissionCount;
-        if (currentUser.role === "MENTOR" || input.mentorUsername) {
-          submissionCount = await ctx.db.attachment.findMany({
+        const submissionWhere =
+          currentUser.role === "MENTOR" || input.mentorUsername
+            ? {
+                enrolledUser: {
+                  mentorUsername:
+                    input.mentorUsername ?? currentUser.username,
+                },
+                status: "SUBMITTED" as const,
+              }
+            : { status: "SUBMITTED" as const };
+
+        const eligibleStudentsWhere =
+          currentUser.role === "MENTOR" || input.mentorUsername
+            ? {
+                courseId: input.courseId,
+                mentorUsername:
+                  input.mentorUsername ?? currentUser.username,
+              }
+            : { courseId: input.courseId };
+
+        const [assignments, totalEligible] = await Promise.all([
+          ctx.db.attachment.findMany({
             where: {
               attachmentType: "ASSIGNMENT",
               courseId: input.courseId,
             },
-            include: {
+            select: {
+              id: true,
+              title: true,
+              dueDate: true,
+              maxSubmissions: true,
               submissions: {
-                where: {
-                  enrolledUser: {
-                    mentorUsername:
-                      input.mentorUsername ?? currentUser.username,
-                  },
-                  status: "SUBMITTED",
+                where: submissionWhere,
+                select: {
+                  id: true,
+                  points: { select: { id: true } },
                 },
               },
             },
-            orderBy: {
-              createdAt: "asc",
-            },
-          });
-        } else if (currentUser.role === "INSTRUCTOR") {
-          submissionCount = await ctx.db.attachment.findMany({
-            where: {
-              attachmentType: "ASSIGNMENT",
-              courseId: input.courseId,
-            },
-            include: {
-              submissions: {
-                where: {
-                  status: "SUBMITTED",
-                },
-              },
-            },
-            orderBy: {
-              createdAt: "asc",
-            },
-          });
-        }
-        const assignments: Array<string> = [];
-        const countForEachAssignment: Array<number> = [];
-        submissionCount?.forEach((submission) => {
-          assignments.push(submission.title);
-          countForEachAssignment.push(submission.submissions.length);
+            orderBy: { createdAt: "asc" },
+          }),
+          ctx.db.enrolledUsers.count({ where: eligibleStudentsWhere }),
+        ]);
+
+        return assignments.map((a) => {
+          const total = a.submissions.length;
+          const evaluated = a.submissions.filter(
+            (s) => s.points.length > 0,
+          ).length;
+          const pending = total - evaluated;
+          const notSubmitted = Math.max(0, totalEligible - total);
+          const overdue = a.dueDate
+            ? new Date(a.dueDate as unknown as string).getTime() < Date.now()
+            : false;
+          return {
+            assignment: a.title,
+            submissions: total,
+            evaluated,
+            pending,
+            notSubmitted,
+            totalEligible,
+            maxSubmissions: a.maxSubmissions,
+            overdue,
+            dueDate: a.dueDate ?? null,
+          };
         });
-        const barchartData = [];
-        for (let i = 0; i < assignments.length; i++) {
-          barchartData.push({
-            assignment: assignments[i],
-            submissions: countForEachAssignment[i],
-          });
-        }
-        return barchartData;
       } catch (e) {
         return { error: "Failed to fetch barchart data", details: String(e) };
       }
@@ -562,7 +574,7 @@ export const statisticsRouter = createTRPCRouter({
           return {
             success: false,
             error: "Mentor username required",
-            redirectTo: `/tutor/statistics/${courseId}?mentor=${currentUser.username}`,
+            redirectTo: `/tutor/statistics/detail?id=${courseId}&mentor=${currentUser.username}`,
           };
         }
 
