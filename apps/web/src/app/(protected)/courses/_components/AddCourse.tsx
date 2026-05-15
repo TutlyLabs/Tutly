@@ -30,7 +30,7 @@ function AddCourse() {
   return (
     <>
       <Card
-        className="text-primary group bg-card hover:bg-primary/5 hover:border-primary/40 flex aspect-[16/9] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors"
+        className="text-primary group bg-card hover:bg-primary/5 hover:border-primary/40 flex h-full min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed shadow-none transition-colors"
         onClick={() => setOpenModal(true)}
       >
         <div className="text-center">

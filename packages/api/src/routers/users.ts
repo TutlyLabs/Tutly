@@ -903,6 +903,11 @@ export const usersRouter = createTRPCRouter({
           ];
         }
 
+        const parseHours = (raw: string | undefined) => {
+          const n = Number(raw);
+          return Number.isFinite(n) && n > 0 ? n : null;
+        };
+
         activeFilters.forEach((filter) => {
           const { column, operator, value } = filter;
 
@@ -917,19 +922,65 @@ export const usersRouter = createTRPCRouter({
               case "online":
                 where.user.lastSeen = { gte: onlineCutoff };
                 break;
+              case "seen_within_hours": {
+                const hours = parseHours(value);
+                if (hours)
+                  where.user.lastSeen = {
+                    gte: new Date(Date.now() - hours * 60 * 60 * 1000),
+                  };
+                break;
+              }
+              case "seen_before_hours": {
+                const hours = parseHours(value);
+                if (hours)
+                  where.user.lastSeen = {
+                    lt: new Date(Date.now() - hours * 60 * 60 * 1000),
+                  };
+                break;
+              }
+              case "never_seen":
+                where.user.lastSeen = null;
+                break;
             }
           }
         });
 
-        const [totalItems, activeCount] = await Promise.all([
+        const now = Date.now();
+        const h = (n: number) => new Date(now - n * 60 * 60 * 1000);
+        const [
+          totalItems,
+          activeCount,
+          neverSeenCount,
+          last1hCount,
+          last24hCount,
+          last7dCount,
+        ] = await Promise.all([
           ctx.db.enrolledUsers.count({ where }),
           ctx.db.enrolledUsers.count({
             where: {
               ...where,
-              user: {
-                ...where.user,
-                lastSeen: { gte: onlineCutoff },
-              },
+              user: { ...where.user, lastSeen: { gte: onlineCutoff } },
+            },
+          }),
+          ctx.db.enrolledUsers.count({
+            where: { ...where, user: { ...where.user, lastSeen: null } },
+          }),
+          ctx.db.enrolledUsers.count({
+            where: {
+              ...where,
+              user: { ...where.user, lastSeen: { gte: h(1) } },
+            },
+          }),
+          ctx.db.enrolledUsers.count({
+            where: {
+              ...where,
+              user: { ...where.user, lastSeen: { gte: h(24) } },
+            },
+          }),
+          ctx.db.enrolledUsers.count({
+            where: {
+              ...where,
+              user: { ...where.user, lastSeen: { gte: h(24 * 7) } },
             },
           }),
         ]);
@@ -979,6 +1030,10 @@ export const usersRouter = createTRPCRouter({
             users,
             totalItems,
             activeCount,
+            neverSeenCount,
+            last1hCount,
+            last24hCount,
+            last7dCount,
           },
         };
       } catch (error) {

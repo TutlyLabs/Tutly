@@ -2,7 +2,6 @@
 
 import {
   ArrowLeft,
-  Command as CommandIcon,
   Maximize,
   Minimize,
   Settings as SettingsIcon,
@@ -59,21 +58,6 @@ export default function IDEHeader({ title, rightSlot }: Props) {
       </div>
 
       <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          onClick={() =>
-            window.dispatchEvent(
-              new CustomEvent("tutly:open-palette", {
-                detail: { mode: "commands" },
-              }),
-            )
-          }
-          className="bg-background text-muted-foreground hover:text-foreground hidden h-7 items-center gap-2 rounded-md border px-2.5 text-xs md:flex"
-          title="Open command palette (⌘⇧P)"
-        >
-          <CommandIcon className="h-3.5 w-3.5" />
-          <span className="tracking-wider">⌘⇧P to run a command</span>
-        </button>
         {rightSlot}
         <Button
           variant="ghost"

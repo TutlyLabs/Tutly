@@ -22,6 +22,9 @@ import { Skeleton } from "@tutly/ui/skeleton";
 import { cn, dayjs, formatDurationSeconds } from "@tutly/utils";
 
 import { api } from "@/trpc/react";
+import { Navigate } from "@/components/auth/Navigate";
+import { useAuthSession } from "@/components/auth/ProtectedShell";
+import PageLoader from "@/components/loader/PageLoader";
 
 type StatusFilter = "all" | "UPLOADING" | "PROCESSING" | "READY" | "FAILED";
 
@@ -71,6 +74,7 @@ const FILTER_TABS: { value: StatusFilter; label: string }[] = [
 ];
 
 export default function VideoRunsPage() {
+  const { user, isPending } = useAuthSession();
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
 
@@ -115,6 +119,16 @@ export default function VideoRunsPage() {
       );
     });
   }, [runsQuery.data, search]);
+
+  if (isPending) return <PageLoader />;
+  if (!user) return <Navigate to="/sign-in" />;
+  if (
+    user.role !== "INSTRUCTOR" &&
+    user.role !== "ADMIN" &&
+    user.role !== "SUPER_ADMIN"
+  ) {
+    return <Navigate to="/dashboard" />;
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-4 p-4 sm:p-6">

@@ -3,7 +3,7 @@
 import type { Attachment } from "@tutly/db/browser";
 import { Calendar, RefreshCw } from "lucide-react";
 
-import MarkdownPreview from "@/components/MarkdownPreview";
+import ContentPreview from "@/components/ContentPreview";
 import { Badge } from "@tutly/ui/badge";
 import day from "@tutly/utils/dayjs";
 
@@ -11,33 +11,46 @@ interface AssignmentPreviewProps {
   assignment: Attachment;
 }
 
+function hasJsonContent(json: unknown): boolean {
+  if (!json || typeof json !== "object") return false;
+  const content = (json as any).content;
+  return Array.isArray(content) && content.length > 0;
+}
+
 export function AssignmentPreview({ assignment }: AssignmentPreviewProps) {
   return (
-    <div className="bg-muted/30 flex h-full w-full flex-col border-r">
-      <div className="flex h-11 flex-shrink-0 items-center justify-between border-b px-4">
-        <div className="flex min-w-0 items-center gap-2 text-sm font-semibold">
-          <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-          <span className="truncate">{assignment.title}</span>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
+    <div className="flex h-full w-full flex-col">
+      <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
+        <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
+          Assignment
+        </span>
+        <div className="flex shrink-0 items-center gap-1.5">
           {assignment.dueDate && (
-            <Badge variant="secondary" className="gap-1 text-[11px]">
+            <Badge variant="secondary" className="h-5 gap-1 px-1.5 text-[10px]">
               <Calendar className="h-3 w-3" />
-              {day(assignment.dueDate).format("DD MMM YYYY")}
+              {day(assignment.dueDate).format("DD MMM")}
             </Badge>
           )}
-          <Badge variant="secondary" className="gap-1 text-[11px]">
+          <Badge variant="secondary" className="h-5 gap-1 px-1.5 text-[10px]">
             <RefreshCw className="h-3 w-3" />
             {assignment.maxSubmissions} max
           </Badge>
         </div>
       </div>
-
-      <div className="flex-1 overflow-y-auto p-4">
-        {assignment.details ? (
-          <MarkdownPreview content={assignment.details} fontSize="text-sm" />
+      <div className="border-b px-3 py-2.5">
+        <div className="text-foreground line-clamp-2 text-sm font-semibold">
+          {assignment.title}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto p-3">
+        {assignment.details || hasJsonContent(assignment.detailsJson) ? (
+          <ContentPreview
+            content={assignment.details ?? ""}
+            jsonContent={assignment.detailsJson}
+            fontSize="text-xs"
+          />
         ) : (
-          <div className="text-muted-foreground py-8 text-center text-sm">
+          <div className="text-muted-foreground py-8 text-center text-xs">
             No assignment details provided
           </div>
         )}

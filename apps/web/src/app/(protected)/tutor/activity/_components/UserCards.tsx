@@ -1,29 +1,20 @@
 "use client";
 
-import { Bell } from "lucide-react";
-import { useState } from "react";
+import { MessageCircle } from "lucide-react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { UserLink } from "@/components/UserLink";
 
 import DisplayTable, { type Column } from "@/components/table/DisplayTable";
 import { Avatar, AvatarFallback, AvatarImage } from "@tutly/ui/avatar";
 import { Badge } from "@tutly/ui/badge";
-import { Button } from "@tutly/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@tutly/ui/dialog";
-import { Textarea } from "@tutly/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@tutly/ui/tooltip";
+import { cn } from "@tutly/utils";
 import day from "@tutly/utils/dayjs";
 import { api } from "@/trpc/react";
 
@@ -31,6 +22,11 @@ interface UserCardsProps {
   data: Record<string, any>[];
   totalItems: number;
   activeCount: number;
+  neverSeenCount: number;
+  last1hCount: number;
+  last24hCount: number;
+  last7dCount: number;
+  isRefetching?: boolean;
 }
 
 const renderOnlineStatus = ({ lastSeen }: { lastSeen: Date | null }) => {
@@ -176,115 +172,179 @@ const columns: Column[] = [
 ];
 
 const gridViewRender = (data: Record<string, any>[]) => (
-  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-    {data.map((user) => (
-      <div
-        key={user.id}
-        className="group bg-card relative overflow-hidden rounded-lg border p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-      >
-        {user.__actions}
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Avatar className="ring-primary/20 h-12 w-12 ring-2">
-              <AvatarImage
-                src={user.image ?? "/placeholder.jpg"}
-                alt={user.name ?? ""}
+  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    {data.map((user) => {
+      const now = day();
+      const lastSeenTime = user.lastSeen ? day(user.lastSeen) : null;
+      const diffInMinutes = lastSeenTime
+        ? now.diff(lastSeenTime, "minute")
+        : null;
+      const isOnline = diffInMinutes !== null && diffInMinutes < 2;
+      const statusLabel = isOnline
+        ? "Online now"
+        : lastSeenTime
+          ? `Last seen ${lastSeenTime.fromNow()}`
+          : "Never logged in";
+      return (
+        <div
+          key={user.id}
+          className="group bg-card hover:border-primary/30 relative flex flex-col gap-3 rounded-xl border p-4 shadow-sm transition-all hover:shadow-md"
+        >
+          <div className="absolute top-3 right-3">{user.__actions}</div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Avatar className="ring-border h-11 w-11 ring-1">
+                <AvatarImage
+                  src={user.image ?? "/placeholder.jpg"}
+                  alt={user.name ?? ""}
+                />
+                <AvatarFallback className="bg-muted text-muted-foreground text-xs font-semibold">
+                  {user.name
+                    ?.split(" ")
+                    .map((n: string) => n[0])
+                    .join("") ?? user.username?.slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <div
+                className={`ring-card absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full ring-2 ${
+                  isOnline
+                    ? "animate-pulse bg-emerald-500"
+                    : lastSeenTime
+                      ? "bg-muted-foreground/40"
+                      : "bg-rose-500"
+                }`}
               />
-              <AvatarFallback className="bg-primary/20 text-primary">
-                {user.name
-                  ?.split(" ")
-                  .map((n: string) => n[0])
-                  .join("") ?? user.username?.slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="absolute top-0 right-0">
-              {(() => {
-                const now = day();
-                const lastSeenTime = user.lastSeen ? day(user.lastSeen) : null;
-                const diffInMinutes = lastSeenTime
-                  ? now.diff(lastSeenTime, "minute")
-                  : null;
-                const isOnline = diffInMinutes !== null && diffInMinutes < 2;
-
-                return (
-                  <div
-                    className={`ring-background h-3 w-3 rounded-full ring-2 ${isOnline ? "animate-pulse bg-green-500" : "bg-gray-500"}`}
-                  />
-                );
-              })()}
             </div>
+            <UserLink
+              username={user.username}
+              className="min-w-0 flex-1 transition-opacity hover:opacity-80"
+            >
+              <h3 className="text-foreground truncate text-sm font-semibold hover:underline">
+                {user.name ?? user.username}
+              </h3>
+              <p className="text-muted-foreground truncate text-xs">
+                @{user.username}
+              </p>
+            </UserLink>
+            <Badge
+              variant="outline"
+              className="shrink-0 text-[10px] font-medium tracking-wide uppercase"
+            >
+              {user.role}
+            </Badge>
           </div>
-          <div>
-            <h3 className="font-semibold">{user.name ?? user.username}</h3>
-            <p className="text-muted-foreground text-sm">{user.role}</p>
-            <p className="text-muted-foreground text-xs">
-              {(() => {
-                const now = day();
-                const lastSeenTime = user.lastSeen ? day(user.lastSeen) : null;
-                const diffInMinutes = lastSeenTime
-                  ? now.diff(lastSeenTime, "minute")
-                  : null;
-                const isOnline = diffInMinutes !== null && diffInMinutes < 2;
-
-                return isOnline
-                  ? "Online now"
-                  : lastSeenTime
-                    ? `Last seen ${lastSeenTime.fromNow()}`
-                    : "Never logged in";
-              })()}
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 space-y-2">
-          <p className="text-sm">
-            <span className="font-medium">Email:</span> {user.email}
-          </p>
-          <p className="text-sm">
-            <span className="font-medium">Mobile:</span> {user.mobile ?? "N/A"}
-          </p>
-          {user.mentorUsername && (
-            <p className="text-sm">
-              <span className="font-medium">Mentor:</span>{" "}
-              <UserLink
-                username={user.mentorUsername}
-                target="_blank"
-                className="text-primary"
+          <div className="text-muted-foreground border-border space-y-1 border-t pt-3 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <span>Status</span>
+              <span
+                className={`truncate font-medium ${
+                  isOnline
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-foreground"
+                }`}
               >
-                @{user.mentorUsername}
-              </UserLink>
-            </p>
-          )}
+                {statusLabel}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span>Email</span>
+              <span className="text-foreground truncate">{user.email}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span>Mobile</span>
+              <span className="text-foreground">{user.mobile ?? "—"}</span>
+            </div>
+            {user.mentorUsername && (
+              <div className="flex items-center justify-between gap-2">
+                <span>Mentor</span>
+                <UserLink
+                  username={user.mentorUsername}
+                  target="_blank"
+                  className="text-primary truncate font-medium"
+                >
+                  @{user.mentorUsername}
+                </UserLink>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    ))}
+      );
+    })}
   </div>
 );
 
-const UserCards = ({ data, totalItems, activeCount }: UserCardsProps) => {
-  const [selectedUser, setSelectedUser] = useState<Record<string, any> | null>(
-    null,
-  );
-  const [message, setMessage] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+const UserCards = ({
+  data,
+  totalItems,
+  activeCount,
+  neverSeenCount,
+  last1hCount,
+  last24hCount,
+  last7dCount,
+  isRefetching = false,
+}: UserCardsProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentPreset = searchParams.get("lastSeen") ?? "all";
 
-  const notifyUserMutation = api.notifications.notifyUser.useMutation({
-    onSuccess: () => {
-      toast.success("Message sent successfully!");
-      setMessage("");
-      setIsOpen(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to send message");
-    },
-  });
-
-  const handleSendMessage = async () => {
-    if (!selectedUser?.id) return;
-    notifyUserMutation.mutate({
-      userId: selectedUser.id,
-      message,
-    });
+  const setPreset = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") params.delete("lastSeen");
+    else params.set("lastSeen", value);
+    params.delete("page");
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
+
+  const presets: {
+    value: string;
+    label: string;
+    count: number;
+    tone: string;
+  }[] = [
+    { value: "all", label: "All", count: totalItems, tone: "" },
+    {
+      value: "online",
+      label: "Online",
+      count: activeCount,
+      tone: "data-[active=true]:bg-emerald-500 data-[active=true]:text-white",
+    },
+    {
+      value: "1h",
+      label: "Last hour",
+      count: last1hCount,
+      tone: "data-[active=true]:bg-primary data-[active=true]:text-primary-foreground",
+    },
+    {
+      value: "24h",
+      label: "Last 24h",
+      count: last24hCount,
+      tone: "data-[active=true]:bg-primary data-[active=true]:text-primary-foreground",
+    },
+    {
+      value: "7d",
+      label: "Last 7d",
+      count: last7dCount,
+      tone: "data-[active=true]:bg-primary data-[active=true]:text-primary-foreground",
+    },
+    {
+      value: "stale-24h",
+      label: "Idle 24h+",
+      count: Math.max(0, totalItems - last24hCount - neverSeenCount),
+      tone: "data-[active=true]:bg-amber-500 data-[active=true]:text-white",
+    },
+    {
+      value: "never",
+      label: "Never logged in",
+      count: neverSeenCount,
+      tone: "data-[active=true]:bg-rose-500 data-[active=true]:text-white",
+    },
+  ];
+
+  const createDM = api.chat.createOrGetDM.useMutation({
+    onSuccess: ({ groupId }) => router.push(`/community?g=${groupId}`),
+    onError: () => toast.error("Could not start conversation"),
+  });
 
   const sortedData = [...data].sort((a, b) => {
     const now = day();
@@ -296,86 +356,103 @@ const UserCards = ({ data, totalItems, activeCount }: UserCardsProps) => {
     const aIsOnline = aDiffMinutes !== null && aDiffMinutes < 2;
     const bIsOnline = bDiffMinutes !== null && bDiffMinutes < 2;
 
-    //  Online users
     if (aIsOnline && !bIsOnline) return -1;
     if (!aIsOnline && bIsOnline) return 1;
     if (aIsOnline && bIsOnline) return 0;
 
-    // Users who have logged in before vs never logged in
     if (aLastSeen && !bLastSeen) return -1;
     if (!aLastSeen && bLastSeen) return 1;
-
-    // If neither has logged in, maintain original order
     if (!aLastSeen && !bLastSeen) return 0;
 
-    // Both have logged in before, sort by most recent
     return bLastSeen ? bLastSeen.diff(aLastSeen) : 0;
   });
 
   return (
-    <>
-      <DisplayTable
-        data={sortedData}
-        columns={columns}
-        defaultView="grid"
-        filterable={true}
-        clientSideProcessing={false}
-        totalItems={totalItems}
-        defaultPageSize={10}
-        gridViewRender={gridViewRender}
-        title="Users Management"
-        headerContent={
-          <div className="flex gap-2">
-            <Badge variant="secondary">Total: {totalItems}</Badge>
-            <Badge variant="outline">Active: {activeCount}</Badge>
-          </div>
-        }
-        actions={[
-          {
-            label: "Notify",
-            icon: <Bell className="mr-2 h-4 w-4" />,
-            onClick: (user: any) => {
-              setSelectedUser(user);
-              setIsOpen(true);
-            },
-          },
-        ]}
-      />
-
-      <Dialog
-        open={isOpen}
-        onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) setSelectedUser(null);
-        }}
+    <div className="space-y-3">
+      <div className="-mx-1 overflow-x-auto px-1">
+        <div className="bg-muted/40 inline-flex max-w-full items-center gap-1 rounded-full p-1">
+          {presets.map((p) => {
+            const active = currentPreset === p.value;
+            return (
+              <button
+                key={p.value}
+                type="button"
+                data-active={active}
+                onClick={() => setPreset(p.value)}
+                className={cn(
+                  "inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-medium whitespace-nowrap transition-colors",
+                  "text-foreground/70 hover:text-foreground",
+                  "data-[active=true]:shadow-sm",
+                  active && !p.tone && "bg-primary text-primary-foreground",
+                  p.tone,
+                )}
+              >
+                {p.label}
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 py-px text-[10px] font-semibold tabular-nums",
+                    active
+                      ? "bg-black/15 text-white dark:bg-white/15"
+                      : "bg-background/80 text-muted-foreground",
+                  )}
+                >
+                  {p.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div
+        className={cn(
+          "transition-opacity",
+          isRefetching && "pointer-events-none opacity-60",
+        )}
       >
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
-              Send Message to {selectedUser?.name ?? selectedUser?.username}
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground text-sm">
-              Send a notification message to this user
-            </DialogDescription>
-          </DialogHeader>
-          <Textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your message here..."
-            className="min-h-[160px] resize-none text-base leading-relaxed"
-          />
-          <DialogFooter>
-            <Button
-              onClick={handleSendMessage}
-              size="lg"
-              className="w-full font-semibold"
-            >
-              Send Message
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        <DisplayTable
+          data={sortedData}
+          columns={columns}
+          defaultView="table"
+          filterable={true}
+          clientSideProcessing={false}
+          totalItems={totalItems}
+          defaultPageSize={10}
+          gridViewRender={gridViewRender}
+          title="Users Management"
+          headerContent={
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary">Total · {totalItems}</Badge>
+              <Badge
+                variant="outline"
+                className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+              >
+                Online · {activeCount}
+              </Badge>
+              <Badge variant="outline">Last 24h · {last24hCount}</Badge>
+              <Badge variant="outline">Last 7d · {last7dCount}</Badge>
+              {neverSeenCount > 0 && (
+                <Badge
+                  variant="outline"
+                  className="border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400"
+                >
+                  Never logged in · {neverSeenCount}
+                </Badge>
+              )}
+            </div>
+          }
+          actions={[
+            {
+              label: "Message",
+              icon: <MessageCircle className="mr-2 h-4 w-4" />,
+              onClick: (user: any) => {
+                if (!user?.id) return;
+                createDM.mutate({ targetUserId: user.id });
+              },
+            },
+          ]}
+        />
+      </div>
+    </div>
   );
 };
 

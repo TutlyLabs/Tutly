@@ -55,7 +55,7 @@ export function Piechart({
 
   if (total === 0) {
     return (
-      <Card className="h-[300px] w-full">
+      <Card className="h-[300px] w-full shadow-sm">
         <CardHeader>
           <CardTitle>Assignments</CardTitle>
         </CardHeader>
@@ -70,12 +70,12 @@ export function Piechart({
   }
 
   return (
-    <Card className="h-[300px] w-full">
+    <Card className="h-[300px] w-full shadow-sm">
       <CardHeader>
         <CardTitle>Assignments</CardTitle>
       </CardHeader>
-      <CardContent className="h-[250px] w-full">
-        <ChartContainer config={chartConfig} className="h-full w-full">
+      <CardContent className="flex h-[250px] w-full flex-col gap-2">
+        <ChartContainer config={chartConfig} className="h-[170px] w-full">
           <PieChart>
             <Pie
               data={chartData}
@@ -83,24 +83,44 @@ export function Piechart({
               nameKey="name"
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={80}
+              innerRadius={55}
+              outerRadius={75}
               paddingAngle={2}
-              label={(entry) => `${entry.name}: ${entry.value}`}
-              labelLine={true}
+              labelLine={false}
             >
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index]} />
               ))}
               <Label
-                value={`Total\n${total}`}
+                value={total.toString()}
                 position="center"
-                className="text-sm font-medium"
-                fill="hsl(var(--foreground))"
+                dy={-6}
+                className="fill-foreground text-xl font-semibold"
+              />
+              <Label
+                value="Total"
+                position="center"
+                dy={12}
+                className="fill-muted-foreground text-[10px] tracking-wide uppercase"
               />
             </Pie>
           </PieChart>
         </ChartContainer>
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px]">
+          {chartData.map((entry, index) => (
+            <div
+              key={entry.name}
+              className="text-muted-foreground inline-flex items-center gap-1.5"
+            >
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ backgroundColor: COLORS[index] }}
+              />
+              <span className="text-foreground/80">{entry.name}</span>
+              <span className="tabular-nums">{entry.value}</span>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

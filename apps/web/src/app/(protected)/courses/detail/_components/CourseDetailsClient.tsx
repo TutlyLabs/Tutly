@@ -8,10 +8,13 @@ import {
   BookOpenText,
   CalendarDays,
   Check,
+  CheckCircle2,
   ChevronDown,
+  Eye,
   Layers,
   Link2,
   ListChecks,
+  ListFilter,
   MessagesSquare,
   MonitorPlay,
   NotebookPen,
@@ -22,6 +25,7 @@ import {
   Sparkles,
   UserCheck,
   UserX,
+  XCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -30,6 +34,14 @@ import { useRouter } from "next/navigation";
 import type { SessionUser } from "@/lib/auth";
 import { Badge } from "@tutly/ui/badge";
 import { Button } from "@tutly/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@tutly/ui/dropdown-menu";
 import { Skeleton } from "@tutly/ui/skeleton";
 import {
   Tooltip,
@@ -270,6 +282,44 @@ export default function CourseDetailsClient({
       : Math.round((submittedAssignments / totalAssignments) * 100)
     : 0;
 
+  type ViewFilter =
+    | "all"
+    | "classes"
+    | "assignments"
+    | "submitted"
+    | "pending"
+    | "live";
+  type SortBy = "default" | "newest" | "oldest" | "title-asc" | "title-desc";
+
+  const [view, setView] = useState<ViewFilter>("all");
+  const [sortBy, setSortBy] = useState<SortBy>("default");
+
+  const isFiltered = view !== "all";
+  const isSorted = sortBy !== "default";
+
+  const flatRows = useMemo<Row[]>(() => {
+    if (!isFiltered && !isSorted) return [];
+    const all: Row[] = groups.flatMap((g) => g.rows);
+    let rows = all.filter((r) => {
+      if (view === "classes") return r.kind === "class";
+      if (view === "assignments") return r.kind === "assignment";
+      if (view === "submitted") return r.kind === "assignment" && r.submitted;
+      if (view === "pending") return r.kind === "assignment" && !r.submitted;
+      if (view === "live") return r.kind === "class" && r.classType === "LIVE";
+      return true;
+    });
+    const cmpDate = (a: Row, b: Row) =>
+      a.createdAt.getTime() - b.createdAt.getTime();
+    const cmpTitle = (a: Row, b: Row) =>
+      a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+    if (sortBy === "newest") rows = [...rows].sort((a, b) => -cmpDate(a, b));
+    else if (sortBy === "oldest") rows = [...rows].sort(cmpDate);
+    else if (sortBy === "title-asc") rows = [...rows].sort(cmpTitle);
+    else if (sortBy === "title-desc")
+      rows = [...rows].sort((a, b) => -cmpTitle(a, b));
+    return rows;
+  }, [groups, view, sortBy, isFiltered, isSorted]);
+
   // Continue takes the student to the most recent class
   const continueHref = useMemo(() => {
     let last: { href: string; createdAt: Date } | null = null;
@@ -359,6 +409,16 @@ export default function CourseDetailsClient({
               )}
             </div>
 
+            {!isLoading && groups.length > 0 && (
+              <ContentToolbar
+                view={view}
+                setView={setView}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                isStudent={isStudent}
+              />
+            )}
+
             {isLoading && <ContentSkeleton />}
 
             {!isLoading && groups.length === 0 && (
@@ -379,7 +439,38 @@ export default function CourseDetailsClient({
               />
             )}
 
-            {!isLoading && groups.length > 0 && (
+            {!isLoading &&
+              groups.length > 0 &&
+              (isFiltered || isSorted) &&
+              (flatRows.length === 0 ? (
+                <div className="bg-card text-muted-foreground rounded-xl border px-6 py-12 text-center text-sm">
+                  No items match the current filters.
+                </div>
+              ) : (
+                <section className="bg-card overflow-hidden rounded-xl border">
+                  <div className="border-b px-4 py-2.5 sm:px-5">
+                    <h3 className="text-foreground text-sm font-semibold sm:text-base">
+                      {VIEW_LABEL[view]}
+                    </h3>
+                    <p className="text-muted-foreground mt-0.5 text-[11px] sm:text-xs">
+                      {flatRows.length}{" "}
+                      {flatRows.length === 1 ? "item" : "items"}
+                    </p>
+                  </div>
+                  <ul>
+                    {flatRows.map((row, i) => (
+                      <ItemRow
+                        key={`${row.kind}-${row.id}`}
+                        row={row}
+                        index={i + 1}
+                        isStudent={isStudent}
+                      />
+                    ))}
+                  </ul>
+                </section>
+              ))}
+
+            {!isLoading && groups.length > 0 && !isFiltered && !isSorted && (
               <div className="space-y-3">
                 {groups.map((g, idx) => (
                   <FolderSection
@@ -428,6 +519,123 @@ export default function CourseDetailsClient({
           </aside>
         </div>
       </div>
+    </div>
+  );
+}
+
+type ContentView =
+  | "all"
+  | "classes"
+  | "assignments"
+  | "submitted"
+  | "pending"
+  | "live";
+type ContentSort = "default" | "newest" | "oldest" | "title-asc" | "title-desc";
+
+const VIEW_LABEL: Record<ContentView, string> = {
+  all: "All content",
+  classes: "Classes",
+  assignments: "Assignments",
+  submitted: "Submitted",
+  pending: "Pending",
+  live: "Live",
+};
+
+const SORT_LABEL: Record<ContentSort, string> = {
+  default: "Default order",
+  newest: "Newest first",
+  oldest: "Oldest first",
+  "title-asc": "Title A → Z",
+  "title-desc": "Title Z → A",
+};
+
+function ContentToolbar({
+  view,
+  setView,
+  sortBy,
+  setSortBy,
+  isStudent,
+}: {
+  view: ContentView;
+  setView: (v: ContentView) => void;
+  sortBy: ContentSort;
+  setSortBy: (v: ContentSort) => void;
+  isStudent: boolean;
+}) {
+  const tabs: { value: ContentView; label: string; Icon: typeof Eye }[] = [
+    { value: "all", label: "All", Icon: Eye },
+    { value: "classes", label: "Classes", Icon: MonitorPlay },
+    { value: "assignments", label: "Assignments", Icon: NotebookPen },
+    ...(isStudent
+      ? ([
+          { value: "submitted", label: "Submitted", Icon: CheckCircle2 },
+          { value: "pending", label: "Pending", Icon: XCircle },
+        ] as const)
+      : []),
+    { value: "live", label: "Live", Icon: Radio },
+  ];
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="bg-muted/40 inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full p-1">
+        {tabs.map((t) => {
+          const active = view === t.value;
+          return (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setView(t.value)}
+              className={cn(
+                "inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-medium whitespace-nowrap transition-colors",
+                active
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-foreground/70 hover:text-foreground",
+              )}
+            >
+              <t.Icon className="h-3.5 w-3.5" />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-8 shrink-0 cursor-pointer gap-1.5 rounded-full px-3",
+              sortBy !== "default" && "border-primary/40 text-primary",
+            )}
+            aria-label="Sort"
+          >
+            <ListFilter className="h-3.5 w-3.5" />
+            <span className="hidden text-xs sm:inline">
+              {SORT_LABEL[sortBy]}
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuLabel className="text-[10px] tracking-wide uppercase">
+            Sort by
+          </DropdownMenuLabel>
+          <DropdownMenuRadioGroup
+            value={sortBy}
+            onValueChange={(v) => setSortBy(v as ContentSort)}
+          >
+            {(Object.keys(SORT_LABEL) as ContentSort[]).map((k) => (
+              <DropdownMenuRadioItem
+                key={k}
+                value={k}
+                className="cursor-pointer"
+              >
+                {SORT_LABEL[k]}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

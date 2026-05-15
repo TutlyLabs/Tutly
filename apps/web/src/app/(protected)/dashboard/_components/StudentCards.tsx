@@ -582,19 +582,6 @@ export function StudentCards({ selectedCourse }: Props) {
           <StatCard key={index} {...item} />
         ))}
       </div>
-      {course?.mentorUsername && (
-        <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm dark:border-blue-900 dark:bg-blue-950/30">
-          <span className="font-medium text-blue-600 dark:text-blue-400">
-            Your Mentor:
-          </span>
-          <UserLink
-            username={course.mentorUsername}
-            className="font-semibold text-blue-700 dark:text-blue-300"
-          >
-            @{course.mentorUsername}
-          </UserLink>
-        </div>
-      )}
       <div className="!mt-6 grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
         <Card className="bg-card flex w-full flex-col rounded-xl border shadow-sm lg:col-span-2">
           <CardHeader className="flex flex-col gap-2 pb-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">

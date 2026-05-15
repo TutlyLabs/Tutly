@@ -41,16 +41,28 @@ interface SandboxHeaderProps {
   onConfigUpdate: (config: SandpackProps) => void;
 }
 
+// Settings dialog exposes the full sandpack JSON — keep it away from students.
+function canShowSettings(
+  currentUser: any | undefined,
+  assignmentId: string | null | undefined,
+) {
+  if (!assignmentId) return true; // standalone playground — fine for anyone
+  const role = currentUser?.role;
+  return role === "INSTRUCTOR" || role === "ADMIN" || role === "MENTOR";
+}
+
 function SandboxActions({
   assignmentId,
   isEditingTemplate,
   savedTemplate,
   onConfigUpdate,
+  showSettingsButton,
 }: {
   assignmentId: string | null;
   isEditingTemplate: boolean;
   savedTemplate: SandpackProps;
   onConfigUpdate: (config: SandpackProps) => void;
+  showSettingsButton: boolean;
 }) {
   const [showSettings, setShowSettings] = useState(false);
 
@@ -85,16 +97,17 @@ function SandboxActions({
 
   return (
     <>
-      {/* Settings Button - Show for everyone */}
-      <Button
-        variant="ghost"
-        onClick={() => setShowSettings(true)}
-        className="text-gray-300 hover:text-white"
-        title="Sandbox Settings"
-      >
-        <Settings className="h-4 w-4" />
-        Settings
-      </Button>
+      {showSettingsButton && (
+        <Button
+          variant="ghost"
+          onClick={() => setShowSettings(true)}
+          className="text-gray-300 hover:text-white"
+          title="Sandbox Settings"
+        >
+          <Settings className="h-4 w-4" />
+          Settings
+        </Button>
+      )}
 
       {/* Save Button - Only for editing templates */}
       {isEditingTemplate && assignmentId && (
@@ -212,6 +225,10 @@ export function SandboxHeader({
                   isEditingTemplate={isEditingTemplate}
                   savedTemplate={savedTemplate}
                   onConfigUpdate={onConfigUpdate}
+                  showSettingsButton={canShowSettings(
+                    currentUser,
+                    assignmentId,
+                  )}
                 />
               </div>
             ) : (

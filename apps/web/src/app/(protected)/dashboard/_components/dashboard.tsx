@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { api } from "@/trpc/react";
+import { UserLink } from "@/components/UserLink";
 import CourseSelector from "./CourseSelector";
 import { InstructorCards } from "./InstructorCards";
 import { MentorCards } from "./MentorCards";
@@ -29,6 +31,18 @@ const Dashboard = ({ name, currentUser }: Props) => {
   const handleCourseChange = (courseId: string) => {
     setSelectedCourse(courseId);
   };
+
+  const isStudent = currentUser.role === "STUDENT";
+  const { data: studentDashboard } =
+    api.dashboard.getStudentDashboardData.useQuery(undefined, {
+      enabled: isStudent,
+    });
+  const mentorUsername =
+    isStudent && studentDashboard?.success
+      ? (studentDashboard.data?.courses.find(
+          (c) => c.courseId === selectedCourse,
+        )?.mentorUsername ?? null)
+      : null;
 
   const renderCards = () => {
     if (currentUser.role === "STUDENT") {
@@ -62,6 +76,17 @@ const Dashboard = ({ name, currentUser }: Props) => {
             <h1 className="mt-1 line-clamp-2 text-xl font-semibold tracking-tight sm:text-2xl">
               {name ? `Hi, ${name} 👋` : "Welcome back 👋"}
             </h1>
+            {mentorUsername && (
+              <p className="mt-1 text-xs text-white/80 sm:text-sm">
+                Mentored by{" "}
+                <UserLink
+                  username={mentorUsername}
+                  className="font-medium text-white hover:text-white"
+                >
+                  @{mentorUsername}
+                </UserLink>
+              </p>
+            )}
           </div>
           <div className="w-full shrink-0 sm:w-auto">
             <CourseSelector

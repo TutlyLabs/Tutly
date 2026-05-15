@@ -106,14 +106,19 @@ export function AppSidebar({
 
   const sidebarItems = useMemo(
     () =>
-      rawSidebarItems.map((item) => {
-        if (item.url === "/community" && unreadCount > 0)
-          return { ...item, badge: unreadCount };
-        if (item.url === "/notifications" && unreadNotifCount > 0)
-          return { ...item, badge: unreadNotifCount };
-        return item;
-      }),
-    [rawSidebarItems, unreadCount, unreadNotifCount],
+      rawSidebarItems
+        .filter((item) => {
+          if (item.url === "/downloads" && !isMobile) return false;
+          return true;
+        })
+        .map((item) => {
+          if (item.url === "/community" && unreadCount > 0)
+            return { ...item, badge: unreadCount };
+          if (item.url === "/notifications" && unreadNotifCount > 0)
+            return { ...item, badge: unreadNotifCount };
+          return item;
+        }),
+    [rawSidebarItems, unreadCount, unreadNotifCount, isMobile],
   );
 
   useEffect(() => {
@@ -203,8 +208,8 @@ export function AppSidebar({
       className={cn(
         "flex-shrink-0 overflow-hidden transition-all duration-100 ease-in-out",
         {
-          "sm:w-[212px]": isOpen && !forceClose,
-          "sm:w-[50px]": !isOpen || forceClose,
+          "md:w-[212px]": isOpen && !forceClose,
+          "md:w-[50px]": !isOpen || forceClose,
         },
       )}
     >

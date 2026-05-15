@@ -55,7 +55,7 @@ export function AppHeader({ user, crumbReplacement = {} }: AppHeaderProps) {
         ].join(" ")}
       >
         <div className="flex w-full items-center justify-between gap-2">
-          <div className="flex min-w-0 flex-1 items-center pl-12 sm:pl-1">
+          <div className="flex min-w-0 flex-1 items-center pl-12 sm:pl-4">
             {isMobile ? (
               <Link
                 href="/dashboard"

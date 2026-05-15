@@ -57,7 +57,7 @@ export type IDEState = {
   sidebar: {
     visible: boolean;
     width: number;
-    active: "files" | "search" | "settings";
+    active: "files" | "search" | "settings" | "assignment";
   };
   preview: {
     visible: boolean;

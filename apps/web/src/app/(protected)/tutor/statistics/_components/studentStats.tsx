@@ -89,37 +89,35 @@ function StudentStats({
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex flex-col gap-4 md:flex-row md:gap-6">
-        <div className="w-full rounded-xl shadow-xl shadow-blue-500/5 md:w-1/3">
+        <div className="w-full rounded-xl shadow-sm md:w-1/3">
           <Radialchart
             data={attendancePercentage}
             thisWeek={Number(attendancePercentage) - Number(uptoLastWeek)}
           />
         </div>
-        <div className="flex w-full flex-col gap-4 rounded-xl shadow-xl shadow-blue-500/5 md:w-3/4 md:flex-row md:gap-2">
-          <div className="flex w-full flex-col justify-between text-gray-500 md:w-1/2 md:px-14 md:py-10">
-            <div className="relative mb-4 rounded-xl border p-4 md:mb-0">
-              <h1 className="bg-background absolute -top-3 px-1 text-sm">
+        <div className="flex w-full flex-col gap-4 md:w-3/4 md:flex-row md:gap-4">
+          <div className="bg-card flex w-full flex-col justify-center gap-4 rounded-xl border p-5 shadow-sm md:w-1/2">
+            <div className="border-border bg-background/40 rounded-xl border p-4">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 # Rank
-              </h1>
-              <div className="flex items-center justify-between">
-                <h1 className="text-primary text-3xl font-bold tabular-nums md:text-4xl">
+              </p>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-foreground text-3xl font-semibold tabular-nums md:text-4xl">
                   NA
-                </h1>
-                <h1>
-                  <FaRankingStar className="text-3xl md:text-4xl" />
-                </h1>
+                </span>
+                <FaRankingStar className="text-muted-foreground text-3xl md:text-4xl" />
               </div>
             </div>
-            <div className="relative rounded-xl border p-4">
-              <h1 className="bg-background absolute -top-3 px-1 text-sm">
+            <div className="border-border bg-background/40 rounded-xl border p-4">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 Score
-              </h1>
-              <h1 className="text-primary text-3xl font-bold tabular-nums md:text-4xl">
+              </p>
+              <p className="text-foreground mt-2 text-3xl font-semibold tabular-nums md:text-4xl">
                 {studentData.totalPoints}
-              </h1>
-              <h1 className="text-xs text-gray-500 md:text-sm">
-                / {studentData.evaluated} assignments{" "}
-              </h1>
+              </p>
+              <p className="text-muted-foreground mt-1 text-xs md:text-sm">
+                / {studentData.evaluated} assignments
+              </p>
             </div>
           </div>
           <div className="md:w-2/3">
@@ -133,7 +131,7 @@ function StudentStats({
           </div>
         </div>
       </div>
-      <div className="rounded-xl shadow-xl shadow-blue-500/5">
+      <div className="w-full">
         <CalendarHeatmap
           classes={typedAttendanceData.classes}
           data={typedAttendanceData.attendanceDates}

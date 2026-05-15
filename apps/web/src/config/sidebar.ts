@@ -323,10 +323,6 @@ const MentorItems = [
         title: "Attendance",
         url: "/tutor/attendance",
       },
-      {
-        title: "Video runs",
-        url: "/tutor/video-runs",
-      },
     ],
   },
   {

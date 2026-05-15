@@ -3,7 +3,7 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import type { Styles, UserOptions } from "jspdf-autotable";
-import { type ChangeEvent, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { api } from "@/trpc/react";
 
@@ -13,6 +13,15 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@tutly/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@tutly/ui/select";
+import { Button } from "@tutly/ui/button";
+import { Download, Columns3 } from "lucide-react";
 import day from "@tutly/utils/dayjs";
 
 import type { Course } from "@tutly/db/browser";
@@ -110,12 +119,12 @@ const Report = ({
     setData(sortedData);
   };
 
-  const handleMentorChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedMentor(e.target.value);
+  const handleMentorChange = (value: string) => {
+    setSelectedMentor(value === "all" ? "" : value);
   };
 
-  const handleFormatChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedFormat(e.target.value);
+  const handleFormatChange = (value: string) => {
+    setSelectedFormat(value);
   };
 
   const filteredData = selectedMentor
@@ -278,16 +287,16 @@ const Report = ({
   };
 
   return (
-    <div className="flex w-full flex-col">
-      {/* Course navigation bar - horizontally scrollable on small screens */}
-      <div className="bg-card w-full overflow-x-auto px-2 py-3 sm:px-6">
-        <div className="flex min-w-max items-center gap-2">
+    <div className="flex w-full flex-col gap-4">
+      {/* Course navigation pills */}
+      <div className="-mx-1 overflow-x-auto px-1">
+        <div className="bg-muted/40 inline-flex min-w-max items-center gap-1 rounded-full p-1">
           <Link
             href="/tutor/report/detail?id=all"
-            className={`rounded px-2 py-1.5 text-sm whitespace-nowrap ${
+            className={`rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors ${
               isAllView
-                ? "border-primary bg-primary/10 border"
-                : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             All Courses
@@ -297,16 +306,16 @@ const Report = ({
               course.isPublished === true && (
                 <Link
                   href={`/tutor/report/detail?id=${course.id}`}
-                  className={`rounded px-2 py-1.5 text-sm whitespace-nowrap ${
+                  className={`rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors ${
                     !isAllView && currentCourse?.id === course?.id
-                      ? "border-primary bg-primary/10 border"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                   key={course?.id}
                 >
-                  <h1 className="max-w-[140px] truncate font-medium sm:max-w-xs">
+                  <span className="block max-w-[160px] truncate sm:max-w-xs">
                     {course.title}
-                  </h1>
+                  </span>
                 </Link>
               ),
           )}
@@ -315,157 +324,159 @@ const Report = ({
 
       {data.length === 0 ? (
         <div>
-          <div>
-            <p className="mt-20 mb-5 flex items-center justify-center text-xl font-semibold">
-              No data available to generate report!
-            </p>
-            <NoDataFound message="No data available to generate report!" />
-          </div>
+          <p className="mt-20 mb-5 flex items-center justify-center text-xl font-semibold">
+            No data available to generate report!
+          </p>
+          <NoDataFound message="No data available to generate report!" />
         </div>
       ) : (
-        <div className="w-full">
-          <div className="bg-card relative overflow-x-auto border shadow-sm sm:rounded-lg">
-            {/* Filter and control section */}
-            <div className="bg-card flex flex-col gap-3 border-b p-3 sm:flex-row sm:justify-between">
-              {/* Mentor filter */}
-              {isMentor ? (
-                <div className="text-foreground/80 flex items-center text-sm">
-                  <span className="mr-2 font-medium">Mentor:</span>
-                  <div className="rounded-lg border p-1.5">
-                    {uniqueMentors.map((mentor) => (
-                      <span key={mentor}>{mentor}</span>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full sm:w-auto">
-                  <select
-                    id="mentor-select"
-                    title="mentor name"
-                    value={selectedMentor}
-                    onChange={handleMentorChange}
-                    className="bg-background w-full rounded-lg border p-1.5 text-sm sm:w-auto"
-                  >
-                    <option value="">All Mentors</option>
-                    {uniqueMentors.map((mentor) => (
-                      <option key={mentor} value={mentor ?? ""}>
-                        {mentor ?? "No Mentor"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+        <div className="bg-card relative overflow-hidden rounded-xl border shadow-sm">
+          {/* Filter and control section */}
+          <div className="flex flex-col gap-3 border-b p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+            {isMentor ? (
+              <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                <span className="font-medium tracking-wide uppercase">
+                  Mentor
+                </span>
+                <span className="bg-muted text-foreground rounded-md px-2 py-1 text-xs font-medium">
+                  {uniqueMentors.join(", ") || "—"}
+                </span>
+              </div>
+            ) : (
+              <Select
+                value={selectedMentor || "all"}
+                onValueChange={handleMentorChange}
+              >
+                <SelectTrigger className="h-9 w-full text-sm sm:w-[200px]">
+                  <SelectValue placeholder="All Mentors" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Mentors</SelectItem>
+                  {uniqueMentors.map((mentor) => (
+                    <SelectItem key={mentor} value={mentor ?? "none"}>
+                      {mentor ?? "No Mentor"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
-              {/* Export controls */}
-              <div className="xs:flex-row flex flex-col gap-2 sm:items-center">
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="xs:w-auto bg-background hover:bg-accent w-full rounded-lg border px-3 py-1.5 text-sm">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-full justify-start gap-2 sm:w-auto"
+                  >
+                    <Columns3 className="h-3.5 w-3.5" />
                     View Columns
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-card">
-                    {Object.keys(visibleColumns)
-                      .filter((col) => col !== "Mentor" || !isMentor)
-                      .map((column) => (
-                        <DropdownMenuCheckboxItem
-                          key={column}
-                          checked={visibleColumns[column]}
-                          onCheckedChange={(checked: boolean) =>
-                            setVisibleColumns((prev) => ({
-                              ...prev,
-                              [column]: checked,
-                            }))
-                          }
-                          className="text-foreground/80"
-                        >
-                          {column}
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {Object.keys(visibleColumns)
+                    .filter((col) => col !== "Mentor" || !isMentor)
+                    .map((column) => (
+                      <DropdownMenuCheckboxItem
+                        key={column}
+                        checked={visibleColumns[column]}
+                        onCheckedChange={(checked: boolean) =>
+                          setVisibleColumns((prev) => ({
+                            ...prev,
+                            [column]: checked,
+                          }))
+                        }
+                      >
+                        {column}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                <div className="xs:w-auto flex w-full">
-                  <select
-                    id="format-select"
-                    title="select format"
-                    value={selectedFormat}
-                    onChange={handleFormatChange}
-                    className="xs:flex-none bg-background flex-1 rounded-l-lg border px-2 py-1.5 text-sm"
-                  >
-                    <option value="pdf">PDF</option>
-                    <option value="csv">CSV</option>
-                  </select>
-                  <button
-                    onClick={handleDownload}
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-r-lg px-3 py-1.5 text-sm whitespace-nowrap"
-                  >
-                    Download
-                  </button>
-                </div>
+              <div className="flex w-full overflow-hidden rounded-md border sm:w-auto">
+                <Select
+                  value={selectedFormat}
+                  onValueChange={handleFormatChange}
+                >
+                  <SelectTrigger className="h-9 w-full rounded-none border-0 border-r text-sm shadow-none sm:w-[88px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pdf">PDF</SelectItem>
+                    <SelectItem value="csv">CSV</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleDownload}
+                  size="sm"
+                  className="h-9 flex-1 gap-2 rounded-none whitespace-nowrap"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download
+                </Button>
               </div>
             </div>
+          </div>
 
-            {/* Table section */}
-            <div className="w-full overflow-x-auto">
-              <table className="text-foreground/90 w-full border-collapse text-left text-sm">
-                <thead className="bg-muted text-muted-foreground text-[11px] tracking-wide uppercase">
-                  <tr>
-                    <th className="border-primary/30 cursor-pointer truncate border-b px-3 py-2 sm:px-4 sm:py-3">
-                      S.No
-                    </th>
-                    {Object.keys(columnMapping).map(
-                      (column) =>
+          {/* Table section */}
+          <div className="w-full overflow-x-auto">
+            <table className="text-foreground w-full border-collapse text-left text-sm">
+              <thead className="bg-muted/60 text-muted-foreground text-[11px] tracking-wide uppercase">
+                <tr>
+                  <th className="border-border cursor-pointer truncate border-b px-3 py-2.5 font-medium sm:px-4 sm:py-3">
+                    S.No
+                  </th>
+                  {Object.keys(columnMapping).map(
+                    (column) =>
+                      visibleColumns[column] && (
+                        <th
+                          key={column}
+                          onClick={() => handleSort(column)}
+                          className="border-border hover:text-foreground cursor-pointer truncate border-b px-3 py-2.5 font-medium transition-colors sm:px-4 sm:py-3"
+                        >
+                          {column}
+                          {sortColumn === columnMapping[column] &&
+                            (sortOrder === "asc" ? " ↑" : " ↓")}
+                        </th>
+                      ),
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map((row, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-muted/40 border-border border-b transition-colors last:border-0"
+                  >
+                    <td className="text-muted-foreground px-3 py-2.5 tabular-nums sm:px-4 sm:py-3">
+                      {index + 1}
+                    </td>
+                    {Object.entries(columnMapping).map(
+                      ([column, key]) =>
                         visibleColumns[column] && (
-                          <th
+                          <td
                             key={column}
-                            onClick={() => handleSort(column)}
-                            className="border-primary/30 cursor-pointer truncate border-b px-3 py-2 sm:px-4 sm:py-3"
+                            className="px-3 py-2.5 sm:px-4 sm:py-3"
                           >
-                            {column}
-                            {sortColumn === columnMapping[column] &&
-                              (sortOrder === "asc" ? " ↑" : " ↓")}
-                          </th>
+                            {column === "Attendance" ? (
+                              formatAttendance(row[key])
+                            ) : column === "Username" ? (
+                              <Link
+                                href={`/u/${row[key]}`}
+                                className="text-primary hover:underline"
+                              >
+                                {row[key]}
+                              </Link>
+                            ) : (
+                              row[key]
+                            )}
+                          </td>
                         ),
                     )}
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredData.map((row, index) => (
-                    <tr
-                      key={index}
-                      className={`${
-                        index % 2 === 0 ? "bg-card" : "bg-muted/40"
-                      } hover:bg-gray-100 dark:hover:bg-gray-600`}
-                    >
-                      <td className="border-border border-b px-3 py-2 sm:px-4 sm:py-3">
-                        {index + 1}
-                      </td>
-                      {Object.entries(columnMapping).map(
-                        ([column, key]) =>
-                          visibleColumns[column] && (
-                            <td
-                              key={column}
-                              className="border-border border-b px-3 py-2 sm:px-4 sm:py-3"
-                            >
-                              {column === "Attendance" ? (
-                                formatAttendance(row[key])
-                              ) : column === "Username" ? (
-                                <Link
-                                  href={`/u/${row[key]}`}
-                                  className="text-primary hover:underline"
-                                >
-                                  {row[key]}
-                                </Link>
-                              ) : (
-                                row[key]
-                              )}
-                            </td>
-                          ),
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

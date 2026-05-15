@@ -10,6 +10,40 @@ async function createTestSandbox(apiKey: string) {
   return { sdk, sandboxId: createdSandbox.id };
 }
 
+// Removes files marked `hidden: true` or under `/solution/` from the template.
+function redactSolutionFiles(template: unknown): unknown {
+  if (!template || typeof template !== "object") return template;
+  const t = template as Record<string, any>;
+  const files = t.files;
+  if (!files || typeof files !== "object") return template;
+
+  const isSolutionPath = (p: string) => {
+    const norm = p.startsWith("/") ? p : `/${p}`;
+    return /^\/solution(\/|$)/i.test(norm) || /\.solution\./i.test(norm);
+  };
+
+  const sanitized: Record<string, any> = {};
+  for (const [path, entry] of Object.entries(files)) {
+    if (isSolutionPath(path)) continue;
+    if (entry && typeof entry === "object" && (entry as any).hidden === true) continue;
+    sanitized[path] = entry;
+  }
+
+  const opts = t.options && typeof t.options === "object" ? { ...t.options } : undefined;
+  if (opts) {
+    if (Array.isArray(opts.visibleFiles)) {
+      opts.visibleFiles = opts.visibleFiles.filter(
+        (p: string) => sanitized[p] !== undefined,
+      );
+    }
+    if (typeof opts.activeFile === "string" && sanitized[opts.activeFile] === undefined) {
+      opts.activeFile = undefined;
+    }
+  }
+
+  return { ...t, files: sanitized, ...(opts ? { options: opts } : {}) };
+}
+
 async function cleanupSandbox(sdk: any, sandboxId: string) {
   try {
     await sdk.sandboxes.hibernate(sandboxId);
@@ -74,6 +108,14 @@ export const sandboxRouter = createTRPCRouter({
         } catch {
           decodedSandboxTemplate = assignment.sandboxTemplate;
         }
+      }
+
+      const shouldRedactForStudent =
+        currentUser.role === "STUDENT" &&
+        !instructorAccess &&
+        !submission;
+      if (shouldRedactForStudent && decodedSandboxTemplate) {
+        decodedSandboxTemplate = redactSolutionFiles(decodedSandboxTemplate);
       }
 
       return {
