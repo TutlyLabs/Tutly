@@ -15,11 +15,19 @@ function isValidBundlerUrl(url: string): boolean {
 // Cache-bust the bundler URL per build.
 const BUNDLER_VERSION = process.env.NEXT_PUBLIC_SANDPACK_VERSION || "";
 
+function toAbsolute(url: string | undefined): string | undefined {
+  if (!url) return url;
+  if (typeof window === "undefined") return url;
+  if (/^https?:\/\//.test(url)) return url;
+  return `${window.location.origin}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
 function withVersion(url: string | undefined): string | undefined {
-  if (!url || !BUNDLER_VERSION) return url;
-  return url.includes("?")
-    ? `${url}&v=${BUNDLER_VERSION}`
-    : `${url}?v=${BUNDLER_VERSION}`;
+  const absolute = toAbsolute(url);
+  if (!absolute || !BUNDLER_VERSION) return absolute;
+  return absolute.includes("?")
+    ? `${absolute}&v=${BUNDLER_VERSION}`
+    : `${absolute}?v=${BUNDLER_VERSION}`;
 }
 
 // Clear stale bundler service workers once per session.
