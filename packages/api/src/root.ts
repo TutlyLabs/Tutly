@@ -16,6 +16,7 @@ import { fileUploadRouter } from "./routers/fileupload";
 import { featureFlagsRouter } from "./routers/featureFlags";
 import { foldersRouter } from "./routers/folders";
 import { geminiRouter } from "./routers/gemini";
+import { glimpseRouter } from "./routers/glimpse";
 import { leaderboardRouter } from "./routers/getLeaderboard";
 import { holidaysRouter } from "./routers/holidays";
 import { mentorsRouter } from "./routers/mentors";
@@ -60,6 +61,7 @@ export const appRouter = createTRPCRouter({
   fileupload: fileUploadRouter,
   folders: foldersRouter,
   gemini: geminiRouter,
+  glimpse: glimpseRouter,
   leaderboard: leaderboardRouter,
   holidays: holidaysRouter,
   mentors: mentorsRouter,

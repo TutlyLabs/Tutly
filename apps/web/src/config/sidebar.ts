@@ -105,6 +105,10 @@ const InstructorItems = [
     icon: BarChart,
     items: [
       {
+        title: "Glimpse",
+        url: "/tutor/glimpse",
+      },
+      {
         title: "Statistics",
         url: "/tutor/statistics",
       },
@@ -220,6 +224,10 @@ const AdminItems = [
     icon: BarChart,
     items: [
       {
+        title: "Glimpse",
+        url: "/tutor/glimpse",
+      },
+      {
         title: "Statistics",
         url: "/tutor/statistics",
       },
@@ -330,6 +338,10 @@ const MentorItems = [
     url: "#",
     icon: BarChart,
     items: [
+      {
+        title: "Glimpse",
+        url: "/tutor/glimpse",
+      },
       {
         title: "Statistics",
         url: "/tutor/statistics",
