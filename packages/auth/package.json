@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@better-auth/expo": "1.4.7",
-    "better-auth": "1.4.7"
+    "better-auth": "^1.4.7"
   },
   "devDependencies": {
     "@tutly/eslint-config": "workspace:*",
