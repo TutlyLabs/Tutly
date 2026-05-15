@@ -1,5 +1,7 @@
 FROM node:22-alpine AS base
 
+FROM ghcr.io/tutlylabs/sandbox:latest AS sandpack
+
 FROM base AS builder
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk update
@@ -30,6 +32,8 @@ RUN pnpm install
 # Build the project
 COPY --from=builder /app/out/full/ .
 
+COPY --from=sandpack /www ./apps/web/public/sandpack
+
 # skip env validation during build
 ENV SKIP_ENV_VALIDATION=1
 
@@ -39,7 +43,9 @@ WORKDIR /app/packages/db
 RUN pnpm prisma generate
 
 WORKDIR /app
-RUN pnpm turbo build
+# Bake bundler version for cache-busting.
+RUN export NEXT_PUBLIC_SANDPACK_VERSION="$(cat ./apps/web/public/sandpack/version.txt 2>/dev/null || echo dev)" && \
+    pnpm turbo build
 RUN node apps/web/scripts/copy-vscode-assets.js
 
 FROM base AS runner

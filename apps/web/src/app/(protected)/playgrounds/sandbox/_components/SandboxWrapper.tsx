@@ -6,12 +6,12 @@ import {
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
 import type { Attachment } from "@tutly/db/browser";
-import { useMemo, useState } from "react";
+import { useTheme } from "next-themes";
+import { useEffect, useMemo, useState } from "react";
 import { useBundlerUrl } from "@/hooks/use-bundler-url";
 
 import { SandboxEmbed } from "./SandboxEmbed";
 import { SandboxHeader } from "./SandboxHeader";
-import { glassyTheme } from "./theme";
 
 interface SandboxWrapperProps {
   template: string;
@@ -33,6 +33,10 @@ export function SandboxWrapper({
   currentUser,
 }: SandboxWrapperProps) {
   const bundlerUrl = useBundlerUrl();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const sandpackTheme = resolvedTheme === "dark" ? "dark" : "light";
   const config = {
     fileExplorer: !assignment || (canEditTemplate && isEditingTemplate),
     closableTabs: !assignment,
@@ -70,11 +74,23 @@ export function SandboxWrapper({
 
   const sandpackProps: SandpackProps = {
     ...currentConfig,
-    theme: glassyTheme,
+    theme: sandpackTheme,
   };
 
+  if (!mounted) return null;
+
   return (
-    <SandpackProvider {...sandpackProps}>
+    <SandpackProvider
+      key={sandpackTheme}
+      {...sandpackProps}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        minHeight: 0,
+        width: "100%",
+      }}
+    >
       <SandboxHeader
         assignmentId={assignmentId ?? null}
         template={template}
@@ -85,10 +101,11 @@ export function SandboxWrapper({
         savedTemplate={currentConfig}
         onConfigUpdate={handleConfigUpdate}
       />
-      <div className="h-full w-full flex-1 overflow-hidden">
+      <div className="min-h-0 w-full flex-1 overflow-hidden">
         <SandboxEmbed
           assignment={assignment}
           isEditTemplate={canEditTemplate}
+          template={template}
           config={config}
         />
       </div>

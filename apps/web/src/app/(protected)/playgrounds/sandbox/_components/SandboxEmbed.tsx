@@ -1,12 +1,11 @@
 "use client";
 
 import {
-  SandpackCodeEditor,
-  SandpackPreview,
+  type SandpackPredefinedTemplate,
+  useSandpack,
 } from "@codesandbox/sandpack-react";
 import type { Attachment } from "@tutly/db/browser";
-// @ts-expect-error - sandpack-file-explorer package has incorrect type definitions
-import { SandpackFileExplorer } from "sandpack-file-explorer";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ResizableHandle,
@@ -14,201 +13,160 @@ import {
   ResizablePanelGroup,
 } from "@tutly/ui/resizable";
 
+import IDEShell from "@/app/(protected)/playgrounds/_components/ide/IDEShell";
+import type { EditableScope } from "@/app/(protected)/playgrounds/_components/ide/ideOptions";
+import {
+  IDEProvider,
+  useIDE,
+} from "@/app/(protected)/playgrounds/_components/ide/ideStore";
+
 import { AssignmentPreview } from "./AssignmentPreview";
-import { BottomTabs } from "./BottomTabs";
-import "./styles.css";
 
 interface SandboxEmbedProps {
   assignment?: Attachment | null;
   isEditTemplate: boolean;
+  template?: SandpackPredefinedTemplate | string;
   config: {
     fileExplorer: boolean;
     closableTabs: boolean;
   };
 }
+
 export function SandboxEmbed({
   assignment,
   isEditTemplate,
+  template,
   config,
 }: SandboxEmbedProps) {
   return (
-    <div className="relative h-full w-full">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-black"></div>
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, rgba(30, 30, 30, 0.3) 0%, transparent 70%)",
-        }}
-      ></div>
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at bottom right, rgba(37, 208, 171, 0.02) 0%, transparent 60%)",
-        }}
-      ></div>
-
-      <ResizablePanelGroup
-        direction="horizontal"
-        className="relative z-10 h-full min-h-[calc(100vh-3rem)] w-full"
-      >
-        {/* Assignment Panel - Only show if assignment exists */}
-        {assignment && (
-          <>
-            <ResizablePanel defaultSize={isEditTemplate ? 20 : 35} minSize={1}>
-              <AssignmentPreview assignment={assignment} />
-            </ResizablePanel>
-
-            <ResizableHandle
-              style={{ backgroundColor: "rgba(100, 100, 100, 0.2)" }}
-              className="transition-opacity hover:opacity-80"
-            />
-          </>
-        )}
-
-        {/* Sandbox Panel */}
-        <ResizablePanel defaultSize={assignment ? 65 : 100}>
-          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-            {/* File Explorer  */}
-            {config.fileExplorer && (
-              <>
-                <ResizablePanel defaultSize={18} minSize={1}>
-                  <div
-                    className="flex h-full w-full flex-col border-r shadow-2xl backdrop-blur-xl"
-                    style={{
-                      background:
-                        "linear-gradient(180deg, rgba(35, 35, 35, 1) 0%, rgba(25, 25, 25, 1) 50%, rgba(20, 20, 20, 1) 100%)",
-                      borderColor: "rgba(100, 100, 100, 0.2)",
-                    }}
-                  >
-                    <div
-                      className="file-explorer flex-1 overflow-y-auto"
-                      style={
-                        {
-                          "--sp-layout-height": "95vh",
-                          maxHeight: "100vh",
-                        } as React.CSSProperties
-                      }
-                    >
-                      <SandpackFileExplorer />
-                    </div>
-                  </div>
-                </ResizablePanel>
-
-                <ResizableHandle
-                  style={{ backgroundColor: "rgba(100, 100, 100, 0.2)" }}
-                  className="transition-opacity hover:opacity-80"
-                />
-              </>
-            )}
-
-            {/* Editor and Preview */}
-            <ResizablePanel defaultSize={config.fileExplorer ? 82 : 100}>
-              <ResizablePanelGroup direction="horizontal" className="h-full">
-                {/* Editor */}
-                <ResizablePanel defaultSize={50} minSize={1}>
-                  <div
-                    className="flex h-full flex-col shadow-2xl backdrop-blur-xl"
-                    style={{
-                      backgroundColor: "rgba(0, 0, 0, 1)",
-                    }}
-                  >
-                    <SandpackCodeEditor
-                      showTabs
-                      showLineNumbers
-                      showInlineErrors
-                      wrapContent
-                      closableTabs={config.closableTabs}
-                      style={{
-                        height: "100%",
-                        maxHeight: "calc(100vh - 2rem)",
-                        flex: 1,
-                      }}
-                    />
-                  </div>
-                </ResizablePanel>
-
-                <ResizableHandle
-                  style={{ backgroundColor: "rgba(100, 100, 100, 0.2)" }}
-                  className="transition-opacity hover:opacity-80"
-                />
-
-                {/* Preview and Bottom Tabs */}
-                <ResizablePanel defaultSize={50} minSize={10}>
-                  <ResizablePanelGroup direction="vertical" className="h-full">
-                    {/* Preview */}
-                    <ResizablePanel defaultSize={70} minSize={10}>
-                      <div
-                        className="flex h-full flex-col border-l shadow-2xl backdrop-blur-xl"
-                        style={{
-                          borderColor: "rgba(100, 100, 100, 0.2)",
-                          backgroundColor: "rgba(0, 0, 0, 0.95)",
-                        }}
-                      >
-                        <div
-                          className="flex h-[42px] flex-shrink-0 items-center border-b px-4 backdrop-blur-xl"
-                          style={{
-                            borderColor: "rgba(100, 100, 100, 0.2)",
-                            background:
-                              "linear-gradient(90deg, rgba(20, 20, 20, 0.9) 0%, rgba(40, 40, 40, 0.8) 100%)",
-                          }}
-                        >
-                          <div
-                            className="flex items-center text-sm font-semibold"
-                            style={{ color: "#ffffff" }}
-                          >
-                            <span
-                              className="mr-2 h-2 w-2 animate-pulse rounded-full shadow-sm"
-                              style={{
-                                backgroundColor: "#f59e0b",
-                                boxShadow: "0 0 4px rgba(245, 158, 11, 0.5)",
-                              }}
-                            ></span>
-                            Preview
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <SandpackPreview
-                            showOpenInCodeSandbox={false}
-                            showRefreshButton
-                            showSandpackErrorOverlay={false}
-                            showOpenNewtab
-                            style={{
-                              height: "100%",
-                              width: "100%",
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </ResizablePanel>
-
-                    <ResizableHandle
-                      style={{ backgroundColor: "rgba(100, 100, 100, 0.2)" }}
-                      className="transition-opacity hover:opacity-80"
-                    />
-
-                    {/* Bottom Tabs (Console and Tests) */}
-                    <ResizablePanel defaultSize={30} minSize={10}>
-                      <div
-                        className="flex h-full flex-col rounded-br-xl border-l shadow-2xl backdrop-blur-xl"
-                        style={{
-                          borderColor: "rgba(100, 100, 100, 0.2)",
-                          background:
-                            "linear-gradient(180deg, rgba(35, 35, 35, 1) 0%, rgba(25, 25, 25, 1) 50%, rgba(20, 20, 20, 1) 100%)",
-                        }}
-                      >
-                        <BottomTabs />
-                      </div>
-                    </ResizablePanel>
-                  </ResizablePanelGroup>
-                </ResizablePanel>
-              </ResizablePanelGroup>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </ResizablePanel>
-      </ResizablePanelGroup>
-    </div>
+    <IDEProvider>
+      <SandboxEmbedInner
+        assignment={assignment}
+        isEditTemplate={isEditTemplate}
+        template={template}
+        config={config}
+      />
+    </IDEProvider>
   );
+}
+
+function SandboxEmbedInner({
+  assignment,
+  isEditTemplate,
+  template,
+  config,
+}: SandboxEmbedProps) {
+  const { sandpack } = useSandpack();
+
+  // Capture template paths once on first non-empty sandpack.files.
+  const initialPathsRef = useRef<string[] | null>(null);
+  const [initialPaths, setInitialPaths] = useState<string[]>([]);
+  if (initialPathsRef.current === null) {
+    const keys = Object.keys(sandpack.files);
+    if (keys.length > 0) {
+      initialPathsRef.current = keys;
+      // Defer the state update — React forbids setState during render.
+      queueMicrotask(() => setInitialPaths(keys));
+    }
+  }
+
+  const editableScope = useMemo<EditableScope>(() => {
+    if (!assignment || isEditTemplate) {
+      return { projectName: assignment?.title ?? undefined };
+    }
+    const meta = (assignment.detailsJson as any) ?? {};
+    const allow: string[] | null = Array.isArray(meta.editableFiles)
+      ? meta.editableFiles
+      : null;
+    return {
+      allowList: allow,
+      templatePaths: allow ? null : initialPaths,
+      projectName: assignment.title || "assignment",
+    };
+  }, [assignment, isEditTemplate, initialPaths]);
+
+  return (
+    <>
+      <AutoOpenInitial />
+      {!config.fileExplorer && <HideSidebarOnMount />}
+
+      <div className="bg-background relative h-full min-h-0 w-full overflow-hidden">
+        <ResizablePanelGroup
+          direction="horizontal"
+          className="relative z-10 h-full min-h-0 w-full"
+        >
+          {assignment && (
+            <>
+              <ResizablePanel
+                defaultSize={isEditTemplate ? 22 : 32}
+                minSize={15}
+                order={1}
+              >
+                <AssignmentPreview assignment={assignment} />
+              </ResizablePanel>
+              <ResizableHandle />
+            </>
+          )}
+          <ResizablePanel defaultSize={assignment ? 68 : 100} order={2}>
+            <IDEShell
+              template={template as SandpackPredefinedTemplate | undefined}
+              closableTabs={config.closableTabs}
+              editableScope={editableScope}
+              projectName={assignment?.title ?? undefined}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+    </>
+  );
+}
+
+function AutoOpenInitial() {
+  const { sandpack } = useSandpack();
+  const { openFile, state } = useIDE();
+  useEffect(() => {
+    if (state.layout.type === "pane" && state.layout.tabs.length > 0) return;
+
+    // Open configured visibleFiles/activeFile if provided.
+    const visibleFromProps = sandpack.visibleFilesFromProps ?? [];
+    const activeFromProps = sandpack.activeFile;
+
+    if (visibleFromProps.length > 0) {
+      for (const path of visibleFromProps) {
+        if (sandpack.files[path] && !sandpack.files[path]?.hidden) {
+          openFile(path);
+        }
+      }
+      if (activeFromProps && sandpack.files[activeFromProps]) {
+        openFile(activeFromProps);
+      }
+      return;
+    }
+
+    // Fallback: heuristic pick of a single entrypoint.
+    const visible = Object.entries(sandpack.files).filter(([, f]) => !f.hidden);
+    const preferred = visible.find(([p]) =>
+      [
+        "/App.tsx",
+        "/src/App.tsx",
+        "/App.js",
+        "/App.jsx",
+        "/index.tsx",
+        "/index.js",
+        "/index.html",
+      ].includes(p),
+    );
+    const pick = activeFromProps ?? preferred?.[0] ?? visible[0]?.[0];
+    if (pick) openFile(pick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
+
+function HideSidebarOnMount() {
+  const { setSidebarVisible } = useIDE();
+  useEffect(() => {
+    setSidebarVisible(false);
+  }, [setSidebarVisible]);
+  return null;
 }

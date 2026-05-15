@@ -1,0 +1,30 @@
+/* Sandpack global overrides used inside the Tutly IDE. */
+
+/* Test detail spec error visibility toggle. */
+.sp-test-spec-error {
+  display: none !important;
+}
+.hide-test-details .sp-test-spec-error {
+  display: none !important;
+}
+.show-test-details .sp-test-spec-error {
+  display: block !important;
+}
+
+/* Make the Sandpack-rendered Watch button blend with our toolbar. */
+.sp-tests .sp-button {
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Force Sandpack components to inherit our background color so the
+   loading screen doesn't flash a different shade. */
+.sp-wrapper,
+.sp-layout,
+.sp-preview-container,
+.sp-preview-iframe,
+.sp-tests,
+.sp-console-wrapper {
+  background: transparent !important;
+}

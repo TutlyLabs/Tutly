@@ -30,7 +30,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "postinstall": "node scripts/copy-vscode-assets.js",
+    "postinstall": "node scripts/copy-vscode-assets.js && node scripts/copy-sandpack-assets.js",
     "preview": "next build --webpack && next start",
     "start": "next start"
   },
@@ -124,6 +124,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
+    "fflate": "^0.8.2",
     "hls.js": "^1.5.20",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",

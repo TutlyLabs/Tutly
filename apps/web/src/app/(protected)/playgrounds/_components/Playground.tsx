@@ -3,45 +3,59 @@
 import {
   type SandpackFiles,
   type SandpackPredefinedTemplate,
-  SandpackPreview,
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
-import { useCallback, useState } from "react";
-import { TfiFullscreen } from "react-icons/tfi";
+import { useTheme } from "next-themes";
+import { useEffect, useMemo, useState } from "react";
 
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@tutly/ui/resizable";
 import { useBundlerUrl } from "@/hooks/use-bundler-url";
-
-import FileExplorer from "./FileExplorer";
-import MonacoEditor from "./MonacoEditor";
-import SandboxConsole from "./SandboxConsole";
-import StaticConsole from "./StaticConsole";
-import StaticPreview from "./StaticPreview";
-import SubmitAssignment from "./SubmitAssignment";
 import type { SessionUser } from "@/lib/auth";
+
+import IDEHeader from "./ide/IDEHeader";
+import IDEShell from "./ide/IDEShell";
+import { IDEProvider, useIDE } from "./ide/ideStore";
+import SubmitAssignment from "./SubmitAssignment";
 
 const defaultFiles: SandpackFiles = {
   "/index.html": `<!DOCTYPE html>
 <html>
-
-<head>
-  <title>Document</title>
-  <link rel="stylesheet" href="/styles.css">
-</head>
-
-<body>
-  <h1>Hello world!</h1>
-  <script src="/index.js"></script>
-</body>
-
+  <head>
+    <title>Hello</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <h1>Hello world!</h1>
+    <script src="/index.js"></script>
+  </body>
 </html>
 `,
-  "/styles.css": "",
-  "/index.js": "",
+  "/styles.css": `body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 2rem;
+}
+`,
+  "/index.js": `console.log("Welcome to Tutly Playgrounds");
+`,
+};
+
+const titleForTemplate: Partial<Record<SandpackPredefinedTemplate, string>> = {
+  static: "HTML · CSS · JS Studio",
+  react: "React Studio",
+  "react-ts": "React + TS Studio",
+  vue: "Vue Studio",
+  angular: "Angular Studio",
+  svelte: "Svelte Studio",
+  vanilla: "Vanilla Studio",
+  "vanilla-ts": "Vanilla TS Studio",
+  nextjs: "Next.js Studio",
+  vite: "Vite Studio",
+};
+
+type PlaygroundProps = {
+  assignmentId?: string;
+  initialFiles?: SandpackFiles;
+  template?: SandpackPredefinedTemplate;
+  currentUser: SessionUser;
 };
 
 const Playground = ({
@@ -49,124 +63,82 @@ const Playground = ({
   initialFiles,
   template = "static",
   currentUser,
-}: {
-  assignmentId?: string;
-  initialFiles?: SandpackFiles;
-  template?: SandpackPredefinedTemplate;
-  currentUser: SessionUser;
-}) => {
+}: PlaygroundProps) => {
   const bundlerUrl = useBundlerUrl();
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [staticLogs, setStaticLogs] = useState<string[]>([]);
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const startingFiles = useMemo(
+    () => initialFiles ?? defaultFiles,
+    [initialFiles],
+  );
+  const title = titleForTemplate[template] ?? "Studio";
+  const sandpackTheme = resolvedTheme === "dark" ? "dark" : "light";
 
-  const handleStaticLog = useCallback((log: string) => {
-    setStaticLogs((prev) => [...prev, log]);
-  }, []);
-
-  const handleClearStaticLogs = useCallback(() => {
-    setStaticLogs([]);
-  }, []);
-
-  const startingFiles = initialFiles || defaultFiles;
+  if (!mounted) return null;
 
   return (
-    <div className="relative h-[95vh]">
-      <SandpackProvider
-        files={startingFiles}
-        template={template}
-        theme="light"
-        options={{
-          bundlerURL: bundlerUrl,
-        }}
-      >
-        {isFullScreen && (
-          <div className="fixed inset-0 z-50 bg-white">
-            <button
-              className="absolute top-1 right-1 z-50 rounded bg-gray-800 p-2 text-white"
-              onClick={() => setIsFullScreen(false)}
-            >
-              Exit Fullscreen
-            </button>
-            {template === "static" ? (
-              <StaticPreview
-                onConsoleLog={handleStaticLog}
-                onClear={handleClearStaticLogs}
+    <SandpackProvider
+      key={sandpackTheme}
+      files={startingFiles}
+      template={template}
+      theme={sandpackTheme}
+      options={{ bundlerURL: bundlerUrl }}
+    >
+      <IDEProvider>
+        <AutoOpenEntry startingFiles={startingFiles} template={template} />
+        <div className="bg-background fixed inset-0 z-[55] flex flex-col">
+          <IDEShell
+            template={template}
+            topBar={
+              <IDEHeader
+                title={title}
+                rightSlot={
+                  assignmentId ? (
+                    <SubmitAssignment
+                      currentUser={currentUser}
+                      assignmentId={assignmentId}
+                    />
+                  ) : null
+                }
               />
-            ) : (
-              <SandpackPreview
-                showNavigator
-                showOpenInCodeSandbox={false}
-                className="h-[95vh] overflow-y-scroll"
-              />
-            )}
-          </div>
-        )}
-
-        <ResizablePanelGroup
-          direction="horizontal"
-          className="h-[95vh] overflow-y-scroll rounded-lg border"
-        >
-          <ResizablePanel defaultSize={14}>
-            <FileExplorer />
-          </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel defaultSize={43}>
-            <MonacoEditor />
-          </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel defaultSize={43}>
-            <ResizablePanelGroup
-              direction="vertical"
-              className="h-[95vh] overflow-y-scroll"
-            >
-              <ResizablePanel defaultSize={70}>
-                <div className="relative h-[95vh] overflow-y-scroll">
-                  <div className="border-b bg-white text-black">
-                    <h1 className="text-center text-xl font-bold">Preview</h1>
-                    <TfiFullscreen
-                      className="absolute top-2 right-2 cursor-pointer"
-                      onClick={() => setIsFullScreen(true)}
-                    />
-                  </div>
-                  {template === "static" ? (
-                    <StaticPreview
-                      onConsoleLog={handleStaticLog}
-                      onClear={handleClearStaticLogs}
-                    />
-                  ) : (
-                    <SandpackPreview
-                      showOpenNewtab
-                      showOpenInCodeSandbox={false}
-                      className="h-[95vh] overflow-y-scroll"
-                    />
-                  )}
-                </div>
-              </ResizablePanel>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={30}>
-                {template === "static" ? (
-                  <StaticConsole
-                    logs={staticLogs}
-                    onClear={handleClearStaticLogs}
-                  />
-                ) : (
-                  <SandboxConsole />
-                )}
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-        {assignmentId && (
-          <div className="absolute -top-6 left-1/2 z-[60] -translate-x-1/2 -translate-y-1/2">
-            <SubmitAssignment
-              currentUser={currentUser}
-              assignmentId={assignmentId}
-            />
-          </div>
-        )}
-      </SandpackProvider>
-    </div>
+            }
+          />
+        </div>
+      </IDEProvider>
+    </SandpackProvider>
   );
 };
+
+function AutoOpenEntry({
+  startingFiles,
+  template,
+}: {
+  startingFiles: SandpackFiles;
+  template: SandpackPredefinedTemplate;
+}) {
+  const { openFile, state } = useIDE();
+
+  useEffect(() => {
+    if (state.layout.type === "pane" && state.layout.tabs.length > 0) return;
+    const preferred =
+      template === "static"
+        ? ["/index.html", "/index.js", "/styles.css"]
+        : [
+            "/App.tsx",
+            "/App.jsx",
+            "/src/App.tsx",
+            "/src/App.jsx",
+            "/index.tsx",
+            "/index.js",
+          ];
+    const first =
+      preferred.find((p) => startingFiles[p]) ?? Object.keys(startingFiles)[0];
+    if (first) openFile(first);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return null;
+}
 
 export default Playground;

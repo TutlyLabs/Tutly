@@ -19,6 +19,12 @@ const nextConfig: NextConfig = {
             allowedOrigins: ["learn.tutly.in", "localhost:3000"],
           },
         },
+        async rewrites() {
+          return [
+            { source: "/sandpack", destination: "/sandpack/index.html" },
+            { source: "/sandpack/", destination: "/sandpack/index.html" },
+          ];
+        },
         async headers() {
           return [
             {
@@ -34,6 +40,20 @@ const nextConfig: NextConfig = {
                 { key: "Content-Type", value: "application/json" },
                 { key: "Cache-Control", value: "public, max-age=3600" },
               ],
+            },
+            {
+              source: "/sandpack/static/:path*",
+              headers: [
+                {
+                  key: "Cache-Control",
+                  value: "public, max-age=31536000, immutable",
+                },
+                { key: "Access-Control-Allow-Origin", value: "*" },
+              ],
+            },
+            {
+              source: "/sandpack/:path*",
+              headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
             },
           ];
         },

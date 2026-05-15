@@ -55,3 +55,6 @@ Thumbs.db
 /public/vscode/assets
 /public/vscode/extensions
 /public/vscode/extensions.json
+
+# Sandpack bundler (copied from ../../codesandbox-client by postinstall)
+/public/sandpack

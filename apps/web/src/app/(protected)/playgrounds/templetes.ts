@@ -1,10 +1,9 @@
 import { IoLogoHtml5 } from "react-icons/io5";
-import { RiReactjsFill } from "react-icons/ri";
+import { RiReactjsFill, RiSvelteFill } from "react-icons/ri";
 import {
   SiAngular,
   SiJavascript,
-  SiNextdotjs,
-  SiNodedotjs,
+  SiSolid,
   SiTypescript,
   SiVuedotjs,
 } from "react-icons/si";
@@ -17,6 +16,7 @@ export interface Template {
   template: string;
 }
 
+// Browser-runnable templates only.
 export const templates: Template[] = [
   {
     name: "Static",
@@ -33,32 +33,39 @@ export const templates: Template[] = [
     template: "vanilla",
   },
   {
-    name: "Vite + React",
-    description: "React with Vite bundler",
-    icon: RiReactjsFill,
-    color: "text-sky-400",
-    template: "vite-react",
-  },
-  {
-    name: "Vite + React TS",
-    description: "React with TypeScript and Vite",
+    name: "Vanilla TS",
+    description: "Vanilla with TypeScript",
     icon: SiTypescript,
     color: "text-blue-600",
-    template: "vite-react-ts",
+    template: "vanilla-ts",
   },
   {
-    name: "Node.js",
-    description: "Node.js backend",
-    icon: SiNodedotjs,
+    name: "React",
+    description: "React (Parcel)",
+    icon: RiReactjsFill,
+    color: "text-sky-400",
+    template: "react",
+  },
+  {
+    name: "React TS",
+    description: "React with TypeScript (Parcel)",
+    icon: SiTypescript,
+    color: "text-blue-600",
+    template: "react-ts",
+  },
+  {
+    name: "Vue",
+    description: "Vue.js framework",
+    icon: SiVuedotjs,
     color: "text-green-600",
-    template: "node",
+    template: "vue",
   },
   {
-    name: "Next.js",
-    description: "Next.js framework",
-    icon: SiNextdotjs,
-    color: "text-black",
-    template: "nextjs",
+    name: "Vue TS",
+    description: "Vue with TypeScript",
+    icon: SiTypescript,
+    color: "text-blue-600",
+    template: "vue-ts",
   },
   {
     name: "Angular",
@@ -68,10 +75,17 @@ export const templates: Template[] = [
     template: "angular",
   },
   {
-    name: "Vue",
-    description: "Vue.js framework",
-    icon: SiVuedotjs,
-    color: "text-green-600",
-    template: "vue",
+    name: "Svelte",
+    description: "Svelte framework",
+    icon: RiSvelteFill,
+    color: "text-orange-500",
+    template: "svelte",
+  },
+  {
+    name: "Solid",
+    description: "SolidJS framework",
+    icon: SiSolid,
+    color: "text-blue-500",
+    template: "solid",
   },
 ];
