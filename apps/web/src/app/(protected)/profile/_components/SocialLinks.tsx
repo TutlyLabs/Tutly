@@ -36,7 +36,9 @@ const formSchema = z.object({
   facebook: z
     .string()
     .refine(
-      (val) => !val.includes("/") && !val.includes("facebook.com"),
+      (val) =>
+        !val.includes("/") &&
+        !/(^|[/.@])facebook\.com(?:[/.]|$)/i.test(val),
       "Please enter only username",
     )
     .optional()
@@ -44,7 +46,9 @@ const formSchema = z.object({
   linkedin: z
     .string()
     .refine(
-      (val) => !val.includes("/") && !val.includes("linkedin.com"),
+      (val) =>
+        !val.includes("/") &&
+        !/(^|[/.@])linkedin\.com(?:[/.]|$)/i.test(val),
       "Please enter only username",
     )
     .optional()

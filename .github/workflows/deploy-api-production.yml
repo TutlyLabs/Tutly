@@ -11,6 +11,9 @@ on:
       - "api@*"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   Deploy-API-Production:
     name: Deploy API App to Production

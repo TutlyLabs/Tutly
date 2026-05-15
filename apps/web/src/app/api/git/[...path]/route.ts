@@ -130,29 +130,52 @@ async function handleGitRequest(
     return new NextResponse("Repo not found", { status: 404 });
   }
 
-  // Construct the upstream Gitea URL.
-  const upstreamSearchParams = new URLSearchParams(requestUrl.searchParams);
-  upstreamSearchParams.delete("token");
-  const queryString = upstreamSearchParams.toString()
-    ? `?${upstreamSearchParams.toString()}`
-    : "";
-
-  let giteaUrl = "";
-  if (gitPathParts[0] === "archive") {
-    // Remove .git from repo path for archive requests
-    giteaUrl = `${GITEA_API_URL}/${targetRepoPath}/${gitPathParts.join("/")}${queryString}`;
-  } else {
-    giteaUrl = `${GITEA_API_URL}/${targetRepoPath}.git/${gitPathParts.join("/")}${queryString}`;
+  // Reject any path segment that could break out of the upstream origin
+  // (protocol-relative prefixes, traversal, embedded query/fragment).
+  const segmentsToCheck = [targetRepoPath, ...gitPathParts];
+  for (const seg of segmentsToCheck) {
+    if (
+      typeof seg !== "string" ||
+      seg.includes("\\") ||
+      seg.includes("\n") ||
+      seg.includes("\r") ||
+      seg.includes("..") ||
+      seg.includes("?") ||
+      seg.includes("#") ||
+      seg.includes("@") ||
+      seg.includes(":")
+    ) {
+      return new NextResponse("Bad request", { status: 400 });
+    }
   }
 
-  // Hard-pin the upstream host so a crafted gitPathParts cannot redirect
-  // the proxy to a different origin.
+  // Build the upstream URL by appending to the configured Gitea base. Anchoring
+  // on a parsed URL object (not string concatenation) plus an origin check makes
+  // it impossible for any path segment to redirect the proxy elsewhere.
+  let upstreamUrl: URL;
   try {
-    const requested = new URL(giteaUrl);
-    const allowed = new URL(GITEA_API_URL);
-    if (requested.origin !== allowed.origin) {
+    const apiBase = new URL(GITEA_API_URL);
+    const repoSegment =
+      gitPathParts[0] === "archive" ? targetRepoPath : `${targetRepoPath}.git`;
+    const relativePath = [repoSegment, ...gitPathParts].join("/");
+    const baseHref = apiBase.href.endsWith("/")
+      ? apiBase.href
+      : apiBase.href + "/";
+    upstreamUrl = new URL(relativePath, baseHref);
+
+    if (upstreamUrl.origin !== apiBase.origin) {
       return new NextResponse("Forbidden: invalid upstream", { status: 403 });
     }
+    const basePathname = apiBase.pathname.endsWith("/")
+      ? apiBase.pathname
+      : apiBase.pathname + "/";
+    if (!upstreamUrl.pathname.startsWith(basePathname)) {
+      return new NextResponse("Forbidden: invalid upstream", { status: 403 });
+    }
+
+    const upstreamSearchParams = new URLSearchParams(requestUrl.searchParams);
+    upstreamSearchParams.delete("token");
+    upstreamUrl.search = upstreamSearchParams.toString();
   } catch {
     return new NextResponse("Bad request", { status: 400 });
   }
@@ -208,7 +231,7 @@ async function handleGitRequest(
   headers.delete("connection");
 
   try {
-    const upstreamResponse = await fetch(giteaUrl, {
+    const upstreamResponse = await fetch(upstreamUrl, {
       method: req.method,
       headers: headers,
       body: req.body,

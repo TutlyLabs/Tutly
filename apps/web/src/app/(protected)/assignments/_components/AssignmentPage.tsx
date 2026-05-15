@@ -522,7 +522,16 @@ const StudentAssignmentSubmission = ({
       return;
     }
 
-    if (externalLink.includes("codesandbox.io")) {
+    let isCodeSandboxLink = false;
+    try {
+      const host = new URL(externalLink).hostname.toLowerCase();
+      isCodeSandboxLink =
+        host === "codesandbox.io" || host.endsWith(".codesandbox.io");
+    } catch {
+      isCodeSandboxLink = false;
+    }
+
+    if (isCodeSandboxLink) {
       const isValid = await validateCodeSandboxLink(externalLink);
       if (!isValid) {
         return;

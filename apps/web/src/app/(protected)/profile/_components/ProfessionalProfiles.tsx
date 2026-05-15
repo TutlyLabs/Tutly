@@ -32,7 +32,9 @@ const formSchema = z.object({
   github: z
     .string()
     .refine(
-      (val) => !val.includes("/") && !val.includes("github.com"),
+      (val) =>
+        !val.includes("/") &&
+        !/(^|[/.@])github\.com(?:[/.]|$)/i.test(val),
       "Please enter only username",
     )
     .optional()
@@ -40,7 +42,9 @@ const formSchema = z.object({
   interviewbit: z
     .string()
     .refine(
-      (val) => !val.includes("/") && !val.includes("interviewbit.com"),
+      (val) =>
+        !val.includes("/") &&
+        !/(^|[/.@])interviewbit\.com(?:[/.]|$)/i.test(val),
       "Please enter only username",
     )
     .optional()
@@ -48,7 +52,9 @@ const formSchema = z.object({
   leetcode: z
     .string()
     .refine(
-      (val) => !val.includes("/") && !val.includes("leetcode.com"),
+      (val) =>
+        !val.includes("/") &&
+        !/(^|[/.@])leetcode\.com(?:[/.]|$)/i.test(val),
       "Please enter only username",
     )
     .optional()
@@ -56,7 +62,9 @@ const formSchema = z.object({
   codechef: z
     .string()
     .refine(
-      (val) => !val.includes("/") && !val.includes("codechef.com"),
+      (val) =>
+        !val.includes("/") &&
+        !/(^|[/.@])codechef\.com(?:[/.]|$)/i.test(val),
       "Please enter only username",
     )
     .optional()
@@ -64,7 +72,9 @@ const formSchema = z.object({
   codeforces: z
     .string()
     .refine(
-      (val) => !val.includes("/") && !val.includes("codeforces.com"),
+      (val) =>
+        !val.includes("/") &&
+        !/(^|[/.@])codeforces\.com(?:[/.]|$)/i.test(val),
       "Please enter only username",
     )
     .optional()
@@ -72,7 +82,9 @@ const formSchema = z.object({
   hackerrank: z
     .string()
     .refine(
-      (val) => !val.includes("/") && !val.includes("hackerrank.com"),
+      (val) =>
+        !val.includes("/") &&
+        !/(^|[/.@])hackerrank\.com(?:[/.]|$)/i.test(val),
       "Please enter only username",
     )
     .optional()

@@ -36,12 +36,14 @@ function StaticPreview({
 
     // Strip root-relative <link>/<script> refs — srcDoc has no base URL so
     // they'd 404 against the parent origin. External (http/https) refs stay.
-    html = html
-      .replace(/<link\b[^>]*\bhref\s*=\s*["']\/[^"']*["'][^>]*>/gi, "")
-      .replace(
-        /<script\b[^>]*\bsrc\s*=\s*["']\/[^"']*["'][^>]*>\s*<\/script>/gi,
-        "",
-      );
+    // Loop until stable so nested matches (e.g. <scr<script>ipt>) cannot survive.
+    const stripPattern =
+      /<link\b[^>]*\bhref\s*=\s*["']\/[^"']*["'][^>]*>|<script\b[^>]*\bsrc\s*=\s*["']\/[^"']*["'][^>]*>\s*<\/script>/gi;
+    let prevHtml: string;
+    do {
+      prevHtml = html;
+      html = html.replace(stripPattern, "");
+    } while (html !== prevHtml);
 
     const styles: string[] = [];
     const scripts: string[] = [];
