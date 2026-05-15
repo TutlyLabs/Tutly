@@ -22,11 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@tutly/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@tutly/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@tutly/ui/tooltip";
 import { cn } from "@tutly/utils";
 import { UserLink } from "@/components/UserLink";
 import { api } from "@/trpc/react";
@@ -60,9 +56,7 @@ export default function GlimpseClient() {
 
   const courses = report?.courses ?? [];
   const selectedCourse =
-    courseId === ALL
-      ? null
-      : (courses.find((c) => c.id === courseId) ?? null);
+    courseId === ALL ? null : (courses.find((c) => c.id === courseId) ?? null);
 
   useEffect(() => {
     setMentorKey(ALL);
@@ -161,9 +155,9 @@ export default function GlimpseClient() {
                   of their mentees submitted anything in this window.
                 </p>
                 <p className="text-muted-foreground mt-1">
-                  Submission totals, evaluated/pending counts, "submitted
-                  ever" and the assignment-wise table are <b>not</b> filtered
-                  by this window.
+                  Submission totals, evaluated/pending counts, "submitted ever"
+                  and the assignment-wise table are <b>not</b> filtered by this
+                  window.
                 </p>
               </>
             }
@@ -241,11 +235,7 @@ export default function GlimpseClient() {
               >
                 <Copy className="h-3.5 w-3.5" />
                 Copy{" "}
-                {selectedMentor
-                  ? "mentor"
-                  : selectedCourse
-                    ? "course"
-                    : "all"}
+                {selectedMentor ? "mentor" : selectedCourse ? "course" : "all"}
               </Button>
               <Button
                 size="sm"
@@ -390,7 +380,7 @@ function DayPicker({
           const n = parseInt(e.target.value);
           if (!isNaN(n) && n > 0 && n <= 365) onChange(n);
         }}
-        className="bg-transparent w-12 text-center tabular-nums outline-none"
+        className="w-12 bg-transparent text-center tabular-nums outline-none"
       />
       <span className="text-muted-foreground">d</span>
       {hint && (
@@ -659,7 +649,7 @@ function CourseView({
               {course.classesPendingAttendance.map((cl) => (
                 <li
                   key={cl.id}
-                  className="bg-amber-500/10 text-amber-700 border-amber-500/30 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] dark:text-amber-400"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-700 dark:text-amber-400"
                 >
                   <span className="font-medium">{cl.title}</span>
                   <span className="text-muted-foreground">
@@ -702,9 +692,7 @@ function CourseView({
             course={course}
             staleDays={staleDays}
             recentDays={recentDays}
-            onPickMentor={(m) =>
-              setMentorKey(m.mentorUsername ?? UNASSIGNED)
-            }
+            onPickMentor={(m) => setMentorKey(m.mentorUsername ?? UNASSIGNED)}
           />
         )}
       </section>
@@ -781,10 +769,7 @@ function MentorTable({
               <Td align="right">{m.mentees}</Td>
               <Td align="right">{m.totalSubs}</Td>
               <Td align="right">{m.evaluated}</Td>
-              <Td
-                align="right"
-                tone={m.pending > 0 ? "warn" : undefined}
-              >
+              <Td align="right" tone={m.pending > 0 ? "warn" : undefined}>
                 {m.pending}
               </Td>
               <Td
@@ -887,10 +872,7 @@ function MentorPanel({
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat
-          label="Mentees"
-          value={String(mentor.mentees)}
-        />
+        <Stat label="Mentees" value={String(mentor.mentees)} />
         <Stat
           label="Never signed in"
           value={String(mentor.neverSignedIn)}
@@ -1162,9 +1144,7 @@ function Stat({
       <div className={`mt-1 text-xl font-semibold tabular-nums ${toneCls}`}>
         {value}
       </div>
-      {sub && (
-        <div className="text-muted-foreground mt-0.5 text-xs">{sub}</div>
-      )}
+      {sub && <div className="text-muted-foreground mt-0.5 text-xs">{sub}</div>}
     </div>
   );
 }
@@ -1191,14 +1171,10 @@ function MiniStat({
       <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
         {label}
       </div>
-      <div
-        className={`mt-0.5 text-base font-semibold tabular-nums ${toneCls}`}
-      >
+      <div className={`mt-0.5 text-base font-semibold tabular-nums ${toneCls}`}>
         {value}
       </div>
-      {sub && (
-        <div className="text-muted-foreground text-[10px]">{sub}</div>
-      )}
+      {sub && <div className="text-muted-foreground text-[10px]">{sub}</div>}
     </div>
   );
 }

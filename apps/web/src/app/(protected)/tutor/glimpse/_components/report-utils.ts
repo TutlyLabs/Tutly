@@ -55,7 +55,9 @@ export function mentorDisplay(m: {
 }
 
 // Mobile → @+<intl-digits>. Defaults missing country code to +91.
-export function whatsappMention(mobile: string | null | undefined): string | null {
+export function whatsappMention(
+  mobile: string | null | undefined,
+): string | null {
   if (!mobile) return null;
   const raw = String(mobile).trim();
   const digits = raw.replace(/\D+/g, "");
@@ -133,8 +135,7 @@ function mentorBlock(
   if (m.lastSubmission) {
     lines.push(`🕒 Last submission: ${relativeIST(m.lastSubmission)}`);
   }
-  if (m.neverSignedIn > 0)
-    lines.push(`🔴 ${m.neverSignedIn} never signed in`);
+  if (m.neverSignedIn > 0) lines.push(`🔴 ${m.neverSignedIn} never signed in`);
   if (m.idle > 0) lines.push(`⚠️ ${m.idle} idle >=${staleDays}d`);
   if (m.neverSubmitted > 0)
     lines.push(`⏳ ${m.neverSubmitted} never submitted`);
@@ -177,25 +178,18 @@ function mentorBlock(
   };
 
   renderList("🔴 Never signed in", neverSignedInMine, () => "");
-  renderList(
-    "⏳ Never submitted",
-    neverSubmittedMine,
-    (r) => {
-      const lastSeen = c.neverSubmittedList.find(
-        (x) => x.username === r.username,
-      )?.lastSeen;
-      return lastSeen ? ` — last seen ${relativeIST(lastSeen)}` : "";
-    },
-  );
-  renderList(
-    `⚠️ Idle >=${staleDays}d`,
-    idleMine,
-    (r) => {
-      const lastSeen = c.idleList.find((x) => x.username === r.username)
-        ?.lastSeen;
-      return lastSeen ? ` — last seen ${relativeIST(lastSeen)}` : "";
-    },
-  );
+  renderList("⏳ Never submitted", neverSubmittedMine, (r) => {
+    const lastSeen = c.neverSubmittedList.find(
+      (x) => x.username === r.username,
+    )?.lastSeen;
+    return lastSeen ? ` — last seen ${relativeIST(lastSeen)}` : "";
+  });
+  renderList(`⚠️ Idle >=${staleDays}d`, idleMine, (r) => {
+    const lastSeen = c.idleList.find(
+      (x) => x.username === r.username,
+    )?.lastSeen;
+    return lastSeen ? ` — last seen ${relativeIST(lastSeen)}` : "";
+  });
 
   return lines.join("\n");
 }
