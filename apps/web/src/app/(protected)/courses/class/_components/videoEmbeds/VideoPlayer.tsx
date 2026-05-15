@@ -156,10 +156,9 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
       driveIframe.style.height = "100%";
       driveIframe.style.border = "none";
       driveIframe.allow =
-        "autoplay; encrypted-media; picture-in-picture; fullscreen";
+        "autoplay; encrypted-media; picture-in-picture; fullscreen; storage-access *";
       driveIframe.allowFullscreen = true;
-      driveIframe.referrerPolicy = "strict-origin-when-cross-origin";
-      driveIframe.setAttribute("credentialless", "true");
+      driveIframe.referrerPolicy = "no-referrer-when-downgrade";
 
       videoRef.current.innerHTML = "";
       videoRef.current.appendChild(driveIframe);
@@ -271,6 +270,17 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
       className="group relative aspect-video overflow-hidden rounded-lg bg-black"
     >
       <div ref={videoRef} className="absolute inset-0" />
+
+      {videoType === "DRIVE" && (
+        <a
+          href={`https://drive.google.com/file/d/${videoId}/view`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute top-2 right-2 z-10 rounded bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/80"
+        >
+          Open in Drive
+        </a>
+      )}
 
       {/* Custom Controls - Only show for YouTube videos */}
       {videoType === "YOUTUBE" && (
