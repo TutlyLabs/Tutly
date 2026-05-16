@@ -1,5 +1,12 @@
 import { existsSync } from "node:fs";
-import { copyFile, mkdir, rm, symlink, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  copyFile,
+  mkdir,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 
 import { env } from "./env.js";
@@ -73,6 +80,8 @@ export async function assembleWorkspace(opts: {
   const runId = path.basename(opts.testRunId).replace(/[^a-zA-Z0-9_-]/g, "");
   const cwd = path.resolve(env.WORK_DIR, `run-${runId}-${Date.now()}`);
   await mkdir(cwd, { recursive: true });
+  // Jest container runs as uid 1000; allow it to write the symlink + report.
+  await chmod(cwd, 0o777);
 
   const targetModules = safeJoin(cwd, "node_modules");
   const sourceModules = path.resolve(env.RUNTIME_DIR, "node_modules");
