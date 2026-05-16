@@ -52,6 +52,7 @@ import { GitSubmissionSection } from "./GitSubmissionSection";
 import { TestRunStatusBadge } from "./TestRunStatusBadge";
 import { TestReportModal } from "./TestReportModal";
 import { DeadlineLockedBanner } from "./DeadlineLockedBanner";
+import { ScoreFormulaHint } from "./ScoreFormulaHint";
 
 interface GitFsConfig {
   assignmentId?: string;
@@ -1051,7 +1052,12 @@ const AdminAssignmentTable = ({
                 <TableHead className="text-foreground">Date</TableHead>
                 <TableHead className="text-foreground">Score(10)</TableHead>
                 <TableHead className="text-foreground">Test Cases</TableHead>
-                <TableHead className="text-foreground">Total</TableHead>
+                <TableHead className="text-foreground">
+                  <span className="inline-flex items-center">
+                    Total
+                    <ScoreFormulaHint />
+                  </span>
+                </TableHead>
                 <TableHead className="text-foreground">Feedback</TableHead>
                 {currentUser.role !== "STUDENT" && (
                   <>
