@@ -38,6 +38,9 @@ function badgeFor(run: Run | undefined) {
       label: "Not run",
     };
   }
+  const passed = run.visiblePassed + run.hiddenPassed;
+  const total = run.visibleTotal + run.hiddenTotal;
+  const counts = total > 0 ? `${passed}/${total}` : "—";
   switch (run.status) {
     case "QUEUED":
       return {
@@ -55,13 +58,13 @@ function badgeFor(run: Run | undefined) {
       return {
         tone: "success" as const,
         icon: <CheckCircle2 className="h-3 w-3" />,
-        label: `${run.score}/${run.maxScore}`,
+        label: counts,
       };
     case "FAILED":
       return {
         tone: "warn" as const,
         icon: <XCircle className="h-3 w-3" />,
-        label: `${run.score}/${run.maxScore}`,
+        label: counts,
       };
     case "ERROR":
       return {
@@ -121,7 +124,7 @@ export function TestRunStatusBadge({
         latest?.errorMessage
           ? latest.errorMessage
           : latest
-            ? `${latest.status} · visible ${latest.visiblePassed}/${latest.visibleTotal} · hidden ${latest.hiddenPassed}/${latest.hiddenTotal}`
+            ? `${latest.status} · score ${latest.score}/${latest.maxScore} · visible ${latest.visiblePassed}/${latest.visibleTotal} · hidden ${latest.hiddenPassed}/${latest.hiddenTotal}`
             : "No test run yet"
       }
     >
