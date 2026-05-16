@@ -139,9 +139,7 @@ app.get("/internal/queue", checkSecret, (_req, res) => {
   res.json(getQueueSnapshot());
 });
 
-// Lightweight in-process dashboard. No auth on the HTML (it ships no secrets);
-// in prod, lock the orchestrator off the public internet (Coolify internal network).
-// Mirrors the video-worker's `/admin/queues` URL so the muscle memory carries over.
+// Internal dashboard — orchestrator must not be exposed to the public internet.
 app.get(["/", "/dashboard", "/admin/queues"], (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.send(dashboardHtml());

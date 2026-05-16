@@ -40,6 +40,22 @@ function normalizePath(p: string): string {
   return p.startsWith("/") ? p.slice(1) : p;
 }
 
+// Join an untrusted relative path under a trusted base, rejecting traversal.
+function safeJoin(base: string, rel: string): string {
+  if (rel.includes("\0")) {
+    throw new Error("invalid path: null byte");
+  }
+  const resolvedBase = path.resolve(base);
+  const resolved = path.resolve(resolvedBase, rel);
+  if (
+    resolved !== resolvedBase &&
+    !resolved.startsWith(resolvedBase + path.sep)
+  ) {
+    throw new Error(`path escapes workspace: ${rel}`);
+  }
+  return resolved;
+}
+
 const TEST_FILE_REGEX = /\.(test|spec)\.[tj]sx?$/;
 
 export type AssembledWorkspace = {
@@ -54,19 +70,20 @@ export async function assembleWorkspace(opts: {
   sandboxTemplate: string | null;
   hiddenTestFiles: Record<string, string> | null;
 }): Promise<AssembledWorkspace> {
-  const cwd = path.join(env.WORK_DIR, `run-${opts.testRunId}-${Date.now()}`);
+  const runId = path.basename(opts.testRunId).replace(/[^a-zA-Z0-9_-]/g, "");
+  const cwd = path.resolve(env.WORK_DIR, `run-${runId}-${Date.now()}`);
   await mkdir(cwd, { recursive: true });
 
-  const targetModules = path.join(cwd, "node_modules");
-  const sourceModules = path.join(env.RUNTIME_DIR, "node_modules");
+  const targetModules = safeJoin(cwd, "node_modules");
+  const sourceModules = path.resolve(env.RUNTIME_DIR, "node_modules");
   if (existsSync(sourceModules)) {
     await symlink(sourceModules, targetModules, "dir").catch(() => undefined);
   }
 
   for (const file of ["jest.config.cjs", "tsconfig.json", "package.json"]) {
-    const src = path.join(env.RUNTIME_DIR, file);
+    const src = path.resolve(env.RUNTIME_DIR, file);
     if (existsSync(src)) {
-      await copyFile(src, path.join(cwd, file)).catch(() => undefined);
+      await copyFile(src, safeJoin(cwd, file)).catch(() => undefined);
     }
   }
 
@@ -80,28 +97,34 @@ export async function assembleWorkspace(opts: {
   const visibleTestPaths: string[] = [];
   const hiddenTestPaths: string[] = [];
 
+  const writeUntrusted = async (filePath: string, content: string) => {
+    let out: string;
+    try {
+      out = safeJoin(cwd, normalizePath(filePath));
+    } catch {
+      return null;
+    }
+    await mkdir(path.dirname(out), { recursive: true });
+    await writeFile(out, content, "utf-8");
+    return out;
+  };
+
   // Write order matters: template, then student overlay, then re-apply visible
   // tests (so students can't disable them by editing), then hidden tests.
   for (const [filePath, entry] of Object.entries(templateFiles)) {
     if (typeof entry === "object" && entry.hidden === true) continue;
-    const out = path.join(cwd, normalizePath(filePath));
-    await mkdir(path.dirname(out), { recursive: true });
-    await writeFile(out, fileContent(entry), "utf-8");
+    await writeUntrusted(filePath, fileContent(entry));
   }
 
   for (const [filePath, entry] of Object.entries(submissionFiles)) {
-    const out = path.join(cwd, normalizePath(filePath));
-    await mkdir(path.dirname(out), { recursive: true });
-    await writeFile(out, fileContent(entry), "utf-8");
+    await writeUntrusted(filePath, fileContent(entry));
   }
 
   for (const [filePath, entry] of Object.entries(templateFiles)) {
     if (!TEST_FILE_REGEX.test(filePath)) continue;
     if (typeof entry === "object" && entry.hidden === true) continue;
-    const out = path.join(cwd, normalizePath(filePath));
-    await mkdir(path.dirname(out), { recursive: true });
-    await writeFile(out, fileContent(entry), "utf-8");
-    visibleTestPaths.push(normalizePath(filePath));
+    const written = await writeUntrusted(filePath, fileContent(entry));
+    if (written) visibleTestPaths.push(normalizePath(filePath));
   }
 
   const hidden = opts.hiddenTestFiles ?? {};
@@ -110,10 +133,8 @@ export async function assembleWorkspace(opts: {
     const safePath = normalized.startsWith("__hidden__/")
       ? normalized
       : `__hidden__/${normalized}`;
-    const out = path.join(cwd, safePath);
-    await mkdir(path.dirname(out), { recursive: true });
-    await writeFile(out, source, "utf-8");
-    hiddenTestPaths.push(safePath);
+    const written = await writeUntrusted(safePath, source);
+    if (written) hiddenTestPaths.push(safePath);
   }
 
   return { cwd, visibleTestPaths, hiddenTestPaths };

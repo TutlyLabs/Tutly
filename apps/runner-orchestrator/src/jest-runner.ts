@@ -95,8 +95,7 @@ function dockerArgs(hostCwd: string, containerName: string): string[] {
   return args;
 }
 
-// The Docker daemon sees host paths. When orchestrator runs in a container,
-// WORK_DIR_HOST may differ from WORK_DIR and we translate accordingly.
+// Docker bind-mount paths must resolve on the host, not inside the orchestrator container.
 function toHostPath(localPath: string): string {
   if (!env.WORK_DIR_HOST || env.WORK_DIR_HOST === env.WORK_DIR) {
     return localPath;
@@ -106,16 +105,24 @@ function toHostPath(localPath: string): string {
 }
 
 export async function runJest(cwd: string): Promise<RunOutcome> {
-  const reportPathLocal = path.join(cwd, "report.json");
+  const workRoot = path.resolve(env.WORK_DIR);
+  const resolvedCwd = path.resolve(cwd);
+  if (
+    resolvedCwd !== workRoot &&
+    !resolvedCwd.startsWith(workRoot + path.sep)
+  ) {
+    return { kind: "spawn-failed", error: "cwd outside WORK_DIR" };
+  }
+  const reportPathLocal = path.join(resolvedCwd, "report.json");
   const useDocker = env.USE_DOCKER;
-  const hostCwd = toHostPath(cwd);
-  const containerName = `tutly-jest-${path.basename(cwd)}`;
+  const hostCwd = toHostPath(resolvedCwd);
+  const containerName = `tutly-jest-${path.basename(resolvedCwd).replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const cmd = useDocker ? "docker" : "node";
   const cmdArgs = useDocker
     ? dockerArgs(hostCwd, containerName)
     : [
-        path.join(cwd, "node_modules", ".bin", "jest"),
+        path.join(resolvedCwd, "node_modules", ".bin", "jest"),
         ...jestArgsHost(reportPathLocal),
       ];
 
@@ -123,7 +130,7 @@ export async function runJest(cwd: string): Promise<RunOutcome> {
 
   return await new Promise<RunOutcome>((resolve) => {
     const child = spawn(cmd, cmdArgs, {
-      cwd: useDocker ? undefined : cwd,
+      cwd: useDocker ? undefined : resolvedCwd,
       detached: !useDocker,
       env: useDocker
         ? process.env
@@ -165,7 +172,7 @@ export async function runJest(cwd: string): Promise<RunOutcome> {
       if (resolved) return;
       resolved = true;
       clearTimeout(timeoutTimer);
-      clearInterval(memoryTimer);
+      if (memoryTimer) clearInterval(memoryTimer);
       await killChild();
       if (outcome.kind === "completed") {
         try {
@@ -217,8 +224,8 @@ export async function runJest(cwd: string): Promise<RunOutcome> {
     }, env.JOB_TIMEOUT_MS);
 
     // Non-Docker mode only: cgroup enforces the cap when Docker is in use.
-    const memoryTimer = useDocker
-      ? (null as unknown as NodeJS.Timeout)
+    const memoryTimer: ReturnType<typeof setInterval> | null = useDocker
+      ? null
       : setInterval(async () => {
           if (!child.pid) return;
           try {
