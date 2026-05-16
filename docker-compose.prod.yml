@@ -19,6 +19,39 @@ services:
       - 3001:3001
     networks:
       - app_network
+  jest-runner-image:
+    image: tutly-jest-runner:1
+    build:
+      context: .
+      dockerfile: ./apps/runner-orchestrator/Dockerfile.jest
+    command: ["--version"]
+    profiles: ["build-only"]
+
+  runner-orchestrator:
+    container_name: runner-orchestrator
+    build:
+      context: .
+      dockerfile: ./apps/runner-orchestrator/Dockerfile
+    restart: always
+    ports:
+      - 3010:3010
+    networks:
+      - app_network
+    environment:
+      USE_DOCKER: "true"
+      JEST_IMAGE: tutly-jest-runner:1
+      WORK_DIR: /tmp/tutly-runner
+      WORK_DIR_HOST: /tmp/tutly-runner
+    volumes:
+      - /tmp/tutly-runner:/tmp/tutly-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - jest-runner-image
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3010/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 networks:
   app_network:

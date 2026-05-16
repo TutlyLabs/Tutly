@@ -49,6 +49,10 @@ import NewAttachmentPage from "@/app/(protected)/courses/class/_components/NewAs
 import { api } from "@/trpc/react";
 import { GitTemplateSection } from "./GitTemplateSection";
 import { GitSubmissionSection } from "./GitSubmissionSection";
+import { TestRunStatusBadge } from "./TestRunStatusBadge";
+import { TestReportModal } from "./TestReportModal";
+import { DeadlineLockedBanner } from "./DeadlineLockedBanner";
+import { ScoreFormulaHint } from "./ScoreFormulaHint";
 
 interface GitFsConfig {
   assignmentId?: string;
@@ -659,6 +663,7 @@ const StudentAssignmentSubmission = ({
 
       <div className="space-y-4">
         <h2 className="text-foreground text-lg font-semibold">Submissions</h2>
+        <DeadlineLockedBanner dueDate={assignment?.dueDate} />
 
         <Table>
           <TableHeader className="bg-muted">
@@ -666,25 +671,12 @@ const StudentAssignmentSubmission = ({
               <TableHead className="text-foreground">No.</TableHead>
               <TableHead className="text-foreground">View Submission</TableHead>
               <TableHead className="text-foreground">Submission Date</TableHead>
+              <TableHead className="text-foreground">Tests</TableHead>
               <TableHead className="text-foreground">Feedback</TableHead>
-              <TableHead className="text-foreground">Total</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {assignment?.submissions.map((submission: any, index: number) => {
-              const points = {
-                other:
-                  submission.points.find((p: any) => p.category === "OTHER")
-                    ?.score || 0,
-                tests:
-                  submission.points.find((p: any) => p.category === "TESTS")
-                    ?.score || 0,
-              };
-
-              const totalScore = Object.values(points).reduce(
-                (sum, score) => sum + score,
-                0,
-              );
               const submissionUrl = isPlaygroundSubmission
                 ? `/playgrounds/html-css-js?submissionId=${submission.id}`
                 : isExternalLinkSubmission
@@ -710,10 +702,13 @@ const StudentAssignmentSubmission = ({
                       "NA"}
                   </TableCell>
                   <TableCell className="text-foreground">
-                    {submission.overallFeedback || "NA"}
+                    <TestRunStatusBadge
+                      submissionId={submission.id}
+                      initialRun={submission.testRuns?.[0]}
+                    />
                   </TableCell>
                   <TableCell className="text-foreground">
-                    {totalScore ? "Submitted" : "NA"}
+                    {submission.overallFeedback || "NA"}
                   </TableCell>
                 </TableRow>
               );
@@ -900,6 +895,19 @@ const AdminAssignmentTable = ({
   isSandboxConfigured,
 }: AdminTableProps) => {
   const router = useRouter();
+  const [reportSubmissionId, setReportSubmissionId] = useState<string | null>(
+    null,
+  );
+  const canRerun = currentUser?.role === "INSTRUCTOR";
+  const rerunMutation = api.testRuns.enqueueOfficial.useMutation({
+    onSuccess: () => toast.success("Rerun queued"),
+    onError: (err) => toast.error(err.message ?? "Failed to queue rerun"),
+  });
+  const rerunAllMutation = api.testRuns.rerunAllForAssignment.useMutation({
+    onSuccess: (res) => toast.success(`Queued ${res.count} runs`),
+    onError: (err) => toast.error(err.message ?? "Failed to queue reruns"),
+  });
+
   const messages = [
     "Hi, how are you?",
     "Complete your assignments on time !!",
@@ -950,6 +958,28 @@ const AdminAssignmentTable = ({
               onChange={(e) => onSearch(e.target.value)}
             />
           </div>
+          {canRerun && (
+            <Button
+              onClick={() => {
+                if (
+                  confirm(
+                    "Re-run tests for every submission to this assignment? This may take a while.",
+                  )
+                ) {
+                  rerunAllMutation.mutate({ assignmentId });
+                }
+              }}
+              size="sm"
+              variant="outline"
+              className="h-8"
+              disabled={rerunAllMutation.isPending}
+            >
+              <FiRefreshCw
+                className={`mr-1 h-3.5 w-3.5 ${rerunAllMutation.isPending ? "animate-spin" : ""}`}
+              />
+              Rerun all
+            </Button>
+          )}
           <Button
             onClick={() => {
               if (username) {
@@ -1022,7 +1052,12 @@ const AdminAssignmentTable = ({
                 <TableHead className="text-foreground">Date</TableHead>
                 <TableHead className="text-foreground">Score(10)</TableHead>
                 <TableHead className="text-foreground">Test Cases</TableHead>
-                <TableHead className="text-foreground">Total</TableHead>
+                <TableHead className="text-foreground">
+                  <span className="inline-flex items-center">
+                    Total
+                    <ScoreFormulaHint />
+                  </span>
+                </TableHead>
                 <TableHead className="text-foreground">Feedback</TableHead>
                 {currentUser.role !== "STUDENT" && (
                   <>
@@ -1110,9 +1145,10 @@ const AdminAssignmentTable = ({
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {testValue
-                        ? `${testValue.score}${testValue.maxScore ? `/${testValue.maxScore}` : ""}`
-                        : "Queued"}
+                      <TestRunStatusBadge
+                        submissionId={submission.id}
+                        initialRun={submission.testRuns?.[0]}
+                      />
                     </TableCell>
                     <TableCell className="text-foreground">
                       {oValue?.score || testValue?.score ? totalScore : "NA"}
@@ -1163,6 +1199,37 @@ const AdminAssignmentTable = ({
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                onClick={() =>
+                                  setReportSubmissionId(submission.id)
+                                }
+                                title="View test report"
+                              >
+                                <FiTerminal className="h-4 w-4" />
+                              </Button>
+                              {canRerun && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    rerunMutation.mutate({
+                                      submissionId: submission.id,
+                                    })
+                                  }
+                                  disabled={rerunMutation.isPending}
+                                  title="Rerun tests"
+                                >
+                                  <FiRefreshCw
+                                    className={`h-4 w-4 ${
+                                      rerunMutation.isPending
+                                        ? "animate-spin"
+                                        : ""
+                                    }`}
+                                  />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => {
                                   onEdit(index, submission.id);
                                 }}
@@ -1196,6 +1263,14 @@ const AdminAssignmentTable = ({
             </TableBody>
           </Table>
         )}
+
+        <TestReportModal
+          submissionId={reportSubmissionId}
+          open={Boolean(reportSubmissionId)}
+          onOpenChange={(open) => {
+            if (!open) setReportSubmissionId(null);
+          }}
+        />
 
         {modal && (
           <Dialog open={modal} onOpenChange={setModal}>

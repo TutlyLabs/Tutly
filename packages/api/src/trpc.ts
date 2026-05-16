@@ -14,6 +14,7 @@ export interface TRPCContext {
   session: SessionContext | null;
   token: string | null;
   source: string;
+  headers: Headers;
 }
 
 export const createTRPCContext = async (opts: {
@@ -35,6 +36,7 @@ export const createTRPCContext = async (opts: {
     db,
     token,
     source,
+    headers: opts.headers,
   };
 };
 

@@ -250,6 +250,81 @@ export const attachmentsRouter = createTRPCRouter({
       return { success: true, data: attachment };
     }),
 
+  getHiddenTests: protectedProcedure
+    .input(z.object({ assignmentId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const currentUser = ctx.session.user;
+      const attachment = await ctx.db.attachment.findUnique({
+        where: { id: input.assignmentId },
+        select: {
+          id: true,
+          courseId: true,
+          hiddenTestFiles: true,
+          course: {
+            select: {
+              createdById: true,
+              courseAdmins: { select: { id: true } },
+            },
+          },
+        },
+      });
+      if (!attachment) {
+        return { success: false, error: "Not found" };
+      }
+      const isInstructor = currentUser.role === "INSTRUCTOR";
+      const isCourseStaff =
+        attachment.course?.createdById === currentUser.id ||
+        attachment.course?.courseAdmins.some((a) => a.id === currentUser.id);
+      if (!isInstructor && !isCourseStaff) {
+        return { success: false, error: "Unauthorized" };
+      }
+      return {
+        success: true,
+        data: (attachment.hiddenTestFiles as Record<string, string> | null) ?? {},
+      };
+    }),
+
+  updateHiddenTests: protectedProcedure
+    .input(
+      z.object({
+        assignmentId: z.string(),
+        hiddenTestFiles: z.record(z.string(), z.string()),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const currentUser = ctx.session.user;
+      const attachment = await ctx.db.attachment.findUnique({
+        where: { id: input.assignmentId },
+        select: {
+          id: true,
+          course: {
+            select: {
+              createdById: true,
+              courseAdmins: { select: { id: true } },
+            },
+          },
+        },
+      });
+      if (!attachment) {
+        return { success: false, error: "Not found" };
+      }
+      const isInstructor = currentUser.role === "INSTRUCTOR";
+      const isCourseStaff =
+        attachment.course?.createdById === currentUser.id ||
+        attachment.course?.courseAdmins.some((a) => a.id === currentUser.id);
+      if (!isInstructor && !isCourseStaff) {
+        return { success: false, error: "Unauthorized" };
+      }
+      const updated = await ctx.db.attachment.update({
+        where: { id: input.assignmentId },
+        data: {
+          hiddenTestFiles: input.hiddenTestFiles as never,
+        },
+        select: { id: true, hiddenTestFiles: true },
+      });
+      return { success: true, data: updated };
+    }),
+
   getUnlinkedAssignments: protectedProcedure
     .input(
       z.object({

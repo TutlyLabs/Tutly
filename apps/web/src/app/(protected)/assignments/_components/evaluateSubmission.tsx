@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import day from "@tutly/utils/dayjs";
 import { api } from "@/trpc/react";
 
+import { ScoreFormulaHint } from "./ScoreFormulaHint";
+
 const EvaluateSubmission = ({
   submission,
   showActions,
@@ -180,7 +182,10 @@ const EvaluateSubmission = ({
               scope="col"
               className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
             >
-              Total
+              <span className="inline-flex items-center">
+                Total
+                <ScoreFormulaHint />
+              </span>
             </th>
             <th
               scope="col"

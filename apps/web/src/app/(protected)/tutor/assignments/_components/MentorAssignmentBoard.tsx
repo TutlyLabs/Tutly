@@ -123,11 +123,15 @@ const MentorAssignmentBoard = ({
         const stat = statsByUser[s.username] ?? {
           submitted: 0,
           evaluated: 0,
+          testsPassed: 0,
+          testsFailed: 0,
         };
         return {
           ...s,
           _submitted: stat.submitted,
           _evaluated: stat.evaluated,
+          _testsPassed: (stat as { testsPassed?: number }).testsPassed ?? 0,
+          _testsFailed: (stat as { testsFailed?: number }).testsFailed ?? 0,
           _underReview: Math.max(0, stat.submitted - stat.evaluated),
           _missing: Math.max(0, totalAssignments - stat.submitted),
         };
@@ -472,6 +476,23 @@ const MentorAssignmentBoard = ({
                       <Badge className="h-6 gap-1 rounded-full bg-amber-500/15 text-[11px] font-medium text-amber-700 hover:bg-amber-500/20 dark:text-amber-400">
                         <Clock className="h-3 w-3" />
                         {underReview} pending
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <div className="hidden w-24 shrink-0 justify-end sm:flex">
+                    {student._testsPassed + student._testsFailed > 0 ? (
+                      <Badge
+                        className={cn(
+                          "h-6 gap-1 rounded-full text-[11px] font-medium",
+                          student._testsFailed === 0
+                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                            : "bg-rose-500/15 text-rose-700 dark:text-rose-400",
+                        )}
+                        title={`${student._testsPassed} passed · ${student._testsFailed} failed`}
+                      >
+                        <CheckCircle className="h-3 w-3" />
+                        {student._testsPassed}/
+                        {student._testsPassed + student._testsFailed} tests
                       </Badge>
                     ) : null}
                   </div>

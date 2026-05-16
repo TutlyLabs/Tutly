@@ -4,6 +4,7 @@ import type { SandpackProps } from "@codesandbox/sandpack-react";
 import {
   ArrowLeft,
   Edit,
+  Lock,
   Maximize2,
   Minimize2,
   RotateCcw,
@@ -27,6 +28,7 @@ import SubmitAssignment from "@/app/(protected)/playgrounds/_components/SubmitAs
 import { templates } from "@/app/(protected)/playgrounds/templetes";
 import { api } from "@/trpc/react";
 
+import { HiddenTestsModal } from "./HiddenTestsModal";
 import { SandboxSettingsModal } from "./SandboxSettingsModal";
 
 interface SandboxHeaderProps {
@@ -65,6 +67,7 @@ function SandboxActions({
   showSettingsButton: boolean;
 }) {
   const [showSettings, setShowSettings] = useState(false);
+  const [showHiddenTests, setShowHiddenTests] = useState(false);
 
   // tRPC mutation
   const updateAttachmentMutation =
@@ -109,6 +112,19 @@ function SandboxActions({
         </Button>
       )}
 
+      {/* Hidden Tests editor - Only for editing templates */}
+      {isEditingTemplate && assignmentId && (
+        <Button
+          variant="ghost"
+          onClick={() => setShowHiddenTests(true)}
+          className="text-amber-400 hover:text-amber-300"
+          title="Edit hidden tests (server-only)"
+        >
+          <Lock className="h-4 w-4" />
+          Hidden Tests
+        </Button>
+      )}
+
       {/* Save Button - Only for editing templates */}
       {isEditingTemplate && assignmentId && (
         <Button
@@ -128,6 +144,14 @@ function SandboxActions({
         onSave={(config) => onConfigUpdate(config)}
         savedTemplate={savedTemplate}
       />
+
+      {isEditingTemplate && assignmentId && (
+        <HiddenTestsModal
+          assignmentId={assignmentId}
+          open={showHiddenTests}
+          onOpenChange={setShowHiddenTests}
+        />
+      )}
     </>
   );
 }
