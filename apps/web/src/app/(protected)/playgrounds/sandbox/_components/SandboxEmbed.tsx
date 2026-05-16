@@ -5,7 +5,7 @@ import {
   useSandpack,
 } from "@codesandbox/sandpack-react";
 import type { Attachment } from "@tutly/db/browser";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import IDEShell from "@/app/(protected)/playgrounds/_components/ide/IDEShell";
 import type { EditableScope } from "@/app/(protected)/playgrounds/_components/ide/ideOptions";
@@ -24,6 +24,7 @@ interface SandboxEmbedProps {
     /** Hide the Files & Search activity items in the IDE sidebar. */
     restrictFiles?: boolean;
   };
+  editableFiles?: string[];
 }
 
 export function SandboxEmbed({
@@ -31,6 +32,7 @@ export function SandboxEmbed({
   isEditTemplate,
   template,
   config,
+  editableFiles,
 }: SandboxEmbedProps) {
   return (
     <IDEProvider>
@@ -39,6 +41,7 @@ export function SandboxEmbed({
         isEditTemplate={isEditTemplate}
         template={template}
         config={config}
+        editableFiles={editableFiles}
       />
     </IDEProvider>
   );
@@ -49,35 +52,29 @@ function SandboxEmbedInner({
   isEditTemplate,
   template,
   config,
+  editableFiles,
 }: SandboxEmbedProps) {
-  const { sandpack } = useSandpack();
-
-  // Capture template paths once on first non-empty sandpack.files.
-  const initialPathsRef = useRef<string[] | null>(null);
-  const [initialPaths, setInitialPaths] = useState<string[]>([]);
-  if (initialPathsRef.current === null) {
-    const keys = Object.keys(sandpack.files);
-    if (keys.length > 0) {
-      initialPathsRef.current = keys;
-      // Defer the state update — React forbids setState during render.
-      queueMicrotask(() => setInitialPaths(keys));
-    }
-  }
-
   const editableScope = useMemo<EditableScope>(() => {
     if (!assignment || isEditTemplate) {
       return { projectName: assignment?.title ?? undefined };
     }
     const meta = (assignment.detailsJson as any) ?? {};
-    const allow: string[] | null = Array.isArray(meta.editableFiles)
-      ? meta.editableFiles
+    const fromTemplate = Array.isArray(editableFiles) ? editableFiles : null;
+    const fromMeta = Array.isArray(meta.editableFiles)
+      ? (meta.editableFiles as string[])
       : null;
+    const allow =
+      fromTemplate && fromTemplate.length > 0
+        ? fromTemplate
+        : fromMeta && fromMeta.length > 0
+          ? fromMeta
+          : null;
     return {
       allowList: allow,
-      templatePaths: allow ? null : initialPaths,
+      templatePaths: null,
       projectName: assignment.title || "assignment",
     };
-  }, [assignment, isEditTemplate, initialPaths]);
+  }, [assignment, isEditTemplate, editableFiles]);
 
   const restrictFiles =
     config.restrictFiles ?? (Boolean(assignment) && !isEditTemplate);

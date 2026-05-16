@@ -388,18 +388,6 @@ const NewAttachmentPage = ({
                     </SelectItem>
                     <SelectItem
                       className="cursor-pointer text-base"
-                      value="HTML_CSS_JS"
-                    >
-                      HTML CSS JS
-                    </SelectItem>
-                    <SelectItem
-                      className="cursor-pointer text-base"
-                      value="WORKSPACE"
-                    >
-                      Workspace
-                    </SelectItem>
-                    <SelectItem
-                      className="cursor-pointer text-base"
                       value="EXTERNAL_LINK"
                     >
                       External link

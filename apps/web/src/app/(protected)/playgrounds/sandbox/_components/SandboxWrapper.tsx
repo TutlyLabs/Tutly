@@ -56,7 +56,8 @@ export function SandboxWrapper({
         showConsoleButton: true,
         showConsole: false,
         bundlerURL: bundlerUrl,
-      },
+        editableFiles: [] as string[],
+      } as any,
     }),
     [template, config.closableTabs, bundlerUrl],
   );
@@ -76,6 +77,10 @@ export function SandboxWrapper({
     ...currentConfig,
     theme: sandpackTheme,
   };
+
+  const editableFilesFromTemplate = (
+    currentConfig.options as unknown as { editableFiles?: unknown }
+  )?.editableFiles as string[] | undefined;
 
   if (!mounted) return null;
 
@@ -107,6 +112,7 @@ export function SandboxWrapper({
           isEditTemplate={canEditTemplate}
           template={template}
           config={config}
+          editableFiles={editableFilesFromTemplate}
         />
       </div>
     </SandpackProvider>

@@ -18,8 +18,6 @@ const EvaluateSubmission = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedScores, setEditedScores] = useState({
-    responsiveness: 0,
-    styling: 0,
     other: 0,
   });
   const [feedback, setFeedback] = useState<string | null>(
@@ -27,12 +25,6 @@ const EvaluateSubmission = ({
   );
   const router = useRouter();
 
-  const rValue = submission.points.find(
-    (point: any) => point.category === "RESPOSIVENESS",
-  );
-  const sValue = submission.points.find(
-    (point: any) => point.category === "STYLING",
-  );
   const oValue = submission.points.find(
     (point: any) => point.category === "OTHER",
   );
@@ -40,12 +32,9 @@ const EvaluateSubmission = ({
     (point: any) => point.category === "TESTS",
   );
 
-  const totalScore = [rValue, sValue, oValue, testValue].reduce(
-    (acc, currentValue) => {
-      return acc + (currentValue ? currentValue.score : 0);
-    },
-    0,
-  );
+  const totalScore = [oValue, testValue].reduce((acc, currentValue) => {
+    return acc + (currentValue ? currentValue.score : 0);
+  }, 0);
 
   const addPointsMutation = api.points.addPoints.useMutation({
     onSuccess: () => {
@@ -102,18 +91,10 @@ const EvaluateSubmission = ({
 
   const handleEdit = () => {
     setIsEditing(true);
-    const rValue = submission?.points.find(
-      (point: any) => point.category === "RESPOSIVENESS",
-    );
-    const sValue = submission?.points.find(
-      (point: any) => point.category === "STYLING",
-    );
     const oValue = submission?.points.find(
       (point: any) => point.category === "OTHER",
     );
     setEditedScores({
-      responsiveness: rValue ? rValue.score : 0,
-      styling: sValue ? sValue.score : 0,
       other: oValue ? oValue.score : 0,
     });
   };
@@ -187,25 +168,13 @@ const EvaluateSubmission = ({
               scope="col"
               className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
             >
-              Responsiveness (/10)
+              Score (/10)
             </th>
             <th
               scope="col"
               className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
             >
-              Styling (/10)
-            </th>
-            <th
-              scope="col"
-              className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
-            >
-              Others (/10)
-            </th>
-            <th
-              scope="col"
-              className="text-muted-foreground px-2 py-2 text-[11px] font-semibold tracking-wide uppercase"
-            >
-              Tests
+              Test Cases
             </th>
             <th
               scope="col"
@@ -255,52 +224,6 @@ const EvaluateSubmission = ({
                   <input
                     title="null"
                     type="number"
-                    value={editedScores.responsiveness}
-                    onChange={(e) => {
-                      const newScore = parseInt(e.target.value);
-                      if (!isNaN(newScore) && newScore >= 0 && newScore <= 10) {
-                        setEditedScores((prevScores) => ({
-                          ...prevScores,
-                          responsiveness: newScore,
-                        }));
-                      }
-                    }}
-                    min={0}
-                    max={10}
-                    className="text-background w-20 rounded-lg border-2 border-black bg-transparent px-2"
-                  />
-                ) : (
-                  rValue?.score || "NA"
-                )}
-              </td>
-              <td className="px-2 py-1 whitespace-nowrap">
-                {isEditing ? (
-                  <input
-                    title="null"
-                    type="number"
-                    value={editedScores.styling}
-                    onChange={(e) => {
-                      const newScore = parseInt(e.target.value);
-                      if (!isNaN(newScore) && newScore >= 0 && newScore <= 10) {
-                        setEditedScores((prevScores) => ({
-                          ...prevScores,
-                          styling: newScore,
-                        }));
-                      }
-                    }}
-                    min={0}
-                    max={10}
-                    className="text-background w-20 rounded-lg border-2 border-black bg-transparent px-2"
-                  />
-                ) : (
-                  sValue?.score || "NA"
-                )}
-              </td>
-              <td className="px-2 py-1 whitespace-nowrap">
-                {isEditing ? (
-                  <input
-                    title="null"
-                    type="number"
                     value={editedScores.other}
                     onChange={(e) => {
                       const newScore = parseInt(e.target.value);
@@ -319,18 +242,13 @@ const EvaluateSubmission = ({
                   oValue?.score || "NA"
                 )}
               </td>
-              <td className="px-2 py-1 whitespace-nowrap">
+              <td className="text-muted-foreground px-2 py-1 whitespace-nowrap">
                 {testValue
                   ? `${testValue.score}${testValue.maxScore ? `/${testValue.maxScore}` : ""}`
                   : (submission.testRuns?.[0]?.status ?? "NA")}
               </td>
               <td className="px-2 py-1 whitespace-nowrap">
-                {rValue?.score ||
-                sValue?.score ||
-                oValue?.score ||
-                testValue?.score
-                  ? totalScore
-                  : "NA"}
+                {oValue?.score || testValue?.score ? totalScore : "NA"}
               </td>
               <td>
                 {isEditing ? (

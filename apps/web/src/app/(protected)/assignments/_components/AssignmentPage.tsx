@@ -116,8 +116,6 @@ export default function AssignmentPage({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [editingIndex, setEditingIndex] = useState(-1);
   const [editedScores, setEditedScores] = useState({
-    responsiveness: 0,
-    styling: 0,
     other: 0,
   });
   const [feedback, setFeedback] = useState("");
@@ -214,8 +212,6 @@ export default function AssignmentPage({
     };
 
     setEditedScores({
-      responsiveness: getScore("RESPOSIVENESS"),
-      styling: getScore("STYLING"),
       other: getScore("OTHER"),
     });
   };
@@ -677,15 +673,11 @@ const StudentAssignmentSubmission = ({
           <TableBody>
             {assignment?.submissions.map((submission: any, index: number) => {
               const points = {
-                responsiveness:
-                  submission.points.find(
-                    (p: any) => p.category === "RESPOSIVENESS",
-                  )?.score || 0,
-                styling:
-                  submission.points.find((p: any) => p.category === "STYLING")
-                    ?.score || 0,
                 other:
                   submission.points.find((p: any) => p.category === "OTHER")
+                    ?.score || 0,
+                tests:
+                  submission.points.find((p: any) => p.category === "TESTS")
                     ?.score || 0,
               };
 
@@ -847,8 +839,6 @@ function FeedbackCell({ value }: { value?: string | null }) {
 }
 
 type Scores = {
-  responsiveness: number;
-  styling: number;
   other: number;
 };
 
@@ -1030,12 +1020,8 @@ const AdminAssignmentTable = ({
                 <TableHead className="text-foreground">Sl.no</TableHead>
                 <TableHead className="text-foreground">Username</TableHead>
                 <TableHead className="text-foreground">Date</TableHead>
-                <TableHead className="text-foreground">
-                  Responsive(10)
-                </TableHead>
-                <TableHead className="text-foreground">Styling(10)</TableHead>
-                <TableHead className="text-foreground">Others(10)</TableHead>
-                <TableHead className="text-foreground">Tests</TableHead>
+                <TableHead className="text-foreground">Score(10)</TableHead>
+                <TableHead className="text-foreground">Test Cases</TableHead>
                 <TableHead className="text-foreground">Total</TableHead>
                 <TableHead className="text-foreground">Feedback</TableHead>
                 {currentUser.role !== "STUDENT" && (
@@ -1048,12 +1034,6 @@ const AdminAssignmentTable = ({
             </TableHeader>
             <TableBody>
               {assignments?.map((submission: any, index: any) => {
-                const rValue = submission.points.find(
-                  (point: any) => point.category === "RESPOSIVENESS",
-                );
-                const sValue = submission.points.find(
-                  (point: any) => point.category === "STYLING",
-                );
                 const oValue = submission.points.find(
                   (point: any) => point.category === "OTHER",
                 );
@@ -1061,7 +1041,7 @@ const AdminAssignmentTable = ({
                   (point: any) => point.category === "TESTS",
                 );
 
-                const totalScore = [rValue, sValue, oValue, testValue].reduce(
+                const totalScore = [oValue, testValue].reduce(
                   (acc, currentValue) => {
                     return acc + (currentValue ? currentValue.score : 0);
                   },
@@ -1107,58 +1087,6 @@ const AdminAssignmentTable = ({
                       {editingIndex === index ? (
                         <Input
                           type="number"
-                          value={editedScores.responsiveness}
-                          onChange={(e) => {
-                            const newScore = parseInt(e.target.value);
-                            if (
-                              !isNaN(newScore) &&
-                              newScore >= 0 &&
-                              newScore <= 10
-                            ) {
-                              setEditedScores({
-                                ...editedScores,
-                                responsiveness: newScore,
-                              });
-                            }
-                          }}
-                          min={0}
-                          max={10}
-                          className="w-20"
-                        />
-                      ) : (
-                        rValue?.score || "NA"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {editingIndex === index ? (
-                        <Input
-                          type="number"
-                          value={editedScores.styling}
-                          onChange={(e) => {
-                            const newScore = parseInt(e.target.value);
-                            if (
-                              !isNaN(newScore) &&
-                              newScore >= 0 &&
-                              newScore <= 10
-                            ) {
-                              setEditedScores({
-                                ...editedScores,
-                                styling: newScore,
-                              });
-                            }
-                          }}
-                          min={0}
-                          max={10}
-                          className="w-20"
-                        />
-                      ) : (
-                        sValue?.score || "NA"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {editingIndex === index ? (
-                        <Input
-                          type="number"
                           value={editedScores.other}
                           onChange={(e) => {
                             const newScore = parseInt(e.target.value);
@@ -1181,18 +1109,13 @@ const AdminAssignmentTable = ({
                         oValue?.score || "NA"
                       )}
                     </TableCell>
-                    <TableCell className="text-foreground">
+                    <TableCell className="text-muted-foreground">
                       {testValue
                         ? `${testValue.score}${testValue.maxScore ? `/${testValue.maxScore}` : ""}`
                         : "Queued"}
                     </TableCell>
                     <TableCell className="text-foreground">
-                      {rValue?.score ||
-                      sValue?.score ||
-                      oValue?.score ||
-                      testValue?.score
-                        ? totalScore
-                        : "NA"}
+                      {oValue?.score || testValue?.score ? totalScore : "NA"}
                     </TableCell>
                     <TableCell className="text-foreground">
                       {editingIndex === index ? (
