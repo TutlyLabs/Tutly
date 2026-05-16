@@ -40,7 +40,7 @@ const config = [
       ".cap-stash/**",
       "android/**",
       "ios/**",
-      "public/vscode/**",
+      "public/**",
       "**/*.min.js",
       "**/*.min.css",
     ],
