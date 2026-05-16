@@ -1,5 +1,7 @@
 import type { Db } from "@tutly/db";
 
+export const DEFAULT_TEST_MAX_SCORE = 10;
+
 export const reportedTestVisibility = ["VISIBLE", "HIDDEN"] as const;
 
 export type ReportedTest = {
@@ -49,6 +51,30 @@ export function scoreReportedResults(
     };
   }
 
+  // No explicit cases → normalise to DEFAULT_TEST_MAX_SCORE.
+  if (cases.length === 0) {
+    const totalResults = results.length;
+    const perResultPoints =
+      totalResults > 0 ? DEFAULT_TEST_MAX_SCORE / totalResults : 0;
+    const normalized = results.map((result) => ({
+      ...result,
+      visibility: result.visibility ?? "VISIBLE",
+      points: perResultPoints,
+    }));
+    const scoreRaw = normalized.reduce(
+      (total, result) => total + (result.passed ? result.points : 0),
+      0,
+    );
+    const passedCount = normalized.filter((r) => r.passed).length;
+    return {
+      normalized,
+      score: totalResults > 0 ? Math.round(scoreRaw) : 0,
+      maxScore: totalResults > 0 ? DEFAULT_TEST_MAX_SCORE : 0,
+      passed: passedCount,
+      total: totalResults,
+    };
+  }
+
   const normalized = results.map((result) => {
     const points =
       result.points ??
@@ -61,17 +87,17 @@ export function scoreReportedResults(
     (total, result) => total + (result.passed ? result.points : 0),
     0,
   );
-  const maxScoreRaw =
-    cases.length > 0
-      ? cases.reduce((total, testCase) => total + testCase.points, 0)
-      : normalized.reduce((total, result) => total + result.points, 0);
+  const maxScoreRaw = cases.reduce(
+    (total, testCase) => total + testCase.points,
+    0,
+  );
 
   return {
     normalized,
     score: Math.round(scoreRaw),
     maxScore: Math.round(maxScoreRaw),
     passed: normalized.filter((r) => r.passed).length,
-    total: cases.length > 0 ? cases.length : normalized.length,
+    total: cases.length,
   };
 }
 
