@@ -2229,32 +2229,58 @@ export const assignmentsRouter = createTRPCRouter({
           select: {
             id: true,
             enrolledUser: { select: { username: true } },
-            points: { select: { id: true } },
+            points: { select: { id: true, category: true } },
             attachmentId: true,
+            testRuns: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { status: true },
+            },
           },
         });
 
         const byUser = new Map<
           string,
-          { submitted: Set<string>; evaluated: Set<string> }
+          {
+            submitted: Set<string>;
+            evaluated: Set<string>;
+            testsPassed: Set<string>;
+            testsFailed: Set<string>;
+          }
         >();
         submissions.forEach((s) => {
           const u = s.enrolledUser.username;
           const cur = byUser.get(u) ?? {
             submitted: new Set<string>(),
             evaluated: new Set<string>(),
+            testsPassed: new Set<string>(),
+            testsFailed: new Set<string>(),
           };
           cur.submitted.add(s.attachmentId);
           if (s.points.length > 0) cur.evaluated.add(s.attachmentId);
+          const latestRun = s.testRuns[0]?.status;
+          if (latestRun === "PASSED") cur.testsPassed.add(s.attachmentId);
+          if (latestRun === "FAILED" || latestRun === "ERROR")
+            cur.testsFailed.add(s.attachmentId);
           byUser.set(u, cur);
         });
 
         const stats: Record<
           string,
-          { submitted: number; evaluated: number }
+          {
+            submitted: number;
+            evaluated: number;
+            testsPassed: number;
+            testsFailed: number;
+          }
         > = {};
         byUser.forEach((v, k) => {
-          stats[k] = { submitted: v.submitted.size, evaluated: v.evaluated.size };
+          stats[k] = {
+            submitted: v.submitted.size,
+            evaluated: v.evaluated.size,
+            testsPassed: v.testsPassed.size,
+            testsFailed: v.testsFailed.size,
+          };
         });
 
         return {

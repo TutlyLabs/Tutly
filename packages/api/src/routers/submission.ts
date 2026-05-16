@@ -9,6 +9,7 @@ import { createHmac } from "node:crypto";
 
 import { z } from "zod";
 
+import { enqueueTestRun } from "../lib/runner-client";
 import {
   buildWorkspaceObjectKey,
   getArtifactDownloadUrl,
@@ -142,6 +143,42 @@ export const submissionRouter = createTRPCRouter({
           eventCategoryDataId: submission.id,
         },
       });
+
+      const assignment = await ctx.db.attachment.findUnique({
+        where: { id: input.assignmentDetails.id },
+        select: { submissionMode: true },
+      });
+
+      if (assignment?.submissionMode === "SANDBOX") {
+        const run = await ctx.db.submissionTestRun.create({
+          data: {
+            submissionId: submission.id,
+            assignmentId: input.assignmentDetails.id,
+            provider: "LOCAL",
+            trigger: "auto-submit",
+            status: "QUEUED",
+            attempt: 1,
+            triggeredByUserId: user.id,
+            outputSummary: { queued: true } as never,
+          },
+        });
+
+        await ctx.db.submissionReview.upsert({
+          where: { submissionId: submission.id },
+          create: {
+            submissionId: submission.id,
+            assignmentId: input.assignmentDetails.id,
+            status: "NEEDS_REVIEW",
+            testRunId: run.id,
+          },
+          update: {
+            status: "NEEDS_REVIEW",
+            testRunId: run.id,
+          },
+        });
+
+        void enqueueTestRun(run.id);
+      }
 
       return { success: true, data: submission };
     }),

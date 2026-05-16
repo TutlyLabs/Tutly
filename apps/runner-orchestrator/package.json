@@ -1,0 +1,31 @@
+{
+  "name": "runner-orchestrator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "start": "node --import tsx --env-file=.env src/index.ts",
+    "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.1.0",
+    "@tutly/db": "workspace:*",
+    "express": "^5.2.1",
+    "pino": "^9.5.0",
+    "pino-pretty": "^11.3.0",
+    "tsx": "^4.21.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@tutly/eslint-config": "workspace:*",
+    "@tutly/typescript-config": "workspace:*",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.0.2",
+    "eslint": "^9.39.2",
+    "typescript": "5.9.3"
+  }
+}

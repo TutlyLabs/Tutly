@@ -1,12 +1,21 @@
+import { timingSafeEqual } from "node:crypto";
+
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { enqueueTestRun, enqueueTestRunBatch } from "../lib/runner-client";
 import {
+  recordTestRunOutcome,
+  scoreReportedResults,
+} from "../lib/test-run-scoring";
+import { projectTestRunForViewer } from "../lib/test-visibility";
+import {
+  canManageAssignment,
+  requireAssignmentManageAccess,
   requireAssignmentReadAccess,
   requireSubmissionReadAccess,
-  requireSubmissionReviewAccess,
 } from "../lib/workspace-access";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 const reportedTestSchema = z.object({
   testCaseId: z.string().optional(),
@@ -19,60 +28,6 @@ const reportedTestSchema = z.object({
   error: z.string().optional(),
   metadata: z.any().optional(),
 });
-
-function scoreReportedResults(
-  results: Array<z.infer<typeof reportedTestSchema>>,
-  cases: Array<{ id: string; points: number }>,
-) {
-  const pointsByCase = new Map(cases.map((testCase) => [testCase.id, testCase.points]));
-  const lacksCaseMapping =
-    results.length > 0 &&
-    results.every((result) => result.testCaseId === undefined && result.points === undefined);
-
-  if (cases.length === 1 && lacksCaseMapping) {
-    const casePoints = cases[0]?.points ?? 1;
-    const perResultPoints = casePoints / results.length;
-    const normalized = results.map((result) => ({
-      ...result,
-      points: perResultPoints,
-    }));
-    const scoreRaw = normalized.reduce(
-      (total, result) => total + (result.passed ? result.points : 0),
-      0,
-    );
-
-    return {
-      normalized,
-      score: Math.round(scoreRaw),
-      maxScore: Math.round(casePoints),
-      passed: normalized.filter((result) => result.passed).length,
-      total: normalized.length,
-    };
-  }
-
-  const normalized = results.map((result) => {
-    const points =
-      result.points ?? (result.testCaseId ? pointsByCase.get(result.testCaseId) : undefined) ?? 1;
-    return { ...result, points };
-  });
-
-  const scoreRaw = normalized.reduce(
-    (total, result) => total + (result.passed ? result.points : 0),
-    0,
-  );
-  const maxScoreRaw =
-    cases.length > 0
-      ? cases.reduce((total, testCase) => total + testCase.points, 0)
-      : normalized.reduce((total, result) => total + result.points, 0);
-
-  return {
-    normalized,
-    score: Math.round(scoreRaw),
-    maxScore: Math.round(maxScoreRaw),
-    passed: normalized.filter((result) => result.passed).length,
-    total: cases.length > 0 ? cases.length : normalized.length,
-  };
-}
 
 export const testRunsRouter = createTRPCRouter({
   runVisible: protectedProcedure
@@ -200,34 +155,32 @@ export const testRunsRouter = createTRPCRouter({
     .input(
       z.object({
         submissionId: z.string(),
-        provider: z.enum(["LOCAL", "SSH"]).default("SSH"),
-        serviceConnectionId: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const submission = await requireSubmissionReviewAccess(ctx, input.submissionId);
-      const testCases = await ctx.db.assignmentTestCase.findMany({
-        where: { assignmentId: submission.attachmentId },
-        select: { visibility: true, points: true },
+      const submission = await requireSubmissionReadAccess(ctx, input.submissionId);
+      const user = ctx.session?.user;
+      if (!user || !canManageAssignment(user, submission.assignment)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only instructors can rerun tests",
+        });
+      }
+
+      const previousAttempts = await ctx.db.submissionTestRun.count({
+        where: { submissionId: submission.id },
       });
-      const hiddenTotal = testCases.filter((testCase) => testCase.visibility === "HIDDEN").length;
-      const maxScore = testCases.reduce((total, testCase) => total + testCase.points, 0);
 
       const run = await ctx.db.submissionTestRun.create({
         data: {
           submissionId: submission.id,
           assignmentId: submission.attachmentId,
-          serviceConnectionId: input.serviceConnectionId ?? null,
-          provider: input.provider,
-          trigger: "official",
-          status: hiddenTotal > 0 ? "QUEUED" : "PASSED",
-          hiddenTotal,
-          visibleTotal: testCases.length - hiddenTotal,
-          maxScore,
-          outputSummary: {
-            queued: hiddenTotal > 0,
-            trustedRunnerRequired: hiddenTotal > 0,
-          } as never,
+          provider: "LOCAL",
+          trigger: "instructor-rerun",
+          status: "QUEUED",
+          attempt: previousAttempts + 1,
+          triggeredByUserId: user.id,
+          outputSummary: { queued: true } as never,
         },
       });
 
@@ -236,18 +189,93 @@ export const testRunsRouter = createTRPCRouter({
         create: {
           submissionId: submission.id,
           assignmentId: submission.attachmentId,
-          status: hiddenTotal > 0 ? "NEEDS_REVIEW" : "AUTO_SCORED",
+          status: "NEEDS_REVIEW",
           testRunId: run.id,
-          maxScore,
         },
         update: {
-          status: hiddenTotal > 0 ? "NEEDS_REVIEW" : "AUTO_SCORED",
+          status: "NEEDS_REVIEW",
           testRunId: run.id,
-          maxScore,
         },
       });
 
+      void enqueueTestRun(run.id);
+
       return { success: true, data: run };
+    }),
+
+  rerunAllForAssignment: protectedProcedure
+    .input(z.object({ assignmentId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const assignment = await requireAssignmentManageAccess(ctx, input.assignmentId);
+      const user = ctx.session!.user;
+
+      const recentBulk = await ctx.db.submissionTestRun.count({
+        where: {
+          assignmentId: assignment.id,
+          trigger: "rerun-all",
+          createdAt: { gt: new Date(Date.now() - 5 * 60 * 1000) },
+        },
+      });
+      if (recentBulk > 0) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "A bulk rerun was triggered for this assignment in the last 5 minutes",
+        });
+      }
+
+      const submissions = await ctx.db.submission.findMany({
+        where: { attachmentId: assignment.id },
+        select: { id: true, _count: { select: { testRuns: true } } },
+      });
+
+      if (submissions.length === 0) {
+        return { success: true, count: 0 };
+      }
+
+      const created = await ctx.db.$transaction(
+        submissions.map((submission) =>
+          ctx.db.submissionTestRun.create({
+            data: {
+              submissionId: submission.id,
+              assignmentId: assignment.id,
+              provider: "LOCAL",
+              trigger: "rerun-all",
+              status: "QUEUED",
+              attempt: submission._count.testRuns + 1,
+              triggeredByUserId: user.id,
+              outputSummary: { queued: true } as never,
+            },
+          }),
+        ),
+      );
+
+      void enqueueTestRunBatch(created.map((run) => run.id));
+
+      return { success: true, count: created.length };
+    }),
+
+  reapStaleRuns: protectedProcedure
+    .input(z.object({ olderThanMinutes: z.number().int().min(1).default(10) }))
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.session?.user;
+      if (!user || (user.role !== "INSTRUCTOR" && !user.isAdmin)) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const cutoff = new Date(Date.now() - input.olderThanMinutes * 60 * 1000);
+      const result = await ctx.db.submissionTestRun.updateMany({
+        where: {
+          status: "RUNNING",
+          startedAt: { lt: cutoff },
+        },
+        data: {
+          status: "ERROR",
+          errorMessage: "runner timeout (reaped)",
+          completedAt: new Date(),
+        },
+      });
+
+      return { success: true, reaped: result.count };
     }),
 
   recordOfficial: protectedProcedure
@@ -391,7 +419,17 @@ export const testRunsRouter = createTRPCRouter({
         orderBy: { createdAt: "desc" },
       });
 
-      return { success: true, data: runs };
+      const user = ctx.session!.user;
+      const isOwner = submission.enrolledUser.username === user.username;
+      const projected = runs.map((run) =>
+        projectTestRunForViewer(
+          run,
+          { dueDate: submission.assignment.dueDate ?? null },
+          { role: user.role, isOwnerOfSubmission: isOwner },
+        ),
+      );
+
+      return { success: true, data: projected };
     }),
 
   getForAssignment: protectedProcedure
@@ -419,5 +457,39 @@ export const testRunsRouter = createTRPCRouter({
       });
 
       return { success: true, data: runs };
+    }),
+
+  recordByService: publicProcedure
+    .input(
+      z.object({
+        testRunId: z.string(),
+        status: z.enum(["PASSED", "FAILED", "ERROR"]),
+        results: z.array(reportedTestSchema).default([]),
+        jestReport: z.any().optional(),
+        errorMessage: z.string().optional(),
+        logsArtifactId: z.string().optional(),
+        reportArtifactId: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const provided = ctx.headers.get("x-service-token") ?? "";
+      const expected = process.env.TEST_RUNNER_SECRET ?? "";
+      if (!expected) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Runner secret not configured",
+        });
+      }
+      const a = Buffer.from(provided);
+      const b = Buffer.from(expected);
+      if (a.length !== b.length || !timingSafeEqual(a, b)) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      const result = await recordTestRunOutcome(ctx.db, input);
+      if (!result.ok) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Test run not found" });
+      }
+      return { success: true, ...result };
     }),
 });

@@ -138,6 +138,7 @@ model User {
   portSessions       PortSession[]
   submissionReviews  SubmissionReview[] @relation("SubmissionReviewer")
   createdArtifacts   AssignmentArtifact[]
+  triggeredTestRuns  SubmissionTestRun[] @relation("TestRunTriggeredBy")
 
   displayUsername String?
   sessions        Session[]
@@ -682,6 +683,7 @@ model Attachment {
   course          Course?        @relation(fields: [courseId], references: [id])
   submissionMode  submissionMode @default(HTML_CSS_JS)
   sandboxTemplate String?        @db.Text
+  hiddenTestFiles Json?
 
   gitTemplateRepo String?
   workspaceConfig AssignmentConfig?
@@ -927,6 +929,13 @@ model SubmissionTestRun {
   maxScore      Int @default(0)
 
   outputSummary Json? @default("{}")
+  jestReport    Json?
+  errorMessage  String? @db.Text
+  attempt       Int     @default(1)
+
+  triggeredByUserId String?
+  triggeredBy       User?   @relation("TestRunTriggeredBy", fields: [triggeredByUserId], references: [id])
+
   logsArtifactId String?
   reportArtifactId String?
   startedAt DateTime?
@@ -936,6 +945,7 @@ model SubmissionTestRun {
   updatedAt DateTime @updatedAt
 
   @@index([assignmentId, status])
+  @@index([assignmentId, createdAt])
   @@index([submissionId, createdAt])
 }
 

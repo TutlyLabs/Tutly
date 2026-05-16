@@ -91,10 +91,21 @@ export const sandboxRouter = createTRPCRouter({
         return { allowed: false as const };
       }
 
-      const assignment = input.assignmentId
+      const assignmentRaw = input.assignmentId
         ? await ctx.db.attachment.findUnique({
             where: { id: input.assignmentId, attachmentType: "ASSIGNMENT" },
           })
+        : null;
+      // Hidden test files must never leave the server. Strip before returning.
+      const assignment = assignmentRaw
+        ? (() => {
+            const { hiddenTestFiles: _stripped, ...rest } = assignmentRaw as Record<
+              string,
+              unknown
+            > & { hiddenTestFiles?: unknown };
+            void _stripped;
+            return rest as typeof assignmentRaw;
+          })()
         : null;
 
       let decodedSandboxTemplate: unknown = null;
