@@ -3,6 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { mkdir, rm } from "node:fs/promises";
 import express from "express";
 
+import { dashboardHtml, getDashboardState } from "./dashboard.js";
 import { db } from "./db.js";
 import { env } from "./env.js";
 import { logger } from "./logger.js";
@@ -136,6 +137,24 @@ app.post("/enqueue-batch", checkSecret, (req, res) => {
 
 app.get("/internal/queue", checkSecret, (_req, res) => {
   res.json(getQueueSnapshot());
+});
+
+// Lightweight in-process dashboard. No auth on the HTML (it ships no secrets);
+// in prod, lock the orchestrator off the public internet (Coolify internal network).
+// Mirrors the video-worker's `/admin/queues` URL so the muscle memory carries over.
+app.get(["/", "/dashboard", "/admin/queues"], (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(dashboardHtml());
+});
+
+app.get("/dashboard/data", async (_req, res) => {
+  try {
+    const state = await getDashboardState();
+    res.json(state);
+  } catch (err) {
+    logger.error({ err }, "dashboard data failed");
+    res.status(500).json({ error: "dashboard query failed" });
+  }
 });
 
 const server = app.listen(env.TEST_RUNNER_PORT, () => {
