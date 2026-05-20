@@ -1,5 +1,11 @@
 # runner-orchestrator
 
+## 0.2.1
+
+### Patch Changes
+
+- [#115](https://github.com/TutlyLabs/Tutly/pull/115) [`71095b2`](https://github.com/TutlyLabs/Tutly/commit/71095b2bb6cfc63ee5547543af99a577ecb635eb) Thanks [@UdaySagar-Git](https://github.com/UdaySagar-Git)! - Test runtime: swap jsdom→happy-dom and ts-jest→babel-jest (loose mode) so autoeval matches Sandpack's in-browser preview. Fixes `structuredClone is not defined`, `fetch not available`, and spec-strict spread errors for code that passes in the editor.
+
 ## 0.2.0
 
 ### Minor Changes
