@@ -1,4 +1,3 @@
-# Per-submission Jest sandbox. Spawned by the orchestrator with --network=none.
 FROM node:22-alpine
 
 RUN apk add --no-cache tini
@@ -11,15 +10,18 @@ RUN apk add --no-cache --virtual .build-deps python3 make g++ \
   && rm -rf /root/.npm
 
 COPY apps/runner-orchestrator/runtime/jest.config.cjs ./jest.config.cjs
+COPY apps/runner-orchestrator/runtime/babel.config.cjs ./babel.config.cjs
+COPY apps/runner-orchestrator/runtime/jest.setup.js ./jest.setup.js
 COPY apps/runner-orchestrator/runtime/tsconfig.json ./tsconfig.json
 
-# Symlink baked deps + configs into the orchestrator's mounted /work before running jest.
 RUN printf '%s\n' \
   '#!/bin/sh' \
   'set -e' \
   'cd /work' \
   '[ -e node_modules ] || ln -s /runtime/node_modules node_modules' \
   '[ -e jest.config.cjs ] || ln -s /runtime/jest.config.cjs jest.config.cjs' \
+  '[ -e babel.config.cjs ] || ln -s /runtime/babel.config.cjs babel.config.cjs' \
+  '[ -e jest.setup.js ] || ln -s /runtime/jest.setup.js jest.setup.js' \
   '[ -e tsconfig.json ] || ln -s /runtime/tsconfig.json tsconfig.json' \
   'exec node /runtime/node_modules/.bin/jest "$@"' \
   > /entrypoint.sh \
