@@ -106,25 +106,7 @@ export const sandboxRouter = createTRPCRouter({
         if (locRow) locator = locatorFrom(locRow);
       }
       if (locator) {
-        try {
-          decodedSandboxTemplate = await readSandpackTemplate(locator);
-        } catch (err) {
-          console.error("storage read failed for sandboxTemplate", {
-            assignmentId: resolvedAssignmentId,
-            err,
-          });
-        }
-      }
-      if (decodedSandboxTemplate == null && assignment?.sandboxTemplate) {
-        try {
-          const decoded = Buffer.from(
-            assignment.sandboxTemplate as string,
-            "base64",
-          ).toString("utf-8");
-          decodedSandboxTemplate = JSON.parse(decoded);
-        } catch {
-          decodedSandboxTemplate = assignment.sandboxTemplate;
-        }
+        decodedSandboxTemplate = await readSandpackTemplate(locator);
       }
 
       let resolvedSubmission = submission as
@@ -132,24 +114,9 @@ export const sandboxRouter = createTRPCRouter({
         | null;
       let submissionFiles: Record<string, string> | null = null;
       if (resolvedSubmission && locator) {
-        try {
-          const fromStorage = await readSubmission(locator, resolvedSubmission.id);
-          if (fromStorage) {
-            submissionFiles = fromStorage;
-            resolvedSubmission = { ...resolvedSubmission, data: fromStorage };
-          }
-        } catch (err) {
-          console.error("storage read failed for submission", {
-            submissionId: resolvedSubmission.id,
-            err,
-          });
-        }
-        if (
-          submissionFiles == null &&
-          resolvedSubmission.data &&
-          typeof resolvedSubmission.data === "object"
-        ) {
-          submissionFiles = resolvedSubmission.data as Record<string, string>;
+        submissionFiles = await readSubmission(locator, resolvedSubmission.id);
+        if (submissionFiles) {
+          resolvedSubmission = { ...resolvedSubmission, data: submissionFiles };
         }
       }
 

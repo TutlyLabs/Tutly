@@ -50,10 +50,8 @@ export async function POST(req: NextRequest) {
       id: true,
       submissionId: true,
       assignmentId: true,
-      submission: { select: { id: true, data: true, attachmentId: true } },
-      assignment: {
-        select: { ...locatorSelect, sandboxTemplate: true },
-      },
+      submission: { select: { id: true, attachmentId: true } },
+      assignment: { select: locatorSelect },
     },
   });
 
@@ -63,25 +61,15 @@ export async function POST(req: NextRequest) {
 
   const locator = locatorFrom(run.assignment);
   const [submissionFiles, template] = await Promise.all([
-    readSubmission(locator, run.submission.id).catch(() => null),
-    readSandpackTemplate(locator).catch(() => null),
+    readSubmission(locator, run.submission.id),
+    readSandpackTemplate(locator),
   ]);
-
-  const submissionDataMap =
-    submissionFiles ??
-    (run.submission.data && typeof run.submission.data === "object"
-      ? (run.submission.data as Record<string, string>)
-      : {});
 
   // Runner sees full template + submission overrides on visible paths.
   const mergedTemplate = template
-    ? mergeForAudience(
-        template as SandpackTemplate,
-        submissionDataMap,
-        "runner",
-      )
+    ? mergeForAudience(template as SandpackTemplate, submissionFiles, "runner")
     : null;
-  const mergedFiles = mergedTemplate?.files ?? submissionDataMap;
+  const mergedFiles = mergedTemplate?.files ?? submissionFiles ?? {};
 
   return NextResponse.json({
     claimed: true,
@@ -100,7 +88,7 @@ export async function POST(req: NextRequest) {
           ? Buffer.from(JSON.stringify(mergedTemplate), "utf-8").toString(
               "base64",
             )
-          : run.assignment.sandboxTemplate,
+          : null,
       },
     },
   });

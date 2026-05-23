@@ -253,23 +253,12 @@ export const attachmentsRouter = createTRPCRouter({
       });
       if (!existing) return { error: "Not found" };
 
-      const templateString = JSON.stringify(parsed.data);
-      const base64Template = Buffer.from(templateString, "utf-8").toString(
-        "base64",
-      );
-      try {
-        await writeSandpackTemplate(locatorFrom(existing), parsed.data);
-      } catch (err) {
-        console.error("storage write failed for sandboxTemplate", { id, err });
-      }
-
+      await writeSandpackTemplate(locatorFrom(existing), parsed.data);
       const attachment = await ctx.db.attachment.update({
         where: { id },
-        data: {
-          sandboxTemplate: base64Template,
-        },
+        data: { updatedAt: new Date() },
+        select: { id: true, updatedAt: true },
       });
-
       return { success: true as const, data: attachment };
     }),
 

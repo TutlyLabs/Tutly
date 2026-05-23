@@ -5,28 +5,16 @@ import { z } from "zod";
 import { locatorFrom, locatorSelect } from "../lib/storage-locator";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
-async function loadSandboxTemplateRaw(assignment: {
-  id: string;
-  sandboxTemplate: string | null;
-}): Promise<string | null> {
-  try {
-    const row = await db.attachment.findUnique({
-      where: { id: assignment.id },
-      select: locatorSelect,
-    });
-    if (row) {
-      const parsed = await readSandpackTemplate(locatorFrom(row));
-      if (parsed != null) {
-        return Buffer.from(JSON.stringify(parsed), "utf-8").toString("base64");
-      }
-    }
-  } catch (err) {
-    console.error("storage read failed for sandboxTemplate", {
-      assignmentId: assignment.id,
-      err,
-    });
-  }
-  return assignment.sandboxTemplate;
+async function loadSandboxTemplateRaw(assignmentId: string): Promise<string | null> {
+  const row = await db.attachment.findUnique({
+    where: { id: assignmentId },
+    select: locatorSelect,
+  });
+  if (!row) return null;
+  const parsed = await readSandpackTemplate(locatorFrom(row));
+  return parsed
+    ? Buffer.from(JSON.stringify(parsed), "utf-8").toString("base64")
+    : null;
 }
 import { defaultWorkspaceConfig } from "../lib/workspace-config";
 import {
@@ -1220,7 +1208,7 @@ export const assignmentsRouter = createTRPCRouter({
             link: assignment.link,
             details: assignment.details,
             detailsJson: assignment.detailsJson,
-            sandboxTemplate: await loadSandboxTemplateRaw(assignment),
+            sandboxTemplate: await loadSandboxTemplateRaw(assignment.id),
             class: {
               id: assignment.class.id,
               title: assignment.class.title,

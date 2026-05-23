@@ -178,7 +178,7 @@ export const submissionRouter = createTRPCRouter({
       // Load template to validate the submission (no deletions allowed).
       const templateAttachment = await ctx.db.attachment.findUnique({
         where: { id: input.assignmentDetails.id },
-        select: { ...locatorSelect, sandboxTemplate: true },
+        select: locatorSelect,
       });
       const locator = templateAttachment ? locatorFrom(templateAttachment) : null;
       type Template = Awaited<ReturnType<typeof readSandpackTemplate>>;
@@ -186,17 +186,6 @@ export const submissionRouter = createTRPCRouter({
       if (locator) {
         try {
           template = await readSandpackTemplate(locator);
-        } catch {
-          template = null;
-        }
-      }
-      if (!template && templateAttachment?.sandboxTemplate) {
-        try {
-          const decoded = Buffer.from(
-            templateAttachment.sandboxTemplate,
-            "base64",
-          ).toString("utf-8");
-          template = JSON.parse(decoded) as Template;
         } catch {
           template = null;
         }
@@ -212,7 +201,7 @@ export const submissionRouter = createTRPCRouter({
         };
       }
 
-      // Drop hidden/solution paths before storing — server-side enforcement.
+      // Drop hidden/solution/test paths before storing — server-side enforcement.
       const submittedFiles = template
         ? filterSubmissionInput(
             submittedRaw,
@@ -224,8 +213,6 @@ export const submissionRouter = createTRPCRouter({
         data: {
           attachmentId: input.assignmentDetails.id,
           enrolledUserId: enrolledUser.id,
-          // Prisma JSON input type isn't on the browser bundle.
-          data: submittedFiles as never,
           status: "SUBMITTED",
         },
       });
@@ -234,7 +221,7 @@ export const submissionRouter = createTRPCRouter({
         try {
           await writeSubmission(locator, submission.id, submittedFiles);
         } catch (err) {
-          console.error("storage write failed for submission.data", {
+          console.error("storage write failed for submission", {
             submissionId: submission.id,
             err,
           });
@@ -680,44 +667,24 @@ export const submissionRouter = createTRPCRouter({
         });
         if (locRow) {
           const loc = locatorFrom(locRow);
-          let submissionFiles: Record<string, string> | null = null;
-          try {
-            submissionFiles = await readSubmission(loc, submission.id);
-          } catch (err) {
-            console.error("storage read failed for submission", {
-              submissionId: submission.id,
-              err,
-            });
-          }
-          if (
-            submissionFiles == null &&
-            submission.data &&
-            typeof submission.data === "object"
-          ) {
-            submissionFiles = submission.data as Record<string, string>;
-          }
-
-          let template: SandpackTemplate | null = null;
-          try {
-            template = (await readSandpackTemplate(loc)) as SandpackTemplate | null;
-          } catch (err) {
-            console.error("storage read failed for sandboxTemplate", {
-              assignmentId: submission.attachmentId,
-              err,
-            });
-          }
+          const submissionFiles = await readSubmission(loc, submission.id);
+          const template = (await readSandpackTemplate(
+            loc,
+          )) as SandpackTemplate | null;
 
           const audience: "student" | "instructor" = isInstructorAccess
             ? "instructor"
             : "student";
           if (template) {
-            initialFiles = mergeForAudience(template, submissionFiles, audience)
-              .files;
+            initialFiles = mergeForAudience(
+              template,
+              submissionFiles,
+              audience,
+            ).files;
           } else {
             initialFiles = submissionFiles;
           }
         }
-        if (initialFiles == null) initialFiles = submission.data;
 
         return {
           success: true,
