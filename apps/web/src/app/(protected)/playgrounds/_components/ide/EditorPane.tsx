@@ -29,6 +29,8 @@ import { cn } from "@tutly/utils";
 
 import { getDisplayName } from "./fileMeta";
 import { useIDE } from "./ideStore";
+import { FileFlagsBar } from "../../sandbox/_components/FileFlagsBar";
+import { useInstructorMode } from "../../sandbox/_components/instructorMode";
 import type { DropEdge, Pane, Tab } from "./types";
 
 const tabMime = "application/x-tutly-tab";
@@ -64,6 +66,7 @@ export default function EditorPane({ pane }: { pane: Pane }) {
     pinTab,
     openFile,
   } = useIDE();
+  const instructorMode = useInstructorMode();
   const isActive = state.activePaneId === pane.id;
   const activeTab = pane.tabs.find((t) => t.id === pane.activeTabId) ?? null;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -139,6 +142,7 @@ export default function EditorPane({ pane }: { pane: Pane }) {
           moveTab(srcPaneId, srcTabId, pane.id, toIndex)
         }
       />
+      {instructorMode && <FileFlagsBar filePath={activeTab?.path ?? null} />}
       <div className="relative min-h-0 flex-1">
         {activeTab ? <MonacoCanvas tab={activeTab} /> : <EmptyPaneMessage />}
         {dropEdge && dropEdge !== "center" && <DropIndicator edge={dropEdge} />}

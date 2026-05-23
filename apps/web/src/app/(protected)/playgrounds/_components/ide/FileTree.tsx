@@ -3,12 +3,9 @@
 import {
   ChevronDown,
   ChevronRight,
-  ChevronsDownUp,
-  Download,
   FilePlus,
   FolderPlus,
   Lock,
-  Upload,
 } from "lucide-react";
 import {
   useCallback,
@@ -273,13 +270,14 @@ export default function FileTree() {
           >
             <FolderPlus className="h-3.5 w-3.5" />
           </IconButton>
-          <IconButton
+          {/* context strip injected below */}
+          {/* <IconButton
             tooltip="Upload Files…"
             onClick={() => filesInputRef.current?.click()}
           >
             <Upload className="h-3.5 w-3.5" />
-          </IconButton>
-          <IconButton
+          </IconButton> */}
+          {/* <IconButton
             tooltip="Download Project (.zip)"
             shortcut="⌘⇧S"
             onClick={() => downloadProjectZip(files, projectName)}
@@ -291,7 +289,7 @@ export default function FileTree() {
             onClick={() => setExpanded({})}
           >
             <ChevronsDownUp className="h-3.5 w-3.5" />
-          </IconButton>
+          </IconButton> */}
         </div>
       </div>
 

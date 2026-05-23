@@ -27,8 +27,8 @@ export function ScoreFormulaHint() {
             including hidden testcases (10 × passed / total)
           </div>
           <div>
-            <span className="font-medium">Total</span> = Score + Test Cases
-            (max 20)
+            <span className="font-medium">Total</span> = Score + Test Cases (max
+            20)
           </div>
         </div>
       </TooltipContent>

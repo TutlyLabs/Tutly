@@ -10,7 +10,6 @@ import {
   CommandShortcut,
 } from "@tutly/ui/command";
 import {
-  Download,
   FolderSync,
   PanelBottom,
   PanelLeft,
@@ -169,7 +168,7 @@ export default function CommandPalette() {
               )}
             </CommandGroup>
             <CommandGroup heading="Project">
-              <CommandItem
+              {/* <CommandItem
                 onSelect={run(() =>
                   downloadProjectZip(
                     files,
@@ -180,7 +179,7 @@ export default function CommandPalette() {
                 <Download />
                 Download Project (.zip)
                 <CommandShortcut>⌘⇧S</CommandShortcut>
-              </CommandItem>
+              </CommandItem> */}
               <CommandItem
                 onSelect={run(() => {
                   const input = document.createElement("input");

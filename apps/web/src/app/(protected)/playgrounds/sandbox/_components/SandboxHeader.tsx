@@ -1,15 +1,14 @@
 "use client";
 
 import type { SandpackProps } from "@codesandbox/sandpack-react";
+import { useSandpack } from "@codesandbox/sandpack-react";
 import {
   ArrowLeft,
   Edit,
-  Lock,
   Maximize2,
   Minimize2,
   RotateCcw,
   Save,
-  Settings,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -28,8 +27,7 @@ import SubmitAssignment from "@/app/(protected)/playgrounds/_components/SubmitAs
 import { templates } from "@/app/(protected)/playgrounds/templetes";
 import { api } from "@/trpc/react";
 
-import { HiddenTestsModal } from "./HiddenTestsModal";
-import { SandboxSettingsModal } from "./SandboxSettingsModal";
+import { TUTLY_CONFIG_PATH, parseTutlyConfig } from "./tutlyConfigFile";
 
 interface SandboxHeaderProps {
   template: string;
@@ -43,55 +41,66 @@ interface SandboxHeaderProps {
   onConfigUpdate: (config: SandpackProps) => void;
 }
 
-// Settings dialog exposes the full sandpack JSON — keep it away from students.
-function canShowSettings(
-  currentUser: any | undefined,
-  assignmentId: string | null | undefined,
-) {
-  if (!assignmentId) return true; // standalone playground — fine for anyone
-  const role = currentUser?.role;
-  return role === "INSTRUCTOR" || role === "ADMIN" || role === "MENTOR";
-}
-
 function SandboxActions({
   assignmentId,
   isEditingTemplate,
   savedTemplate,
   onConfigUpdate,
-  showSettingsButton,
 }: {
   assignmentId: string | null;
   isEditingTemplate: boolean;
   savedTemplate: SandpackProps;
   onConfigUpdate: (config: SandpackProps) => void;
-  showSettingsButton: boolean;
 }) {
-  const [showSettings, setShowSettings] = useState(false);
-  const [showHiddenTests, setShowHiddenTests] = useState(false);
+  const { sandpack } = useSandpack();
 
-  // tRPC mutation
   const updateAttachmentMutation =
     api.attachments.updateAttachmentSandboxTemplate.useMutation();
 
   const handleSaveTemplate = async () => {
     if (!assignmentId) {
-      console.error("No assignment ID found");
+      toast.error("No assignment id");
       return;
     }
 
-    try {
-      console.log("Saving template:", savedTemplate);
+    const allFiles = { ...sandpack.files } as Record<
+      string,
+      { code: string } | string
+    >;
 
+    // /tutly.json — the instructor's edit surface for template/options/customSetup/fileMeta.
+    const tutlyEntry = allFiles[TUTLY_CONFIG_PATH];
+    const tutlyRaw =
+      typeof tutlyEntry === "string" ? tutlyEntry : (tutlyEntry?.code ?? null);
+    delete allFiles[TUTLY_CONFIG_PATH];
+
+    let configOverrides: Record<string, unknown> = {};
+    if (tutlyRaw != null) {
+      const parsed = parseTutlyConfig(tutlyRaw);
+      if (!parsed.ok) {
+        toast.error(parsed.error);
+        return;
+      }
+      configOverrides = parsed.config;
+    }
+
+    const templateToSave = {
+      ...savedTemplate,
+      ...configOverrides,
+      files: allFiles,
+    } as SandpackProps;
+
+    try {
       const result = await updateAttachmentMutation.mutateAsync({
         id: assignmentId,
-        sandboxTemplate: savedTemplate,
+        sandboxTemplate: templateToSave,
       });
-
-      if (result.success) {
-        toast.success("Template updated successfully");
-      } else {
-        toast.error("Failed to save template");
+      if (!result.success) {
+        toast.error(result.error ?? "Failed to save template");
+        return;
       }
+      toast.success("Template saved");
+      onConfigUpdate(templateToSave);
     } catch (error) {
       console.error("Error saving template:", error);
       toast.error("Failed to save template");
@@ -100,32 +109,6 @@ function SandboxActions({
 
   return (
     <>
-      {showSettingsButton && (
-        <Button
-          variant="ghost"
-          onClick={() => setShowSettings(true)}
-          className="text-gray-300 hover:text-white"
-          title="Sandbox Settings"
-        >
-          <Settings className="h-4 w-4" />
-          Settings
-        </Button>
-      )}
-
-      {/* Hidden Tests editor - Only for editing templates */}
-      {isEditingTemplate && assignmentId && (
-        <Button
-          variant="ghost"
-          onClick={() => setShowHiddenTests(true)}
-          className="text-amber-400 hover:text-amber-300"
-          title="Edit hidden tests (server-only)"
-        >
-          <Lock className="h-4 w-4" />
-          Hidden Tests
-        </Button>
-      )}
-
-      {/* Save Button - Only for editing templates */}
       {isEditingTemplate && assignmentId && (
         <Button
           variant="ghost"
@@ -136,21 +119,6 @@ function SandboxActions({
           <Save className="h-4 w-4" />
           Save Template
         </Button>
-      )}
-
-      <SandboxSettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-        onSave={(config) => onConfigUpdate(config)}
-        savedTemplate={savedTemplate}
-      />
-
-      {isEditingTemplate && assignmentId && (
-        <HiddenTestsModal
-          assignmentId={assignmentId}
-          open={showHiddenTests}
-          onOpenChange={setShowHiddenTests}
-        />
       )}
     </>
   );
@@ -249,10 +217,6 @@ export function SandboxHeader({
                   isEditingTemplate={isEditingTemplate}
                   savedTemplate={savedTemplate}
                   onConfigUpdate={onConfigUpdate}
-                  showSettingsButton={canShowSettings(
-                    currentUser,
-                    assignmentId,
-                  )}
                 />
               </div>
             ) : (

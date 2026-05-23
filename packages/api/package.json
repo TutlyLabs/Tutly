@@ -11,6 +11,10 @@
     "./lib/test-run-scoring": {
       "types": "./src/lib/test-run-scoring.ts",
       "default": "./src/lib/test-run-scoring.ts"
+    },
+    "./lib/storage-locator": {
+      "types": "./src/lib/storage-locator.ts",
+      "default": "./src/lib/storage-locator.ts"
     }
   },
   "scripts": {
@@ -25,6 +29,7 @@
     "@trpc/server": "11.8.0",
     "@tutly/auth": "workspace:*",
     "@tutly/db": "workspace:*",
+    "@tutly/storage": "workspace:*",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.1.2",
     "firebase-admin": "^13.8.0",

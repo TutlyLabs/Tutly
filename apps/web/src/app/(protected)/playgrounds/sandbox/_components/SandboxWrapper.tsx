@@ -10,8 +10,10 @@ import { useTheme } from "next-themes";
 import { useEffect, useMemo, useState } from "react";
 import { useBundlerUrl } from "@/hooks/use-bundler-url";
 
+import { InstructorModeProvider } from "./instructorMode";
 import { SandboxEmbed } from "./SandboxEmbed";
 import { SandboxHeader } from "./SandboxHeader";
+import { TUTLY_CONFIG_PATH, buildTutlyConfigContent } from "./tutlyConfigFile";
 
 interface SandboxWrapperProps {
   template: string;
@@ -37,9 +39,19 @@ export function SandboxWrapper({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const sandpackTheme = resolvedTheme === "dark" ? "dark" : "light";
+
+  // Instructor editing template + free playground always see the explorer.
+  // Students respect options.showFileExplorer in tutly.json (defaults to off).
+  const templateOptions = (assignment?.sandboxTemplate as SandpackProps | null)
+    ?.options as { showFileExplorer?: boolean } | undefined;
+  const fileExplorer =
+    (canEditTemplate && isEditingTemplate) ||
+    !assignment ||
+    templateOptions?.showFileExplorer === true;
   const config = {
-    fileExplorer: !assignment || (canEditTemplate && isEditingTemplate),
+    fileExplorer,
     closableTabs: !assignment,
+    restrictFiles: !fileExplorer,
   };
 
   const baseTemplate: SandpackProps = useMemo(
@@ -73,8 +85,20 @@ export function SandboxWrapper({
     setCurrentConfig(newConfig);
   };
 
+  // Inject /tutly.json so instructors edit template config as a file.
+  const showInstructorConfig = canEditTemplate && isEditingTemplate;
+  const filesForSandpack = useMemo(() => {
+    const base = (currentConfig.files ?? {}) as Record<string, unknown>;
+    if (!showInstructorConfig) return base;
+    return {
+      ...base,
+      [TUTLY_CONFIG_PATH]: { code: buildTutlyConfigContent(currentConfig) },
+    };
+  }, [currentConfig, showInstructorConfig]);
+
   const sandpackProps: SandpackProps = {
     ...currentConfig,
+    files: filesForSandpack as SandpackProps["files"],
     theme: sandpackTheme,
   };
 
@@ -85,36 +109,38 @@ export function SandboxWrapper({
   if (!mounted) return null;
 
   return (
-    <SandpackProvider
-      key={sandpackTheme}
-      {...sandpackProps}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        minHeight: 0,
-        width: "100%",
-      }}
-    >
-      <SandboxHeader
-        assignmentId={assignmentId ?? null}
-        template={template}
-        templateName={templateName}
-        isEditTemplate={canEditTemplate}
-        isEditingTemplate={isEditingTemplate}
-        currentUser={currentUser}
-        savedTemplate={currentConfig}
-        onConfigUpdate={handleConfigUpdate}
-      />
-      <div className="min-h-0 w-full flex-1 overflow-hidden">
-        <SandboxEmbed
-          assignment={assignment}
-          isEditTemplate={canEditTemplate}
+    <InstructorModeProvider value={showInstructorConfig}>
+      <SandpackProvider
+        key={sandpackTheme}
+        {...sandpackProps}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          minHeight: 0,
+          width: "100%",
+        }}
+      >
+        <SandboxHeader
+          assignmentId={assignmentId ?? null}
           template={template}
-          config={config}
-          editableFiles={editableFilesFromTemplate}
+          templateName={templateName}
+          isEditTemplate={canEditTemplate}
+          isEditingTemplate={isEditingTemplate}
+          currentUser={currentUser}
+          savedTemplate={currentConfig}
+          onConfigUpdate={handleConfigUpdate}
         />
-      </div>
-    </SandpackProvider>
+        <div className="min-h-0 w-full flex-1 overflow-hidden">
+          <SandboxEmbed
+            assignment={assignment}
+            isEditTemplate={canEditTemplate}
+            template={template}
+            config={config}
+            editableFiles={editableFilesFromTemplate}
+          />
+        </div>
+      </SandpackProvider>
+    </InstructorModeProvider>
   );
 }
