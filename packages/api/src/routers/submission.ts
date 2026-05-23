@@ -9,6 +9,19 @@ import { createHmac } from "node:crypto";
 
 import { z } from "zod";
 
+import {
+  readSandpackTemplate,
+  readSubmission,
+  writeSubmission,
+} from "@tutly/storage";
+
+import { locatorFrom, locatorSelect } from "../lib/storage-locator";
+import {
+  filterSubmissionInput,
+  mergeForAudience,
+  type SandpackTemplate,
+} from "../lib/template-policy";
+
 import { enqueueTestRun } from "../lib/runner-client";
 import {
   buildWorkspaceObjectKey,
@@ -79,6 +92,42 @@ function signWorkspaceToken(input: {
   return `${encodedPayload}.${signature}`;
 }
 
+function sandpackFilesToFilesMap(input: unknown): Record<string, string> {
+  if (!input || typeof input !== "object") return {};
+  const out: Record<string, string> = {};
+  for (const [path, entry] of Object.entries(input as Record<string, unknown>)) {
+    if (typeof entry === "string") {
+      out[path] = entry;
+    } else if (entry && typeof entry === "object" && "code" in entry) {
+      const code = (entry as { code?: unknown }).code;
+      out[path] = typeof code === "string" ? code : "";
+    }
+  }
+  return out;
+}
+
+function findDeletedTemplatePaths(
+  submitted: Record<string, string>,
+  template: { files?: Record<string, unknown> } | null,
+): string[] {
+  const files = template?.files ?? {};
+  const have = new Set(Object.keys(submitted));
+  const deleted: string[] = [];
+  for (const [path, entry] of Object.entries(files)) {
+    if (/^\/solution(\/|$)/i.test(path) || /\.solution\./i.test(path)) continue;
+    if (
+      typeof entry === "object" &&
+      entry !== null &&
+      "hidden" in entry &&
+      (entry as { hidden?: unknown }).hidden === true
+    ) {
+      continue;
+    }
+    if (!have.has(path)) deleted.push(path);
+  }
+  return deleted;
+}
+
 export const submissionRouter = createTRPCRouter({
   createSubmission: protectedProcedure
     .input(
@@ -126,15 +175,71 @@ export const submissionRouter = createTRPCRouter({
       });
       if (!enrolledUser) return { error: "Not enrolled" };
 
+      // Load template to validate the submission (no deletions allowed).
+      const templateAttachment = await ctx.db.attachment.findUnique({
+        where: { id: input.assignmentDetails.id },
+        select: { ...locatorSelect, sandboxTemplate: true },
+      });
+      const locator = templateAttachment ? locatorFrom(templateAttachment) : null;
+      type Template = Awaited<ReturnType<typeof readSandpackTemplate>>;
+      let template: Template = null;
+      if (locator) {
+        try {
+          template = await readSandpackTemplate(locator);
+        } catch {
+          template = null;
+        }
+      }
+      if (!template && templateAttachment?.sandboxTemplate) {
+        try {
+          const decoded = Buffer.from(
+            templateAttachment.sandboxTemplate,
+            "base64",
+          ).toString("utf-8");
+          template = JSON.parse(decoded) as Template;
+        } catch {
+          template = null;
+        }
+      }
+
+      const submittedRaw = sandpackFilesToFilesMap(input.files);
+      const missing = findDeletedTemplatePaths(submittedRaw, template);
+      if (missing.length > 0) {
+        return {
+          error: `Cannot delete template files. Restore: ${missing
+            .slice(0, 5)
+            .join(", ")}${missing.length > 5 ? "…" : ""}`,
+        };
+      }
+
+      // Drop hidden/solution paths before storing — server-side enforcement.
+      const submittedFiles = template
+        ? filterSubmissionInput(
+            submittedRaw,
+            template as unknown as SandpackTemplate,
+          )
+        : submittedRaw;
+
       const submission = await ctx.db.submission.create({
         data: {
           attachmentId: input.assignmentDetails.id,
           enrolledUserId: enrolledUser.id,
           // Prisma JSON input type isn't on the browser bundle.
-          data: input.files as never,
+          data: submittedFiles as never,
           status: "SUBMITTED",
         },
       });
+
+      if (locator) {
+        try {
+          await writeSubmission(locator, submission.id, submittedFiles);
+        } catch (err) {
+          console.error("storage write failed for submission.data", {
+            submissionId: submission.id,
+            err,
+          });
+        }
+      }
 
       await ctx.db.events.create({
         data: {
@@ -566,11 +671,59 @@ export const submissionRouter = createTRPCRouter({
           return { success: false, error: "Access denied" };
         }
 
+        // Merge: hidden/solution come from current template (so instructor
+        // edits propagate); visible files come from the submission.
+        let initialFiles: unknown = null;
+        const locRow = await ctx.db.attachment.findUnique({
+          where: { id: submission.attachmentId },
+          select: locatorSelect,
+        });
+        if (locRow) {
+          const loc = locatorFrom(locRow);
+          let submissionFiles: Record<string, string> | null = null;
+          try {
+            submissionFiles = await readSubmission(loc, submission.id);
+          } catch (err) {
+            console.error("storage read failed for submission", {
+              submissionId: submission.id,
+              err,
+            });
+          }
+          if (
+            submissionFiles == null &&
+            submission.data &&
+            typeof submission.data === "object"
+          ) {
+            submissionFiles = submission.data as Record<string, string>;
+          }
+
+          let template: SandpackTemplate | null = null;
+          try {
+            template = (await readSandpackTemplate(loc)) as SandpackTemplate | null;
+          } catch (err) {
+            console.error("storage read failed for sandboxTemplate", {
+              assignmentId: submission.attachmentId,
+              err,
+            });
+          }
+
+          const audience: "student" | "instructor" = isInstructorAccess
+            ? "instructor"
+            : "student";
+          if (template) {
+            initialFiles = mergeForAudience(template, submissionFiles, audience)
+              .files;
+          } else {
+            initialFiles = submissionFiles;
+          }
+        }
+        if (initialFiles == null) initialFiles = submission.data;
+
         return {
           success: true,
           data: {
             submission,
-            initialFiles: submission.data,
+            initialFiles,
           },
         };
       } catch (error) {

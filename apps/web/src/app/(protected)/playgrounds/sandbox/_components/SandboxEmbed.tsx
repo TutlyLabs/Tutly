@@ -14,6 +14,8 @@ import {
   useIDE,
 } from "@/app/(protected)/playgrounds/_components/ide/ideStore";
 
+import { useInstructorMode } from "./instructorMode";
+
 interface SandboxEmbedProps {
   assignment?: Attachment | null;
   isEditTemplate: boolean;
@@ -111,10 +113,19 @@ function DefaultToAssignmentTab() {
 function AutoOpenInitial() {
   const { sandpack } = useSandpack();
   const { openFile, state } = useIDE();
+  const instructorMode = useInstructorMode();
   useEffect(() => {
     if (state.layout.type === "pane" && state.layout.tabs.length > 0) return;
 
-    // Open configured visibleFiles/activeFile if provided.
+    // Instructor editing the template: open EVERY file (including hidden)
+    // so they can see and toggle flags for each.
+    if (instructorMode) {
+      for (const path of Object.keys(sandpack.files)) openFile(path);
+      if (sandpack.activeFile) openFile(sandpack.activeFile);
+      return;
+    }
+
+    // Students / read-only viewers: open configured visibleFiles only.
     const visibleFromProps = sandpack.visibleFilesFromProps ?? [];
     const activeFromProps = sandpack.activeFile;
 

@@ -2,6 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 
 import { db } from "@tutly/db";
+import { readSandpackTemplate, readSubmission } from "@tutly/storage";
+
+import { locatorFrom, locatorSelect } from "@tutly/api/lib/storage-locator";
+import {
+  mergeForAudience,
+  type SandpackTemplate,
+} from "@tutly/api/lib/template-policy";
 
 function checkSecret(req: NextRequest): boolean {
   const provided = req.headers.get("x-service-token") ?? "";
@@ -45,10 +52,56 @@ export async function POST(req: NextRequest) {
       assignmentId: true,
       submission: { select: { id: true, data: true, attachmentId: true } },
       assignment: {
-        select: { id: true, sandboxTemplate: true, hiddenTestFiles: true },
+        select: { ...locatorSelect, sandboxTemplate: true },
       },
     },
   });
 
-  return NextResponse.json({ claimed: true, run });
+  if (!run) {
+    return NextResponse.json({ claimed: false });
+  }
+
+  const locator = locatorFrom(run.assignment);
+  const [submissionFiles, template] = await Promise.all([
+    readSubmission(locator, run.submission.id).catch(() => null),
+    readSandpackTemplate(locator).catch(() => null),
+  ]);
+
+  const submissionDataMap =
+    submissionFiles ??
+    (run.submission.data && typeof run.submission.data === "object"
+      ? (run.submission.data as Record<string, string>)
+      : {});
+
+  // Runner sees full template + submission overrides on visible paths.
+  const mergedTemplate = template
+    ? mergeForAudience(
+        template as SandpackTemplate,
+        submissionDataMap,
+        "runner",
+      )
+    : null;
+  const mergedFiles = mergedTemplate?.files ?? submissionDataMap;
+
+  return NextResponse.json({
+    claimed: true,
+    run: {
+      id: run.id,
+      submissionId: run.submissionId,
+      assignmentId: run.assignmentId,
+      submission: {
+        id: run.submission.id,
+        attachmentId: run.submission.attachmentId,
+        data: mergedFiles,
+      },
+      assignment: {
+        id: run.assignment.id,
+        sandboxTemplate: mergedTemplate
+          ? Buffer.from(JSON.stringify(mergedTemplate), "utf-8").toString(
+              "base64",
+            )
+          : run.assignment.sandboxTemplate,
+      },
+    },
+  });
 }

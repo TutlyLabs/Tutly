@@ -1,5 +1,16 @@
 import { CodeSandbox } from "@codesandbox/sdk";
+import {
+  readSandpackTemplate,
+  readSubmission,
+  type Locator,
+} from "@tutly/storage";
 import { z } from "zod";
+
+import { locatorFrom, locatorSelect } from "../lib/storage-locator";
+import {
+  mergeForAudience,
+  type SandpackTemplate,
+} from "../lib/template-policy";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { db } from "@tutly/db";
@@ -8,40 +19,6 @@ async function createTestSandbox(apiKey: string) {
   const sdk = new CodeSandbox(apiKey);
   const createdSandbox = await sdk.sandboxes.create();
   return { sdk, sandboxId: createdSandbox.id };
-}
-
-// Removes files marked `hidden: true` or under `/solution/` from the template.
-function redactSolutionFiles(template: unknown): unknown {
-  if (!template || typeof template !== "object") return template;
-  const t = template as Record<string, any>;
-  const files = t.files;
-  if (!files || typeof files !== "object") return template;
-
-  const isSolutionPath = (p: string) => {
-    const norm = p.startsWith("/") ? p : `/${p}`;
-    return /^\/solution(\/|$)/i.test(norm) || /\.solution\./i.test(norm);
-  };
-
-  const sanitized: Record<string, any> = {};
-  for (const [path, entry] of Object.entries(files)) {
-    if (isSolutionPath(path)) continue;
-    if (entry && typeof entry === "object" && (entry as any).hidden === true) continue;
-    sanitized[path] = entry;
-  }
-
-  const opts = t.options && typeof t.options === "object" ? { ...t.options } : undefined;
-  if (opts) {
-    if (Array.isArray(opts.visibleFiles)) {
-      opts.visibleFiles = opts.visibleFiles.filter(
-        (p: string) => sanitized[p] !== undefined,
-      );
-    }
-    if (typeof opts.activeFile === "string" && sanitized[opts.activeFile] === undefined) {
-      opts.activeFile = undefined;
-    }
-  }
-
-  return { ...t, files: sanitized, ...(opts ? { options: opts } : {}) };
 }
 
 async function cleanupSandbox(sdk: any, sandboxId: string) {
@@ -91,25 +68,54 @@ export const sandboxRouter = createTRPCRouter({
         return { allowed: false as const };
       }
 
-      const assignmentRaw = input.assignmentId
-        ? await ctx.db.attachment.findUnique({
-            where: { id: input.assignmentId, attachmentType: "ASSIGNMENT" },
-          })
-        : null;
-      // Hidden test files must never leave the server. Strip before returning.
+      // Fall back to submission.attachmentId so ?submissionId=... works.
+      const fallbackAssignmentId = submission?.attachmentId ?? null;
+      const assignmentRaw =
+        input.assignmentId || fallbackAssignmentId
+          ? await ctx.db.attachment.findUnique({
+              where: {
+                id: (input.assignmentId ?? fallbackAssignmentId)!,
+                attachmentType: "ASSIGNMENT",
+              },
+            })
+          : null;
+      // Legacy hiddenTestFiles column — strip from response (now merged into template).
       const assignment = assignmentRaw
         ? (() => {
-            const { hiddenTestFiles: _stripped, ...rest } = assignmentRaw as Record<
-              string,
-              unknown
-            > & { hiddenTestFiles?: unknown };
-            void _stripped;
+            const { hiddenTestFiles: _stale, ...rest } =
+              assignmentRaw as Record<string, unknown> & {
+                hiddenTestFiles?: unknown;
+              };
+            void _stale;
             return rest as typeof assignmentRaw;
           })()
         : null;
 
+      const canEditTemplate =
+        currentUser.role === "INSTRUCTOR" || currentUser.role === "ADMIN";
+
       let decodedSandboxTemplate: unknown = null;
-      if (assignment?.sandboxTemplate) {
+      const resolvedAssignmentId =
+        input.assignmentId ?? submission?.attachmentId ?? null;
+      let locator: Locator | null = null;
+      if (resolvedAssignmentId) {
+        const locRow = await ctx.db.attachment.findUnique({
+          where: { id: resolvedAssignmentId },
+          select: locatorSelect,
+        });
+        if (locRow) locator = locatorFrom(locRow);
+      }
+      if (locator) {
+        try {
+          decodedSandboxTemplate = await readSandpackTemplate(locator);
+        } catch (err) {
+          console.error("storage read failed for sandboxTemplate", {
+            assignmentId: resolvedAssignmentId,
+            err,
+          });
+        }
+      }
+      if (decodedSandboxTemplate == null && assignment?.sandboxTemplate) {
         try {
           const decoded = Buffer.from(
             assignment.sandboxTemplate as string,
@@ -121,23 +127,55 @@ export const sandboxRouter = createTRPCRouter({
         }
       }
 
-      const shouldRedactForStudent =
-        currentUser.role === "STUDENT" &&
-        !instructorAccess &&
-        !submission;
-      if (shouldRedactForStudent && decodedSandboxTemplate) {
-        decodedSandboxTemplate = redactSolutionFiles(decodedSandboxTemplate);
+      let resolvedSubmission = submission as
+        | (typeof submission & { data?: unknown })
+        | null;
+      let submissionFiles: Record<string, string> | null = null;
+      if (resolvedSubmission && locator) {
+        try {
+          const fromStorage = await readSubmission(locator, resolvedSubmission.id);
+          if (fromStorage) {
+            submissionFiles = fromStorage;
+            resolvedSubmission = { ...resolvedSubmission, data: fromStorage };
+          }
+        } catch (err) {
+          console.error("storage read failed for submission", {
+            submissionId: resolvedSubmission.id,
+            err,
+          });
+        }
+        if (
+          submissionFiles == null &&
+          resolvedSubmission.data &&
+          typeof resolvedSubmission.data === "object"
+        ) {
+          submissionFiles = resolvedSubmission.data as Record<string, string>;
+        }
+      }
+
+      const audience: "student" | "instructor" = canEditTemplate
+        ? "instructor"
+        : "student";
+      if (decodedSandboxTemplate && typeof decodedSandboxTemplate === "object") {
+        decodedSandboxTemplate = mergeForAudience(
+          decodedSandboxTemplate as SandpackTemplate,
+          submissionFiles,
+          audience,
+        );
+        if (resolvedSubmission) {
+          const merged = (decodedSandboxTemplate as SandpackTemplate).files ?? {};
+          resolvedSubmission = { ...resolvedSubmission, data: merged };
+        }
       }
 
       return {
         allowed: true as const,
-        submission,
+        submission: resolvedSubmission,
         assignment: assignment
           ? { ...assignment, sandboxTemplate: decodedSandboxTemplate }
           : null,
         showActions: instructorAccess || mentorAccess,
-        canEditTemplate:
-          currentUser.role === "INSTRUCTOR" || currentUser.role === "ADMIN",
+        canEditTemplate,
       };
     }),
 

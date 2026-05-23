@@ -109,6 +109,7 @@
     "@tutly/db": "workspace:*",
     "@tutly/fsrelay": "workspace:*",
     "@tutly/hooks": "workspace:*",
+    "@tutly/storage": "workspace:*",
     "@tutly/ui": "workspace:*",
     "@tutly/utils": "workspace:*",
     "@uiw/react-md-editor": "^4.0.11",
