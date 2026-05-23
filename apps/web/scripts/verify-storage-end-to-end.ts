@@ -18,7 +18,10 @@ import {
 } from "@tutly/storage";
 
 import {
-  mergeForAudience,
+  isHiddenFile,
+  isHiddenPath,
+  isSolutionPath,
+  isTestPath,
   type SandpackTemplate,
 } from "../../../packages/api/src/lib/template-policy";
 
@@ -94,6 +97,7 @@ const locatorSelect = {
 async function verifySubmissions() {
   console.log(`\n→ submissions (sample of ${SAMPLE})`);
   const res = newResult();
+  let toleratedDivergence = 0;
   const subs = await db.submission.findMany({
     where: { data: { not: null } as never },
     take: SAMPLE,
@@ -113,23 +117,42 @@ async function verifySubmissions() {
         res.missing += 1;
         continue;
       }
-      // Storage submission holds only editable files. Merge with the current
-      // template (runner view = full) and compare against the full inline map.
       const template = (await readSandpackTemplate(
         loc,
       )) as SandpackTemplate | null;
-      const merged = template
-        ? (mergeForAudience(template, fromStorage, "runner").files ?? {})
-        : fromStorage;
+      const templateFiles = (template?.files ?? {}) as Record<string, unknown>;
       const inline = inlineToMap(s.data);
-      const cmp = compareFiles(merged as Record<string, string>, inline);
-      if (cmp.matched) {
+      // Compare only the editable subset — the slice we actually persist.
+      // Template-only paths (test/solution/hidden) are expected to diverge
+      // from frozen inline data and counted separately.
+      let bad = 0;
+      let comparedFiles = 0;
+      let comparedBytes = 0;
+      let templateOnlyDivergence = 0;
+      for (const [path, code] of Object.entries(inline)) {
+        const templateOnly =
+          isHiddenPath(path) ||
+          isSolutionPath(path) ||
+          isTestPath(path) ||
+          isHiddenFile(templateFiles[path] as never);
+        if (templateOnly) {
+          templateOnlyDivergence += 1;
+          continue;
+        }
+        if (fromStorage[path] !== code) bad += 1;
+        else {
+          comparedFiles += 1;
+          comparedBytes += code.length;
+        }
+      }
+      if (bad === 0) {
         res.ok += 1;
-        res.files += cmp.files;
-        res.bytes += cmp.bytes;
+        res.files += comparedFiles;
+        res.bytes += comparedBytes;
+        toleratedDivergence += templateOnlyDivergence;
       } else {
         res.bad += 1;
-        console.warn(`  sub ${s.id}: parity miss`);
+        console.warn(`  sub ${s.id}: ${bad} editable file(s) differ`);
       }
     } catch (err) {
       res.bad += 1;
@@ -137,8 +160,13 @@ async function verifySubmissions() {
     }
   }
   console.log(
-    `  sampled=${subs.length} ok=${res.ok} bad=${res.bad} missing=${res.missing} files=${res.files} bytes=${(res.bytes / 1024).toFixed(1)}KB`,
+    `  sampled=${subs.length} ok=${res.ok} bad=${res.bad} missing=${res.missing} editable-files=${res.files} bytes=${(res.bytes / 1024).toFixed(1)}KB`,
   );
+  if (toleratedDivergence > 0) {
+    console.log(
+      `  (${toleratedDivergence} template-only path(s) differ from inline — expected; instructor edits propagate via template)`,
+    );
+  }
   return res;
 }
 
