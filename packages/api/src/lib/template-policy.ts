@@ -45,7 +45,7 @@ export function isTestPath(p: string): boolean {
   return /\.(test|spec)\.[tj]sx?$/i.test(p);
 }
 
-function isHiddenFromStudent(
+export function isHiddenFromStudent(
   path: string,
   file: SandpackFile | undefined,
 ): boolean {
@@ -54,7 +54,7 @@ function isHiddenFromStudent(
 
 // Wider than hidden — also includes test files (visible to student but
 // owned by the template, never stored per-submission).
-function isTemplateOnly(
+export function isTemplateOnly(
   path: string,
   file: SandpackFile | undefined,
 ): boolean {

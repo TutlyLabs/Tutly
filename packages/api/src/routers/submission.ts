@@ -7,6 +7,7 @@ import type {
 } from "@tutly/db/browser";
 import { createHmac } from "node:crypto";
 
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import {
@@ -18,6 +19,7 @@ import {
 import { locatorFrom, locatorSelect } from "../lib/storage-locator";
 import {
   filterSubmissionInput,
+  isTemplateOnly,
   mergeForAudience,
   type SandpackTemplate,
 } from "../lib/template-policy";
@@ -114,15 +116,10 @@ function findDeletedTemplatePaths(
   const have = new Set(Object.keys(submitted));
   const deleted: string[] = [];
   for (const [path, entry] of Object.entries(files)) {
-    if (/^\/solution(\/|$)/i.test(path) || /\.solution\./i.test(path)) continue;
-    if (
-      typeof entry === "object" &&
-      entry !== null &&
-      "hidden" in entry &&
-      (entry as { hidden?: unknown }).hidden === true
-    ) {
-      continue;
-    }
+    const sf = typeof entry === "string" || (entry && typeof entry === "object")
+      ? (entry as Parameters<typeof isTemplateOnly>[1])
+      : undefined;
+    if (isTemplateOnly(path, sf)) continue;
     if (!have.has(path)) deleted.push(path);
   }
   return deleted;
@@ -161,7 +158,10 @@ export const submissionRouter = createTRPCRouter({
       });
 
       if (submissions.length >= input.assignmentDetails.maxSubmissions) {
-        return { error: "Maximum submission limit reached" };
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Maximum submission limit reached",
+        });
       }
 
       const enrolledUser = await ctx.db.enrolledUsers.findUnique({
@@ -173,7 +173,12 @@ export const submissionRouter = createTRPCRouter({
           },
         },
       });
-      if (!enrolledUser) return { error: "Not enrolled" };
+      if (!enrolledUser) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Not enrolled in this course",
+        });
+      }
 
       // Load template to validate the submission (no deletions allowed).
       const templateAttachment = await ctx.db.attachment.findUnique({
@@ -194,11 +199,12 @@ export const submissionRouter = createTRPCRouter({
       const submittedRaw = sandpackFilesToFilesMap(input.files);
       const missing = findDeletedTemplatePaths(submittedRaw, template);
       if (missing.length > 0) {
-        return {
-          error: `Cannot delete template files. Restore: ${missing
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot delete template files. Restore: ${missing
             .slice(0, 5)
             .join(", ")}${missing.length > 5 ? "…" : ""}`,
-        };
+        });
       }
 
       // Drop hidden/solution/test paths before storing — server-side enforcement.

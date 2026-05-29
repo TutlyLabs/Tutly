@@ -55,13 +55,19 @@ const Submit = ({
       setSubmitting(true);
       toast.loading("Submitting assignment");
 
-      await createSubmission.mutateAsync({
+      const result = await createSubmission.mutateAsync({
         assignmentDetails,
         mentorDetails,
         files,
       });
 
       toast.dismiss();
+
+      if (result && typeof result === "object" && "error" in result && result.error) {
+        toast.error(String(result.error));
+        return;
+      }
+
       setConfetti(true);
       setTimeout(() => setConfetti(false), 5000);
       toast.success("Assignment submitted successfully");
@@ -69,7 +75,9 @@ const Submit = ({
       router.push("/assignments");
     } catch (e) {
       toast.dismiss();
-      toast.error("Error submitting assignment");
+      const message =
+        e instanceof Error && e.message ? e.message : "Error submitting assignment";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
