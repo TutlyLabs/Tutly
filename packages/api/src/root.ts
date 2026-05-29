@@ -68,6 +68,7 @@ export const appRouter = createTRPCRouter({
   notes: notesRouter,
   notifications: notificationsRouter,
   oauth: oauthRouter,
+  playground: playgroundRouter,
   points: pointsRouter,
   portSessions: portSessionsRouter,
   report: reportRouter,

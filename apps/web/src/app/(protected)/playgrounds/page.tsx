@@ -1,7 +1,7 @@
 "use client";
 
 import { RiReactjsFill } from "react-icons/ri";
-import { IoLogoHtml5 } from "react-icons/io5";
+import { IoLogoHtml5, IoTerminal } from "react-icons/io5";
 import Link from "next/link";
 
 import PageLoader from "@/components/loader/PageLoader";
@@ -65,6 +65,22 @@ export default function PlaygroundsPage() {
                 </h3>
                 <p className="text-muted-foreground truncate text-xs sm:text-sm">
                   Playground for React components.
+                </p>
+              </div>
+            </Link>
+            <Link
+              href="/playgrounds/runner"
+              className="bg-card hover:border-primary/40 hover:bg-accent/30 group flex items-center gap-4 rounded-xl border p-4 shadow-sm transition-colors"
+            >
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-emerald-500/10">
+                <IoTerminal className="h-8 w-8 text-emerald-500" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-foreground text-sm font-semibold sm:text-base">
+                  Runner playgrounds
+                </h3>
+                <p className="text-muted-foreground truncate text-xs sm:text-sm">
+                  Node, Python, C++, Java, SQL — runs in Docker on your machine.
                 </p>
               </div>
             </Link>

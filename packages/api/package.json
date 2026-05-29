@@ -34,6 +34,7 @@
     "@tutly/auth": "workspace:*",
     "@tutly/db": "workspace:*",
     "@tutly/storage": "workspace:*",
+    "argon2": "^0.41.1",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.1.2",
     "firebase-admin": "^13.8.0",

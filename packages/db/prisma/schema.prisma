@@ -153,6 +153,10 @@ model User {
   banReason  String?
   banExpires DateTime?
 
+  playgroundRunners     PlaygroundRunner[]     @relation("PlaygroundRunners")
+  playgroundSessions    PlaygroundSession[]    @relation("PlaygroundSessions")
+  playgroundDefinitions PlaygroundDefinition[] @relation("PlaygroundDefinitionsCreated")
+
   @@map("User")
 }
 
@@ -1160,4 +1164,90 @@ model Jwks {
   expiresAt  DateTime?
 
   @@map("jwks")
+}
+
+enum PlaygroundCategory {
+  WEB
+  BACKEND
+  SYSTEMS
+  DATA
+  DB
+  OTHER
+}
+
+enum PlaygroundRunnerStatus {
+  PENDING
+  ONLINE
+  OFFLINE
+  REVOKED
+}
+
+model PlaygroundDefinition {
+  id              String             @id @default(uuid())
+  slug            String             @unique
+  name            String
+  description     String?
+  language        String
+  category        PlaygroundCategory @default(OTHER)
+  dockerImage     String
+  defaultShell    String             @default("bash")
+  setupCommands   String[]           @default([])
+  starterFilesUrl String?
+  exposedPorts    Int[]              @default([])
+  iconKey         String?
+  isPublished     Boolean            @default(true)
+  featureFlagKey  String?
+
+  createdById String?
+  createdBy   User?   @relation("PlaygroundDefinitionsCreated", fields: [createdById], references: [id])
+
+  runners  PlaygroundRunner[]
+  sessions PlaygroundSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PlaygroundRunner {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation("PlaygroundRunners", fields: [userId], references: [id], onDelete: Cascade)
+
+  definitionId String
+  definition   PlaygroundDefinition @relation(fields: [definitionId], references: [id])
+
+  name         String?
+  tokenHash    String
+  tokenHint    String
+  status       PlaygroundRunnerStatus @default(PENDING)
+  agentVersion String?
+  image        String?
+
+  connectedAt DateTime?
+  lastSeenAt  DateTime?
+
+  sessions PlaygroundSession[]
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, status])
+  @@index([tokenHint])
+}
+
+model PlaygroundSession {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation("PlaygroundSessions", fields: [userId], references: [id], onDelete: Cascade)
+
+  runnerId String
+  runner   PlaygroundRunner @relation(fields: [runnerId], references: [id], onDelete: Cascade)
+
+  definitionId String
+  definition   PlaygroundDefinition @relation(fields: [definitionId], references: [id])
+
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  @@index([userId])
+  @@index([runnerId])
 }

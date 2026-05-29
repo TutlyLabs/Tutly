@@ -1,0 +1,34 @@
+{
+  "name": "@tutly/playground-agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/agent.cjs",
+  "bin": {
+    "tutly-playground-agent": "dist/agent.cjs"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/agent.cjs --banner:js=\"#!/usr/bin/env node\\nrequire('module').Module._initPaths();\" --external:node-pty",
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "start": "node --env-file=.env src/index.ts",
+    "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tutly/playground-protocol": "workspace:*",
+    "chokidar": "^4.0.3",
+    "node-pty": "^1.0.0",
+    "ws": "^8.18.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tutly/eslint-config": "workspace:*",
+    "@tutly/typescript-config": "workspace:*",
+    "@types/node": "^25.0.2",
+    "@types/ws": "^8.5.13",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.39.2",
+    "tsx": "^4.21.0",
+    "typescript": "5.9.3"
+  }
+}
