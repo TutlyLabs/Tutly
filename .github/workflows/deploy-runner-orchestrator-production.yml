@@ -19,10 +19,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Checkout Sandpack fork
+      - name: Checkout Sandpack fork (prebuilt bundler)
         uses: actions/checkout@v4
         with:
           repository: TutlyLabs/sandbox
+          ref: prebuilt-bundler
           path: sandbox
           token: ${{ secrets.SANDBOX_CHECKOUT_TOKEN || secrets.GITHUB_TOKEN }}
 
