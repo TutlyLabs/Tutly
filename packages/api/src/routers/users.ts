@@ -30,6 +30,21 @@ export const generateRandomPassword = (length = 8) => {
   return arr.join("");
 };
 
+// Safe user schema - only expose non-sensitive fields
+const safeUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  username: z.string(),
+  email: z.string().nullable(),
+  role: z.string(),
+  image: z.string().nullable(),
+  mobile: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  isEmailVerified: z.boolean(),
+  isProfilePublic: z.boolean(),
+});
+
 export const usersRouter = createTRPCRouter({
   hasCredentialAccount: protectedProcedure.query(async ({ ctx }) => {
     const account = await ctx.db.account.findFirst({
@@ -248,10 +263,22 @@ export const usersRouter = createTRPCRouter({
         role: z.string(),
       }),
     )
+    .output(safeUserSchema)
     .mutation(async ({ ctx, input }) => {
       try {
         if (!ctx.session.user.organization) {
           throw new Error("Organization not found");
+        }
+
+        // Check if username already exists
+        const existingUser = await ctx.db.user.findUnique({
+          where: { username: input.username },
+        });
+
+        if (existingUser) {
+          throw new Error(
+            `Username "${input.username}" already exists. Please choose a different username.`
+          );
         }
 
         const user = await ctx.db.$transaction(async (tx) => {
@@ -283,8 +310,11 @@ export const usersRouter = createTRPCRouter({
         });
 
         return user;
-      } catch {
-        throw new Error("Failed to create user");
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to create user";
+        console.error("[createUser] Error:", errorMessage, error);
+        throw new Error(errorMessage);
       }
     }),
 
@@ -374,6 +404,7 @@ export const usersRouter = createTRPCRouter({
         }),
       ),
     )
+    .output(z.array(safeUserSchema))
     .mutation(async ({ ctx, input }) => {
       try {
         if (!ctx.session.user.organization) {
@@ -382,73 +413,98 @@ export const usersRouter = createTRPCRouter({
 
         const results = await Promise.all(
           input.map(async (userData) => {
-            const existingUser = await ctx.db.user.findFirst({
-              where: {
-                email: userData.email,
-                organizationId: ctx.session.user.organization?.id,
-              },
-            });
-
-            const hashedPassword =
-              "password" in userData && userData.password
-                ? await bcrypt.hash(userData.password, 10)
-                : null;
-
-            if (existingUser) {
-              return ctx.db.$transaction(async (tx) => {
-                const updatedUser = await tx.user.update({
-                  where: { id: existingUser.id },
-                  data: {
-                    name: userData.name,
-                    username: userData.username,
-                    role: userData.role as Role,
-                  },
-                });
-                if (hashedPassword) {
-                  await tx.account.updateMany({
-                    where: {
-                      userId: existingUser.id,
-                      providerId: "credential",
-                    },
-                    data: { password: hashedPassword },
-                  });
-                }
-                return updatedUser;
-              });
-            }
-
-            return ctx.db.$transaction(async (tx) => {
-              const createdUser = await tx.user.create({
-                data: {
-                  name: userData.name,
-                  username: userData.username,
+            try {
+              const existingUser = await ctx.db.user.findFirst({
+                where: {
                   email: userData.email,
-                  organization: {
-                    connect: { id: ctx.session.user.organization?.id },
-                  },
-                  role: userData.role as Role,
-                  oneTimePassword: generateRandomPassword(8),
+                  organizationId: ctx.session.user.organization?.id,
                 },
               });
 
-              if (hashedPassword) {
-                await tx.account.create({
-                  data: {
-                    accountId: createdUser.id,
-                    userId: createdUser.id,
-                    providerId: "credential",
-                    password: hashedPassword,
-                  },
+              const hashedPassword =
+                "password" in userData && userData.password
+                  ? await bcrypt.hash(userData.password, 10)
+                  : null;
+
+              if (existingUser) {
+                return ctx.db.$transaction(async (tx) => {
+                  const updatedUser = await tx.user.update({
+                    where: { id: existingUser.id },
+                    data: {
+                      name: userData.name,
+                      username: userData.username,
+                      role: userData.role as Role,
+                    },
+                  });
+                  if (hashedPassword) {
+                    await tx.account.updateMany({
+                      where: {
+                        userId: existingUser.id,
+                        providerId: "credential",
+                      },
+                      data: { password: hashedPassword },
+                    });
+                  }
+                  return updatedUser;
                 });
               }
-              return createdUser;
-            });
+
+              // For new users, check if username already exists
+              const usernameExists = await ctx.db.user.findUnique({
+                where: { username: userData.username },
+              });
+
+              if (usernameExists) {
+                throw new Error(
+                  `Username "${userData.username}" already exists. Cannot create duplicate username.`
+                );
+              }
+
+              return ctx.db.$transaction(async (tx) => {
+                const createdUser = await tx.user.create({
+                  data: {
+                    name: userData.name,
+                    username: userData.username,
+                    email: userData.email,
+                    organization: {
+                      connect: { id: ctx.session.user.organization?.id },
+                    },
+                    role: userData.role as Role,
+                    oneTimePassword: generateRandomPassword(8),
+                  },
+                });
+
+                if (hashedPassword) {
+                  await tx.account.create({
+                    data: {
+                      accountId: createdUser.id,
+                      userId: createdUser.id,
+                      providerId: "credential",
+                      password: hashedPassword,
+                    },
+                  });
+                }
+                return createdUser;
+              });
+            } catch (error) {
+              const errorMessage =
+                error instanceof Error ? error.message : "Unknown error";
+              console.error(
+                `[bulkUpsert] Error processing user ${userData.username}:`,
+                errorMessage,
+                error
+              );
+              throw error;
+            }
           }),
         );
 
         return results;
-      } catch {
-        throw new Error("Failed to bulk upsert users");
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to bulk upsert users";
+        console.error("[bulkUpsert] Error:", errorMessage, error);
+        throw new Error(errorMessage);
       }
     }),
 
@@ -1104,89 +1160,186 @@ export const usersRouter = createTRPCRouter({
 
         const courseIds = courses.map((course) => course.id);
 
-        const where: Record<string, any> = {
-          courseId: {
-            in: courseIds,
-          },
-          user: {
+        let allUsers;
+        let totalItems;
+
+        if (currentUser.role === "INSTRUCTOR") {
+          // For instructors: show all users in organization (enrolled or not)
+          const userWhere: Record<string, any> = {
             role: {
               in: ["STUDENT", "MENTOR"],
             },
             organizationId: currentUser.organizationId,
-          },
-        };
+          };
 
-        if (currentUser.role === "MENTOR") {
-          where.mentorUsername = currentUser.username;
-        }
-
-        if (searchTerm) {
-          where.user.OR = [
-            { name: { contains: searchTerm, mode: "insensitive" } },
-            { username: { contains: searchTerm, mode: "insensitive" } },
-            { email: { contains: searchTerm, mode: "insensitive" } },
-          ];
-        }
-
-        activeFilters.forEach((filter) => {
-          const { column, operator, value } = filter;
-
-          if (typeof column === "string") {
-            switch (operator) {
-              case "contains":
-                where.user[column] = { contains: value, mode: "insensitive" };
-                break;
-              case "equals":
-                where.user[column] = value;
-                break;
-              case "startsWith":
-                where.user[column] = { startsWith: value, mode: "insensitive" };
-                break;
-              case "endsWith":
-                where.user[column] = { endsWith: value, mode: "insensitive" };
-                break;
-              case "greaterThan":
-                where.user[column] = { gt: Number(value) };
-                break;
-              case "lessThan":
-                where.user[column] = { lt: Number(value) };
-                break;
-            }
+          if (searchTerm) {
+            userWhere.OR = [
+              { name: { contains: searchTerm, mode: "insensitive" } },
+              { username: { contains: searchTerm, mode: "insensitive" } },
+              { email: { contains: searchTerm, mode: "insensitive" } },
+            ];
           }
-        });
 
-        const totalItems = await ctx.db.enrolledUsers.count({ where });
+          // Apply custom filters
+          activeFilters.forEach((filter) => {
+            const { column, operator, value } = filter;
 
-        const enrolledUsers = await ctx.db.enrolledUsers.findMany({
-          where,
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                username: true,
-                email: true,
-                role: true,
-                oneTimePassword: true,
-                disabledAt: true,
-              },
+            if (typeof column === "string") {
+              switch (operator) {
+                case "contains":
+                  userWhere[column] = {
+                    contains: value,
+                    mode: "insensitive",
+                  };
+                  break;
+                case "equals":
+                  userWhere[column] = value;
+                  break;
+                case "startsWith":
+                  userWhere[column] = { startsWith: value, mode: "insensitive" };
+                  break;
+                case "endsWith":
+                  userWhere[column] = { endsWith: value, mode: "insensitive" };
+                  break;
+                case "greaterThan":
+                  userWhere[column] = { gt: Number(value) };
+                  break;
+                case "lessThan":
+                  userWhere[column] = { lt: Number(value) };
+                  break;
+              }
+            }
+          });
+
+          totalItems = await ctx.db.user.count({ where: userWhere });
+
+          const allOrgUsers = await ctx.db.user.findMany({
+            where: userWhere,
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              email: true,
+              role: true,
+              oneTimePassword: true,
+              disabledAt: true,
             },
-          },
-          orderBy: {
-            user: {
+            orderBy: {
               [sortField]: sortDirection,
             },
-          },
-          skip: (page - 1) * limit,
-          take: limit,
-          distinct: ["username"],
-        });
+            skip: (page - 1) * limit,
+            take: limit,
+          });
 
-        const allUsers = enrolledUsers.map((enrolled) => ({
-          ...enrolled.user,
-          courseId: enrolled.courseId,
-          mentorUsername: enrolled.mentorUsername,
-        }));
+          // Get enrollment info for these users (to show which course/mentor they're assigned to)
+          const enrollmentMap = await ctx.db.enrolledUsers.findMany({
+            where: {
+              username: {
+                in: allOrgUsers.map((u) => u.username),
+              },
+              courseId: {
+                in: courseIds,
+              },
+            },
+            select: {
+              username: true,
+              courseId: true,
+              mentorUsername: true,
+            },
+          });
+
+          const enrollmentsByUsername = new Map(
+            enrollmentMap.map((e) => [e.username, e])
+          );
+
+          allUsers = allOrgUsers.map((user) => {
+            const enrollment = enrollmentsByUsername.get(user.username);
+            return {
+              ...user,
+              courseId: enrollment?.courseId ?? null,
+              mentorUsername: enrollment?.mentorUsername ?? null,
+            };
+          });
+        } else {
+          // For mentors: show only their assigned mentees
+          const mentorWhere: Record<string, any> = {
+            mentorUsername: currentUser.username,
+          };
+
+          if (searchTerm) {
+            mentorWhere.user = {
+              OR: [
+                { name: { contains: searchTerm, mode: "insensitive" } },
+                { username: { contains: searchTerm, mode: "insensitive" } },
+                { email: { contains: searchTerm, mode: "insensitive" } },
+              ],
+            };
+          }
+
+          activeFilters.forEach((filter) => {
+            const { column, operator, value } = filter;
+
+            if (typeof column === "string") {
+              if (!mentorWhere.user) mentorWhere.user = {};
+              switch (operator) {
+                case "contains":
+                  mentorWhere.user[column] = {
+                    contains: value,
+                    mode: "insensitive",
+                  };
+                  break;
+                case "equals":
+                  mentorWhere.user[column] = value;
+                  break;
+                case "startsWith":
+                  mentorWhere.user[column] = { startsWith: value, mode: "insensitive" };
+                  break;
+                case "endsWith":
+                  mentorWhere.user[column] = { endsWith: value, mode: "insensitive" };
+                  break;
+                case "greaterThan":
+                  mentorWhere.user[column] = { gt: Number(value) };
+                  break;
+                case "lessThan":
+                  mentorWhere.user[column] = { lt: Number(value) };
+                  break;
+              }
+            }
+          });
+
+          totalItems = await ctx.db.enrolledUsers.count({ where: mentorWhere });
+
+          const mentorEnrolledUsers = await ctx.db.enrolledUsers.findMany({
+            where: mentorWhere,
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  username: true,
+                  email: true,
+                  role: true,
+                  oneTimePassword: true,
+                  disabledAt: true,
+                },
+              },
+            },
+            orderBy: {
+              user: {
+                [sortField]: sortDirection,
+              },
+            },
+            skip: (page - 1) * limit,
+            take: limit,
+            distinct: ["username"],
+          });
+
+          allUsers = mentorEnrolledUsers.map((enrolled) => ({
+            ...enrolled.user,
+            courseId: enrolled.courseId,
+            mentorUsername: enrolled.mentorUsername,
+          }));
+        }
 
         return {
           success: true,
