@@ -135,6 +135,10 @@ function getModeMeta(mode?: string) {
   };
 }
 
+function isFinalReviewStatus(status?: string) {
+  return status === "REVIEWED" || status === "AUTO_SCORED";
+}
+
 function Dot() {
   return (
     <span aria-hidden className="text-muted-foreground/40 mx-2 select-none">
@@ -157,8 +161,8 @@ export default function AssignmentBoard({ courses, assignments, userId }: any) {
 
   const initialCourse =
     courseParam &&
-    (courseParam === ALL_COURSES_VALUE ||
-      courses?.some((c: any) => c.id === courseParam))
+      (courseParam === ALL_COURSES_VALUE ||
+        courses?.some((c: any) => c.id === courseParam))
       ? courseParam
       : ALL_COURSES_VALUE;
   const initialFilter =
@@ -225,13 +229,17 @@ export default function AssignmentBoard({ courses, assignments, userId }: any) {
       if (filterOption === "unreviewed") {
         return (
           assignment.submissions.length > 0 &&
-          assignment.submissions.some((x: any) => x.points.length === 0)
+          assignment.submissions.some(
+            (x: any) => !isFinalReviewStatus(x.review?.status),
+          )
         );
       }
       if (filterOption === "reviewed") {
         return (
           assignment.submissions.length > 0 &&
-          assignment.submissions.some((x: any) => x.points.length > 0)
+          assignment.submissions.some((x: any) =>
+            isFinalReviewStatus(x.review?.status),
+          )
         );
       }
       return true;
@@ -524,7 +532,7 @@ export default function AssignmentBoard({ courses, assignments, userId }: any) {
                       (() => {
                         const total = assignment.submissions.length;
                         const evaluated = assignment.submissions.filter(
-                          (s: any) => s.points.length > 0,
+                          (s: any) => isFinalReviewStatus(s.review?.status),
                         ).length;
                         const underReview = total - evaluated;
                         return (
@@ -561,8 +569,11 @@ export default function AssignmentBoard({ courses, assignments, userId }: any) {
                             (pathname.startsWith("/mentor/") ||
                               pathname.startsWith("/instructor/")) &&
                             submission.submissionLink;
+                          const isReviewed = isFinalReviewStatus(
+                            submission.review?.status,
+                          );
 
-                          if (submission.points.length === 0) {
+                          if (!isReviewed) {
                             return (
                               <Badge
                                 key={index}
@@ -579,10 +590,12 @@ export default function AssignmentBoard({ courses, assignments, userId }: any) {
                               </Badge>
                             );
                           }
+
                           const total = submission.points.reduce(
                             (sum: number, point: any) => sum + point.score,
                             0,
                           );
+
                           return (
                             <Badge
                               key={index}

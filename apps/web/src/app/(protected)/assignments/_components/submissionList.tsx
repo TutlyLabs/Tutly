@@ -72,6 +72,9 @@ export const SubmissionList = ({
               : `/assignments/evaluate?id=${assignmentId}&submissionId=${singleSubmission.id}`;
 
             const sortBy = searchParams?.sortBy;
+            const isReviewed =
+              singleSubmission.review?.status === "REVIEWED" ||
+              singleSubmission.review?.status === "AUTO_SCORED";
 
             if (sortBy) {
               if (username) {
@@ -97,7 +100,7 @@ export const SubmissionList = ({
                 className={`cursor-pointer border-b p-2 hover:bg-gray-100 hover:text-blue-500 ${
                   singleSubmission.id == searchParams?.submissionId &&
                   "bg-gray-100 text-blue-500"
-                } ${singleSubmission.points.length > 0 && "text-green-500"}`}
+                } ${isReviewed && "text-green-500"}`}
               >
                 <p className="flex items-center gap-1 text-sm">
                   <UserLink

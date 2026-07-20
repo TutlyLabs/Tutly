@@ -77,19 +77,8 @@ async function getLeaderboardDataForUser(
       },
     });
 
-    const submissionsUptoLastSunday = submissions.filter((submission) => {
-      const submissionDate = new Date(submission.submissionDate);
-      const currentDate = new Date();
-      const currentDayOfWeek = currentDate.getDay();
-      const daysToLastSunday = currentDayOfWeek === 0 ? 7 : currentDayOfWeek;
-      const lastSunday = new Date(currentDate);
-      lastSunday.setDate(currentDate.getDate() - daysToLastSunday);
-      lastSunday.setHours(12, 0, 0, 0);
-      return submissionDate < lastSunday;
-    });
-
-    const totalPoints: Array<LeaderboardSubmission> =
-      submissionsUptoLastSunday.map((submission) => {
+    const totalPoints: Array<LeaderboardSubmission> = submissions.map(
+      (submission) => {
         const totalPoints = submission.points.reduce(
           (acc: number, curr: { score: number | null }) =>
             acc + (curr.score ?? 0),
@@ -178,18 +167,7 @@ export const leaderboardRouter = createTRPCRouter({
         },
       });
 
-      const submissionsUptoLastSunday = submissions.filter((submission) => {
-        const submissionDate = new Date(submission.submissionDate);
-        const currentDate = new Date();
-        const currentDayOfWeek = currentDate.getDay();
-        const daysToLastSunday = currentDayOfWeek === 0 ? 7 : currentDayOfWeek;
-        const lastSunday = new Date(currentDate);
-        lastSunday.setDate(currentDate.getDate() - daysToLastSunday);
-        lastSunday.setHours(12, 0, 0, 0);
-        return submissionDate < lastSunday;
-      });
-
-      const totalPoints = submissionsUptoLastSunday.map((submission) => {
+      const totalPoints = submissions.map((submission) => {
         const totalPoints = submission.points.reduce(
           (acc: number, curr: { score: number | null }) =>
             acc + (curr.score ?? 0),
