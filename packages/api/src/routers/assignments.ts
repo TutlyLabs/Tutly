@@ -1,8 +1,9 @@
 import { db } from "@tutly/db";
-import { readSandpackTemplate } from "@tutly/storage";
+import { readSandpackTemplate, readSubmission } from "@tutly/storage";
 import { z } from "zod";
 
 import { locatorFrom, locatorSelect } from "../lib/storage-locator";
+import { mergeForAudience, type SandpackTemplate } from "../lib/template-policy";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 async function loadSandboxTemplateRaw(assignmentId: string): Promise<string | null> {
@@ -1994,13 +1995,55 @@ export const assignmentsRouter = createTRPCRouter({
         const submission = filteredSubmissions.find(
           (submission) => submission?.id === submissionId,
         );
+        let hydratedSubmission = submission;
+        let assignmentWithTemplate = assignment;
+
+        const submissionMode = assignment?.submissionMode;
+        const isSandboxMode =
+          submissionMode !== "WORKSPACE" && submissionMode !== "EXTERNAL_LINK";
+
+        if (isSandboxMode) {
+          const locRow = await ctx.db.attachment.findUnique({
+            where: { id: assignmentId },
+            select: locatorSelect,
+          });
+          const locator = locRow ? locatorFrom(locRow) : null;
+
+          if (locator) {
+            const sandboxTemplate = await readSandpackTemplate(locator);
+            const submissionFiles =
+              submission && submissionId
+                ? await readSubmission(locator, submissionId)
+                : null;
+
+            if (sandboxTemplate && typeof sandboxTemplate === "object") {
+              const mergedTemplate = mergeForAudience(
+                sandboxTemplate as SandpackTemplate,
+                submissionFiles,
+                "instructor",
+              );
+              assignmentWithTemplate = {
+                ...assignment,
+                sandboxTemplate: mergedTemplate,
+              };
+              if (submission) {
+                hydratedSubmission = {
+                  ...submission,
+                  data: mergedTemplate.files ?? submission.data,
+                };
+              }
+            } else if (submission && submissionFiles) {
+              hydratedSubmission = { ...submission, data: submissionFiles };
+            }
+          }
+        }
 
         return {
           success: true,
           data: {
-            assignment,
+            assignment: assignmentWithTemplate,
             submissions: filteredSubmissions,
-            submission,
+            submission: hydratedSubmission,
           },
         };
       } catch (error) {
