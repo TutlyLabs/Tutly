@@ -4,7 +4,6 @@ import {
   type SandpackPredefinedTemplate,
   useSandpack,
 } from "@codesandbox/sandpack-react";
-import type { Attachment } from "@tutly/db/browser";
 import { useEffect, useMemo } from "react";
 
 import IDEShell from "@/app/(protected)/playgrounds/_components/ide/IDEShell";
@@ -15,9 +14,10 @@ import {
 } from "@/app/(protected)/playgrounds/_components/ide/ideStore";
 
 import { useInstructorMode } from "./instructorMode";
+import type { SandboxAssignment } from "./SandboxWrapper";
 
 interface SandboxEmbedProps {
-  assignment?: Attachment | null;
+  assignment?: SandboxAssignment;
   isEditTemplate: boolean;
   template?: SandpackPredefinedTemplate | string;
   config: {

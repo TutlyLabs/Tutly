@@ -17,13 +17,26 @@ const createContext = cache(async () => {
   const heads = new Headers(await headers());
   heads.set("x-trpc-source", "rsc");
   const session = await auth.api.getSession({ headers: heads });
-  return createTRPCContext({ headers: heads, session });
+  return createTRPCContext({
+    headers: heads,
+    // better-auth widens the customSession return to an index-signature
+    // object; project the two fields the tRPC context actually declares.
+    session: session ? { user: session.user, session: session.session } : null,
+  });
 });
 
 const getQueryClient = cache(createQueryClient);
 const caller = createCaller(createContext);
 
-export const { trpc: api, HydrateClient } = createHydrationHelpers<AppRouter>(
+// Annotated so declaration emit does not have to name @trpc/react-query's
+// internal chunk types (TS2742).
+type HydrationHelpers = ReturnType<typeof createHydrationHelpers<AppRouter>>;
+
+const hydrationHelpers: HydrationHelpers = createHydrationHelpers<AppRouter>(
   caller,
   getQueryClient,
 );
+
+export const api: HydrationHelpers["trpc"] = hydrationHelpers.trpc;
+export const HydrateClient: HydrationHelpers["HydrateClient"] =
+  hydrationHelpers.HydrateClient;

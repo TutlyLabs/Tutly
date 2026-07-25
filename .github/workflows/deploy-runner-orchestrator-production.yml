@@ -8,19 +8,26 @@ on:
       - "runner-orchestrator@*"
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
-  build-and-deploy:
-    name: Build and Deploy Runner Orchestrator
+  build:
+    name: Build and push Runner Orchestrator images
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout Sandpack fork (prebuilt bundler)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: TutlyLabs/sandbox
           ref: prebuilt-bundler
@@ -34,71 +41,38 @@ jobs:
           du -sh apps/web/public/sandpack
           ls apps/web/public/sandpack | head -5
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Browser runner image metadata
-        id: meta-browser
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/tutly-browser-runner
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest
-            type=match,pattern=runner-orchestrator@(.*),group=1
-
       - name: Build and push browser runner image
-        uses: docker/build-push-action@v6
+        uses: ./tooling/github/docker-publish
         with:
-          context: .
-          file: apps/runner-orchestrator/Dockerfile.browser
-          push: true
-          tags: ${{ steps.meta-browser.outputs.tags }}
-          labels: ${{ steps.meta-browser.outputs.labels }}
-          cache-from: type=gha,scope=browser
-          cache-to: type=gha,mode=max,scope=browser
-
-      - name: Orchestrator image metadata
-        id: meta-orch
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/tutly-runner-orchestrator
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest
-            type=match,pattern=runner-orchestrator@(.*),group=1
+          image: ghcr.io/${{ github.repository_owner }}/tutly-browser-runner
+          dockerfile: apps/runner-orchestrator/Dockerfile.browser
+          tag-pattern: runner-orchestrator@(.*)
+          cache-scope: browser
+          registry-username: ${{ github.actor }}
+          registry-password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Orchestrator image
-        uses: docker/build-push-action@v6
+        uses: ./tooling/github/docker-publish
         with:
-          context: .
-          file: apps/runner-orchestrator/Dockerfile
-          push: true
-          tags: ${{ steps.meta-orch.outputs.tags }}
-          labels: ${{ steps.meta-orch.outputs.labels }}
-          cache-from: type=gha,scope=orch
-          cache-to: type=gha,mode=max,scope=orch
+          image: ghcr.io/${{ github.repository_owner }}/tutly-runner-orchestrator
+          dockerfile: apps/runner-orchestrator/Dockerfile
+          tag-pattern: runner-orchestrator@(.*)
+          cache-scope: orch
+          registry-username: ${{ github.actor }}
+          registry-password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy to Coolify
-        env:
-          COOLIFY_WEBHOOK_RUNNER_ORCHESTRATOR: ${{ secrets.COOLIFY_WEBHOOK_RUNNER_ORCHESTRATOR }}
-          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
-        run: |
-          RESPONSE=$(curl --request GET "${COOLIFY_WEBHOOK_RUNNER_ORCHESTRATOR}" \
-            --header "Authorization: Bearer ${COOLIFY_TOKEN}" \
-            --silent --show-error --fail)
+  deploy:
+    name: Deploy Runner Orchestrator to Production
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
 
-          if [ $? -eq 0 ]; then
-            echo "Deployment triggered successfully"
-            echo "Response: $RESPONSE"
-          else
-            echo "Deployment failed"
-            exit 1
-          fi
+      - name: Trigger Coolify deploy
+        uses: ./tooling/github/coolify-trigger
+        with:
+          webhook: ${{ secrets.COOLIFY_WEBHOOK_RUNNER_ORCHESTRATOR }}
+          token: ${{ secrets.COOLIFY_TOKEN }}

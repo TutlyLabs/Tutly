@@ -1,0 +1,61 @@
+name: "Deploy to Vercel"
+description: "Pulls Vercel settings, builds, and deploys, retrying the upload."
+
+inputs:
+  token:
+    description: "Vercel API token."
+    required: true
+  environment:
+    description: '"preview" or "production".'
+    required: true
+  working-directory:
+    description: "Directory the Vercel CLI runs from."
+    required: false
+    default: "."
+
+outputs:
+  deployment-url:
+    description: "URL of the deployment that was created."
+    value: ${{ steps.deploy.outputs.deployment_url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install Vercel CLI
+      shell: bash
+      run: npm install -g vercel@latest
+
+    - name: Pull Vercel environment
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: vercel pull --yes --environment="$VERCEL_ENVIRONMENT" --token="$VERCEL_TOKEN"
+      env:
+        VERCEL_ENVIRONMENT: ${{ inputs.environment }}
+        VERCEL_TOKEN: ${{ inputs.token }}
+
+    - name: Build with Vercel
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: vercel build $PROD_FLAG --token="$VERCEL_TOKEN"
+      env:
+        PROD_FLAG: ${{ inputs.environment == 'production' && '--prod' || '' }}
+        VERCEL_TOKEN: ${{ inputs.token }}
+
+    # Vercel aborts the upload often enough that a bare `vercel deploy` is the
+    # single largest source of red production deploys. Retry the upload only -
+    # the prebuilt output is already on disk, so a retry is cheap.
+    - name: Deploy to Vercel
+      id: deploy
+      uses: nick-fields/retry@v4
+      with:
+        timeout_minutes: 20
+        max_attempts: 3
+        retry_wait_seconds: 30
+        command: >-
+          cd "$WORKING_DIRECTORY" &&
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt $PROD_FLAG --token="$VERCEL_TOKEN") &&
+          echo "deployment_url=$DEPLOYMENT_URL" >> "$GITHUB_OUTPUT"
+      env:
+        PROD_FLAG: ${{ inputs.environment == 'production' && '--prod' || '' }}
+        VERCEL_TOKEN: ${{ inputs.token }}
+        WORKING_DIRECTORY: ${{ inputs.working-directory }}

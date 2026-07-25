@@ -5,7 +5,9 @@ on:
     branches:
       - main
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -15,11 +17,25 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      # Refs pushed with the default GITHUB_TOKEN never trigger other
+      # workflows, so the version tags Changesets pushes here could not start
+      # the `on: push: tags:` production deploys. A GitHub App token can.
+      # Simpler alternative if you do not want to run a GitHub App: create a
+      # classic PAT with `repo` + `workflow` scopes, store it as
+      # secrets.RELEASE_TOKEN, drop this step, and use
+      # ${{ secrets.RELEASE_TOKEN }} in both places below.
+      - name: Generate release token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - name: Checkout Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup
         uses: ./tooling/github/setup
@@ -32,5 +48,5 @@ jobs:
           commit: "chore(release): version packages"
           title: "chore(release): version packages"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

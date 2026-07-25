@@ -237,7 +237,9 @@ export class TutlyAPI {
       try {
         const jsonError = JSON.parse(errorText);
         if (jsonError.error) return { success: false, error: jsonError.error };
-      } catch (e) { }
+      } catch {
+        // Body was not JSON; fall through to the status-line message.
+      }
 
       return { success: false, error: `${response.status} ${response.statusText} - ${errorText}` };
     }

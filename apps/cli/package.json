@@ -34,6 +34,7 @@
   "devDependencies": {
     "@oclif/dev-cli": "^1.26.10",
     "@oclif/test": "^4.1.15",
+    "@tutly/eslint-config": "workspace:*",
     "@types/adm-zip": "^0.5.7",
     "@types/archiver": "^7.0.0",
     "@types/chai": "^5",
@@ -90,13 +91,17 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "format": "prettier --write .",
+    "format": "prettier .",
     "postinstall": "npm rebuild node-pty",
     "postpack": "rm -f oclif.manifest.json",
-    "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "rm -rf lib && npm run build && oclif-dev manifest && oclif-dev readme",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "version": "oclif-dev readme && git add README.md"
+    "version": "oclif-dev readme && git add README.md",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit"
   },
-  "types": "lib/index.d.ts"
+  "types": "lib/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  }
 }

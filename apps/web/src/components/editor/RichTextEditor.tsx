@@ -78,7 +78,7 @@ import "./styles.scss";
 
 // --- Utils ---
 import { cn } from "@tutly/utils";
-import { JsonValue } from "@tutly/db/browser";
+import type { Prisma } from "@tutly/db/browser";
 
 const convertStringToJson = (text: string) => {
   if (!text || text.trim() === "") {
@@ -101,7 +101,7 @@ const convertStringToJson = (text: string) => {
 
 interface RichTextEditorProps {
   onChange: (jsonValue: string) => void;
-  initialValue?: string | JsonValue;
+  initialValue?: string | Prisma.JsonValue;
   height?: string;
   allowUpload?: boolean;
   fileUploadOptions?: FileUploadOptions;

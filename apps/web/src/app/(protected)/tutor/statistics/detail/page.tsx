@@ -48,11 +48,7 @@ export default function StatisticsDetailPage() {
       <Header courseId={id} userRole={userRole} username={username} />
       {student ? (
         <Suspense fallback={<StatisticsLoadingSkeleton />}>
-          <StudentStats
-            courseId={id}
-            studentUsername={student}
-            mentorUsername={mentor}
-          />
+          <StudentStats courseId={id} studentUsername={student} />
         </Suspense>
       ) : (
         <>

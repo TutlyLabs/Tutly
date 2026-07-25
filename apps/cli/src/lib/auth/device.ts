@@ -114,7 +114,9 @@ export async function login(): Promise<AuthTokens> {
           expiresAt = new Date(sessionData.session.expiresAt).getTime();
         }
       }
-    } catch {}
+    } catch {
+      // Session lookup is best-effort; fall back to the default expiry.
+    }
 
     // Store tokens
     const authTokens: AuthTokens = {
@@ -150,7 +152,9 @@ export async function logout(): Promise<void> {
           "User-Agent": CLI_USER_AGENT,
         },
       });
-    } catch {}
+    } catch {
+      // Best-effort server-side sign-out; local tokens are cleared regardless.
+    }
   }
 
   await clearAuthTokens();

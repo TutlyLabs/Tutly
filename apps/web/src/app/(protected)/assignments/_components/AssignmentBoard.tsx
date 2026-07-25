@@ -161,8 +161,8 @@ export default function AssignmentBoard({ courses, assignments, userId }: any) {
 
   const initialCourse =
     courseParam &&
-      (courseParam === ALL_COURSES_VALUE ||
-        courses?.some((c: any) => c.id === courseParam))
+    (courseParam === ALL_COURSES_VALUE ||
+      courses?.some((c: any) => c.id === courseParam))
       ? courseParam
       : ALL_COURSES_VALUE;
   const initialFilter =

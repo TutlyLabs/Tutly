@@ -15,11 +15,12 @@
     "dev:web": "turbo watch dev -F web",
     "dev:landing": "turbo watch dev -F landing",
     "dev:video-worker": "turbo watch dev -F video-worker",
-    "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
+    "format": "turbo run format --continue -- --check --cache --cache-location .cache/.prettiercache",
     "format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
     "lint": "turbo run lint --continue",
     "lint:fix": "turbo run lint --continue -- --fix",
-    "lint:ws": "pnpm dlx sherif@latest",
+    "lint:ws": "sherif",
+    "test": "turbo run test",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "changeset publish",
@@ -34,6 +35,7 @@
     "@turbo/gen": "^2.6.3",
     "@tutly/prettier-config": "workspace:*",
     "prettier": "catalog:",
+    "sherif": "^1.13.0",
     "turbo": "^2.6.3",
     "typescript": "catalog:"
   },
@@ -76,7 +78,8 @@
       "tar": "^7.5.15",
       "undici": "^7.18.2",
       "uuid": "^11.1.1",
-      "webpack": "^5.104.1"
+      "webpack": "^5.104.1",
+      "zod": "^4.4.3"
     }
   }
 }

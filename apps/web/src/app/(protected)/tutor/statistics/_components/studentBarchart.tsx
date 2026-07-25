@@ -92,7 +92,7 @@ export function StudentBarchart({ data }: any) {
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Bar dataKey="submissions" layout="vertical" radius={5} />
+            <Bar dataKey="submissions" radius={5} />
           </BarChart>
         </ChartContainer>
       </CardContent>

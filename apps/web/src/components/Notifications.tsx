@@ -62,6 +62,7 @@ export interface causedObjects {
   classId?: string;
   assignmentId?: string;
   doubtId?: string;
+  groupId?: string;
 }
 
 export const NOTIFICATION_HREF_MAP: Record<
@@ -77,6 +78,10 @@ export const NOTIFICATION_HREF_MAP: Record<
   DOUBT_RESPONDED: (obj: causedObjects) => `/doubts/${obj.doubtId}`,
   ATTENDANCE_MISSED: (_obj: causedObjects) => `/attendance`,
   CUSTOM_MESSAGE: (_obj: causedObjects) => `/`,
+  CHAT_MENTION: (obj: causedObjects) =>
+    obj.groupId ? `/community?g=${obj.groupId}` : `/community`,
+  DIRECT_MESSAGE: (obj: causedObjects) =>
+    obj.groupId ? `/community?g=${obj.groupId}` : `/community`,
 };
 
 const DEFAULT_NOTIFICATION_CONFIG = {
@@ -167,6 +172,26 @@ const NOTIFICATION_TYPES: Record<
     bgColor: "bg-gray-500/10",
     getLink: (obj) => ({
       href: NOTIFICATION_HREF_MAP.CUSTOM_MESSAGE(obj),
+      external: false,
+    }),
+  },
+  CHAT_MENTION: {
+    label: "Mentions",
+    icon: MessageSquare,
+    color: "text-indigo-500",
+    bgColor: "bg-indigo-500/10",
+    getLink: (obj) => ({
+      href: NOTIFICATION_HREF_MAP.CHAT_MENTION(obj),
+      external: false,
+    }),
+  },
+  DIRECT_MESSAGE: {
+    label: "Direct Messages",
+    icon: MessageSquare,
+    color: "text-teal-500",
+    bgColor: "bg-teal-500/10",
+    getLink: (obj) => ({
+      href: NOTIFICATION_HREF_MAP.DIRECT_MESSAGE(obj),
       external: false,
     }),
   },

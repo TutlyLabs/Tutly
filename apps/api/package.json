@@ -9,11 +9,12 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "dev": "nodemon --exec \"node -r esbuild-register ./src/index.ts\" -e .ts",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
+    "format": "prettier \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "eslint \"src/**/*.ts*\" --max-warnings 0",
     "lint:fix": "eslint \"src/**/*.ts*\" --fix",
     "start": "node -r esbuild-register ./src/index.ts",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --detectOpenHandles",
+    "typecheck": "tsc --noEmit"
   },
   "jest": {
     "preset": "@tutly/jest-presets/node"

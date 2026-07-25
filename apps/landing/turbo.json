@@ -1,21 +1,23 @@
 {
   "$schema": "https://turborepo.org/schema.json",
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "next-env.d.ts"
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
+      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts"],
+      "env": [
+        "NEXT_PUBLIC_APP_URL",
+        "NEXT_PUBLIC_API_URL",
+        "FRONTEND_URL",
+        "BACKEND_URL",
+        "VERCEL_URL"
       ]
     },
     "dev": {
-      "persistent": true
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": ["*"]
     }
   }
 }

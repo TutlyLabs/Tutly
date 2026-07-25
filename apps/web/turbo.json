@@ -1,32 +1,42 @@
 {
   "$schema": "https://turborepo.org/schema.json",
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.md",
+        "!android/**",
+        "!ios/**",
+        "!**/__tests__/**"
       ],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "next-env.d.ts"
+      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts"],
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_URL",
+        "NEXT_PUBLIC_APP_URL",
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_BUILD_TARGET",
+        "FRONTEND_URL",
+        "BACKEND_URL",
+        "VERCEL_URL",
+        "GOOGLE_CLIENT_ID",
+        "GITHUB_CLIENT_ID",
+        "ZOOM_CLIENT_ID",
+        "AWS_BUCKET_NAME",
+        "AWS_BUCKET_REGION",
+        "AWS_ENDPOINT",
+        "AWS_S3_URL",
+        "AWS_S3_PUBLIC_URL",
+        "VIDEO_WORKER_URL",
+        "TEST_RUNNER_URL"
       ]
     },
     "dev": {
+      "cache": false,
       "persistent": true,
-      "env": [
-        "GOOGLE_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET",
-        "GITHUB_CLIENT_ID",
-        "GITHUB_CLIENT_SECRET",
-        "DATABASE_URL",
-        "CLOUDFLARE_API_TOKEN",
-        "CLOUDFLARE_ZONE_ID",
-        "APP_SERVER_IP",
-        "FRONTEND_URL"
-      ]
+      "passThroughEnv": ["*"]
     }
   }
 }

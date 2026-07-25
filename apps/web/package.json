@@ -20,19 +20,18 @@
     "cap:run:android": "cap run android",
     "cap:sync": "cap sync",
     "release:android": "node scripts/release-android.mjs",
-    "check": "next lint && tsc --noEmit",
     "clean": "git clean -xdf .cache .next .turbo out ios android node_modules",
     "db:generate": "pnpm -F @tutly/db db:generate",
     "db:push": "pnpm -F @tutly/db db:push",
     "db:studio": "pnpm -F @tutly/db db:studio",
     "dev": "next dev --turbopack --port 3000",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
+    "format": "prettier \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "postinstall": "node scripts/copy-vscode-assets.js && node scripts/copy-sandpack-assets.js",
     "preview": "next build --webpack && next start",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",

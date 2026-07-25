@@ -94,7 +94,7 @@ export const sandboxRouter = createTRPCRouter({
       const canEditTemplate =
         currentUser.role === "INSTRUCTOR" || currentUser.role === "ADMIN";
 
-      let decodedSandboxTemplate: unknown = null;
+      let decodedSandboxTemplate: SandpackTemplate | null = null;
       const resolvedAssignmentId =
         input.assignmentId ?? submission?.attachmentId ?? null;
       let locator: Locator | null = null;
@@ -106,7 +106,11 @@ export const sandboxRouter = createTRPCRouter({
         if (locRow) locator = locatorFrom(locRow);
       }
       if (locator) {
-        decodedSandboxTemplate = await readSandpackTemplate(locator);
+        // Storage returns the loosely-typed on-disk shape; this is the single
+        // deserialization boundary where it becomes a SandpackTemplate.
+        decodedSandboxTemplate = (await readSandpackTemplate(
+          locator,
+        )) as SandpackTemplate | null;
       }
 
       let resolvedSubmission = submission as
@@ -125,12 +129,12 @@ export const sandboxRouter = createTRPCRouter({
         : "student";
       if (decodedSandboxTemplate && typeof decodedSandboxTemplate === "object") {
         decodedSandboxTemplate = mergeForAudience(
-          decodedSandboxTemplate as SandpackTemplate,
+          decodedSandboxTemplate,
           submissionFiles,
           audience,
         );
         if (resolvedSubmission) {
-          const merged = (decodedSandboxTemplate as SandpackTemplate).files ?? {};
+          const merged = decodedSandboxTemplate.files ?? {};
           resolvedSubmission = { ...resolvedSubmission, data: merged };
         }
       }

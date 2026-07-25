@@ -63,7 +63,12 @@ const Submit = ({
 
       toast.dismiss();
 
-      if (result && typeof result === "object" && "error" in result && result.error) {
+      if (
+        result &&
+        typeof result === "object" &&
+        "error" in result &&
+        result.error
+      ) {
         toast.error(String(result.error));
         return;
       }
@@ -76,7 +81,9 @@ const Submit = ({
     } catch (e) {
       toast.dismiss();
       const message =
-        e instanceof Error && e.message ? e.message : "Error submitting assignment";
+        e instanceof Error && e.message
+          ? e.message
+          : "Error submitting assignment";
       toast.error(message);
     } finally {
       setSubmitting(false);

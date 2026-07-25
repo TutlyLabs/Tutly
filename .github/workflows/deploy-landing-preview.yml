@@ -1,8 +1,6 @@
 name: Deploy Landing App Preview
 
 env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING }}
   TURBO_FORCE: ${{ contains(github.event.pull_request.labels.*.name, 'disable cache') && 'true' || '' }}
 
 on:
@@ -16,56 +14,54 @@ on:
       - "pnpm-lock.yaml"
       - "turbo.json"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
+  contents: read
   issues: write
   pull-requests: write
 
 jobs:
-  Deploy-Landing-Preview:
+  deploy:
+    name: Deploy Landing App Preview
     runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup
         uses: ./tooling/github/setup
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build with Vercel
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy to Vercel Preview
+      - name: Deploy to Vercel
         id: deploy
-        run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+        uses: ./tooling/github/vercel-deploy
+        with:
+          token: ${{ secrets.VERCEL_TOKEN }}
+          environment: preview
 
       - name: Comment on PR
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         with:
           script: |
-            const deploymentUrl = '${{ steps.deploy.outputs.deployment_url }}';
-            const comment = `🚀 **Landing App Preview Deployed!**
+            const marker = "🚀 **Landing App Preview Deployed!**";
+            const comment = `${marker}\n\n**Preview URL:** ${process.env.DEPLOYMENT_URL}\n\nThis deployment was triggered by changes to the landing app.`;
 
-            **Preview URL:** ${deploymentUrl}
-
-            This deployment was triggered by changes to the landing app. Test your changes and let us know if everything looks good!`;
-
-            const existingComments = await github.rest.issues.listComments({
+            const existingComments = await github.paginate(github.rest.issues.listComments, {
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo
             });
 
-            const botComment = existingComments.data.find(comment => 
-              comment.body.includes('🚀 **Landing App Preview Deployed!**') &&
-              comment.user.login === 'github-actions[bot]'
+            const botComment = existingComments.find(
+              (c) => c.body.includes(marker) && c.user.login === "github-actions[bot]"
             );
 
             if (botComment) {

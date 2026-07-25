@@ -26,6 +26,7 @@
     "@tutly/logger",
     "@tutly/playgrounds",
     "@tutly/prettier-config",
+    "@tutly/storage",
     "@tutly/typescript-config",
     "@tutly/ui",
     "@tutly/utils",

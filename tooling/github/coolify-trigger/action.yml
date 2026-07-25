@@ -1,0 +1,31 @@
+name: "Trigger Coolify deploy"
+description: "Calls a Coolify deploy webhook, retrying on transient failures."
+
+inputs:
+  webhook:
+    description: "Coolify deploy webhook URL."
+    required: true
+  token:
+    description: "Coolify API token."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # --fail-with-body so a non-2xx still prints Coolify's error before the
+    # step fails. The previous `RESPONSE=$(curl ... --fail)` + `if [ $? -eq 0 ]`
+    # could never take its else branch: `$?` reported the assignment, and the
+    # default `bash -e` shell aborted on the failing curl first.
+    - name: Trigger Coolify webhook
+      uses: nick-fields/retry@v4
+      with:
+        timeout_minutes: 3
+        max_attempts: 5
+        retry_wait_seconds: 20
+        command: >-
+          curl -sS --fail-with-body --max-time 60
+          --request GET "$COOLIFY_WEBHOOK"
+          --header "Authorization: Bearer $COOLIFY_TOKEN"
+      env:
+        COOLIFY_WEBHOOK: ${{ inputs.webhook }}
+        COOLIFY_TOKEN: ${{ inputs.token }}

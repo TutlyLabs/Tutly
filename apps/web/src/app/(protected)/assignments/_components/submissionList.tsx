@@ -55,9 +55,11 @@ export const SubmissionList = ({
           Submissions {assignment && `(max:${assignment?.maxSubmissions})`}
         </p>
         <p className="text-xs text-slate-600">
-          {submissions.filter(
-            (submission: any) => submission?.points.length === 0,
-          ).length}{" "}
+          {
+            submissions.filter(
+              (submission: any) => submission?.points.length === 0,
+            ).length
+          }{" "}
           un-evaluated / {submissions.length} total
         </p>
       </div>

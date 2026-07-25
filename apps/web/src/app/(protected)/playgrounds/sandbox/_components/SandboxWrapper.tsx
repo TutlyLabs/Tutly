@@ -5,15 +5,24 @@ import {
   type SandpackProps,
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
-import type { Attachment } from "@tutly/db/browser";
 import { useTheme } from "next-themes";
 import { useEffect, useMemo, useState } from "react";
 import { useBundlerUrl } from "@/hooks/use-bundler-url";
+import type { RouterOutputs } from "@/trpc/react";
 
 import { InstructorModeProvider } from "./instructorMode";
 import { SandboxEmbed } from "./SandboxEmbed";
 import { SandboxHeader } from "./SandboxHeader";
 import { TUTLY_CONFIG_PATH, buildTutlyConfigContent } from "./tutlyConfigFile";
+
+/**
+ * The attachment as served by `sandbox.getSandboxPageData`: the stored
+ * `sandboxTemplate` column is replaced by the decoded Sandpack config.
+ */
+export type SandboxAssignment = Extract<
+  RouterOutputs["sandbox"]["getSandboxPageData"],
+  { allowed: true }
+>["assignment"];
 
 interface SandboxWrapperProps {
   template: string;
@@ -21,7 +30,7 @@ interface SandboxWrapperProps {
   canEditTemplate: boolean;
   isEditingTemplate: boolean;
   assignmentId?: string | null;
-  assignment: Attachment | null;
+  assignment: SandboxAssignment;
   currentUser?: any;
 }
 

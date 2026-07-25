@@ -11,7 +11,15 @@ const handler = async (req: NextRequest) => {
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext: () => createTRPCContext({ headers: req.headers, session }),
+    createContext: () =>
+      createTRPCContext({
+        headers: req.headers,
+        // better-auth widens the customSession return to an index-signature
+        // object; project the two fields the tRPC context actually declares.
+        session: session
+          ? { user: session.user, session: session.session }
+          : null,
+      }),
     onError:
       process.env.NODE_ENV === "development"
         ? ({ path, error }) => {

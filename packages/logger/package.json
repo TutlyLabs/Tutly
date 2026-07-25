@@ -13,7 +13,8 @@
     "dev": "tsc -w",
     "lint": "eslint \"src/**/*.ts*\" --max-warnings 0",
     "lint:fix": "eslint \"src/**/*.ts*\" --fix",
-    "test": "jest"
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
   },
   "jest": {
     "preset": "@tutly/jest-presets/node"

@@ -44,10 +44,10 @@ const formSchema = z.object({
     .max(14, "Invalid WhatsApp number")
     .refine((value) => value.startsWith("+"), "Must start with +"),
   gender: z.enum(["male", "female", "other"], {
-    required_error: "Please select a gender",
+    error: "Please select a gender",
   }),
   tshirtSize: z.enum(["XS", "S", "M", "L", "XL", "XXL"], {
-    required_error: "Please select a size",
+    error: "Please select a size",
   }),
 });
 

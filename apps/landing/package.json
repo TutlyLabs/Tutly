@@ -8,10 +8,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
+    "format": "prettier \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "start": "next start",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.35.0",

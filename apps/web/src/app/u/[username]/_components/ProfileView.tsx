@@ -502,9 +502,9 @@ export function ProfileView({ profile }: { profile: Profile }) {
                   modal={
                     <SkillsEditor
                       initial={skills}
-                      onSave={async (s) =>
-                        await updateExtended.mutateAsync({ skills: s })
-                      }
+                      onSave={async (s) => {
+                        await updateExtended.mutateAsync({ skills: s });
+                      }}
                     />
                   }
                 />

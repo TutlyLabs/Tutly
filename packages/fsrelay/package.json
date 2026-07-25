@@ -159,7 +159,10 @@
     "dev": "webpack --mode development --watch",
     "dev-webview": "webpack --config webpack-react.config.js --watch",
     "watch": "npm-run-all --parallel dev dev-webview",
-    "package": "pnpm run build"
+    "package": "pnpm run build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
@@ -167,6 +170,7 @@
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@tailwindcss/postcss": "^4.1.18",
+    "@tutly/eslint-config": "workspace:*",
     "@types/node": "^25.0.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
@@ -175,6 +179,7 @@
     "babel-loader": "^10.0.0",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.4",
+    "eslint": "^9.39.2",
     "mini-css-extract-plugin": "^2.9.4",
     "mocha": "^11.7.5",
     "npm-run-all": "^4.1.5",

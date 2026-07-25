@@ -1,5 +1,6 @@
 "use client";
 
+import type { Role } from "@tutly/db/browser";
 import { MessageCircle, Search, UserPlus, UserX, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -50,7 +51,7 @@ type User = {
   username: string;
   name: string | null;
   email: string | null;
-  role: "STUDENT" | "MENTOR" | "INSTRUCTOR" | "ADMIN";
+  role: Role;
   image: string | null;
   enrolledUsers: EnrolledUser[];
 };

@@ -1,8 +1,6 @@
 name: Deploy Landing App to Production
 
 env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING }}
   TURBO_FORCE: ${{ github.event_name == 'workflow_dispatch' && contains(github.event.inputs.labels, 'disable cache') && 'true' || '' }}
 
 on:
@@ -11,31 +9,32 @@ on:
       - "landing@*"
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
-  Deploy-Landing-Production:
+  deploy:
     name: Deploy Landing App to Production
     runs-on: ubuntu-latest
+    environment:
+      name: production
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup
         uses: ./tooling/github/setup
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build with Vercel
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy to Vercel Production
+      - name: Deploy to Vercel
         id: deploy
-        run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+        uses: ./tooling/github/vercel-deploy
+        with:
+          token: ${{ secrets.VERCEL_TOKEN }}
+          environment: production

@@ -1,0 +1,57 @@
+name: "Build and publish image"
+description: "Builds a Dockerfile and pushes it to GHCR with sha/latest/tag tags."
+
+inputs:
+  image:
+    description: "Fully qualified GHCR image name."
+    required: true
+  dockerfile:
+    description: "Path to the Dockerfile, relative to the repo root."
+    required: true
+  tag-pattern:
+    description: 'Git tag pattern to derive the image tag from, e.g. "web@(.*)".'
+    required: true
+  cache-scope:
+    description: "Buildx GHA cache scope."
+    required: false
+    default: "default"
+  registry-username:
+    description: "GHCR username."
+    required: true
+  registry-password:
+    description: "GHCR password or token."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ inputs.registry-username }}
+        password: ${{ inputs.registry-password }}
+
+    - name: Docker metadata
+      id: meta
+      uses: docker/metadata-action@v6
+      with:
+        images: ${{ inputs.image }}
+        tags: |
+          type=sha,prefix=
+          type=raw,value=latest
+          type=match,pattern=${{ inputs.tag-pattern }},group=1
+
+    - name: Build and push image
+      uses: docker/build-push-action@v7
+      with:
+        context: .
+        file: ${{ inputs.dockerfile }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha,scope=${{ inputs.cache-scope }}
+        cache-to: type=gha,mode=max,scope=${{ inputs.cache-scope }}

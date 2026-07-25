@@ -746,7 +746,7 @@ export default class Playground extends Command {
 
   private async setupFileWatcher(directory: string) {
     this.fileWatcher = chokidarWatch(directory, {
-      ignored: /(^|[\/\\])\.(?!tutly)[^/\\\\]+/, // ignore dotfiles except .tutly
+      ignored: /(^|[/\\])\.(?!tutly)[^/\\\\]+/, // ignore dotfiles except .tutly
       persistent: true,
       ignoreInitial: true,
     });

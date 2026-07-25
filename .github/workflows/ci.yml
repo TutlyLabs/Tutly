@@ -18,23 +18,43 @@ env:
   FORCE_COLOR: 3
   NODE_OPTIONS: "--max-old-space-size=8192"
   TURBO_FORCE: ${{ contains(github.event.pull_request.labels.*.name, 'disable cache') && 'true' || '' }}
+  # Remote cache. Both are empty when unset, which turbo treats as "no remote
+  # cache" - it falls back to the local .turbo directory below.
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  # turbo --affected diffs against this. Only set on pull_request; pushes to
+  # main and merge_group runs check everything.
+  TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha }}
+  TURBO_SCM_HEAD: ${{ github.sha }}
+  AFFECTED: ${{ github.event_name == 'pull_request' && '--affected' || '' }}
 
 jobs:
   build:
+    name: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup
         uses: ./tooling/github/setup
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-build-${{ github.sha }}
           restore-keys: |
             turbo-${{ runner.os }}-build-
+
+      - name: Copy env
+        run: cp .env.example .env
+
+      # Previously CI only ran prepack + trpc-api-export, so a broken app build
+      # was not discovered until the deploy workflow ran.
+      - name: Build
+        run: pnpm turbo run build $AFFECTED
 
       - name: Build CLI
         run: pnpm --filter tutly prepack
@@ -43,7 +63,7 @@ jobs:
         run: pnpm --filter @tutly/api trpc-api-export
 
       - name: Upload api types
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-types
           path: |
@@ -51,13 +71,16 @@ jobs:
             apps/api/package.json
 
   lint:
+    name: lint
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Download api types
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: api-types
           path: apps/api
@@ -66,7 +89,7 @@ jobs:
         uses: ./tooling/github/setup
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-lint-${{ github.sha }}
@@ -74,43 +97,50 @@ jobs:
             turbo-${{ runner.os }}-lint-
 
       - name: Copy env
-        shell: bash
         run: cp .env.example .env
 
       - name: Lint with Turbo
-        run: pnpm lint
+        run: pnpm turbo run lint --continue $AFFECTED
 
       - name: Lint workspace
         run: pnpm lint:ws
 
   format:
+    name: format
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup
         uses: ./tooling/github/setup
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-format-${{ github.sha }}
           restore-keys: |
             turbo-${{ runner.os }}-format-
 
-      - name: Format
+      # `pnpm format` is a --check now. It used to run prettier --write, which
+      # rewrote files in the runner and could never fail.
+      - name: Format check
         run: pnpm format
 
   typecheck:
+    name: typecheck
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Download api types
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: api-types
           path: apps/api
@@ -119,12 +149,70 @@ jobs:
         uses: ./tooling/github/setup
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-typecheck-${{ github.sha }}
           restore-keys: |
             turbo-${{ runner.os }}-typecheck-
 
+      - name: Copy env
+        run: cp .env.example .env
+
       - name: Typecheck
-        run: pnpm typecheck
+        run: pnpm turbo run typecheck $AFFECTED
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Turbo cache
+        uses: actions/cache@v6
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-test-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-test-
+
+      - name: Copy env
+        run: cp .env.example .env
+
+      - name: Test
+        run: pnpm turbo run test $AFFECTED
+
+  changeset:
+    name: changeset
+    runs-on: ubuntu-latest
+    # The release bot's own version PR never carries a changeset - it deletes
+    # them. Contributors can opt out with the "no changeset" label.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.head_ref != 'changeset-release/main' &&
+      !contains(github.event.pull_request.labels.*.name, 'no changeset')
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check for a changeset
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          added=$(git diff --name-only --diff-filter=A "$BASE_SHA" HEAD -- '.changeset/*.md' \
+            | grep -v '^.changeset/README.md$' || true)
+          if [ -z "$added" ]; then
+            echo "No changeset found in this PR."
+            echo "Run \`pnpm changeset\` and commit the result, or add the"
+            echo "\`no changeset\` label if this PR needs no release note."
+            exit 1
+          fi
+          echo "Found changeset(s):"
+          echo "$added"

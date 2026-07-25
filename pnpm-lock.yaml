@@ -42,6 +42,7 @@ overrides:
   undici: ^7.18.2
   uuid: ^11.1.1
   webpack: ^5.104.1
+  zod: ^4.4.3
 
 importers:
 
@@ -62,6 +63,9 @@ importers:
       prettier:
         specifier: 3.5.3
         version: 3.5.3
+      sherif:
+        specifier: ^1.13.0
+        version: 1.13.0
       turbo:
         specifier: ^2.6.3
         version: 2.6.3
@@ -205,8 +209,8 @@ importers:
         specifier: ^8.18.3
         version: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       zod:
-        specifier: ^4.1.13
-        version: 4.1.13
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@oclif/dev-cli':
         specifier: ^1.26.10
@@ -214,6 +218,9 @@ importers:
       '@oclif/test':
         specifier: ^4.1.15
         version: 4.1.15(@oclif/core@4.8.0)
+      '@tutly/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
       '@types/adm-zip':
         specifier: ^0.5.7
         version: 0.5.7
@@ -371,7 +378,7 @@ importers:
         specifier: ^4.21.0
         version: 4.21.0
       zod:
-        specifier: ^4.1.13
+        specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
       '@tutly/eslint-config':
@@ -798,8 +805,8 @@ importers:
         specifier: ^0.18.5
         version: 0.18.5
       zod:
-        specifier: ^4.1.13
-        version: 4.1.13
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@capacitor/assets':
         specifier: ^3.0.5
@@ -925,8 +932,8 @@ importers:
         specifier: 2.2.6
         version: 2.2.6
       zod:
-        specifier: ^4.1.13
-        version: 4.1.13
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@tutly/eslint-config':
         specifier: workspace:*
@@ -1072,6 +1079,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.18
         version: 4.1.18
+      '@tutly/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
       '@types/node':
         specifier: ^25.0.2
         version: 25.0.2
@@ -1096,6 +1106,9 @@ importers:
       css-minimizer-webpack-plugin:
         specifier: ^7.0.4
         version: 7.0.4(webpack@5.106.2)
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.2(jiti@2.7.0)
       mini-css-extract-plugin:
         specifier: ^2.9.4
         version: 2.9.4(webpack@5.106.2)
@@ -1197,7 +1210,7 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0(@aws-sdk/client-s3@3.1053.0)(@aws-sdk/s3-request-presigner@3.948.0)(@google-cloud/storage@7.19.0)
       zod:
-        specifier: ^4.1.13
+        specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
       '@tutly/eslint-config':
@@ -1395,8 +1408,8 @@ importers:
         specifier: ^11.3.0
         version: 11.3.0
       zod:
-        specifier: ^4.1.13
-        version: 4.1.13
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@tutly/eslint-config':
         specifier: workspace:*
@@ -7062,7 +7075,7 @@ packages:
   better-call@1.1.8:
     resolution: {integrity: sha512-XMQ2rs6FNXasGNfMjzbyroSwKwYbZ/T3IxruSS6U2MJRsSYh3wYtG3o6H00ZlKZ/C/UPOAD97tqgQJNsxyeTXw==}
     peerDependencies:
-      zod: ^4.0.0
+      zod: ^4.4.3
     peerDependenciesMeta:
       zod:
         optional: true
@@ -7664,10 +7677,12 @@ packages:
   conventional-changelog-atom@2.0.8:
     resolution: {integrity: sha512-xo6v46icsFTK3bb7dY/8m2qvc8sZemRgdqLb/bjpBsH2UyOS8rKNTgcb5025Hri6IpANPApbXMg15QLb1LJpBw==}
     engines: {node: '>=10'}
+    deprecated: This preset is deprecated. Please use conventional-changelog-conventionalcommits or conventional-changelog-angular instead.
 
   conventional-changelog-codemirror@2.0.8:
     resolution: {integrity: sha512-z5DAsn3uj1Vfp7po3gpt2Boc+Bdwmw2++ZHa5Ak9k0UKsYAO5mH1UBTN0qSCuJZREIhX6WU4E1p3IW2oRCNzQw==}
     engines: {node: '>=10'}
+    deprecated: This preset is deprecated. Please use conventional-changelog-conventionalcommits or conventional-changelog-angular instead.
 
   conventional-changelog-conventionalcommits@4.6.3:
     resolution: {integrity: sha512-LTTQV4fwOM4oLPad317V/QNQ1FY4Hju5qeBIM1uTHbrnCE+Eg4CdRZ3gO2pUeR+tzWdp80M2j3qFFEDWVqOV4g==}
@@ -7676,26 +7691,32 @@ packages:
   conventional-changelog-core@4.2.4:
     resolution: {integrity: sha512-gDVS+zVJHE2v4SLc6B0sLsPiloR0ygU7HaDW14aNJE1v4SlqJPILPl/aJC7YdtRE4CybBf8gDwObBvKha8Xlyg==}
     engines: {node: '>=10'}
+    deprecated: Deprecated and no longer maintained. Please use conventional-changelog instead.
 
   conventional-changelog-ember@2.0.9:
     resolution: {integrity: sha512-ulzIReoZEvZCBDhcNYfDIsLTHzYHc7awh+eI44ZtV5cx6LVxLlVtEmcO+2/kGIHGtw+qVabJYjdI5cJOQgXh1A==}
     engines: {node: '>=10'}
+    deprecated: This preset is deprecated. Please use conventional-changelog-conventionalcommits or conventional-changelog-angular instead.
 
   conventional-changelog-eslint@3.0.9:
     resolution: {integrity: sha512-6NpUCMgU8qmWmyAMSZO5NrRd7rTgErjrm4VASam2u5jrZS0n38V7Y9CzTtLT2qwz5xEChDR4BduoWIr8TfwvXA==}
     engines: {node: '>=10'}
+    deprecated: This preset is deprecated. Please use conventional-changelog-conventionalcommits or conventional-changelog-angular instead.
 
   conventional-changelog-express@2.0.6:
     resolution: {integrity: sha512-SDez2f3iVJw6V563O3pRtNwXtQaSmEfTCaTBPCqn0oG0mfkq0rX4hHBq5P7De2MncoRixrALj3u3oQsNK+Q0pQ==}
     engines: {node: '>=10'}
+    deprecated: This preset is deprecated. Please use conventional-changelog-conventionalcommits or conventional-changelog-angular instead.
 
   conventional-changelog-jquery@3.0.11:
     resolution: {integrity: sha512-x8AWz5/Td55F7+o/9LQ6cQIPwrCjfJQ5Zmfqi8thwUEKHstEn4kTIofXub7plf1xvFA2TqhZlq7fy5OmV6BOMw==}
     engines: {node: '>=10'}
+    deprecated: This preset is deprecated. Please use conventional-changelog-conventionalcommits or conventional-changelog-angular instead.
 
   conventional-changelog-jshint@2.0.9:
     resolution: {integrity: sha512-wMLdaIzq6TNnMHMy31hql02OEQ8nCQfExw1SE0hYL5KvU+JCTuPaDO+7JiogGT2gJAxiUGATdtYYfh+nT+6riA==}
     engines: {node: '>=10'}
+    deprecated: This preset is deprecated. Please use conventional-changelog-conventionalcommits or conventional-changelog-angular instead.
 
   conventional-changelog-preset-loader@2.3.4:
     resolution: {integrity: sha512-GEKRWkrSAZeTq5+YjUZOYxdHq+ci4dNwHvpaBC3+ENalzFWuCWa9EZXSuZBpkr72sMdKB+1fyDV4takK1Lf58g==}
@@ -9252,7 +9273,7 @@ packages:
   git-semver-tags@4.1.1:
     resolution: {integrity: sha512-OWyMt5zBe7xFs8vglMmhM9lRQzCWL3WjHtxNNfJTMngGym7pC1kh8sP6jevfydJ6LP3ZvGxfb6ABYgPUM0mtsA==}
     engines: {node: '>=10'}
-    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   gitconfiglocal@1.0.0:
@@ -13071,6 +13092,50 @@ packages:
     resolution: {integrity: sha512-ObmnIF4hXNg1BqhnHmgbDETF8dLPCggZWBjkQfhZpbszZnYur5DUljTcCHii5LC3J5E0yeO/1LIMyH+UvHQgyw==}
     engines: {node: '>= 0.4'}
 
+  sherif-darwin-arm64@1.13.0:
+    resolution: {integrity: sha512-k38jpGpZIEWS5dpSRLSvVi53LZuGO3hDqB88jgdLMDN11LZM6yTDcP0GytnQ8OpE6Br/Js6bDCLsdWDarZdV9g==}
+    cpu: [arm64]
+    os: [darwin]
+
+  sherif-darwin-x64@1.13.0:
+    resolution: {integrity: sha512-W2bOj0Ya9A0fPSWzbeaaNg2RRRr48l2lArN8sGbfc9SZuJSJWXcdWkTVC3sEUiiXwpxNeLY/CsGNyQz5Izbfig==}
+    cpu: [x64]
+    os: [darwin]
+
+  sherif-linux-arm64-musl@1.13.0:
+    resolution: {integrity: sha512-9IDAlwYT5Ay2nex9Da3R98cvnPKVveT57i7pJXnnY/DC90qdqqz6Twlp7STRv+7qo4k4ES+2J9zQ0k6SDe888A==}
+    cpu: [arm64]
+    os: [linux]
+
+  sherif-linux-arm64@1.13.0:
+    resolution: {integrity: sha512-Z94SgKNClWarVJj4LsayOmL7zccCUAvy3ugZnIO860FoJofh812KAyF8CdWrSho8qfmmoAzNcqSSc1OZh7+ckQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  sherif-linux-x64-musl@1.13.0:
+    resolution: {integrity: sha512-2L+A8jF5ylojFwl7eAePR1h3Bzx24IcMgEoWObXgD70k6xF+GOJaM/n+q4MQ9YDntAKbJfMDr6ETjt6Bt/hosA==}
+    cpu: [x64]
+    os: [linux]
+
+  sherif-linux-x64@1.13.0:
+    resolution: {integrity: sha512-xGB9iiet8l/i8/YLZje8icpZyt4pVgoxB2+SoC6JCB8iDWsCVSuixebwX2t9yeGqXBXO1kphaW0TLf8Tmwy9JQ==}
+    cpu: [x64]
+    os: [linux]
+
+  sherif-windows-arm64@1.13.0:
+    resolution: {integrity: sha512-jHzJ/EcG4HuNLf/3AEDzbRkAofLPBHRJKJJMjAosampAe9861atu4q+Z2IZ1/sHg5oVnNgaNg/Xc5DDhGcQ/3w==}
+    cpu: [arm64]
+    os: [win32]
+
+  sherif-windows-x64@1.13.0:
+    resolution: {integrity: sha512-KyMqQY62Eb3O+wePlw433mH2XBPVPLXdDjWPneg9pB6jeK0B1sgEzM2yks+aAP5asZ1Y8Q7C7iR7ZtbJKdsAtA==}
+    cpu: [x64]
+    os: [win32]
+
+  sherif@1.13.0:
+    resolution: {integrity: sha512-Ld2nUOlwW1nmYDA2Q/5o7SC8WcCzVS7XjImmzW4a4z1o8DXJnt+2xYLvI42N5UYlNb/EevPahdC/XxIP6C38TQ==}
+    hasBin: true
+
   shimmer@1.2.1:
     resolution: {integrity: sha512-sQTKC1Re/rM6XyFM6fIAGHRPVGvyXfgzIDvzoq608vM+jeyVD0Tu1E6Np0Kc2zAIFWIj963V2800iF/9LPieQw==}
 
@@ -14514,10 +14579,7 @@ packages:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      zod: ^3.25.0 || ^4.0.0
-
-  zod@4.1.13:
-    resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
+      zod: ^4.4.3
 
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
@@ -16119,7 +16181,7 @@ snapshots:
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
       '@standard-schema/spec': 1.0.0
-      better-call: 1.1.8(zod@4.1.13)
+      better-call: 1.1.8(zod@4.4.3)
       jose: 6.1.3
       kysely: 0.28.17
       nanostores: 1.1.0
@@ -21761,7 +21823,7 @@ snapshots:
       '@better-fetch/fetch': 1.1.21
       '@noble/ciphers': 2.0.1
       '@noble/hashes': 2.0.1
-      better-call: 1.1.8(zod@4.1.13)
+      better-call: 1.1.8(zod@4.4.3)
       defu: 6.1.7
       jose: 6.1.3
       kysely: 0.28.17
@@ -21775,15 +21837,6 @@ snapshots:
       prisma: 7.1.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
-
-  better-call@1.1.8(zod@4.1.13):
-    dependencies:
-      '@better-auth/utils': 0.3.0
-      '@better-fetch/fetch': 1.1.21
-      rou3: 0.7.10
-      set-cookie-parser: 2.7.2
-    optionalDependencies:
-      zod: 4.1.13
 
   better-call@1.1.8(zod@4.4.3):
     dependencies:
@@ -29307,6 +29360,41 @@ snapshots:
 
   shell-quote@1.8.3: {}
 
+  sherif-darwin-arm64@1.13.0:
+    optional: true
+
+  sherif-darwin-x64@1.13.0:
+    optional: true
+
+  sherif-linux-arm64-musl@1.13.0:
+    optional: true
+
+  sherif-linux-arm64@1.13.0:
+    optional: true
+
+  sherif-linux-x64-musl@1.13.0:
+    optional: true
+
+  sherif-linux-x64@1.13.0:
+    optional: true
+
+  sherif-windows-arm64@1.13.0:
+    optional: true
+
+  sherif-windows-x64@1.13.0:
+    optional: true
+
+  sherif@1.13.0:
+    optionalDependencies:
+      sherif-darwin-arm64: 1.13.0
+      sherif-darwin-x64: 1.13.0
+      sherif-linux-arm64: 1.13.0
+      sherif-linux-arm64-musl: 1.13.0
+      sherif-linux-x64: 1.13.0
+      sherif-linux-x64-musl: 1.13.0
+      sherif-windows-arm64: 1.13.0
+      sherif-windows-x64: 1.13.0
+
   shimmer@1.2.1:
     optional: true
 
@@ -30941,8 +31029,6 @@ snapshots:
   zod-validation-error@4.0.2(zod@4.4.3):
     dependencies:
       zod: 4.4.3
-
-  zod@4.1.13: {}
 
   zod@4.4.3: {}
 
