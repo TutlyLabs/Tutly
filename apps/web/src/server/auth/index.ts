@@ -2,6 +2,7 @@ import { compare, hash } from "bcryptjs";
 import { Resend } from "resend";
 
 import { createServerAuth } from "@tutly/auth/server";
+import type { SessionWithUser } from "@tutly/auth/session";
 
 import {
   RESEND_API_KEY,
@@ -58,12 +59,16 @@ export const auth = createServerAuth({
     });
   },
   customSessionHandler: async ({ user, session }) => {
+    // Degraded pass-through for the two unreachable-in-practice paths below:
+    // the better-auth user lacks the enriched columns, so every permission
+    // check fails closed. Kept as-is (with a cast) rather than changed here.
+    const passThrough = () => ({ user, session }) as unknown as SessionWithUser;
     try {
       const prismaUser = await db.user.findUnique({
         where: { id: user.id },
         include: { organization: true, adminForCourses: true },
       });
-      if (!prismaUser) return { user, session };
+      if (!prismaUser) return passThrough();
       if (prismaUser.disabledAt) {
         await db.session.deleteMany({ where: { userId: user.id } });
         return { session: null, user: null };
@@ -89,7 +94,7 @@ export const auth = createServerAuth({
       };
     } catch (error) {
       console.error("customSession error:", error);
-      return { user, session };
+      return passThrough();
     }
   },
   google:

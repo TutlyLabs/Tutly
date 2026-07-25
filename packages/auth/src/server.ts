@@ -1,27 +1,30 @@
+import { randomUUID } from "crypto";
+import type { User } from "better-auth";
+import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { customSession } from "better-auth/plugins/custom-session";
-import { bearer } from "better-auth/plugins/bearer";
-import { username } from "better-auth/plugins/username";
 import { admin } from "better-auth/plugins/admin";
-import { expo } from "@better-auth/expo";
-import { randomUUID } from "crypto";
+import { bearer } from "better-auth/plugins/bearer";
+import { customSession } from "better-auth/plugins/custom-session";
+import { username } from "better-auth/plugins/username";
 
-import { ac, ROLES } from "./permissions";
+import type { Db } from "@tutly/db";
+
+import type { CustomSessionInput, CustomSessionResult } from "./session";
+import { ac, ROLE_NAMES, ROLES } from "./permissions";
 
 export interface CreateServerAuthOptions {
   secret: string;
   baseURL: string;
-  db: any;
+  db: Db;
   useSecureCookies: boolean;
   sendResetPassword: (params: {
     user: { id: string; email: string };
     url: string;
   }) => Promise<void>;
-  customSessionHandler: (input: {
-    user: any;
-    session: any;
-  }) => Promise<any>;
+  customSessionHandler: (
+    input: CustomSessionInput,
+  ) => Promise<CustomSessionResult>;
   google?: { clientId: string; clientSecret: string };
   github?: { clientId: string; clientSecret: string };
   zoom?: { clientId: string; clientSecret: string };
@@ -29,7 +32,7 @@ export interface CreateServerAuthOptions {
     hash: (plaintext: string) => Promise<string>;
     verify: (data: { password: string; hash: string }) => Promise<boolean>;
   };
-  afterEmailVerification?: (user: any) => Promise<void>;
+  afterEmailVerification?: (user: User) => Promise<void>;
   trustedOrigins?: (request?: Request) => string[];
 }
 
@@ -75,7 +78,7 @@ export function createServerAuth(opts: CreateServerAuthOptions) {
     emailVerification: {
       afterEmailVerification: opts.afterEmailVerification,
     },
-    roles: ["STUDENT", "INSTRUCTOR", "ADMIN", "MENTOR", "SUPER_ADMIN"],
+    roles: ROLE_NAMES,
     socialProviders: {
       ...(opts.google?.clientId &&
         opts.google.clientSecret && {

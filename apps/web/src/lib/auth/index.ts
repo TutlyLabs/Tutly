@@ -4,19 +4,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/server/auth";
 import { headers } from "next/headers";
 import { cache } from "react";
-import type { Course, Organization, Role, User } from "@tutly/db/browser";
-import type { Session } from "better-auth";
+import type { SessionUser, SessionWithUser } from "@tutly/auth/session";
 
-export type SessionUser = Omit<User, "password" | "oneTimePassword"> & {
-  organization: Organization | null;
-  role: Role;
-  adminForCourses: Course[];
-};
-
-export type SessionWithUser = {
-  user: SessionUser;
-  session: Session;
-};
+export type { SessionUser, SessionWithUser };
 
 export const getServerSession = cache(
   async (): Promise<SessionWithUser | null> => {
@@ -24,10 +14,10 @@ export const getServerSession = cache(
       const session = await auth.api.getSession({
         headers: await headers(),
       });
-      if (!session) {
+      if (!session?.user) {
         return null;
       }
-      return session as any;
+      return session as SessionWithUser;
     } catch {
       return null;
     }

@@ -12,6 +12,14 @@
       "types": "./src/permissions.ts",
       "default": "./src/permissions.ts"
     },
+    "./access-control": {
+      "types": "./src/access-control.ts",
+      "default": "./src/access-control.ts"
+    },
+    "./session": {
+      "types": "./src/session.ts",
+      "default": "./src/session.ts"
+    },
     "./server": {
       "types": "./src/server.ts",
       "default": "./src/server.ts"
@@ -24,16 +32,19 @@
   "scripts": {
     "lint": "eslint \"src/**/*.ts*\" --max-warnings 0",
     "lint:fix": "eslint \"src/**/*.ts*\" --fix",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@better-auth/expo": "1.4.22",
+    "@tutly/db": "workspace:*",
     "better-auth": "1.4.22"
   },
   "devDependencies": {
     "@tutly/eslint-config": "workspace:*",
     "@tutly/typescript-config": "workspace:*",
     "eslint": "^9.39.2",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
   }
 }
