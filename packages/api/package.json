@@ -24,7 +24,8 @@
   "scripts": {
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings 0",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.948.0",
@@ -46,6 +47,7 @@
     "@tutly/typescript-config": "workspace:*",
     "@types/bcryptjs": "^3.0.0",
     "eslint": "^9.39.2",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
   }
 }

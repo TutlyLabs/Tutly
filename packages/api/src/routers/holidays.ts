@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, permissionProcedure } from "../trpc";
 
 export const holidaysRouter = createTRPCRouter({
-  addHoliday: protectedProcedure
+  addHoliday: permissionProcedure("holiday", "create")
     .input(
       z.object({
         reason: z.string(),
@@ -24,7 +24,7 @@ export const holidaysRouter = createTRPCRouter({
       return { success: true, data: holiday };
     }),
 
-  deleteHoliday: protectedProcedure
+  deleteHoliday: permissionProcedure("holiday", "delete")
     .input(
       z.object({
         id: z.string(),
@@ -37,12 +37,14 @@ export const holidaysRouter = createTRPCRouter({
       return { success: true, data: holiday };
     }),
 
-  getAllHolidays: protectedProcedure.query(async ({ ctx }) => {
-    const holidays = await ctx.db.holidays.findMany();
-    return { success: true, data: holidays };
-  }),
+  getAllHolidays: permissionProcedure("holiday", "list").query(
+    async ({ ctx }) => {
+      const holidays = await ctx.db.holidays.findMany();
+      return { success: true, data: holidays };
+    },
+  ),
 
-  editHolidays: protectedProcedure
+  editHolidays: permissionProcedure("holiday", "update")
     .input(
       z.object({
         id: z.string(),

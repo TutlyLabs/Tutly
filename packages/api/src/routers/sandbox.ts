@@ -12,7 +12,7 @@ import {
   type SandpackTemplate,
 } from "../lib/template-policy";
 
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { db } from "@tutly/db";
 
 async function createTestSandbox(apiKey: string) {
@@ -146,17 +146,18 @@ export const sandboxRouter = createTRPCRouter({
       };
     }),
 
-  createSandbox: publicProcedure
+  // Provisions real third-party compute from a caller-supplied key: authenticated only.
+  createSandbox: protectedProcedure
     .input(z.object({ apiKey: z.string() }))
     .mutation(async ({ input }) => {
       const { apiKey } = input;
 
       try {
-        const { sdk, sandboxId } = await createTestSandbox(apiKey);
+        // `sdk` is deliberately not returned: serializing it leaks the API key.
+        const { sandboxId } = await createTestSandbox(apiKey);
         return {
           ok: true,
           sandboxId,
-          sdk: JSON.stringify(sdk),
         };
       } catch (error) {
         return {
@@ -166,7 +167,7 @@ export const sandboxRouter = createTRPCRouter({
       }
     }),
 
-  checkReadPermission: publicProcedure
+  checkReadPermission: protectedProcedure
     .input(z.object({ apiKey: z.string() }))
     .mutation(async ({ input }) => {
       const { apiKey } = input;
@@ -183,7 +184,7 @@ export const sandboxRouter = createTRPCRouter({
       }
     }),
 
-  checkEditPermission: publicProcedure
+  checkEditPermission: protectedProcedure
     .input(z.object({ apiKey: z.string(), sandboxId: z.string() }))
     .mutation(async ({ input }) => {
       const { apiKey, sandboxId } = input;
@@ -202,7 +203,7 @@ export const sandboxRouter = createTRPCRouter({
       }
     }),
 
-  checkVMManagePermission: publicProcedure
+  checkVMManagePermission: protectedProcedure
     .input(z.object({ apiKey: z.string(), sandboxId: z.string() }))
     .mutation(async ({ input }) => {
       const { apiKey, sandboxId } = input;
@@ -219,7 +220,7 @@ export const sandboxRouter = createTRPCRouter({
       }
     }),
 
-  cleanupTestSandbox: publicProcedure
+  cleanupTestSandbox: protectedProcedure
     .input(z.object({ apiKey: z.string(), sandboxId: z.string() }))
     .mutation(async ({ input }) => {
       const { apiKey, sandboxId } = input;
@@ -228,7 +229,7 @@ export const sandboxRouter = createTRPCRouter({
         const sdk = new CodeSandbox(apiKey);
         await cleanupSandbox(sdk, sandboxId);
         return { ok: true };
-      } catch (error) {
+      } catch {
         return { ok: false };
       }
     }),

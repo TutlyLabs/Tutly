@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, superAdminProcedure } from "../trpc";
 import {
   createSubdomainRecord,
   deleteRecord,
@@ -8,19 +8,6 @@ import {
   getCnameTarget,
   getCustomDomainInstructions,
 } from "../lib/cloudflare";
-
-/**
- * Middleware that ensures the user has SUPER_ADMIN role
- */
-const superAdminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.session.user.role !== "SUPER_ADMIN") {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Super admin access required",
-    });
-  }
-  return next({ ctx });
-});
 
 export const superAdminRouter = createTRPCRouter({
   // ─── Dashboard ───────────────────────────────────────────────

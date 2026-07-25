@@ -1,11 +1,24 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  requireClassManageAccess,
+  requireClassReadAccess,
+  requireCourseManageAccess,
+  requireCourseReadAccess,
+} from "../lib/authorization";
+import {
+  createTRPCRouter,
+  permissionProcedure,
+  staffProcedure,
+} from "../trpc";
 
 export const classesRouter = createTRPCRouter({
-  getLatestForCourse: protectedProcedure
+  getLatestForCourse: permissionProcedure("class", "read")
     .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
+
       const cls = await ctx.db.class.findFirst({
         where: { courseId: input.courseId },
         orderBy: { createdAt: "desc" },
@@ -14,7 +27,7 @@ export const classesRouter = createTRPCRouter({
       return cls;
     }),
 
-  createClass: protectedProcedure
+  createClass: permissionProcedure("class", "create")
     .input(
       z.object({
         classTitle: z.string().trim().min(1, {
@@ -38,6 +51,10 @@ export const classesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Outside the try: the catch below flattens every error into a generic
+      // message, which would turn an authorization failure into a 500.
+      await requireCourseManageAccess(ctx, input.courseId);
+
       try {
         if (input.videoType === "HLS" && !input.videoId) {
           throw new Error("HLS class requires a pre-created videoId");
@@ -117,7 +134,7 @@ export const classesRouter = createTRPCRouter({
       }
     }),
 
-  updateClass: protectedProcedure
+  updateClass: permissionProcedure("class", "update")
     .input(
       z.object({
         classId: z.string(),
@@ -140,13 +157,9 @@ export const classesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      const isCourseAdmin = currentUser.adminForCourses.some(
-        (course: { id: string }) => course.id === input.courseId,
-      );
-
-      if (currentUser.role !== "INSTRUCTOR" && !isCourseAdmin) {
-        throw new Error("You are not authorized to update this class.");
+      const cls = await requireClassManageAccess(ctx, input.classId);
+      if (cls.courseId !== input.courseId) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
 
       try {
@@ -231,13 +244,15 @@ export const classesRouter = createTRPCRouter({
       }
     }),
 
-  getClassDeletionInfo: protectedProcedure
+  getClassDeletionInfo: permissionProcedure("class", "delete")
     .input(
       z.object({
         classId: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireClassManageAccess(ctx, input.classId);
+
       try {
         const classInfo = await ctx.db.class.findUnique({
           where: { id: input.classId },
@@ -297,13 +312,15 @@ export const classesRouter = createTRPCRouter({
       }
     }),
 
-  deleteClass: protectedProcedure
+  deleteClass: permissionProcedure("class", "delete")
     .input(
       z.object({
         classId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireClassManageAccess(ctx, input.classId);
+
       try {
         await ctx.db.class.delete({
           where: {
@@ -317,7 +334,9 @@ export const classesRouter = createTRPCRouter({
       }
     }),
 
-  totalNumberOfClasses: protectedProcedure.query(async ({ ctx }) => {
+  // Counts every class in the deployment, across all organizations, so it is
+  // staff-only rather than a plain class:list read.
+  totalNumberOfClasses: staffProcedure.query(async ({ ctx }) => {
     try {
       const res = await ctx.db.class.count();
       return res;
@@ -329,13 +348,15 @@ export const classesRouter = createTRPCRouter({
     }
   }),
 
-  getClassesByCourseId: protectedProcedure
+  getClassesByCourseId: permissionProcedure("class", "list")
     .input(
       z.object({
         courseId: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
+
       try {
         const classes = await ctx.db.class.findMany({
           where: {
@@ -357,13 +378,15 @@ export const classesRouter = createTRPCRouter({
       }
     }),
 
-  getClassDetails: protectedProcedure
+  getClassDetails: permissionProcedure("class", "read")
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireClassReadAccess(ctx, input.id);
+
       try {
         const classDetails = await ctx.db.class.findUnique({
           where: {

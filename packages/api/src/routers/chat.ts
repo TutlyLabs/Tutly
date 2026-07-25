@@ -1,8 +1,38 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import type { TRPCContext } from "../trpc";
+import { requireUser, requireUserInOrganization } from "../lib/authorization";
 
 const MESSAGE_PAGE_SIZE = 40;
+
+/**
+ * Batch tenancy filter for the member-id lists this router accepts. Kept local
+ * and set-based because `requireUserInOrganization` is one query per id and
+ * these inputs carry up to 100.
+ *
+ * Note: `GroupMember.role` (ADMIN/MEMBER) is group-local and orthogonal to the
+ * global `Role` enum — group admin checks below stay runtime checks against
+ * GroupMember and must not be folded into the permission model.
+ */
+async function requireUsersInOrganization(ctx: TRPCContext, userIds: string[]) {
+  const actor = requireUser(ctx);
+  const ids = Array.from(new Set(userIds)).filter((id) => id !== actor.id);
+  if (ids.length === 0) return;
+
+  // A null-org user matches nobody: tenancy is never satisfied by two nulls.
+  if (!actor.organizationId) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+  }
+
+  const found = await ctx.db.user.count({
+    where: { id: { in: ids }, organizationId: actor.organizationId },
+  });
+  // NOT_FOUND over FORBIDDEN: a cross-tenant user id must not be confirmed.
+  if (found !== ids.length) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+  }
+}
 
 export const chatRouter = createTRPCRouter({
   // List groups the current user belongs to
@@ -160,6 +190,18 @@ export const chatRouter = createTRPCRouter({
           code: "FORBIDDEN",
           message: "You are not allowed to post in this group.",
         });
+      }
+
+      // A replyTo from another group would pull that group's message into this
+      // group's thread view for every member here.
+      if (input.replyToId) {
+        const replyTo = await ctx.db.message.findUnique({
+          where: { id: input.replyToId },
+          select: { groupId: true },
+        });
+        if (!replyTo || replyTo.groupId !== input.groupId) {
+          throw new TRPCError({ code: "NOT_FOUND" });
+        }
       }
 
       const message = await ctx.db.message.create({
@@ -335,6 +377,18 @@ export const chatRouter = createTRPCRouter({
     .input(z.object({ messageId: z.string(), emoji: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+
+      const message = await ctx.db.message.findUnique({
+        where: { id: input.messageId },
+        select: { groupId: true },
+      });
+      if (!message) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const member = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: message.groupId, userId } },
+      });
+      if (!member) throw new TRPCError({ code: "FORBIDDEN" });
+
       const existing = await ctx.db.messageReaction.findUnique({
         where: { messageId_userId_emoji: { messageId: input.messageId, userId, emoji: input.emoji } },
       });
@@ -397,6 +451,8 @@ export const chatRouter = createTRPCRouter({
       const userId = ctx.session.user.id;
       const allMemberIds = Array.from(new Set([userId, ...input.memberUserIds]));
 
+      await requireUsersInOrganization(ctx, input.memberUserIds);
+
       const group = await ctx.db.chatGroup.create({
         data: {
           name: input.name,
@@ -437,6 +493,8 @@ export const chatRouter = createTRPCRouter({
         where: { groupId_userId: { groupId: input.groupId, userId } },
       });
       if (!member || member.role !== "ADMIN") throw new TRPCError({ code: "FORBIDDEN" });
+
+      await requireUsersInOrganization(ctx, input.userIds);
 
       await ctx.db.groupMember.createMany({
         data: input.userIds.map((uid) => ({ groupId: input.groupId, userId: uid })),
@@ -756,6 +814,10 @@ export const chatRouter = createTRPCRouter({
       const userId = ctx.session.user.id;
       if (userId === input.targetUserId) throw new TRPCError({ code: "BAD_REQUEST" });
 
+      // Before the existing-DM lookup, so a DM created across tenants before
+      // this check existed cannot still be reopened.
+      await requireUserInOrganization(ctx, input.targetUserId);
+
       // Find existing DM between the two users
       const existing = await ctx.db.chatGroup.findFirst({
         where: {
@@ -768,12 +830,6 @@ export const chatRouter = createTRPCRouter({
         },
       });
       if (existing) return { groupId: existing.id };
-
-      const targetUser = await ctx.db.user.findUnique({
-        where: { id: input.targetUserId },
-        select: { name: true, username: true, image: true },
-      });
-      if (!targetUser) throw new TRPCError({ code: "NOT_FOUND" });
 
       const group = await ctx.db.chatGroup.create({
         data: {

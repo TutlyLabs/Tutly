@@ -1,9 +1,42 @@
+import { TRPCError } from "@trpc/server";
 import type { Role } from "@tutly/db/browser";
 import bcrypt from "bcryptjs";
 import { randomInt } from "crypto";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import {
+  requireCourseReadAccess,
+  requireUserInOrganization,
+  requireUsernameInOrganization,
+} from "../lib/authorization";
+import {
+  createTRPCRouter,
+  mentorProcedure,
+  protectedProcedure,
+  publicProcedure,
+  staffProcedure,
+} from "../trpc";
+
+/** Roles a caller may hand out. Only a SUPER_ADMIN can mint admin-tier accounts. */
+const assignableRoleSchema = z.enum([
+  "STUDENT",
+  "MENTOR",
+  "INSTRUCTOR",
+  "ADMIN",
+  "SUPER_ADMIN",
+]);
+
+function assertCanAssignRole(actorRole: string, requested: string) {
+  if (
+    (requested === "ADMIN" || requested === "SUPER_ADMIN") &&
+    actorRole !== "SUPER_ADMIN"
+  ) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You cannot assign this role",
+    });
+  }
+}
 
 export const generateRandomPassword = (length = 8) => {
   const lowercase = "abcdefghijklmnopqrstuvwxyz";
@@ -57,8 +90,12 @@ export const usersRouter = createTRPCRouter({
   getProfileRedirect: protectedProcedure
     .input(z.object({ username: z.string() }))
     .query(async ({ ctx, input }) => {
+      const target = await requireUsernameInOrganization(
+        ctx,
+        input.username.toUpperCase(),
+      );
       const enrolled = await ctx.db.enrolledUsers.findFirst({
-        where: { username: input.username.toUpperCase() },
+        where: { username: target.username },
         include: {
           course: { select: { id: true } },
           user: { select: { role: true } },
@@ -88,7 +125,8 @@ export const usersRouter = createTRPCRouter({
     return user;
   }),
 
-  getAllEnrolledUsers: protectedProcedure
+  // Returns every student's email in the course, so it is mentor-and-above only.
+  getAllEnrolledUsers: mentorProcedure
     .input(
       z.object({
         courseId: z.string(),
@@ -97,8 +135,9 @@ export const usersRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (!currentUser.organization) {
-        throw new Error("Organization not found");
+        throw new TRPCError({ code: "FORBIDDEN", message: "Organization not found" });
       }
+      await requireCourseReadAccess(ctx, input.courseId);
       const enrolledUsers = await ctx.db.user.findMany({
         where: {
           role: "STUDENT",
@@ -121,7 +160,8 @@ export const usersRouter = createTRPCRouter({
       return enrolledUsers;
     }),
 
-  getAllUsers: protectedProcedure
+  // Whole-organization directory including emails and roles: staff only.
+  getAllUsers: staffProcedure
     .input(
       z.object({
         courseId: z.string(),
@@ -130,7 +170,7 @@ export const usersRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (!currentUser.organization) {
-        throw new Error("Organization not found");
+        throw new TRPCError({ code: "FORBIDDEN", message: "Organization not found" });
       }
 
       const globalUsers = await ctx.db.user.findMany({
@@ -253,18 +293,19 @@ export const usersRouter = createTRPCRouter({
       return updatedProfile;
     }),
 
-  createUser: protectedProcedure
+  createUser: staffProcedure
     .input(
       z.object({
         name: z.string(),
         username: z.string(),
         email: z.string(),
         password: z.string(),
-        role: z.string(),
+        role: assignableRoleSchema,
       }),
     )
     .output(safeUserSchema)
     .mutation(async ({ ctx, input }) => {
+      assertCanAssignRole(ctx.session.user.role, input.role);
       try {
         if (!ctx.session.user.organization) {
           throw new Error("Organization not found");
@@ -318,22 +359,21 @@ export const usersRouter = createTRPCRouter({
       }
     }),
 
-  updateUser: protectedProcedure
+  updateUser: staffProcedure
     .input(
       z.object({
         id: z.string(),
         name: z.string(),
         username: z.string(),
         email: z.string(),
-        role: z.string(),
+        role: assignableRoleSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        if (!ctx.session.user.organization) {
-          throw new Error("Organization not found");
-        }
+      assertCanAssignRole(ctx.session.user.role, input.role);
+      await requireUserInOrganization(ctx, input.id);
 
+      try {
         const user = await ctx.db.user.update({
           where: { id: input.id },
           data: {
@@ -349,13 +389,15 @@ export const usersRouter = createTRPCRouter({
       }
     }),
 
-  deleteUser: protectedProcedure
+  deleteUser: staffProcedure
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireUserInOrganization(ctx, input.id);
+
       try {
         await ctx.db.user.delete({ where: { id: input.id } });
       } catch {
@@ -363,13 +405,14 @@ export const usersRouter = createTRPCRouter({
       }
     }),
 
-  getUser: protectedProcedure
+  getUser: staffProcedure
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireUserInOrganization(ctx, input.id);
       try {
         const user = await ctx.db.user.findUnique({
           where: { id: input.id },
@@ -392,7 +435,7 @@ export const usersRouter = createTRPCRouter({
       }
     }),
 
-  bulkUpsert: protectedProcedure
+  bulkUpsert: staffProcedure
     .input(
       z.array(
         z.object({
@@ -400,12 +443,15 @@ export const usersRouter = createTRPCRouter({
           username: z.string(),
           email: z.string(),
           password: z.string().optional(),
-          role: z.string(),
+          role: assignableRoleSchema,
         }),
       ),
     )
     .output(z.array(safeUserSchema))
     .mutation(async ({ ctx, input }) => {
+      for (const row of input) {
+        assertCanAssignRole(ctx.session.user.role, row.role);
+      }
       try {
         if (!ctx.session.user.organization) {
           throw new Error("Organization not found");
@@ -508,119 +554,58 @@ export const usersRouter = createTRPCRouter({
       }
     }),
 
-  resetPassword: publicProcedure
-    .input(
-      z.object({
-        email: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const user = await ctx.db.user.findUnique({
-        where: { email: input.email },
-      });
-
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      await ctx.db.account.updateMany({
-        where: { userId: user.id, providerId: "credential" },
-        data: {
-          password: null,
-        },
-      });
-
-      return user;
-    }),
-
+  // Password resets go through better-auth (`authClient.requestPasswordReset`
+  // / `authClient.resetPassword`); this procedure only rotates a known password.
   updatePassword: protectedProcedure
     .input(
       z.object({
-        email: z.string(),
-        oldPassword: z.string().optional(),
+        oldPassword: z.string().min(1, "Old password is required"),
         newPassword: z
           .string()
-          .min(1, "Password is required")
           .min(8, "Password must have than 8 characters"),
         confirmPassword: z
           .string()
-          .min(1, "Password is required")
           .min(8, "Password must have than 8 characters"),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       if (input.newPassword !== input.confirmPassword) {
-        return {
-          error: {
-            message: "Passwords don't match",
-          },
-        };
-      }
-
-      const userExists = await ctx.db.user.findUnique({
-        where: {
-          email: input.email,
-        },
-      });
-
-      if (!userExists) {
-        return {
-          error: {
-            message: "User does not exist",
-          },
-        };
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Passwords don't match",
+        });
       }
 
       const account = await ctx.db.account.findFirst({
         where: {
-          userId: userExists.id,
+          userId: ctx.session.user.id,
           providerId: "credential",
         },
       });
 
-      if (account?.password) {
-        if (!input.oldPassword) {
-          return {
-            error: {
-              message: "Please provide old password",
-            },
-          };
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          input.oldPassword,
-          account.password,
-        );
-        if (!isPasswordValid) {
-          return {
-            error: {
-              message: "Old password is incorrect",
-            },
-          };
-        }
+      if (!account?.password) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "No password is set for this account. Use the password reset flow.",
+        });
       }
 
-      const password = await bcrypt.hash(input.newPassword, 10);
+      const isPasswordValid = await bcrypt.compare(
+        input.oldPassword,
+        account.password,
+      );
+      if (!isPasswordValid) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Old password is incorrect",
+        });
+      }
 
-      const existingAccount = await ctx.db.account.findFirst({
-        where: { userId: userExists.id, providerId: "credential" },
+      await ctx.db.account.update({
+        where: { id: account.id },
+        data: { password: await bcrypt.hash(input.newPassword, 10) },
       });
-
-      if (existingAccount) {
-        await ctx.db.account.update({
-          where: { id: existingAccount.id },
-          data: { password: password },
-        });
-      } else {
-        await ctx.db.account.create({
-          data: {
-            accountId: userExists.id,
-            userId: userExists.id,
-            providerId: "credential",
-            password: password,
-          },
-        });
-      }
 
       return {
         success: true,
@@ -628,34 +613,25 @@ export const usersRouter = createTRPCRouter({
       };
     }),
 
-  instructor_resetPassword: protectedProcedure
+  instructor_resetPassword: staffProcedure
     .input(
       z.object({
         email: z.string(),
-        newPassword: z.string(),
+        newPassword: z.string().min(8),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") {
-        return {
-          error: {
-            message: "Unauthorized",
-          },
-        };
-      }
-
       const user = await ctx.db.user.findUnique({
         where: { email: input.email },
+        select: { id: true },
       });
 
       if (!user) {
-        return {
-          error: {
-            message: "User not found",
-          },
-        };
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
       }
+
+      // Cross-tenant password reset was previously possible for any instructor.
+      await requireUserInOrganization(ctx, user.id);
 
       const hashedPassword = await bcrypt.hash(input.newPassword, 10);
 
@@ -697,49 +673,42 @@ export const usersRouter = createTRPCRouter({
       const user = ctx.session.user;
       try {
         if (input.password !== input.confirmPassword) {
-          throw new Error("Passwords do not match");
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Passwords do not match",
+          });
         }
 
         const account = await ctx.db.account.findFirst({
           where: { userId: user.id, providerId: "credential" },
         });
 
-        if (input.oldPassword) {
-          if (!account?.password) {
-            throw new Error("User does not have a password");
+        // Whether the old password is required is decided from stored state, never
+        // from the client: omitting it must not skip verification.
+        if (account?.password) {
+          if (!input.oldPassword) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Current password is required",
+            });
           }
           const isOldPasswordCorrect = await bcrypt.compare(
             input.oldPassword,
             account.password,
           );
-
           if (!isOldPasswordCorrect) {
-            throw new Error("Old password is incorrect");
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Current password is incorrect",
+            });
           }
         }
 
         const hashedPassword = await bcrypt.hash(input.password, 10);
 
-        const existingAccountForChange = await ctx.db.account.findFirst({
-          where: { userId: user.id, providerId: "credential" },
-        });
-
-        if (existingAccountForChange) {
-          if (input.oldPassword) {
-            if (!existingAccountForChange.password) {
-              throw new Error("User does not have a password");
-            }
-            const isOldPasswordCorrect = await bcrypt.compare(
-              input.oldPassword,
-              existingAccountForChange.password,
-            );
-
-            if (!isOldPasswordCorrect) {
-              throw new Error("Old password is incorrect");
-            }
-          }
+        if (account) {
           await ctx.db.account.update({
-            where: { id: existingAccountForChange.id },
+            where: { id: account.id },
             data: { password: hashedPassword },
           });
         } else {
@@ -764,12 +733,12 @@ export const usersRouter = createTRPCRouter({
           message: "Password changed successfully",
         };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         console.error("Error changing password:", error);
-        throw new Error(
-          error instanceof Error
-            ? error.message
-            : "An error occurred while changing password",
-        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An error occurred while changing password",
+        });
       }
     }),
 
@@ -825,13 +794,24 @@ export const usersRouter = createTRPCRouter({
     try {
       const currentUser = ctx.session.user;
 
+      // Narrow selects: the full rows carry session bearer tokens, password
+      // hashes and provider access tokens, none of which the UI needs.
       const sessions = await ctx.db.session.findMany({
         where: { userId: currentUser.id },
+        select: {
+          id: true,
+          userAgent: true,
+          ipAddress: true,
+          createdAt: true,
+          updatedAt: true,
+          expiresAt: true,
+        },
         orderBy: { createdAt: "desc" },
       });
 
       const accounts = await ctx.db.account.findMany({
         where: { userId: currentUser.id },
+        select: { id: true, providerId: true, accountId: true, createdAt: true },
       });
 
       return {
@@ -839,7 +819,7 @@ export const usersRouter = createTRPCRouter({
         data: {
           sessions,
           accounts,
-          currentSessionId: ctx.session.session.id,
+          currentSessionId: ctx.session.session?.id ?? null,
         },
       };
     } catch (error) {
@@ -891,8 +871,8 @@ export const usersRouter = createTRPCRouter({
       z.object({
         search: z.string().optional(),
         filter: z.array(z.string()).optional(),
-        page: z.number().default(1),
-        limit: z.number().default(10),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(10),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -1109,8 +1089,8 @@ export const usersRouter = createTRPCRouter({
         sort: z.string().default("name"),
         direction: z.string().default("asc"),
         filter: z.array(z.string()).optional(),
-        page: z.number().default(1),
-        limit: z.number().default(10),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(10),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -1221,7 +1201,6 @@ export const usersRouter = createTRPCRouter({
               username: true,
               email: true,
               role: true,
-              oneTimePassword: true,
               disabledAt: true,
             },
             orderBy: {
@@ -1319,7 +1298,6 @@ export const usersRouter = createTRPCRouter({
                   username: true,
                   email: true,
                   role: true,
-                  oneTimePassword: true,
                   disabledAt: true,
                 },
               },
@@ -1360,7 +1338,11 @@ export const usersRouter = createTRPCRouter({
       }
     }),
 
-  // Public profile — accessible without auth if profile is public
+  /**
+   * Genuinely public: `/u/[username]` is a signed-out page. Gated on the user's
+   * own `isProfilePublic` opt-in, and the selection carries no email, mobile or
+   * oneTimePassword.
+   */
   getPublicProfile: publicProcedure
     .input(z.object({ username: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -1374,7 +1356,6 @@ export const usersRouter = createTRPCRouter({
           role: true,
           isProfilePublic: true,
           createdAt: true,
-          organizationId: true,
           profile: {
             select: {
               headline: true,
@@ -1402,7 +1383,8 @@ export const usersRouter = createTRPCRouter({
       });
 
       if (!user) return null;
-      if (!user.isProfilePublic) return { id: user.id, isPrivate: true };
+      // No id here: a private profile must not hand out an internal user id.
+      if (!user.isProfilePublic) return { isPrivate: true as const };
 
       // For instructors/mentors also fetch courses they teach/mentor + stats
       let taughtCourses: Array<{ id: string; title: string; image: string | null }> = [];
@@ -1523,30 +1505,25 @@ export const usersRouter = createTRPCRouter({
       });
     }),
 
-  disableUser: protectedProcedure
+  disableUser: staffProcedure
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .mutation(async ({ ctx, input: { id } }) => {
-      const currentUser = ctx.session.user;
-      if (!currentUser || currentUser.role !== "INSTRUCTOR") {
-        throw new Error(
-          "Unauthorized - Only instructors can manage user status",
-        );
+      await requireUserInOrganization(ctx, id);
+
+      const user = await ctx.db.user.findUnique({
+        where: { id },
+        select: { disabledAt: true },
+      });
+
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
       }
 
       try {
-        const user = await ctx.db.user.findUnique({
-          where: { id },
-          select: { disabledAt: true },
-        });
-
-        if (!user) {
-          throw new Error("User not found");
-        }
-
         const isCurrentlyDisabled = !!user.disabledAt;
 
         if (isCurrentlyDisabled) {

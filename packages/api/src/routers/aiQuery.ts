@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 import { db } from "@tutly/db";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, staffProcedure } from "../trpc";
 import { PRISMA_SCHEMA, SCHEMA_CONTEXT } from "../lib/prismaSchema";
 
 export const aiQueryRouter = createTRPCRouter({
-  getAvailableModels: protectedProcedure.query(async ({ ctx }) => {
+  getAvailableModels: staffProcedure.query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
 
     try {
@@ -66,14 +66,16 @@ export const aiQueryRouter = createTRPCRouter({
       console.error("Failed to fetch models:", error);
       return {
         ok: false,
-        error:
-          error instanceof Error ? error.message : "Failed to fetch models",
+        error: "Failed to fetch models",
         models: [],
       };
     }
   }),
 
-  executeAIQueryCombined: protectedProcedure
+  // This procedure `eval`s a model-authored Prisma expression against the
+  // unscoped client, so it carries no tenancy boundary of its own — the staff
+  // role gate is the only boundary there is.
+  executeAIQueryCombined: staffProcedure
     .input(
       z.object({
         userQuery: z.string(),
@@ -365,6 +367,9 @@ Query:`;
               await new Promise((resolve) => setTimeout(resolve, 500));
             }
 
+            // UNSAFE: executes LLM-generated code with full db access. Staff-only
+            // gating is a stopgap; this must be replaced by a whitelisted query
+            // builder that validates model/field/operator before execution.
             const executeQuery = (db: any) => {
               return eval(currentQuery);
             };
@@ -380,10 +385,11 @@ Query:`;
             );
 
             if (queryGenerationAttempts === maxQueryAttempts) {
-              // Max retries reached - return error
+              // Prisma error text names tables, columns and constraint values,
+              // so it is logged above but never returned to the client.
               return {
                 ok: false,
-                error: `Query execution failed after ${maxQueryAttempts} attempts: ${queryError instanceof Error ? queryError.message : "Unknown error"}`,
+                error: `Query execution failed after ${maxQueryAttempts} attempts`,
                 query: currentQuery,
               };
             }
@@ -561,10 +567,7 @@ Based on the query results, provide a helpful, conversational response to the us
         console.error("Combined AI Query error:", error);
         return {
           ok: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to execute AI query",
+          error: "Failed to execute AI query",
         };
       }
     }),
