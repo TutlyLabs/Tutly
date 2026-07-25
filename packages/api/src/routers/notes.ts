@@ -1,11 +1,14 @@
 import { NoteCategory } from "@tutly/db/browser";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { db } from "@tutly/db";
+import { createTRPCRouter, permissionProcedure } from "../trpc";
+import {
+  requireRecordOwner,
+  requireUserInOrganization,
+} from "../lib/authorization";
 
 export const notesRouter = createTRPCRouter({
-  updateNote: protectedProcedure
+  updateNote: permissionProcedure("note", "update")
     .input(
       z.object({
         category: z.nativeEnum(NoteCategory),
@@ -74,7 +77,7 @@ export const notesRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  getNote: protectedProcedure
+  getNote: permissionProcedure("note", "read")
     .input(
       z.object({
         userId: z.string(),
@@ -82,6 +85,12 @@ export const notesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      // A note is private to its author; staff may read one in their own org.
+      if (input.userId !== ctx.session.user.id) {
+        await requireUserInOrganization(ctx, input.userId);
+      }
+      requireRecordOwner(ctx, { userId: input.userId }, { allowStaff: true });
+
       try {
         const note = await ctx.db.notes.findUnique({
           where: {
@@ -98,7 +107,7 @@ export const notesRouter = createTRPCRouter({
       }
     }),
 
-  getNotes: protectedProcedure.query(async ({ ctx }) => {
+  getNotes: permissionProcedure("note", "list").query(async ({ ctx }) => {
     const currentUserId = ctx.session.user.id;
 
     const notes = await ctx.db.notes.findMany({

@@ -1,7 +1,20 @@
 import { z } from "zod";
 
 import { db } from "@tutly/db";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  requireClassReadAccess,
+  requireCourseManageAccess,
+  requireCourseReadAccess,
+  requireStudentDataAccess,
+  requireUserInOrganization,
+  requireUsernameInOrganization,
+  resolveTargetMentorUsername,
+} from "../lib/authorization";
+import {
+  createTRPCRouter,
+  permissionProcedure,
+  protectedProcedure,
+} from "../trpc";
 
 export async function getEnrolledCourseIds(username: string) {
   const enrolledCourses = await db.enrolledUsers.findMany({
@@ -167,13 +180,15 @@ export const coursesRouter = createTRPCRouter({
     }
   }),
 
-  getCourseClasses: protectedProcedure
+  getCourseClasses: permissionProcedure("class", "list")
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.id);
+
       const classes = await ctx.db.class.findMany({
         where: {
           courseId: input.id,
@@ -191,13 +206,15 @@ export const coursesRouter = createTRPCRouter({
       return { success: true, data: classes };
     }),
 
-  foldersByCourseId: protectedProcedure
+  foldersByCourseId: permissionProcedure("folder", "list")
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.id);
+
       const folders = await ctx.db.folder.findMany({
         where: {
           Class: {
@@ -301,13 +318,16 @@ export const coursesRouter = createTRPCRouter({
     return { success: true, data: courses };
   }),
 
-  getEnrolledCoursesById: protectedProcedure
+  getEnrolledCoursesById: permissionProcedure("course", "list")
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      const target = await requireUserInOrganization(ctx, input.id);
+      await requireStudentDataAccess(ctx, target.username);
+
       const courses = await ctx.db.course.findMany({
         where: {
           enrolledUsers: {
@@ -331,7 +351,7 @@ export const coursesRouter = createTRPCRouter({
       return { success: true, data: courses };
     }),
 
-  getMentorStudents: protectedProcedure
+  getMentorStudents: permissionProcedure("user", "list")
     .input(
       z.object({
         courseId: z.string(),
@@ -342,6 +362,8 @@ export const coursesRouter = createTRPCRouter({
       if (!currentUser.organization) {
         throw new Error("User must belong to an organization");
       }
+
+      await requireCourseReadAccess(ctx, input.courseId);
 
       const students = await ctx.db.user.findMany({
         where: {
@@ -368,7 +390,7 @@ export const coursesRouter = createTRPCRouter({
       return { success: true, data: students };
     }),
 
-  getMentorStudentsById: protectedProcedure
+  getMentorStudentsById: permissionProcedure("user", "list")
     .input(
       z.object({
         id: z.string(),
@@ -381,11 +403,15 @@ export const coursesRouter = createTRPCRouter({
         throw new Error("User must belong to an organization");
       }
 
+      // `id` is a mentor username taken straight from input.
+      const mentorUsername = await resolveTargetMentorUsername(ctx, input.id);
+      await requireCourseReadAccess(ctx, input.courseId);
+
       const students = await ctx.db.user.findMany({
         where: {
           enrolledUsers: {
             some: {
-              mentorUsername: input.id,
+              mentorUsername,
               courseId: input.courseId,
             },
           },
@@ -405,7 +431,7 @@ export const coursesRouter = createTRPCRouter({
       return { success: true, data: students };
     }),
 
-  getEnrolledStudents: protectedProcedure
+  getEnrolledStudents: permissionProcedure("enrollment", "list")
     .input(
       z.object({
         courseId: z.string(),
@@ -416,6 +442,8 @@ export const coursesRouter = createTRPCRouter({
       if (!currentUser.organization) {
         throw new Error("User must belong to an organization");
       }
+
+      await requireCourseReadAccess(ctx, input.courseId);
 
       const students = await ctx.db.user.findMany({
         where: {
@@ -440,7 +468,7 @@ export const coursesRouter = createTRPCRouter({
       return { success: true, data: students };
     }),
 
-  getAllStudents: protectedProcedure.query(async ({ ctx }) => {
+  getAllStudents: permissionProcedure("user", "list").query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
     if (!currentUser.organization) {
       throw new Error("User must belong to an organization");
@@ -462,7 +490,7 @@ export const coursesRouter = createTRPCRouter({
     return { success: true, data: students };
   }),
 
-  getEnrolledMentees: protectedProcedure
+  getEnrolledMentees: permissionProcedure("enrollment", "list")
     .input(
       z.object({
         courseId: z.string(),
@@ -473,6 +501,8 @@ export const coursesRouter = createTRPCRouter({
       if (!currentUser.organization) {
         throw new Error("User must belong to an organization");
       }
+
+      await requireCourseReadAccess(ctx, input.courseId);
 
       const students = await ctx.db.user.findMany({
         where: {
@@ -528,7 +558,7 @@ export const coursesRouter = createTRPCRouter({
       return { success: true, data: newCourse };
     }),
 
-  updateCourse: protectedProcedure
+  updateCourse: permissionProcedure("course", "update")
     .input(
       z.object({
         id: z.string(),
@@ -538,6 +568,8 @@ export const coursesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireCourseManageAccess(ctx, input.id);
+
       if (!input.title.trim()) {
         return { error: "Title is required" };
       }
@@ -586,13 +618,15 @@ export const coursesRouter = createTRPCRouter({
     return { success: true, data: courses };
   }),
 
-  getClassDetails: protectedProcedure
+  getClassDetails: permissionProcedure("class", "read")
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireClassReadAccess(ctx, input.id);
+
       try {
         const classDetails = await ctx.db.class.findUnique({
           where: {
@@ -616,13 +650,15 @@ export const coursesRouter = createTRPCRouter({
       }
     }),
 
-  getCourseByCourseId: protectedProcedure
+  getCourseByCourseId: permissionProcedure("course", "read")
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.id);
+
       const course = await ctx.db.course.findUnique({
         where: {
           id: input.id,
@@ -639,12 +675,17 @@ export const coursesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized to enroll student to course" };
-        }
+      const currentUser = ctx.session.user;
+      if (currentUser.role !== "INSTRUCTOR") {
+        return { error: "Unauthorized to enroll student to course" };
+      }
 
+      // Outside the try: the catch below would turn a tenancy failure into a
+      // generic "failed" envelope.
+      await requireCourseManageAccess(ctx, input.courseId);
+      await requireUsernameInOrganization(ctx, input.username);
+
+      try {
         const user = await ctx.db.user.findUnique({
           where: { username: input.username },
         });
@@ -714,12 +755,15 @@ export const coursesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized to unenroll student from course" };
-        }
+      const currentUser = ctx.session.user;
+      if (currentUser.role !== "INSTRUCTOR") {
+        return { error: "Unauthorized to unenroll student from course" };
+      }
 
+      await requireCourseManageAccess(ctx, input.courseId);
+      await requireUsernameInOrganization(ctx, input.username);
+
+      try {
         const user = await ctx.db.user.findUnique({
           where: { username: input.username },
         });
@@ -767,12 +811,15 @@ export const coursesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized to update user role" };
-        }
+      const currentUser = ctx.session.user;
+      if (currentUser.role !== "INSTRUCTOR") {
+        return { error: "Unauthorized to update user role" };
+      }
 
+      // Without this an instructor could re-role a user in any organization.
+      await requireUsernameInOrganization(ctx, input.username);
+
+      try {
         const user = await ctx.db.user.findUnique({
           where: { username: input.username },
         });
@@ -805,12 +852,16 @@ export const coursesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized to update mentor" };
-        }
+      const currentUser = ctx.session.user;
+      if (currentUser.role !== "INSTRUCTOR") {
+        return { error: "Unauthorized to update mentor" };
+      }
 
+      await requireCourseManageAccess(ctx, input.courseId);
+      await requireUsernameInOrganization(ctx, input.username);
+      await requireUsernameInOrganization(ctx, input.mentorUsername);
+
+      try {
         const enrolledUser = await ctx.db.enrolledUsers.findFirst({
           where: {
             courseId: input.courseId,

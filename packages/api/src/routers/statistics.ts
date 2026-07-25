@@ -1,6 +1,11 @@
 import type { Attendance, submission, User } from "@tutly/db/browser";
 import { z } from "zod";
 
+import {
+  requireCourseReadAccess,
+  resolveTargetMentorUsername,
+  resolveTargetUsername,
+} from "../lib/authorization";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 type AttendanceWithClass = {
@@ -23,14 +28,21 @@ export const statisticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
+      await requireCourseReadAccess(ctx, input.courseId);
+      // Resolve before the try: an authorization throw must not be swallowed
+      // into the error envelope below.
+      const requestedMentor = input.mentorUsername
+        ? await resolveTargetMentorUsername(ctx, input.mentorUsername)
+        : undefined;
+      const targetMentor = requestedMentor ?? currentUser.username;
       try {
         let assignments: Array<SubmissionWithPoints> | undefined;
         let noOfTotalMentees: number | undefined;
-        if (currentUser.role === "MENTOR" || input.mentorUsername) {
+        if (currentUser.role === "MENTOR" || requestedMentor) {
           assignments = await ctx.db.submission.findMany({
             where: {
               enrolledUser: {
-                mentorUsername: input.mentorUsername ?? currentUser.username,
+                mentorUsername: targetMentor,
                 courseId: input.courseId,
               },
               status: "SUBMITTED",
@@ -41,7 +53,7 @@ export const statisticsRouter = createTRPCRouter({
           });
           noOfTotalMentees = await ctx.db.enrolledUsers.count({
             where: {
-              mentorUsername: input.mentorUsername ?? currentUser.username,
+              mentorUsername: targetMentor,
               courseId: input.courseId,
             },
           });
@@ -102,16 +114,20 @@ export const statisticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
+      await requireCourseReadAccess(ctx, input.courseId);
+      const requestedMentor = input.mentorUsername
+        ? await resolveTargetMentorUsername(ctx, input.mentorUsername)
+        : undefined;
+      const targetMentor = requestedMentor ?? currentUser.username;
       try {
         let attendance: Array<AttendanceWithClass> = [];
-        if (currentUser.role === "MENTOR" || input.mentorUsername) {
+        if (currentUser.role === "MENTOR" || requestedMentor) {
           attendance = await ctx.db.attendance.findMany({
             where: {
               user: {
                 enrolledUsers: {
                   some: {
-                    mentorUsername:
-                      input.mentorUsername ?? currentUser.username,
+                    mentorUsername: targetMentor,
                   },
                 },
               },
@@ -148,11 +164,10 @@ export const statisticsRouter = createTRPCRouter({
           });
         }
         const eligibleWhere =
-          currentUser.role === "MENTOR" || input.mentorUsername
+          currentUser.role === "MENTOR" || requestedMentor
             ? {
                 courseId: input.courseId,
-                mentorUsername:
-                  input.mentorUsername ?? currentUser.username,
+                mentorUsername: targetMentor,
               }
             : { courseId: input.courseId };
 
@@ -191,24 +206,27 @@ export const statisticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
+      await requireCourseReadAccess(ctx, input.courseId);
+      const requestedMentor = input.mentorUsername
+        ? await resolveTargetMentorUsername(ctx, input.mentorUsername)
+        : undefined;
+      const targetMentor = requestedMentor ?? currentUser.username;
       try {
         const submissionWhere =
-          currentUser.role === "MENTOR" || input.mentorUsername
+          currentUser.role === "MENTOR" || requestedMentor
             ? {
                 enrolledUser: {
-                  mentorUsername:
-                    input.mentorUsername ?? currentUser.username,
+                  mentorUsername: targetMentor,
                 },
                 status: "SUBMITTED" as const,
               }
             : { status: "SUBMITTED" as const };
 
         const eligibleStudentsWhere =
-          currentUser.role === "MENTOR" || input.mentorUsername
+          currentUser.role === "MENTOR" || requestedMentor
             ? {
                 courseId: input.courseId,
-                mentorUsername:
-                  input.mentorUsername ?? currentUser.username,
+                mentorUsername: targetMentor,
               }
             : { courseId: input.courseId };
 
@@ -272,9 +290,14 @@ export const statisticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
+      await requireCourseReadAccess(ctx, input.courseId);
+      const requestedMentor = input.mentorUsername
+        ? await resolveTargetMentorUsername(ctx, input.mentorUsername)
+        : undefined;
+      const targetMentor = requestedMentor ?? currentUser.username;
       try {
         let students: Array<User> | undefined;
-        if (currentUser.role === "MENTOR" || input.mentorUsername) {
+        if (currentUser.role === "MENTOR" || requestedMentor) {
           students = await ctx.db.user.findMany({
             where: {
               enrolledUsers: {
@@ -282,7 +305,7 @@ export const statisticsRouter = createTRPCRouter({
                   course: {
                     id: input.courseId,
                   },
-                  mentorUsername: input.mentorUsername ?? currentUser.username,
+                  mentorUsername: targetMentor,
                 },
               },
               role: "STUDENT",
@@ -331,6 +354,7 @@ export const statisticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
+      await requireCourseReadAccess(ctx, input.courseId);
       try {
         const mentors = await ctx.db.user.findMany({
           where: {
@@ -366,12 +390,17 @@ export const statisticsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
+      await requireCourseReadAccess(ctx, input.courseId);
+      const targetStudent = await resolveTargetUsername(
+        ctx,
+        input.studentUsername,
+        input.courseId,
+      );
       try {
         let assignments = await ctx.db.submission.findMany({
           where: {
             enrolledUser: {
-              username: input.studentUsername ?? currentUser.username,
+              username: targetStudent,
             },
             assignment: {
               courseId: input.courseId,
@@ -422,11 +451,16 @@ export const statisticsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
+      await requireCourseReadAccess(ctx, input.courseId);
+      const targetStudent = await resolveTargetUsername(
+        ctx,
+        input.studentUsername,
+        input.courseId,
+      );
       try {
         const attendance = await ctx.db.attendance.findMany({
           where: {
-            username: input.studentUsername ?? currentUser.username,
+            username: targetStudent,
             AND: {
               class: {
                 course: {

@@ -1,9 +1,22 @@
 // todo: fix overall attendance for mentor exceeding 100%
 import type { Prisma, Role } from "@tutly/db/browser";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { db } from "@tutly/db";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  isStaff,
+  requireClassManageAccess,
+  requireClassReadAccess,
+  requireCourseReadAccess,
+  requireStudentDataAccess,
+  resolveTargetMentorUsername,
+} from "../lib/authorization";
+import {
+  createTRPCRouter,
+  permissionProcedure,
+  protectedProcedure,
+} from "../trpc";
 
 type StudentData = {
   Duration: number;
@@ -21,7 +34,7 @@ export type AttendanceRecord = {
 };
 
 export const attendanceRouter = createTRPCRouter({
-  postAttendance: protectedProcedure
+  postAttendance: permissionProcedure("attendance", "create")
     .input(
       z.object({
         classId: z.string(),
@@ -30,9 +43,28 @@ export const attendanceRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const cls = await requireClassManageAccess(ctx, input.classId);
+
       const parsedData = JSON.parse(
         JSON.stringify(input.data),
       ) as Array<StudentData>;
+
+      // Attendance rows are keyed by a raw username from the payload; without
+      // this the caller could write rows for users outside the course entirely.
+      const usernames = [...new Set(parsedData.map((s) => s.username))];
+      if (usernames.length > 0) {
+        const enrolled = await ctx.db.enrolledUsers.findMany({
+          where: { courseId: cls.courseId, username: { in: usernames } },
+          select: { username: true },
+        });
+        const enrolledSet = new Set(enrolled.map((e) => e.username));
+        if (usernames.some((username) => !enrolledSet.has(username))) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Attendance contains users not enrolled in this course",
+          });
+        }
+      }
 
       const attendanceData: Array<Prisma.AttendanceCreateManyInput> =
         parsedData.map((student) => {
@@ -59,7 +91,7 @@ export const attendanceRouter = createTRPCRouter({
       return { success: true, data: postAttendance };
     }),
 
-  getAttendanceForMentorByIdBarChart: protectedProcedure
+  getAttendanceForMentorByIdBarChart: permissionProcedure("attendance", "list")
     .input(
       z.object({
         id: z.string(),
@@ -67,15 +99,20 @@ export const attendanceRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
+      const mentorUsername = await resolveTargetMentorUsername(ctx, input.id);
+
       const attendance = await ctx.db.attendance.findMany({
         where: {
           user: {
             enrolledUsers: {
               some: {
-                mentorUsername: input.id,
+                mentorUsername,
+                courseId: input.courseId,
               },
             },
           },
+          class: { courseId: input.courseId },
           attended: true,
         },
       });
@@ -109,7 +146,7 @@ export const attendanceRouter = createTRPCRouter({
       return { success: true, data: { classes, attendanceInEachClass } };
     }),
 
-  getAttendanceForMentorBarChart: protectedProcedure
+  getAttendanceForMentorBarChart: permissionProcedure("attendance", "list")
     .input(
       z.object({
         courseId: z.string(),
@@ -117,6 +154,7 @@ export const attendanceRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
+      await requireCourseReadAccess(ctx, input.courseId);
 
       let attendance;
       if (currentUser.role === "MENTOR") {
@@ -184,9 +222,25 @@ export const attendanceRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      const currentUser = ctx.session.user;
+      await requireClassReadAccess(ctx, input.id);
+
       const attendance = await ctx.db.attendance.findMany({
         where: {
           classId: input.id,
+          // A student may only see their own row; mentors are narrowed to
+          // their mentees, staff see the whole class.
+          ...(isStaff(currentUser)
+            ? {}
+            : currentUser.role === "MENTOR"
+              ? {
+                  user: {
+                    enrolledUsers: {
+                      some: { mentorUsername: currentUser.username },
+                    },
+                  },
+                }
+              : { username: currentUser.username }),
         },
       });
 
@@ -201,6 +255,7 @@ export const attendanceRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
+      await requireClassReadAccess(ctx, input.classId);
 
       // Check if any attendance has been uploaded for this class
       const attendanceCount = await ctx.db.attendance.count({
@@ -263,6 +318,9 @@ export const attendanceRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
+      await requireStudentDataAccess(ctx, input.id, input.courseId);
+
       const attendance = await ctx.db.attendance.findMany({
         where: {
           username: input.id,
@@ -317,17 +375,14 @@ export const attendanceRouter = createTRPCRouter({
       return { success: true, data: { classes, attendanceDates } };
     }),
 
-  deleteClassAttendance: protectedProcedure
+  deleteClassAttendance: permissionProcedure("attendance", "delete")
     .input(
       z.object({
         classId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") {
-        return { error: "You must be an instructor to delete an attendance" };
-      }
+      await requireClassManageAccess(ctx, input.classId);
 
       const attendance = await ctx.db.attendance.deleteMany({
         where: {
@@ -338,20 +393,18 @@ export const attendanceRouter = createTRPCRouter({
       return { success: true, data: attendance };
     }),
 
-  getTotalNumberOfClassesAttended: protectedProcedure.query(async ({ ctx }) => {
+  getTotalNumberOfClassesAttended: permissionProcedure(
+    "attendance",
+    "list",
+  ).query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
-    if (currentUser.role === "STUDENT") {
-      return {
-        error:
-          "You must be logged in as an instructor or mentor to view attendance",
-      };
-    }
 
     let attendance;
     if (currentUser.role === "MENTOR") {
       attendance = await ctx.db.attendance.findMany({
         where: {
           user: {
+            organizationId: currentUser.organizationId,
             enrolledUsers: {
               some: {
                 mentorUsername: currentUser.username,
@@ -370,6 +423,7 @@ export const attendanceRouter = createTRPCRouter({
         where: {
           user: {
             role: "STUDENT",
+            organizationId: currentUser.organizationId,
           },
         },
         select: {
@@ -408,38 +462,41 @@ export const attendanceRouter = createTRPCRouter({
     return { success: true, data: groupByTotalAttendance };
   }),
 
-  getAttendanceForLeaderbaord: protectedProcedure.query(async ({ ctx }) => {
-    const currentUser = ctx.session.user;
-    if (currentUser.role === "STUDENT") {
-      return { error: "You must be logged in to attend a class" };
-    }
+  getAttendanceForLeaderbaord: permissionProcedure("attendance", "list").query(
+    async ({ ctx }) => {
+      const currentUser = ctx.session.user;
 
-    const attendance = await ctx.db.attendance.findMany({
-      where: {
-        attended: true,
-      },
-      select: {
-        user: {
-          select: {
-            username: true,
+      const attendance = await ctx.db.attendance.findMany({
+        where: {
+          attended: true,
+          user: { organizationId: currentUser.organizationId },
+        },
+        select: {
+          user: {
+            select: {
+              username: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    const groupedAttendance = attendance.reduce(
-      (acc: Record<string, number>, curr) => {
-        const username = curr.user.username;
-        acc[username] = (acc[username] ?? 0) + 1;
-        return acc;
-      },
-      {},
-    );
+      const groupedAttendance = attendance.reduce(
+        (acc: Record<string, number>, curr) => {
+          const username = curr.user.username;
+          acc[username] = (acc[username] ?? 0) + 1;
+          return acc;
+        },
+        {},
+      );
 
-    return { success: true, data: groupedAttendance };
-  }),
+      return { success: true, data: groupedAttendance };
+    },
+  ),
 
-  getAttendanceOfAllStudents: protectedProcedure.query(async ({ ctx }) => {
+  getAttendanceOfAllStudents: permissionProcedure(
+    "attendance",
+    "list",
+  ).query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
 
     const enrolledUsers = await ctx.db.enrolledUsers.findMany({
@@ -475,7 +532,7 @@ export const attendanceRouter = createTRPCRouter({
     return { success: true, data: jsonData };
   }),
 
-  viewAttendanceByClassId: protectedProcedure
+  viewAttendanceByClassId: permissionProcedure("attendance", "list")
     .input(
       z.object({
         classId: z.string(),
@@ -483,12 +540,7 @@ export const attendanceRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
-
-      if (currentUser.role === "STUDENT") {
-        return {
-          error: "You must be an instructor or mentor to view attendance",
-        };
-      }
+      await requireClassReadAccess(ctx, input.classId);
 
       const attendance =
         currentUser.role === "MENTOR"
@@ -745,7 +797,6 @@ export const attendanceRouter = createTRPCRouter({
       return {
         success: false,
         error: "Failed to fetch attendance page data",
-        details: error instanceof Error ? error.message : String(error),
       };
     }
   }),

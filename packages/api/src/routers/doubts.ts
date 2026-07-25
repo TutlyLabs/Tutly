@@ -1,6 +1,15 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  requireCourseReadAccess,
+  requireRecordOwner,
+} from "../lib/authorization";
+import {
+  createTRPCRouter,
+  permissionProcedure,
+  protectedProcedure,
+} from "../trpc";
 
 import { getEnrolledCourseIds } from "./courses";
 
@@ -12,6 +21,8 @@ export const doubtsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
+
       const doubts = await ctx.db.doubt.findMany({
         where: {
           courseId: input.courseId,
@@ -137,6 +148,11 @@ export const doubtsRouter = createTRPCRouter({
         },
       });
       if (!doubt) return null;
+      if (doubt.courseId) {
+        await requireCourseReadAccess(ctx, doubt.courseId);
+      } else {
+        requireRecordOwner(ctx, doubt, { allowStaff: true });
+      }
 
       // Find the community group for this course
       const group = doubt.courseId
@@ -159,11 +175,15 @@ export const doubtsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
+      await requireCourseReadAccess(ctx, input.courseId);
 
       if (currentUser.role === "INSTRUCTOR") {
         const userCourseIds = await getEnrolledCourseIds(currentUser.username);
         if (!userCourseIds.includes(input.courseId)) {
-          throw new Error("You do not have access to this course");
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this course",
+          });
         }
       }
 
@@ -205,6 +225,19 @@ export const doubtsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
+
+      const doubt = await ctx.db.doubt.findUnique({
+        where: { id: input.doubtId },
+        select: { id: true, userId: true, courseId: true },
+      });
+      if (!doubt) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Doubt not found" });
+      }
+      if (doubt.courseId) {
+        await requireCourseReadAccess(ctx, doubt.courseId);
+      } else {
+        requireRecordOwner(ctx, doubt, { allowStaff: true });
+      }
 
       const response = await ctx.db.response.create({
         data: {
@@ -254,13 +287,26 @@ export const doubtsRouter = createTRPCRouter({
       return { success: true, data: doubt };
     }),
 
-  deleteAnyDoubt: protectedProcedure
+  deleteAnyDoubt: permissionProcedure("doubt", "deleteAny")
     .input(
       z.object({
         doubtId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.doubt.findUnique({
+        where: { id: input.doubtId },
+        select: { id: true, userId: true, courseId: true },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Doubt not found" });
+      }
+      if (existing.courseId) {
+        await requireCourseReadAccess(ctx, existing.courseId);
+      } else {
+        requireRecordOwner(ctx, existing, { allowStaff: true });
+      }
+
       const doubt = await ctx.db.doubt.delete({
         where: {
           id: input.doubtId,
@@ -285,6 +331,18 @@ export const doubtsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.response.findUnique({
+        where: { id: input.responseId },
+        select: { id: true, userId: true },
+      });
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Response not found",
+        });
+      }
+      requireRecordOwner(ctx, existing, { allowStaff: true });
+
       const response = await ctx.db.response.delete({
         where: {
           id: input.responseId,

@@ -1,25 +1,8 @@
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 
-import type { Role } from "@tutly/db/browser";
 import { db } from "@tutly/db";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, staffProcedure } from "../trpc";
 import { PRISMA_SCHEMA, SCHEMA_CONTEXT } from "../lib/prismaSchema";
-
-const STAFF_ROLES: Role[] = ["INSTRUCTOR", "ADMIN", "SUPER_ADMIN"];
-
-/**
- * Middleware that ensures the user is staff (INSTRUCTOR / ADMIN / SUPER_ADMIN)
- */
-const staffProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (!STAFF_ROLES.includes(ctx.session.user.role as Role)) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Staff access required",
-    });
-  }
-  return next({ ctx });
-});
 
 export const aiQueryRouter = createTRPCRouter({
   getAvailableModels: staffProcedure.query(async ({ ctx }) => {
@@ -83,13 +66,15 @@ export const aiQueryRouter = createTRPCRouter({
       console.error("Failed to fetch models:", error);
       return {
         ok: false,
-        error:
-          error instanceof Error ? error.message : "Failed to fetch models",
+        error: "Failed to fetch models",
         models: [],
       };
     }
   }),
 
+  // This procedure `eval`s a model-authored Prisma expression against the
+  // unscoped client, so it carries no tenancy boundary of its own — the staff
+  // role gate is the only boundary there is.
   executeAIQueryCombined: staffProcedure
     .input(
       z.object({
@@ -400,10 +385,11 @@ Query:`;
             );
 
             if (queryGenerationAttempts === maxQueryAttempts) {
-              // Max retries reached - return error
+              // Prisma error text names tables, columns and constraint values,
+              // so it is logged above but never returned to the client.
               return {
                 ok: false,
-                error: `Query execution failed after ${maxQueryAttempts} attempts: ${queryError instanceof Error ? queryError.message : "Unknown error"}`,
+                error: `Query execution failed after ${maxQueryAttempts} attempts`,
                 query: currentQuery,
               };
             }
@@ -581,10 +567,7 @@ Based on the query results, provide a helpful, conversational response to the us
         console.error("Combined AI Query error:", error);
         return {
           ok: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to execute AI query",
+          error: "Failed to execute AI query",
         };
       }
     }),

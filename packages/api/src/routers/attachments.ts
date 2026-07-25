@@ -1,14 +1,21 @@
 import type { attachmentType, submissionMode } from "@tutly/db/browser";
+import { TRPCError } from "@trpc/server";
 import { writeSandpackTemplate } from "@tutly/storage";
 import { z } from "zod";
 
 import { sandpackTemplateSchema } from "../lib/sandpack-template-schema";
 import { locatorFrom, locatorSelect } from "../lib/storage-locator";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, permissionProcedure, protectedProcedure } from "../trpc";
+import {
+  requireAssignmentManageAccess,
+  requireAssignmentReadAccess,
+  requireClassManageAccess,
+  requireCourseManageAccess,
+} from "../lib/authorization";
 
 export const attachmentsRouter = createTRPCRouter({
-  createAttachment: protectedProcedure
+  createAttachment: permissionProcedure("assignment", "create")
     .input(
       z.object({
         title: z.string(),
@@ -36,12 +43,12 @@ export const attachmentsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized" };
-        }
+      const currentUser = ctx.session.user;
+      // The role grant alone does not say *which* course may be written to.
+      if (input.courseId) await requireCourseManageAccess(ctx, input.courseId);
+      if (input.classId) await requireClassManageAccess(ctx, input.classId);
 
+      try {
         const attachment = await ctx.db.attachment.create({
           data: {
             title: input.title,
@@ -82,17 +89,16 @@ export const attachmentsRouter = createTRPCRouter({
       }
     }),
 
-  getAttachmentByID: protectedProcedure
+  getAttachmentByID: permissionProcedure("assignment", "read")
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireAssignmentReadAccess(ctx, input.id);
       const attachment = await ctx.db.attachment.findUnique({
-        where: {
-          id: input.id,
-        },
+        where: { id: input.id },
       });
 
       return {
@@ -101,18 +107,14 @@ export const attachmentsRouter = createTRPCRouter({
       };
     }),
 
-  deleteAttachment: protectedProcedure
+  deleteAttachment: permissionProcedure("assignment", "delete")
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-
-      if (currentUser.role !== "INSTRUCTOR") {
-        return { error: "You must be an instructor to delete an attachment" };
-      }
+      await requireAssignmentManageAccess(ctx, input.id);
 
       const attachment = await ctx.db.attachment.delete({
         where: {
@@ -126,7 +128,7 @@ export const attachmentsRouter = createTRPCRouter({
       };
     }),
 
-  updateAttachment: protectedProcedure
+  updateAttachment: permissionProcedure("assignment", "update")
     .input(
       z.object({
         id: z.string(),
@@ -155,12 +157,12 @@ export const attachmentsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
-        if (currentUser.role !== "INSTRUCTOR") {
-          return { error: "Unauthorized" };
-        }
+      await requireAssignmentManageAccess(ctx, input.id);
+      // Re-targeting an attachment needs manage rights on the destination too.
+      if (input.courseId) await requireCourseManageAccess(ctx, input.courseId);
+      if (input.classId) await requireClassManageAccess(ctx, input.classId);
 
+      try {
         const attachment = await ctx.db.attachment.update({
           where: {
             id: input.id,
@@ -231,7 +233,13 @@ export const attachmentsRouter = createTRPCRouter({
         return { error: "Failed to get course assignments" };
       }
     }),
-  updateAttachmentSandboxTemplate: protectedProcedure
+  // Writes the starter/hidden-test payload for an assignment, so it must be
+  // gated exactly like any other assignment mutation — otherwise a student can
+  // overwrite the hidden tests they are graded against.
+  updateAttachmentSandboxTemplate: permissionProcedure(
+    "workspace",
+    "uploadStarter",
+  )
     .input(
       z.object({
         id: z.string(),
@@ -239,6 +247,8 @@ export const attachmentsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input: { id, sandboxTemplate } }) => {
+      await requireAssignmentManageAccess(ctx, id);
+
       const parsed = sandpackTemplateSchema.safeParse(sandboxTemplate);
       if (!parsed.success) {
         const first = parsed.error.issues[0];
@@ -262,25 +272,22 @@ export const attachmentsRouter = createTRPCRouter({
       return { success: true as const, data: attachment };
     }),
 
-  getUnlinkedAssignments: protectedProcedure
+  // `courseId` is now required: without it the query spanned every tenant's
+  // unlinked assignments, and Attachment carries no owner to scope it by.
+  getUnlinkedAssignments: permissionProcedure("assignment", "link")
     .input(
       z.object({
-        courseId: z.string().optional(),
+        courseId: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") {
-        return { success: false, error: "Unauthorized", data: [] };
-      }
+      await requireCourseManageAccess(ctx, input.courseId);
 
       const assignments = await ctx.db.attachment.findMany({
         where: {
           attachmentType: "ASSIGNMENT",
           classId: null,
-          ...(input.courseId
-            ? { OR: [{ courseId: input.courseId }, { courseId: null }] }
-            : {}),
+          OR: [{ courseId: input.courseId }, { courseId: null }],
         },
         include: {
           course: { select: { id: true, title: true } },
@@ -291,7 +298,7 @@ export const attachmentsRouter = createTRPCRouter({
       return { success: true, data: assignments };
     }),
 
-  linkAssignmentToClass: protectedProcedure
+  linkAssignmentToClass: permissionProcedure("assignment", "link")
     .input(
       z.object({
         attachmentId: z.string(),
@@ -300,9 +307,14 @@ export const attachmentsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") {
-        return { success: false, error: "Unauthorized" };
+      await requireAssignmentManageAccess(ctx, input.attachmentId);
+      await requireCourseManageAccess(ctx, input.courseId);
+      const cls = await requireClassManageAccess(ctx, input.classId);
+      if (cls.courseId !== input.courseId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Class does not belong to that course",
+        });
       }
 
       const attachment = await ctx.db.attachment.update({

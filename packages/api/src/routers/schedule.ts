@@ -1,7 +1,48 @@
 import type { EventAttachmentType } from "@tutly/db/browser";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { requireUser } from "../lib/authorization";
+import {
+  createTRPCRouter,
+  permissionProcedure,
+  protectedProcedure,
+  type TRPCContext,
+} from "../trpc";
+
+/**
+ * Events are scoped by enrolment in their course, which is the rule createEvent
+ * already applied to the course being written to. The sibling mutations took an
+ * event id and no course scope at all, so they get the same rule here.
+ */
+async function requireEventAccess(ctx: TRPCContext, eventId: string) {
+  const user = requireUser(ctx);
+  const event = await ctx.db.scheduleEvent.findUnique({
+    where: { id: eventId },
+    select: { id: true, courseId: true, createdById: true },
+  });
+  if (!event) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+  }
+
+  if (!event.courseId) {
+    // No course to scope against, so only the author may touch it.
+    if (event.createdById !== user.id) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+    }
+    return event;
+  }
+
+  const enrolled = await ctx.db.enrolledUsers.count({
+    where: { username: user.username, courseId: event.courseId },
+  });
+  if (enrolled === 0) {
+    // NOT_FOUND, not FORBIDDEN: do not confirm the event id to an outsider.
+    throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+  }
+
+  return event;
+}
 
 export const scheduleRouter = createTRPCRouter({
   getSchedule: protectedProcedure
@@ -61,7 +102,7 @@ export const scheduleRouter = createTRPCRouter({
       };
     }),
 
-  createEvent: protectedProcedure
+  createEvent: permissionProcedure("schedule", "create")
     .input(
       z.object({
         title: z.string(),
@@ -74,10 +115,6 @@ export const scheduleRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
 
-      if (currentUser.role !== "INSTRUCTOR") {
-        throw new Error("You are not authorized to create events");
-      }
-
       const enrolledCourse = await ctx.db.enrolledUsers.findFirst({
         where: {
           username: currentUser.username,
@@ -86,7 +123,10 @@ export const scheduleRouter = createTRPCRouter({
       });
 
       if (!enrolledCourse) {
-        throw new Error("You do not have access to this course");
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Course not found",
+        });
       }
 
       const newEvent = await ctx.db.scheduleEvent.create({
@@ -108,7 +148,7 @@ export const scheduleRouter = createTRPCRouter({
       };
     }),
 
-  updateEvent: protectedProcedure
+  updateEvent: permissionProcedure("schedule", "update")
     .input(
       z.object({
         id: z.string(),
@@ -119,11 +159,7 @@ export const scheduleRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-
-      if (currentUser.role !== "INSTRUCTOR") {
-        throw new Error("You are not authorized to update events");
-      }
+      await requireEventAccess(ctx, input.id);
 
       await ctx.db.eventAttachment.deleteMany({
         where: { eventId: input.id },
@@ -147,28 +183,14 @@ export const scheduleRouter = createTRPCRouter({
       };
     }),
 
-  deleteEvent: protectedProcedure
+  deleteEvent: permissionProcedure("schedule", "delete")
     .input(
       z.object({
         id: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-
-      const event = await ctx.db.scheduleEvent.findUnique({
-        where: { id: input.id },
-        include: {
-          course: true,
-        },
-      });
-
-      if (
-        currentUser.role !== "INSTRUCTOR" &&
-        event?.course?.createdById !== currentUser.id
-      ) {
-        throw new Error("You are not authorized to delete events");
-      }
+      await requireEventAccess(ctx, input.id);
 
       await ctx.db.scheduleEvent.delete({
         where: { id: input.id },
@@ -179,7 +201,7 @@ export const scheduleRouter = createTRPCRouter({
       };
     }),
 
-  addAttachment: protectedProcedure
+  addAttachment: permissionProcedure("schedule", "addAttachment")
     .input(
       z.object({
         id: z.string(),
@@ -203,11 +225,7 @@ export const scheduleRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-
-      if (currentUser.role !== "INSTRUCTOR") {
-        throw new Error("You are not authorized to add attachments");
-      }
+      await requireEventAccess(ctx, input.id);
 
       const newAttachment = await ctx.db.eventAttachment.create({
         data: {

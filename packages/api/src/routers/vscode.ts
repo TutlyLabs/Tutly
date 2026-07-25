@@ -1,36 +1,61 @@
-import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { jwtVerify } from "jose";
+import { z } from "zod";
 
+import { requireAssignmentReadAccess } from "../lib/authorization";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const vscodeRouter = createTRPCRouter({
   resolveConfig: protectedProcedure
-    .input(z.object({ assignmentId: z.string().nullable(), config: z.string().nullable() }))
+    .input(
+      z.object({
+        assignmentId: z.string().nullable(),
+        config: z.string().nullable(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       let assignmentId = input.assignmentId;
       let hasRunCommand = false;
-      let isAuthorized = true;
 
       if (input.config) {
-        try {
-          const secret = new TextEncoder().encode(process.env.TUTLY_VSCODE_SECRET);
-          const { payload } = await jwtVerify(input.config, secret);
-          const decoded = payload as Record<string, unknown> & {
-            assignmentId?: string;
-            tutlyConfig?: {
-              run?: { command?: string };
-              dev?: { command?: string };
-            };
+        const secret = process.env.TUTLY_VSCODE_SECRET;
+        if (!secret) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "VS Code config secret not configured",
+          });
+        }
+
+        let decoded: {
+          assignmentId?: string;
+          tutlyConfig?: {
+            run?: { command?: string };
+            dev?: { command?: string };
           };
-          if (decoded.assignmentId && !assignmentId) {
-            assignmentId = decoded.assignmentId;
-          }
-          if (decoded.tutlyConfig?.run?.command || decoded.tutlyConfig?.dev?.command) {
-            hasRunCommand = true;
-          }
-        } catch (error) {
-          console.error("Failed to verify config param:", error);
-          isAuthorized = false;
+        };
+        try {
+          const { payload } = await jwtVerify(
+            input.config,
+            new TextEncoder().encode(secret),
+          );
+          decoded = payload as typeof decoded;
+        } catch {
+          // Previously this only flipped an `isAuthorized` flag and the assignment
+          // was still returned, so an unsigned config token read like a valid one.
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid VS Code config token",
+          });
+        }
+
+        if (decoded.assignmentId && !assignmentId) {
+          assignmentId = decoded.assignmentId;
+        }
+        if (
+          decoded.tutlyConfig?.run?.command ??
+          decoded.tutlyConfig?.dev?.command
+        ) {
+          hasRunCommand = true;
         }
       }
 
@@ -41,20 +66,18 @@ export const vscodeRouter = createTRPCRouter({
       } | null = null;
 
       if (assignmentId) {
-        try {
-          assignment = await ctx.db.attachment.findUnique({
-            where: { id: assignmentId },
-            select: {
-              id: true,
-              title: true,
-              class: { select: { course: { select: { title: true } } } },
-            },
-          });
-        } catch (error) {
-          console.error("Failed to fetch assignment:", error);
-        }
+        // The id can come straight from input, so the caller's own access decides.
+        await requireAssignmentReadAccess(ctx, assignmentId);
+        assignment = await ctx.db.attachment.findUnique({
+          where: { id: assignmentId },
+          select: {
+            id: true,
+            title: true,
+            class: { select: { course: { select: { title: true } } } },
+          },
+        });
       }
 
-      return { assignment, assignmentId, hasRunCommand, isAuthorized };
+      return { assignment, assignmentId, hasRunCommand, isAuthorized: true };
     }),
 });

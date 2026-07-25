@@ -6,7 +6,17 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { TRPCError } from "@trpc/server";
+
+import {
+  createTRPCRouter,
+  permissionProcedure,
+  protectedProcedure,
+} from "../trpc";
+import {
+  requireFileManageAccess,
+  requireFileReadAccess,
+} from "../lib/authorization";
 import { AWS_BUCKET_NAME, AWS_S3_URL, s3Client } from "../lib/s3";
 
 export const allowedMimeTypes = [
@@ -53,7 +63,7 @@ function getExtension(filename: string): string {
 }
 
 export const fileUploadRouter = createTRPCRouter({
-  createFileAndGetUploadUrl: protectedProcedure
+  createFileAndGetUploadUrl: permissionProcedure("file", "create")
     .input(
       z.object({
         name: z.string(),
@@ -97,17 +107,14 @@ export const fileUploadRouter = createTRPCRouter({
       return { signedUrl, file };
     }),
 
-  getDownloadUrl: protectedProcedure
+  getDownloadUrl: permissionProcedure("file", "read")
     .input(
       z.object({
         fileId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const file = await ctx.db.file.findUnique({
-        where: { id: input.fileId },
-      });
-      if (!file) throw new Error("File not found");
+      const file = await requireFileReadAccess(ctx, input.fileId);
 
       if (file.isPublic) {
         return file.publicUrl;
@@ -124,6 +131,8 @@ export const fileUploadRouter = createTRPCRouter({
       return { signedUrl };
     }),
 
+  // Not gated on `file:archive` (INSTRUCTOR+): owners archive their own Drive
+  // files today, and requireFileManageAccess already scopes to owner-or-staff.
   archiveFile: protectedProcedure
     .input(
       z.object({
@@ -133,6 +142,7 @@ export const fileUploadRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
+      await requireFileManageAccess(ctx, input.fileId);
 
       const file = await ctx.db.file.update({
         where: { id: input.fileId },
@@ -156,11 +166,12 @@ export const fileUploadRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
 
-      const file = await ctx.db.file.findUnique({
-        where: { id: input.fileId },
-      });
-
-      if (!file) throw new Error("File not found");
+      const file = await requireFileManageAccess(ctx, input.fileId);
+      // Only the uploader may finalize: this flips isUploaded and mints the
+      // public URL, so staff must not complete someone else's pending upload.
+      if (file.uploadedById !== currentUser.id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "File not found" });
+      }
 
       const publicUrl = file.isPublic
         ? `${AWS_S3_URL}/${file.fileType}/${file.internalName}`
@@ -185,10 +196,7 @@ export const fileUploadRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const file = await ctx.db.file.findUnique({
-        where: { id: input.fileId },
-      });
-      if (!file) throw new Error("File not found");
+      const file = await requireFileManageAccess(ctx, input.fileId);
 
       // Delete from S3
       const command = new DeleteObjectCommand({
@@ -213,6 +221,8 @@ export const fileUploadRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireFileManageAccess(ctx, input.fileId);
+
       const file = await ctx.db.file.update({
         where: { id: input.fileId },
         data: { associatingId: input.associatingId },

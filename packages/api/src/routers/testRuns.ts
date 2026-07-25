@@ -12,9 +12,8 @@ import { projectTestRunForViewer } from "../lib/test-visibility";
 import {
   canManageAssignment,
   requireAssignmentManageAccess,
-  requireAssignmentReadAccess,
   requireSubmissionReadAccess,
-} from "../lib/workspace-access";
+} from "../lib/authorization";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 const reportedTestSchema = z.object({
@@ -207,7 +206,7 @@ export const testRunsRouter = createTRPCRouter({
     .input(z.object({ assignmentId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const assignment = await requireAssignmentManageAccess(ctx, input.assignmentId);
-      const user = ctx.session!.user;
+      const user = ctx.session.user;
 
       const recentBulk = await ctx.db.submissionTestRun.count({
         where: {
@@ -419,7 +418,7 @@ export const testRunsRouter = createTRPCRouter({
         orderBy: { createdAt: "desc" },
       });
 
-      const user = ctx.session!.user;
+      const user = ctx.session.user;
       const isOwner = submission.enrolledUser.username === user.username;
       const projected = runs.map((run) =>
         projectTestRunForViewer(
@@ -440,7 +439,8 @@ export const testRunsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      await requireAssignmentReadAccess(ctx, input.assignmentId);
+      // Returns every enrolled user's runs unscoped, so read access is not enough.
+      await requireAssignmentManageAccess(ctx, input.assignmentId);
       const runs = await ctx.db.submissionTestRun.findMany({
         where: {
           assignmentId: input.assignmentId,

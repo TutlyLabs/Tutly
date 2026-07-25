@@ -37,11 +37,17 @@ import {
 } from "../lib/workspace-artifacts";
 import { defaultWorkspaceConfig } from "../lib/workspace-config";
 import {
+  canManageAssignment,
   getStudentEnrollmentForAssignment,
   requireAssignmentReadAccess,
   requireSubmissionReadAccess,
-} from "../lib/workspace-access";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+  requireSubmissionReviewAccess,
+} from "../lib/authorization";
+import {
+  createTRPCRouter,
+  permissionProcedure,
+  protectedProcedure,
+} from "../trpc";
 
 export type AssignmentDetails = {
   id: string;
@@ -285,7 +291,7 @@ export const submissionRouter = createTRPCRouter({
       return { success: true, data: submission };
     }),
 
-  addOverallFeedback: protectedProcedure
+  addOverallFeedback: permissionProcedure("submission", "feedback")
     .input(
       z.object({
         submissionId: z.string(),
@@ -293,6 +299,8 @@ export const submissionRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireSubmissionReviewAccess(ctx, input.submissionId);
+
       const submission = await ctx.db.submission.findUnique({
         where: {
           id: input.submissionId,
@@ -317,7 +325,7 @@ export const submissionRouter = createTRPCRouter({
       return { success: true, data: updatedSubmission };
     }),
 
-  getAssignmentSubmissions: protectedProcedure
+  getAssignmentSubmissions: permissionProcedure("submission", "list")
     .input(
       z.object({
         assignmentId: z.string(),
@@ -325,15 +333,10 @@ export const submissionRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const { user } = ctx.session;
-      if (user.role === "STUDENT") {
-        return { error: "Unauthorized" };
-      }
-
-      const assignment = await ctx.db.attachment.findUnique({
-        where: {
-          id: input.assignmentId,
-        },
-      });
+      const assignment = await requireAssignmentReadAccess(
+        ctx,
+        input.assignmentId,
+      );
 
       const submissions = await ctx.db.submission.findMany({
         where: {
@@ -414,15 +417,16 @@ export const submissionRouter = createTRPCRouter({
       return { success: true, data: filteredSubmissions };
     }),
 
-  getAllAssignmentSubmissions: protectedProcedure.query(async ({ ctx }) => {
+  getAllAssignmentSubmissions: permissionProcedure(
+    "submission",
+    "list",
+  ).query(async ({ ctx }) => {
     const { user } = ctx.session;
-    if (user.role === "STUDENT") {
-      return { error: "Unauthorized" };
-    }
 
     const submissions = await ctx.db.submission.findMany({
       where: {
         status: "SUBMITTED",
+        enrolledUser: { user: { organizationId: user.organizationId } },
       },
       include: {
         enrolledUser: {
@@ -524,6 +528,8 @@ export const submissionRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireSubmissionReadAccess(ctx, input.submissionId);
+
       const submission = await ctx.db.submission.findUnique({
         where: {
           id: input.submissionId,
@@ -542,18 +548,16 @@ export const submissionRouter = createTRPCRouter({
       return { success: true, data: submission };
     }),
 
-  deleteSubmission: protectedProcedure
+  // Same rule as points.deleteSubmission: the static `submission:delete` grant
+  // (MENTOR and above) plus review access to that specific submission.
+  deleteSubmission: permissionProcedure("submission", "delete")
     .input(
       z.object({
         submissionId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { user } = ctx.session;
-      const hasAccess = user.role === "INSTRUCTOR" || user.role === "MENTOR";
-      if (!hasAccess) {
-        return { error: "Unauthorized" };
-      }
+      await requireSubmissionReviewAccess(ctx, input.submissionId);
 
       await ctx.db.submission.delete({
         where: {
@@ -663,9 +667,15 @@ export const submissionRouter = createTRPCRouter({
   getSubmissionForPlayground: protectedProcedure
     .input(z.object({ submissionId: z.string() }))
     .query(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
+      const currentUser = ctx.session.user;
+      const scoped = await requireSubmissionReadAccess(ctx, input.submissionId);
+      // Only assignment managers get the instructor view of the template.
+      const isInstructorAccess = canManageAssignment(
+        currentUser,
+        scoped.assignment,
+      );
 
+      try {
         const submission = await ctx.db.submission.findUnique({
           where: { id: input.submissionId, status: "SUBMITTED" },
           include: {
@@ -676,19 +686,6 @@ export const submissionRouter = createTRPCRouter({
 
         if (!submission) {
           return { success: false, error: "Submission not found" };
-        }
-
-        // Check access permissions
-        const isStudentAccess =
-          currentUser.role === "STUDENT" &&
-          submission.enrolledUser.username === currentUser.username;
-        const isMentorAccess =
-          currentUser.role === "MENTOR" &&
-          submission.enrolledUser.mentorUsername === currentUser.username;
-        const isInstructorAccess = currentUser.role === "INSTRUCTOR";
-
-        if (!isStudentAccess && !isMentorAccess && !isInstructorAccess) {
-          return { success: false, error: "Access denied" };
         }
 
         // Merge: hidden/solution come from current template (so instructor
@@ -731,7 +728,6 @@ export const submissionRouter = createTRPCRouter({
         return {
           success: false,
           error: "Failed to fetch submission data",
-          details: error instanceof Error ? error.message : String(error),
         };
       }
     }),

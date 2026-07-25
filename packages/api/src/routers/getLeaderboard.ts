@@ -2,7 +2,8 @@ import type { Course, submission, User } from "@tutly/db/browser";
 import { z } from "zod";
 
 import { db } from "@tutly/db";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { requireCourseReadAccess } from "../lib/authorization";
+import { createTRPCRouter, permissionProcedure } from "../trpc";
 
 export type LeaderboardSubmission = {
   totalPoints: number;
@@ -17,16 +18,16 @@ export type LeaderboardSubmission = {
 } & Partial<submission>;
 
 async function getLeaderboardDataForUser(
-  userId: string,
+  username: string,
   organizationId: string,
 ) {
-  if (!userId || !organizationId) {
+  if (!username || !organizationId) {
     return { error: "Invalid user or organization ID" };
   }
   try {
     const mentor = await db.enrolledUsers.findMany({
       where: {
-        username: userId,
+        username,
         user: {
           organizationId,
         },
@@ -40,6 +41,9 @@ async function getLeaderboardDataForUser(
       where: {
         enrolledUser: {
           mentorUsername: mentor[0]?.mentorUsername ?? null,
+          // Without this the `mentorUsername: null` fallback matches every
+          // unassigned student in every tenant.
+          user: { organizationId },
         },
         status: "SUBMITTED",
       },
@@ -105,7 +109,7 @@ async function getLeaderboardDataForUser(
 }
 
 export const leaderboardRouter = createTRPCRouter({
-  getLeaderboardData: protectedProcedure.query(async ({ ctx }) => {
+  getLeaderboardData: permissionProcedure("leaderboard", "read").query(async ({ ctx }) => {
     try {
       const currentUser = ctx.session.user;
 
@@ -121,10 +125,18 @@ export const leaderboardRouter = createTRPCRouter({
         },
       });
 
+      // Without a tenancy scope the `mentorUsername: null` fallback matches
+      // every unassigned student in every tenant. An org-less user is only ever
+      // in scope with themselves, since two nulls are not the same tenant.
+      const orgScope = currentUser.organizationId
+        ? { user: { organizationId: currentUser.organizationId } }
+        : { username: currentUser.username };
+
       const submissions = await ctx.db.submission.findMany({
         where: {
           enrolledUser: {
             mentorUsername: mentor[0]?.mentorUsername ?? null,
+            ...orgScope,
           },
           status: "SUBMITTED",
         },
@@ -266,12 +278,11 @@ export const leaderboardRouter = createTRPCRouter({
       return {
         success: false,
         error: "Failed to fetch leaderboard data",
-        details: error instanceof Error ? error.message : String(error),
       };
     }
   }),
 
-  getLeaderboardDataForStudent: protectedProcedure.query(async ({ ctx }) => {
+  getLeaderboardDataForStudent: permissionProcedure("leaderboard", "read").query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
 
     if (!currentUser.organization) {
@@ -279,7 +290,7 @@ export const leaderboardRouter = createTRPCRouter({
     }
 
     const result = await getLeaderboardDataForUser(
-      currentUser.id,
+      currentUser.username,
       currentUser.organization.id,
     );
     if (!result.success) {
@@ -300,9 +311,14 @@ export const leaderboardRouter = createTRPCRouter({
     return { success: true, data: totalPoints };
   }),
 
-  getSubmissionsCountOfAllStudents: protectedProcedure.query(
+  getSubmissionsCountOfAllStudents: permissionProcedure("leaderboard", "read").query(
     async ({ ctx }) => {
       const currentUser = ctx.session.user;
+      // This query had no filter at all: it returned a per-student submission
+      // count for every tenant in the deployment.
+      if (!currentUser.organizationId) {
+        return { success: true, data: {} as Record<string, number> };
+      }
 
       const submissions = await ctx.db.submission.findMany({
         select: {
@@ -315,9 +331,7 @@ export const leaderboardRouter = createTRPCRouter({
         },
         where: {
           enrolledUser: {
-            user: {
-              organizationId: currentUser.organizationId,
-            },
+            user: { organizationId: currentUser.organizationId },
           },
           points: {
             some: {
@@ -343,7 +357,7 @@ export const leaderboardRouter = createTRPCRouter({
     },
   ),
 
-  getMentorLeaderboardData: protectedProcedure.query(async ({ ctx }) => {
+  getMentorLeaderboardData: permissionProcedure("leaderboard", "read").query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
 
     const submissions = await ctx.db.submission.findMany({
@@ -406,7 +420,7 @@ export const leaderboardRouter = createTRPCRouter({
     return { success: true, data: { sortedSubmissions, currentUser } };
   }),
 
-  getMentorLeaderboardDataForDashboard: protectedProcedure.query(
+  getMentorLeaderboardDataForDashboard: permissionProcedure("leaderboard", "read").query(
     async ({ ctx }) => {
       const currentUser = ctx.session.user;
 
@@ -430,7 +444,7 @@ export const leaderboardRouter = createTRPCRouter({
     },
   ),
 
-  getDashboardData: protectedProcedure.query(async ({ ctx }) => {
+  getDashboardData: permissionProcedure("dashboard", "read").query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
 
     if (!currentUser.organization) {
@@ -438,7 +452,7 @@ export const leaderboardRouter = createTRPCRouter({
     }
 
     const result = await getLeaderboardDataForUser(
-      currentUser.id,
+      currentUser.username,
       currentUser.organization.id,
     );
     if (!result.success) {
@@ -459,7 +473,7 @@ export const leaderboardRouter = createTRPCRouter({
     };
   }),
 
-  getTutorLeaderboardData: protectedProcedure
+  getTutorLeaderboardData: permissionProcedure("leaderboard", "read")
     .input(
       z.object({
         course: z.string().optional(),
@@ -467,10 +481,17 @@ export const leaderboardRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
-        const { course, mentor } = input;
+      const currentUser = ctx.session.user;
+      const { course, mentor } = input;
 
+      // `course` was taken straight from input into the submissions filter, so
+      // any authenticated user could read any course's submissions. Checked
+      // outside the try so the denial is not flattened into a generic failure.
+      if (course) {
+        await requireCourseReadAccess(ctx, course);
+      }
+
+      try {
         const enrolledCourses = await ctx.db.enrolledUsers.findMany({
           where: {
             username: currentUser.username,
@@ -617,7 +638,6 @@ export const leaderboardRouter = createTRPCRouter({
         return {
           success: false,
           error: "Failed to fetch tutor leaderboard data",
-          details: error instanceof Error ? error.message : String(error),
         };
       }
     }),

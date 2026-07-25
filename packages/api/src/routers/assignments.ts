@@ -27,7 +27,10 @@ import {
   canManageAssignment,
   requireAssignmentManageAccess,
   requireAssignmentReadAccess,
-} from "../lib/workspace-access";
+  requireCourseReadAccess,
+  resolveTargetMentorUsername,
+  resolveTargetUsername,
+} from "../lib/authorization";
 
 import {
   getEnrolledCourseIds,
@@ -127,15 +130,17 @@ export const assignmentsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      // `id` is a username here despite the name.
+      const targetUsername = await resolveTargetUsername(ctx, input.id);
       try {
-        const { data: courses } = await getEnrolledCoursesById(input.id);
+        const { data: courses } = await getEnrolledCoursesById(targetUsername);
 
         const coursesWithAssignments = await ctx.db.course.findMany({
           where: {
             enrolledUsers: {
               some: {
                 user: {
-                  username: input.id,
+                  username: targetUsername,
                 },
               },
             },
@@ -154,7 +159,7 @@ export const assignmentsRouter = createTRPCRouter({
                       where: {
                         enrolledUser: {
                           user: {
-                            username: input.id,
+                            username: targetUsername,
                           },
                         },
                         status: "SUBMITTED",
@@ -489,6 +494,7 @@ export const assignmentsRouter = createTRPCRouter({
   getAssignmentDetailsByUserId: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireAssignmentReadAccess(ctx, input.id);
       try {
         const currentUser = ctx.session.user;
 
@@ -537,6 +543,7 @@ export const assignmentsRouter = createTRPCRouter({
         ctx,
         input,
       }): Promise<AssignmentDetails | { error: string }> => {
+        await requireAssignmentReadAccess(ctx, input.id);
         try {
           const currentUser = ctx.session.user;
           if (!currentUser.organization) {
@@ -628,6 +635,9 @@ export const assignmentsRouter = createTRPCRouter({
         ctx,
         input,
       }): Promise<AssignmentDetails | { error: string }> => {
+        // Instructor-only view of every submission: needs the manage gate, which
+        // is staff or an owner/admin of the assignment's course.
+        await requireAssignmentManageAccess(ctx, input.id);
         try {
           const currentUser = ctx.session.user;
           if (!currentUser.organization) {
@@ -717,6 +727,7 @@ export const assignmentsRouter = createTRPCRouter({
   getAllAssignmentsByCourseId: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.id);
       try {
         const currentUser = ctx.session.user;
 
@@ -762,6 +773,7 @@ export const assignmentsRouter = createTRPCRouter({
   getMentorPieChartData: protectedProcedure
     .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
       try {
         const currentUser = ctx.session.user;
 
@@ -839,11 +851,14 @@ export const assignmentsRouter = createTRPCRouter({
   getMentorPieChartById: protectedProcedure
     .input(z.object({ id: z.string(), courseId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
+      // `id` is a mentor username.
+      const targetMentor = await resolveTargetMentorUsername(ctx, input.id);
       try {
         const assignments = await ctx.db.submission.findMany({
           where: {
             enrolledUser: {
-              mentorUsername: input.id,
+              mentorUsername: targetMentor,
             },
             assignment: {
               courseId: input.courseId,
@@ -917,6 +932,9 @@ export const assignmentsRouter = createTRPCRouter({
   getSubmissionsForMentorByIdLineChart: protectedProcedure
     .input(z.object({ id: z.string(), courseId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
+      // `id` is a mentor username.
+      const targetMentor = await resolveTargetMentorUsername(ctx, input.id);
       try {
         const submissionCount = await ctx.db.attachment.findMany({
           where: {
@@ -927,7 +945,7 @@ export const assignmentsRouter = createTRPCRouter({
             submissions: {
               where: {
                 enrolledUser: {
-                  mentorUsername: input.id,
+                  mentorUsername: targetMentor,
                 },
                 status: "SUBMITTED",
               },
@@ -955,6 +973,7 @@ export const assignmentsRouter = createTRPCRouter({
   getSubmissionsForMentorLineChart: protectedProcedure
     .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
       try {
         const currentUser = ctx.session.user;
 
@@ -997,6 +1016,7 @@ export const assignmentsRouter = createTRPCRouter({
   getStudentEvaluatedAssigments: protectedProcedure
     .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
       try {
         const currentUser = ctx.session.user;
 
@@ -1058,11 +1078,18 @@ export const assignmentsRouter = createTRPCRouter({
   getStudentEvaluatedAssigmentsForMentor: protectedProcedure
     .input(z.object({ id: z.string(), courseId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireCourseReadAccess(ctx, input.courseId);
+      // `id` is the student username being viewed, not the mentor's.
+      const targetStudent = await resolveTargetUsername(
+        ctx,
+        input.id,
+        input.courseId,
+      );
       try {
         const assignments = await ctx.db.submission.findMany({
           where: {
             enrolledUser: {
-              username: input.id,
+              username: targetStudent,
             },
             assignment: {
               courseId: input.courseId,
@@ -1122,6 +1149,7 @@ export const assignmentsRouter = createTRPCRouter({
   getAssignmentDetails: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireAssignmentReadAccess(ctx, input.id);
       try {
         return await ctx.db.attachment.findUnique({
           where: {
@@ -1146,6 +1174,7 @@ export const assignmentsRouter = createTRPCRouter({
   getAssignmentDetailsForSubmission: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
+      await requireAssignmentReadAccess(ctx, input.id);
       try {
         const currentUser = ctx.session.user;
 
@@ -1237,6 +1266,7 @@ export const assignmentsRouter = createTRPCRouter({
   submitAssignment: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      await requireAssignmentReadAccess(ctx, input.id);
       try {
         const currentUser = ctx.session.user;
 
@@ -1519,6 +1549,7 @@ export const assignmentsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      await requireAssignmentReadAccess(ctx, input.assignmentId);
       try {
         const currentUser = ctx.session.user;
         const {
@@ -1882,16 +1913,16 @@ export const assignmentsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      if (ctx.session.user.role === "STUDENT") {
+        return {
+          success: false,
+          error: "Students cannot access evaluation page",
+        };
+      }
+      await requireAssignmentReadAccess(ctx, input.assignmentId);
       try {
         const currentUser = ctx.session.user;
         const { assignmentId, submissionId, username } = input;
-
-        if (currentUser.role === "STUDENT") {
-          return {
-            success: false,
-            error: "Students cannot access evaluation page",
-          };
-        }
 
         const assignment = await ctx.db.attachment.findUnique({
           where: {
@@ -2072,18 +2103,18 @@ export const assignmentsRouter = createTRPCRouter({
   getTutorStudentAssignmentsData: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
+      // Check if current user is a student (should redirect)
+      if (ctx.session.user.role === "STUDENT") {
+        return {
+          success: false,
+          error: "Students cannot access this page",
+          redirectTo: "/assignments",
+        };
+      }
+      // `userId` is a username here; a mentor may only target their own mentees.
+      const userId = await resolveTargetUsername(ctx, input.userId);
       try {
         const currentUser = ctx.session.user;
-        const { userId } = input;
-
-        // Check if current user is a student (should redirect)
-        if (currentUser.role === "STUDENT") {
-          return {
-            success: false,
-            error: "Students cannot access this page",
-            redirectTo: "/assignments",
-          };
-        }
 
         // Fetch student profile
         const student = await ctx.db.user.findUnique({
@@ -2268,11 +2299,12 @@ export const assignmentsRouter = createTRPCRouter({
   getCourseStudentStats: protectedProcedure
     .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }) => {
+      if (ctx.session.user.role === "STUDENT") {
+        return { success: false, error: "Unauthorized", data: null };
+      }
+      await requireCourseReadAccess(ctx, input.courseId);
       try {
         const currentUser = ctx.session.user;
-        if (currentUser.role === "STUDENT") {
-          return { success: false, error: "Unauthorized", data: null };
-        }
 
         const totalAssignments = await ctx.db.attachment.count({
           where: {

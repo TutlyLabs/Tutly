@@ -1,10 +1,11 @@
 import type { pointCategory } from "@tutly/db/browser";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { requireSubmissionReviewAccess } from "../lib/authorization";
+import { createTRPCRouter, permissionProcedure } from "../trpc";
 
 export const pointsRouter = createTRPCRouter({
-  addPoints: protectedProcedure
+  addPoints: permissionProcedure("submission", "evaluate")
     .input(
       z.object({
         submissionId: z.string(),
@@ -17,12 +18,10 @@ export const pointsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
-        if (currentUser.role === "STUDENT") {
-          return { error: "Unauthorized" };
-        }
+      const currentUser = ctx.session.user;
+      await requireSubmissionReviewAccess(ctx, input.submissionId);
 
+      try {
         const allCategories = await Promise.all(
           input.marks.map(async (mark) => {
             const existingPoint = await ctx.db.point.findFirst({
@@ -67,17 +66,16 @@ export const pointsRouter = createTRPCRouter({
       }
     }),
 
-  deleteSubmission: protectedProcedure
+  // Same rule as submission.deleteSubmission: the static `submission:delete`
+  // grant (MENTOR and above) plus review access to that specific submission.
+  deleteSubmission: permissionProcedure("submission", "delete")
     .input(
       z.object({
         submissionId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      if (currentUser.role === "STUDENT") {
-        return { error: "Unauthorized" };
-      }
+      await requireSubmissionReviewAccess(ctx, input.submissionId);
 
       await ctx.db.submission.delete({
         where: {

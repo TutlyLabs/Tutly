@@ -1,10 +1,11 @@
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { db } from "@tutly/db";
 
 export const geminiRouter = createTRPCRouter({
-  validateApiKey: publicProcedure
+  // Unauthenticated this is a free oracle for probing arbitrary Google API keys.
+  validateApiKey: protectedProcedure
     .input(z.object({ apiKey: z.string() }))
     .mutation(async ({ input }) => {
       const { apiKey } = input;
@@ -21,10 +22,9 @@ export const geminiRouter = createTRPCRouter({
         );
 
         if (!response.ok) {
-          const errorData = await response.text();
           return {
             ok: false,
-            error: `API key validation failed: ${response.status} ${response.statusText}. ${errorData}`,
+            error: `API key validation failed: ${response.status} ${response.statusText}`,
           };
         }
 

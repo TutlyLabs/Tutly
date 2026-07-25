@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 
 import type { TRPCContext } from "../trpc";
 
-type UserLike = NonNullable<TRPCContext["session"]>["user"];
+type UserLike = NonNullable<NonNullable<TRPCContext["session"]>["user"]>;
 
 const elevatedRoles = new Set(["INSTRUCTOR", "ADMIN", "SUPER_ADMIN"]);
 

@@ -1,10 +1,14 @@
 import { BookMarkCategory } from "@tutly/db/browser";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, permissionProcedure } from "../trpc";
+import {
+  requireRecordOwner,
+  requireUserInOrganization,
+} from "../lib/authorization";
 
 export const bookmarksRouter = createTRPCRouter({
-  toggleBookmark: protectedProcedure
+  toggleBookmark: permissionProcedure("bookmark", "toggle")
     .input(
       z.object({
         category: z.nativeEnum(BookMarkCategory),
@@ -43,7 +47,7 @@ export const bookmarksRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  getBookmark: protectedProcedure
+  getBookmark: permissionProcedure("bookmark", "read")
     .input(
       z.object({
         userId: z.string(),
@@ -51,6 +55,12 @@ export const bookmarksRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      // A bookmark is private to its owner; staff may read one in their own org.
+      if (input.userId !== ctx.session.user.id) {
+        await requireUserInOrganization(ctx, input.userId);
+      }
+      requireRecordOwner(ctx, { userId: input.userId }, { allowStaff: true });
+
       try {
         const bookmark = await ctx.db.bookMarks.findFirst({
           where: {
@@ -66,7 +76,7 @@ export const bookmarksRouter = createTRPCRouter({
       }
     }),
 
-  getUserBookmarks: protectedProcedure.query(async ({ ctx }) => {
+  getUserBookmarks: permissionProcedure("bookmark", "list").query(async ({ ctx }) => {
     try {
       const currentUser = ctx.session.user;
 
@@ -85,7 +95,6 @@ export const bookmarksRouter = createTRPCRouter({
       return {
         success: false,
         error: "Failed to fetch user bookmarks",
-        details: error instanceof Error ? error.message : String(error),
       };
     }
   }),

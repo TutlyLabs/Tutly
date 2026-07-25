@@ -11,7 +11,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import type { TRPCContext } from "../trpc";
+import { createTRPCRouter, permissionProcedure, protectedProcedure } from "../trpc";
+import { requireCourseManageAccess } from "../lib/authorization";
 import { AWS_BUCKET_NAME, AWS_S3_URL, s3Client } from "../lib/s3";
 
 const VIDEO_WORKER_URL = process.env.VIDEO_WORKER_URL;
@@ -31,6 +33,50 @@ const MAX_VIDEO_BYTES = 5 * 1024 * 1024 * 1024;
 function extOf(filename: string): string {
   const dot = filename.lastIndexOf(".");
   return dot === -1 ? "" : filename.slice(dot).toLowerCase();
+}
+
+/**
+ * Video carries no direct course link — only `Class[]`, which may be empty
+ * while an upload is still in flight. So: once a video is linked to classes,
+ * scope on managing one of those courses; before that, fall back to the
+ * uploader-or-staff rule its sibling procedures already use.
+ */
+async function requireVideoManageAccess(ctx: TRPCContext, videoId: string) {
+  const user = ctx.session?.user;
+  if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
+
+  const video = await ctx.db.video.findUnique({
+    where: { id: videoId },
+    select: {
+      id: true,
+      status: true,
+      uploadedById: true,
+      rawObjectKey: true,
+      class: { select: { courseId: true } },
+    },
+  });
+  if (!video) throw new TRPCError({ code: "NOT_FOUND", message: "Video not found" });
+
+  const courseIds = video.class
+    .map((c) => c.courseId)
+    .filter((id): id is string => Boolean(id));
+
+  if (courseIds.length > 0) {
+    for (const courseId of courseIds) {
+      try {
+        await requireCourseManageAccess(ctx, courseId);
+        return video;
+      } catch {
+        // Try the next course this video is used in.
+      }
+    }
+    throw new TRPCError({ code: "NOT_FOUND", message: "Video not found" });
+  }
+
+  if (video.uploadedById && video.uploadedById !== user.id) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Video not found" });
+  }
+  return video;
 }
 
 async function enqueueWorker(videoId: string, rawObjectKey: string) {
@@ -261,17 +307,10 @@ export const videosRouter = createTRPCRouter({
       return rest;
     }),
 
-  retry: protectedProcedure
+  retry: permissionProcedure("video", "retry")
     .input(z.object({ videoId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const user = ctx.session.user;
-      if (user.role !== "INSTRUCTOR" && user.role !== "ADMIN") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      const video = await ctx.db.video.findUnique({
-        where: { id: input.videoId },
-      });
-      if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+      const video = await requireVideoManageAccess(ctx, input.videoId);
       if (!video.rawObjectKey) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -424,7 +463,7 @@ export const videosRouter = createTRPCRouter({
       return { success: true as const };
     }),
 
-  saveProgress: protectedProcedure
+  saveProgress: permissionProcedure("video", "progress")
     .input(
       z.object({
         videoId: z.string(),
@@ -454,7 +493,7 @@ export const videosRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  getProgress: protectedProcedure
+  getProgress: permissionProcedure("video", "progress")
     .input(z.object({ videoId: z.string() }))
     .query(async ({ ctx, input }) => {
       const row = await ctx.db.videoProgress.findUnique({
@@ -469,23 +508,11 @@ export const videosRouter = createTRPCRouter({
       return row;
     }),
 
-  setCaptions: protectedProcedure
+  setCaptions: permissionProcedure("video", "captions")
     .input(z.object({ videoId: z.string(), captionsUrl: z.string().url().nullable() }))
     .mutation(async ({ ctx, input }) => {
-      const user = ctx.session.user;
-      if (user.role !== "INSTRUCTOR" && user.role !== "ADMIN") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      const video = await ctx.db.video.findUnique({
-        where: { id: input.videoId },
-        select: { uploadedById: true },
-      });
-      if (!video) throw new TRPCError({ code: "NOT_FOUND" });
-      const isStaff =
-        user.role === "INSTRUCTOR" || user.role === "ADMIN";
-      if (!isStaff && video.uploadedById !== user.id) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
+      await requireVideoManageAccess(ctx, input.videoId);
+
       await ctx.db.video.update({
         where: { id: input.videoId },
         data: { captionsUrl: input.captionsUrl },
@@ -552,6 +579,10 @@ export const videosRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const user = ctx.session.user;
+      // Same gate as startMultipartUpload: signing part URLs is the same write.
+      if (user.role !== "INSTRUCTOR" && user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       const video = await ctx.db.video.findUnique({
         where: { id: input.videoId },
         select: { uploadedById: true, rawObjectKey: true },
@@ -595,6 +626,10 @@ export const videosRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const user = ctx.session.user;
+      // Same gate as startMultipartUpload.
+      if (user.role !== "INSTRUCTOR" && user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       const video = await ctx.db.video.findUnique({
         where: { id: input.videoId },
         select: { uploadedById: true, rawObjectKey: true },
@@ -629,6 +664,10 @@ export const videosRouter = createTRPCRouter({
     .input(z.object({ videoId: z.string(), uploadId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const user = ctx.session.user;
+      // Same gate as startMultipartUpload.
+      if (user.role !== "INSTRUCTOR" && user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       const video = await ctx.db.video.findUnique({
         where: { id: input.videoId },
         select: { uploadedById: true, rawObjectKey: true },
@@ -650,18 +689,11 @@ export const videosRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  requestCaptionsUpload: protectedProcedure
+  requestCaptionsUpload: permissionProcedure("video", "captions")
     .input(z.object({ videoId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const user = ctx.session.user;
-      if (user.role !== "INSTRUCTOR" && user.role !== "ADMIN") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      const video = await ctx.db.video.findUnique({
-        where: { id: input.videoId },
-        select: { uploadedById: true },
-      });
-      if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+      await requireVideoManageAccess(ctx, input.videoId);
+
       const captionsKey = `videos/captions/${input.videoId}.vtt`;
       const command = new PutObjectCommand({
         Bucket: AWS_BUCKET_NAME,
