@@ -1,4 +1,5 @@
 import { NotificationEvent, NotificationMedium } from "@tutly/db/browser";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { db } from "@tutly/db";
@@ -199,17 +200,22 @@ export const notificationsRouter = createTRPCRouter({
   handleNotificationRedirect: protectedProcedure
     .input(z.object({ notificationId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      try {
-        const notification = await ctx.db.notification.findUnique({
-          where: {
-            id: input.notificationId,
-          },
+      // NOT_FOUND (not FORBIDDEN) so notification ids stay unenumerable
+      const notification = await ctx.db.notification.findFirst({
+        where: {
+          id: input.notificationId,
+          intendedForId: ctx.session.user.id,
+        },
+      });
+
+      if (!notification) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Notification not found",
         });
+      }
 
-        if (!notification) {
-          return { success: false, error: "Notification not found" };
-        }
-
+      try {
         // Mark notification as read
         await ctx.db.notification.update({
           where: { id: input.notificationId },
@@ -235,23 +241,22 @@ export const notificationsRouter = createTRPCRouter({
   getNotificationRedirectData: protectedProcedure
     .input(z.object({ notificationId: z.string() }))
     .query(async ({ ctx, input }) => {
-      try {
-        const { notificationId } = input;
+      // NOT_FOUND (not FORBIDDEN) so notification ids stay unenumerable
+      const notification = await ctx.db.notification.findFirst({
+        where: {
+          id: input.notificationId,
+          intendedForId: ctx.session.user.id,
+        },
+      });
 
-        if (!notificationId) {
-          return { success: false, error: "Notification ID is required" };
-        }
-
-        const notification = await ctx.db.notification.findUnique({
-          where: {
-            id: notificationId,
-          },
+      if (!notification) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Notification not found",
         });
+      }
 
-        if (!notification) {
-          return { success: false, error: "Notification not found" };
-        }
-
+      try {
         // Check if notification has a custom link
         if (notification.customLink) {
           return {

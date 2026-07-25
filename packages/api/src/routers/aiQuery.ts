@@ -1,11 +1,28 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
+import type { Role } from "@tutly/db/browser";
 import { db } from "@tutly/db";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { PRISMA_SCHEMA, SCHEMA_CONTEXT } from "../lib/prismaSchema";
 
+const STAFF_ROLES: Role[] = ["INSTRUCTOR", "ADMIN", "SUPER_ADMIN"];
+
+/**
+ * Middleware that ensures the user is staff (INSTRUCTOR / ADMIN / SUPER_ADMIN)
+ */
+const staffProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!STAFF_ROLES.includes(ctx.session.user.role as Role)) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Staff access required",
+    });
+  }
+  return next({ ctx });
+});
+
 export const aiQueryRouter = createTRPCRouter({
-  getAvailableModels: protectedProcedure.query(async ({ ctx }) => {
+  getAvailableModels: staffProcedure.query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
 
     try {
@@ -73,7 +90,7 @@ export const aiQueryRouter = createTRPCRouter({
     }
   }),
 
-  executeAIQueryCombined: protectedProcedure
+  executeAIQueryCombined: staffProcedure
     .input(
       z.object({
         userQuery: z.string(),
@@ -365,6 +382,9 @@ Query:`;
               await new Promise((resolve) => setTimeout(resolve, 500));
             }
 
+            // UNSAFE: executes LLM-generated code with full db access. Staff-only
+            // gating is a stopgap; this must be replaced by a whitelisted query
+            // builder that validates model/field/operator before execution.
             const executeQuery = (db: any) => {
               return eval(currentQuery);
             };

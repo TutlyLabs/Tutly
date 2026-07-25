@@ -1512,8 +1512,8 @@ export const assignmentsRouter = createTRPCRouter({
       z.object({
         assignmentId: z.string(),
         username: z.string().optional(),
-        page: z.number().default(1),
-        limit: z.number().default(10),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(10),
         selectedMentor: z.string().optional(),
         searchQuery: z.string().default(""),
       }),

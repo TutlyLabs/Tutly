@@ -302,6 +302,8 @@ export const leaderboardRouter = createTRPCRouter({
 
   getSubmissionsCountOfAllStudents: protectedProcedure.query(
     async ({ ctx }) => {
+      const currentUser = ctx.session.user;
+
       const submissions = await ctx.db.submission.findMany({
         select: {
           enrolledUser: {
@@ -312,6 +314,11 @@ export const leaderboardRouter = createTRPCRouter({
           points: true,
         },
         where: {
+          enrolledUser: {
+            user: {
+              organizationId: currentUser.organizationId,
+            },
+          },
           points: {
             some: {
               score: {
