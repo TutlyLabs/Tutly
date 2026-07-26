@@ -7,10 +7,10 @@ import Sessions from "./_components/Sessions";
 export default function SessionsPage() {
   const q = api.users.getUserSessions.useQuery();
   if (q.isLoading) return <PageLoader />;
-  if (!q.data?.success || !q.data.data) {
+  if (!q.data) {
     return <div>Failed to load sessions data.</div>;
   }
-  const { sessions, accounts, currentSessionId } = q.data.data;
+  const { sessions, accounts, currentSessionId } = q.data;
   return (
     <Sessions
       sessions={sessions}

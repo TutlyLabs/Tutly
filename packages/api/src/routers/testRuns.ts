@@ -1,20 +1,15 @@
-import { timingSafeEqual } from "node:crypto";
-
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { enqueueTestRun, enqueueTestRunBatch } from "../lib/runner-client";
-import {
-  recordTestRunOutcome,
-  scoreReportedResults,
-} from "../lib/test-run-scoring";
-import { projectTestRunForViewer } from "../lib/test-visibility";
 import {
   canManageAssignment,
   requireAssignmentManageAccess,
   requireSubmissionReadAccess,
 } from "../lib/authorization";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { enqueueTestRun, enqueueTestRunBatch } from "../lib/runner-client";
+import { scoreReportedResults } from "../lib/test-run-scoring";
+import { projectTestRunForViewer } from "../lib/test-visibility";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 const reportedTestSchema = z.object({
   testCaseId: z.string().optional(),
@@ -42,7 +37,10 @@ export const testRunsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const submission = await requireSubmissionReadAccess(ctx, input.submissionId);
+      const submission = await requireSubmissionReadAccess(
+        ctx,
+        input.submissionId,
+      );
       const visibleResults = input.results.filter(
         (result) => result.visibility !== "HIDDEN",
       );
@@ -113,21 +111,37 @@ export const testRunsRouter = createTRPCRouter({
           maxScore: score.maxScore,
           source: "tests",
           testRunId: run.id,
-          feedback: status === "PASSED" ? "Visible tests passed." : "Visible tests need attention.",
-          metadata: { trigger: input.trigger, provider: input.provider } as never,
+          feedback:
+            status === "PASSED"
+              ? "Visible tests passed."
+              : "Visible tests need attention.",
+          metadata: {
+            trigger: input.trigger,
+            provider: input.provider,
+          } as never,
         },
         update: {
           score: score.score,
           maxScore: score.maxScore,
           source: "tests",
           testRunId: run.id,
-          feedback: status === "PASSED" ? "Visible tests passed." : "Visible tests need attention.",
-          metadata: { trigger: input.trigger, provider: input.provider } as never,
+          feedback:
+            status === "PASSED"
+              ? "Visible tests passed."
+              : "Visible tests need attention.",
+          metadata: {
+            trigger: input.trigger,
+            provider: input.provider,
+          } as never,
         },
       });
 
       const reviewStatus =
-        hiddenCount > 0 ? "NEEDS_REVIEW" : status === "PASSED" ? "AUTO_SCORED" : "NEEDS_REVIEW";
+        hiddenCount > 0
+          ? "NEEDS_REVIEW"
+          : status === "PASSED"
+            ? "AUTO_SCORED"
+            : "NEEDS_REVIEW";
 
       await ctx.db.submissionReview.upsert({
         where: { submissionId: submission.id },
@@ -147,7 +161,7 @@ export const testRunsRouter = createTRPCRouter({
         },
       });
 
-      return { success: true, data: run };
+      return run;
     }),
 
   enqueueOfficial: protectedProcedure
@@ -157,7 +171,10 @@ export const testRunsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const submission = await requireSubmissionReadAccess(ctx, input.submissionId);
+      const submission = await requireSubmissionReadAccess(
+        ctx,
+        input.submissionId,
+      );
       const user = ctx.session?.user;
       if (!user || !canManageAssignment(user, submission.assignment)) {
         throw new TRPCError({
@@ -199,13 +216,16 @@ export const testRunsRouter = createTRPCRouter({
 
       void enqueueTestRun(run.id);
 
-      return { success: true, data: run };
+      return run;
     }),
 
   rerunAllForAssignment: protectedProcedure
     .input(z.object({ assignmentId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const assignment = await requireAssignmentManageAccess(ctx, input.assignmentId);
+      const assignment = await requireAssignmentManageAccess(
+        ctx,
+        input.assignmentId,
+      );
       const user = ctx.session.user;
 
       const recentBulk = await ctx.db.submissionTestRun.count({
@@ -218,7 +238,8 @@ export const testRunsRouter = createTRPCRouter({
       if (recentBulk > 0) {
         throw new TRPCError({
           code: "TOO_MANY_REQUESTS",
-          message: "A bulk rerun was triggered for this assignment in the last 5 minutes",
+          message:
+            "A bulk rerun was triggered for this assignment in the last 5 minutes",
         });
       }
 
@@ -228,7 +249,7 @@ export const testRunsRouter = createTRPCRouter({
       });
 
       if (submissions.length === 0) {
-        return { success: true, count: 0 };
+        return { count: 0 };
       }
 
       const created = await ctx.db.$transaction(
@@ -250,169 +271,16 @@ export const testRunsRouter = createTRPCRouter({
 
       void enqueueTestRunBatch(created.map((run) => run.id));
 
-      return { success: true, count: created.length };
-    }),
-
-  reapStaleRuns: protectedProcedure
-    .input(z.object({ olderThanMinutes: z.number().int().min(1).default(10) }))
-    .mutation(async ({ ctx, input }) => {
-      const user = ctx.session?.user;
-      if (!user || (user.role !== "INSTRUCTOR" && !user.isAdmin)) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
-      const cutoff = new Date(Date.now() - input.olderThanMinutes * 60 * 1000);
-      const result = await ctx.db.submissionTestRun.updateMany({
-        where: {
-          status: "RUNNING",
-          startedAt: { lt: cutoff },
-        },
-        data: {
-          status: "ERROR",
-          errorMessage: "runner timeout (reaped)",
-          completedAt: new Date(),
-        },
-      });
-
-      return { success: true, reaped: result.count };
-    }),
-
-  recordOfficial: protectedProcedure
-    .input(
-      z.object({
-        testRunId: z.string(),
-        results: z.array(reportedTestSchema).default([]),
-        logsArtifactId: z.string().optional(),
-        reportArtifactId: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const run = await ctx.db.submissionTestRun.findUnique({
-        where: { id: input.testRunId },
-        include: {
-          submission: {
-            include: {
-              enrolledUser: true,
-              assignment: {
-                include: {
-                  course: {
-                    include: {
-                      courseAdmins: { select: { id: true } },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-
-      if (!run) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Test run not found" });
-      }
-
-      const user = ctx.session.user;
-      const canRecord =
-        user.role === "INSTRUCTOR" ||
-        user.role === "ADMIN" ||
-        user.role === "SUPER_ADMIN" ||
-        run.submission.assignment.course?.createdById === user.id ||
-        run.submission.assignment.course?.courseAdmins.some((admin) => admin.id === user.id);
-
-      if (!canRecord) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only trusted instructors/runners can record official results.",
-        });
-      }
-
-      const testCases = await ctx.db.assignmentTestCase.findMany({
-        where: { assignmentId: run.assignmentId },
-        select: { id: true, points: true, visibility: true },
-      });
-      const score = scoreReportedResults(input.results, testCases);
-      const hiddenResults = score.normalized.filter(
-        (result) => result.visibility === "HIDDEN",
-      );
-      const visibleResults = score.normalized.filter(
-        (result) => result.visibility !== "HIDDEN",
-      );
-      const status = score.score >= score.maxScore ? "PASSED" : "FAILED";
-      const completedAt = new Date();
-
-      const updatedRun = await ctx.db.submissionTestRun.update({
-        where: { id: run.id },
-        data: {
-          status,
-          visiblePassed: visibleResults.filter((result) => result.passed).length,
-          visibleTotal: visibleResults.length,
-          hiddenPassed: hiddenResults.filter((result) => result.passed).length,
-          hiddenTotal: hiddenResults.length,
-          score: score.score,
-          maxScore: score.maxScore,
-          outputSummary: {
-            results: score.normalized,
-            source: "trusted-official-runner",
-          } as never,
-          logsArtifactId: input.logsArtifactId ?? run.logsArtifactId,
-          reportArtifactId: input.reportArtifactId ?? run.reportArtifactId,
-          startedAt: run.startedAt ?? completedAt,
-          completedAt,
-        },
-      });
-
-      await ctx.db.point.upsert({
-        where: {
-          submissionId_category: {
-            submissionId: run.submissionId,
-            category: "TESTS",
-          },
-        },
-        create: {
-          submissionId: run.submissionId,
-          category: "TESTS",
-          score: score.score,
-          maxScore: score.maxScore,
-          source: "official_tests",
-          testRunId: run.id,
-          feedback: status === "PASSED" ? "Official tests passed." : "Official tests need review.",
-          metadata: { provider: run.provider, trigger: run.trigger } as never,
-        },
-        update: {
-          score: score.score,
-          maxScore: score.maxScore,
-          source: "official_tests",
-          testRunId: run.id,
-          feedback: status === "PASSED" ? "Official tests passed." : "Official tests need review.",
-          metadata: { provider: run.provider, trigger: run.trigger } as never,
-        },
-      });
-
-      await ctx.db.submissionReview.upsert({
-        where: { submissionId: run.submissionId },
-        create: {
-          submissionId: run.submissionId,
-          assignmentId: run.assignmentId,
-          status: status === "PASSED" ? "AUTO_SCORED" : "NEEDS_REVIEW",
-          autoScore: score.score,
-          maxScore: score.maxScore,
-          testRunId: run.id,
-        },
-        update: {
-          status: status === "PASSED" ? "AUTO_SCORED" : "NEEDS_REVIEW",
-          autoScore: score.score,
-          maxScore: score.maxScore,
-          testRunId: run.id,
-        },
-      });
-
-      return { success: true, data: updatedRun };
+      return { count: created.length };
     }),
 
   getForSubmission: protectedProcedure
     .input(z.object({ submissionId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const submission = await requireSubmissionReadAccess(ctx, input.submissionId);
+      const submission = await requireSubmissionReadAccess(
+        ctx,
+        input.submissionId,
+      );
       const runs = await ctx.db.submissionTestRun.findMany({
         where: { submissionId: submission.id },
         orderBy: { createdAt: "desc" },
@@ -428,68 +296,6 @@ export const testRunsRouter = createTRPCRouter({
         ),
       );
 
-      return { success: true, data: projected };
-    }),
-
-  getForAssignment: protectedProcedure
-    .input(
-      z.object({
-        assignmentId: z.string(),
-        status: z.enum(["QUEUED", "RUNNING", "PASSED", "FAILED", "ERROR", "CANCELLED"]).optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      // Returns every enrolled user's runs unscoped, so read access is not enough.
-      await requireAssignmentManageAccess(ctx, input.assignmentId);
-      const runs = await ctx.db.submissionTestRun.findMany({
-        where: {
-          assignmentId: input.assignmentId,
-          status: input.status,
-        },
-        include: {
-          submission: {
-            include: {
-              enrolledUser: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-
-      return { success: true, data: runs };
-    }),
-
-  recordByService: publicProcedure
-    .input(
-      z.object({
-        testRunId: z.string(),
-        status: z.enum(["PASSED", "FAILED", "ERROR"]),
-        results: z.array(reportedTestSchema).default([]),
-        jestReport: z.any().optional(),
-        errorMessage: z.string().optional(),
-        logsArtifactId: z.string().optional(),
-        reportArtifactId: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const provided = ctx.headers.get("x-service-token") ?? "";
-      const expected = process.env.TEST_RUNNER_SECRET ?? "";
-      if (!expected) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Runner secret not configured",
-        });
-      }
-      const a = Buffer.from(provided);
-      const b = Buffer.from(expected);
-      if (a.length !== b.length || !timingSafeEqual(a, b)) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
-      }
-
-      const result = await recordTestRunOutcome(ctx.db, input);
-      if (!result.ok) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Test run not found" });
-      }
-      return { success: true, ...result };
+      return projected;
     }),
 });

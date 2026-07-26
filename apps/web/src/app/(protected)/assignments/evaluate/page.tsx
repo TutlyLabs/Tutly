@@ -38,11 +38,11 @@ export default function EvaluatePage() {
   if (user.role === "STUDENT") {
     return <Navigate to={`/assignments/detail?id=${assignmentId}`} />;
   }
-  if (!q.data?.success || !q.data.data) {
+  if (!q.data) {
     return <Navigate to="/assignments" />;
   }
 
-  const { assignment, submissions, submission } = q.data.data;
+  const { assignment, submissions, submission } = q.data;
   const assignmentWithDecodedTemplate = assignment
     ? {
         ...assignment,

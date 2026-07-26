@@ -554,9 +554,9 @@ export function CommandPalette({
   }, [router]);
 
   const hasResults = React.useMemo(() => {
-    if (!searchResults?.data) return false;
+    if (!searchResults) return false;
     const { courses, classes, assignments, doubts, users, schedule } =
-      searchResults.data;
+      searchResults;
     return (
       courses.length > 0 ||
       classes.length > 0 ||
@@ -662,13 +662,13 @@ export function CommandPalette({
         )}
 
         {/* Search Results */}
-        {debouncedSearch && searchResults?.data && (
+        {debouncedSearch && searchResults && (
           <>
             {/* Courses */}
-            {searchResults.data.courses.length > 0 && (
+            {searchResults.courses.length > 0 && (
               <>
                 <CommandGroup heading="Courses">
-                  {searchResults.data.courses.map((course: any) => (
+                  {searchResults.courses.map((course) => (
                     <CommandItem
                       key={course.id}
                       onSelect={() => {
@@ -717,10 +717,10 @@ export function CommandPalette({
             )}
 
             {/* Classes */}
-            {searchResults.data.classes.length > 0 && (
+            {searchResults.classes.length > 0 && (
               <>
                 <CommandGroup heading="Classes">
-                  {searchResults.data.classes.map((cls: any) => (
+                  {searchResults.classes.map((cls) => (
                     <CommandItem
                       key={cls.id}
                       onSelect={() =>
@@ -746,10 +746,10 @@ export function CommandPalette({
             )}
 
             {/* Assignments */}
-            {searchResults.data.assignments.length > 0 && (
+            {searchResults.assignments.length > 0 && (
               <>
                 <CommandGroup heading="Assignments">
-                  {searchResults.data.assignments.map((assignment: any) => (
+                  {searchResults.assignments.map((assignment) => (
                     <CommandItem
                       key={assignment.id}
                       onSelect={() =>
@@ -791,10 +791,10 @@ export function CommandPalette({
             )}
 
             {/* Doubts */}
-            {searchResults.data.doubts.length > 0 && (
+            {searchResults.doubts.length > 0 && (
               <>
                 <CommandGroup heading="Doubts">
-                  {searchResults.data.doubts.map((doubt: any) => (
+                  {searchResults.doubts.map((doubt) => (
                     <CommandItem
                       key={doubt.id}
                       onSelect={() =>
@@ -827,44 +827,40 @@ export function CommandPalette({
             )}
 
             {/* Users (for instructors and mentors) */}
-            {searchResults.data.users &&
-              searchResults.data.users.length > 0 && (
-                <>
-                  <CommandGroup heading="Users">
-                    {searchResults.data.users.map((u: any) => (
-                      <CommandItem
-                        key={u.id}
-                        onSelect={() =>
-                          handleSelect(() => router.push(`/u/${u.username}`))
-                        }
-                      >
-                        <UsersIcon className="text-primary mr-2 h-4 w-4" />
-                        <div className="flex flex-1 items-center justify-between gap-2">
-                          <div className="flex flex-col">
-                            <span className="font-medium">{u.name}</span>
-                            <span className="text-muted-foreground text-xs">
-                              @{u.username}
-                            </span>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className="text-xs capitalize"
-                          >
-                            {u.role.toLowerCase()}
-                          </Badge>
+            {searchResults.users && searchResults.users.length > 0 && (
+              <>
+                <CommandGroup heading="Users">
+                  {searchResults.users.map((u) => (
+                    <CommandItem
+                      key={u.id}
+                      onSelect={() =>
+                        handleSelect(() => router.push(`/u/${u.username}`))
+                      }
+                    >
+                      <UsersIcon className="text-primary mr-2 h-4 w-4" />
+                      <div className="flex flex-1 items-center justify-between gap-2">
+                        <div className="flex flex-col">
+                          <span className="font-medium">{u.name}</span>
+                          <span className="text-muted-foreground text-xs">
+                            @{u.username}
+                          </span>
                         </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                  <CommandSeparator />
-                </>
-              )}
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {u.role.toLowerCase()}
+                        </Badge>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandSeparator />
+              </>
+            )}
 
             {/* Schedule Events */}
-            {searchResults.data.schedule.length > 0 && (
+            {searchResults.schedule.length > 0 && (
               <>
                 <CommandGroup heading="Schedule">
-                  {searchResults.data.schedule.map((event: any) => (
+                  {searchResults.schedule.map((event) => (
                     <CommandItem
                       key={event.id}
                       onSelect={() =>
@@ -922,12 +918,12 @@ export function CommandPalette({
           creationMode &&
           selectedCategories.includes("courses") && (
             <>
-              {recentItems?.data && recentItems.data.courses.length > 0 ? (
+              {recentItems && recentItems.courses.length > 0 ? (
                 <>
                   <CommandGroup
                     heading={`Select Course to Create ${creationMode === "class" ? "Class" : "Assignment"}`}
                   >
-                    {recentItems.data.courses.map((course: any) => (
+                    {recentItems.courses.map((course) => (
                       <CommandItem
                         key={course.id}
                         onSelect={() => {
@@ -979,12 +975,12 @@ export function CommandPalette({
               ) : (
                 <div className="py-6 text-center">
                   <div className="text-muted-foreground mb-2 text-sm">
-                    {recentItems?.data
+                    {recentItems
                       ? `No courses available for creating ${creationMode === "class" ? "classes" : "assignments"}.`
                       : "Loading courses..."}
                   </div>
                   <div className="text-muted-foreground text-xs">
-                    {recentItems?.data
+                    {recentItems
                       ? "You need to be enrolled in or have access to courses to create content."
                       : "Please wait while we fetch your courses."}
                   </div>
@@ -1022,12 +1018,12 @@ export function CommandPalette({
                   )}
 
                   {/* Recent Items */}
-                  {recentItems?.data && (
+                  {recentItems && (
                     <>
-                      {recentItems.data.courses.length > 0 && (
+                      {recentItems.courses.length > 0 && (
                         <>
                           <CommandGroup heading="Recent Courses">
-                            {recentItems.data.courses.map((course: any) => (
+                            {recentItems.courses.map((course) => (
                               <CommandItem
                                 key={course.id}
                                 onSelect={() => {
@@ -1099,10 +1095,10 @@ export function CommandPalette({
                         </>
                       )}
 
-                      {recentItems.data.classes.length > 0 && (
+                      {recentItems.classes.length > 0 && (
                         <>
                           <CommandGroup heading="Recent Classes">
-                            {recentItems.data.classes.map((cls: any) => (
+                            {recentItems.classes.map((cls) => (
                               <CommandItem
                                 key={cls.id}
                                 onSelect={() =>
@@ -1127,31 +1123,29 @@ export function CommandPalette({
                         </>
                       )}
 
-                      {recentItems.data.assignments.length > 0 && (
+                      {recentItems.assignments.length > 0 && (
                         <>
                           <CommandGroup heading="Recent Assignments">
-                            {recentItems.data.assignments.map(
-                              (assignment: any) => (
-                                <CommandItem
-                                  key={assignment.id}
-                                  onSelect={() =>
-                                    handleSelect(() =>
-                                      router.push(
-                                        `/assignments/detail?id=${assignment.id}`,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  <FileTextIcon className="text-primary mr-2 h-4 w-4" />
-                                  <div className="flex flex-col">
-                                    <span>{assignment.title}</span>
-                                    <span className="text-muted-foreground text-xs">
-                                      {assignment.course?.title}
-                                    </span>
-                                  </div>
-                                </CommandItem>
-                              ),
-                            )}
+                            {recentItems.assignments.map((assignment) => (
+                              <CommandItem
+                                key={assignment.id}
+                                onSelect={() =>
+                                  handleSelect(() =>
+                                    router.push(
+                                      `/assignments/detail?id=${assignment.id}`,
+                                    ),
+                                  )
+                                }
+                              >
+                                <FileTextIcon className="text-primary mr-2 h-4 w-4" />
+                                <div className="flex flex-col">
+                                  <span>{assignment.title}</span>
+                                  <span className="text-muted-foreground text-xs">
+                                    {assignment.course?.title}
+                                  </span>
+                                </div>
+                              </CommandItem>
+                            ))}
                           </CommandGroup>
                           <CommandSeparator />
                         </>

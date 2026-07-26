@@ -45,7 +45,7 @@ export function WorkspaceProvidersIntegration() {
       passphrase: form.passphrase || undefined,
     });
 
-    if (result.success) {
+    if (result.ok) {
       toast.success("SSH runner saved");
       setForm((value) => ({ ...value, privateKey: "", passphrase: "" }));
     } else {
@@ -129,7 +129,7 @@ export function WorkspaceProvidersIntegration() {
       </div>
 
       <div className="mt-5 space-y-2">
-        {connections.data?.data?.map((connection) => (
+        {connections.data?.map((connection) => (
           <div
             key={connection.id}
             className="border-border flex flex-col gap-3 rounded-md border px-3 py-3 sm:flex-row sm:items-center sm:justify-between"

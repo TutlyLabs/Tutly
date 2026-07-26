@@ -4,6 +4,7 @@ import { ArrowUpDown, Search } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import { UserLink } from "@/components/UserLink";
+import type { RouterOutputs } from "@/trpc/react";
 
 import { Button } from "@tutly/ui/button";
 import { Input } from "@tutly/ui/input";
@@ -17,15 +18,8 @@ import {
 } from "@tutly/ui/table";
 import { cn } from "@tutly/utils";
 
-interface StudentAttendance {
-  name: string;
-  username: string;
-  image: string | null;
-  percentage: number;
-  classesAttended: number;
-  totalClasses: number;
-  [key: string]: string | number | null;
-}
+type StudentAttendance =
+  RouterOutputs["attendances"]["getAttendanceOfAllStudents"][number];
 
 type SortKey = keyof StudentAttendance;
 
@@ -42,13 +36,11 @@ const OverallAttendanceTable = ({
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredData = Array.isArray(studentsAttendance)
-    ? studentsAttendance.filter((item) =>
-        Object.values(item).some((value) =>
-          String(value).toLowerCase().includes(searchQuery.toLowerCase()),
-        ),
-      )
-    : [];
+  const filteredData = studentsAttendance.filter((item) =>
+    Object.values(item).some((value) =>
+      String(value).toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
+  );
 
   const sortedData = [...filteredData].sort((a, b) => {
     if (sortConfig === null) return 0;
@@ -71,10 +63,6 @@ const OverallAttendanceTable = ({
   });
 
   const handleSort = (key: SortKey) => {
-    if (key === "reset") {
-      setSortConfig(null);
-      return;
-    }
     setSortConfig((prev) => ({
       key,
       direction: prev?.key === key && prev.direction === "asc" ? "desc" : "asc",

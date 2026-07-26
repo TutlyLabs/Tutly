@@ -124,41 +124,30 @@ export default function CourseDetailsClient({
 
   const attendanceMap = useMemo(() => {
     const m = new Map<string, { attended: boolean; duration: number | null }>();
-    const records = attendanceResp?.data ?? [];
-    records.forEach(
-      (r: {
-        classId: string;
-        attended: boolean;
-        attendedDuration: number | null;
-      }) => {
-        m.set(r.classId, {
-          attended: r.attended,
-          duration: r.attendedDuration ?? null,
-        });
-      },
-    );
+    const records = attendanceResp ?? [];
+    records.forEach((r) => {
+      m.set(r.classId, {
+        attended: r.attended,
+        duration: r.attendedDuration ?? null,
+      });
+    });
     return m;
   }, [attendanceResp]);
 
-  const course = courseResp?.data;
-  const classes = useMemo(() => classesResp?.data ?? [], [classesResp]);
-  const assignments = useMemo(
-    () => assignmentsResp?.data ?? [],
-    [assignmentsResp],
-  );
+  const course = courseResp;
+  const classes = useMemo(() => classesResp ?? [], [classesResp]);
+  const assignments = useMemo(() => assignmentsResp ?? [], [assignmentsResp]);
 
   const isLoading = courseLoading || classesLoading || assignmentsLoading;
 
   const { groups, totalAssignments, submittedAssignments } = useMemo(() => {
     const classRows: ClassRow[] = classes.map((c) => {
-      const ct = (c as any).classType as "RECORDED" | "LIVE" | undefined;
+      const ct = c.classType;
       let liveStatus: ClassRow["liveStatus"] = null;
       if (ct === "LIVE") {
         const now = new Date();
-        const start = (c as any).startTime
-          ? new Date((c as any).startTime)
-          : null;
-        const end = (c as any).endTime ? new Date((c as any).endTime) : null;
+        const start = c.startTime ? new Date(c.startTime) : null;
+        const end = c.endTime ? new Date(c.endTime) : null;
         if (start && end && now >= start && now <= end) liveStatus = "live";
         else if (start && now < start) liveStatus = "upcoming";
       }

@@ -1,5 +1,10 @@
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+} from "node:crypto";
 import { TRPCError } from "@trpc/server";
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -34,9 +39,16 @@ function encryptSecret(value?: string | null) {
   if (!value) return null;
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", encryptionKey(), iv);
-  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+  const encrypted = Buffer.concat([
+    cipher.update(value, "utf8"),
+    cipher.final(),
+  ]);
   const tag = cipher.getAuthTag();
-  return [iv.toString("base64"), tag.toString("base64"), encrypted.toString("base64")].join(".");
+  return [
+    iv.toString("base64"),
+    tag.toString("base64"),
+    encrypted.toString("base64"),
+  ].join(".");
 }
 
 function decryptSecret(value?: string | null) {
@@ -55,7 +67,9 @@ function decryptSecret(value?: string | null) {
   ]).toString("utf8");
 }
 
-function publicConnection<T extends { encryptedSecret?: string | null }>(connection: T) {
+function publicConnection<T extends { encryptedSecret?: string | null }>(
+  connection: T,
+) {
   const { encryptedSecret, ...rest } = connection;
   return {
     ...rest,
@@ -63,7 +77,11 @@ function publicConnection<T extends { encryptedSecret?: string | null }>(connect
   };
 }
 
-function validateConnection(provider: "LOCAL" | "SSH", config: z.infer<typeof connectionConfigSchema>, secret?: string | null) {
+function validateConnection(
+  provider: "LOCAL" | "SSH",
+  config: z.infer<typeof connectionConfigSchema>,
+  secret?: string | null,
+) {
   if (provider === "LOCAL") {
     return { ok: true, message: "Local agent provider is available." };
   }
@@ -78,7 +96,8 @@ function validateConnection(provider: "LOCAL" | "SSH", config: z.infer<typeof co
 
   return {
     ok: true,
-    message: "SSH configuration is complete. The runner will verify network reachability when a workspace starts.",
+    message:
+      "SSH configuration is complete. The runner will verify network reachability when a workspace starts.",
   };
 }
 
@@ -90,7 +109,7 @@ export const serviceConnectionsRouter = createTRPCRouter({
       orderBy: [{ provider: "asc" }, { createdAt: "desc" }],
     });
 
-    return { success: true, data: connections.map(publicConnection) };
+    return connections.map(publicConnection);
   }),
 
   create: protectedProcedure
@@ -112,7 +131,11 @@ export const serviceConnectionsRouter = createTRPCRouter({
               passphrase: input.passphrase,
             })
           : null;
-      const validation = validateConnection(input.provider, input.config, input.privateKey);
+      const validation = validateConnection(
+        input.provider,
+        input.config,
+        input.privateKey,
+      );
 
       const connection = await ctx.db.serviceConnection.create({
         data: {
@@ -128,55 +151,10 @@ export const serviceConnectionsRouter = createTRPCRouter({
       });
 
       return {
-        success: validation.ok,
+        ok: validation.ok,
         message: validation.message,
-        data: publicConnection(connection),
+        connection: publicConnection(connection),
       };
-    }),
-
-  update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        name: z.string().min(1).optional(),
-        status: z.enum(["ACTIVE", "DISABLED", "ERROR"]).optional(),
-        config: connectionConfigSchema.optional(),
-        privateKey: z.string().nullable().optional(),
-        passphrase: z.string().nullable().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.db.serviceConnection.findFirst({
-        where: { id: input.id, userId: ctx.session.user.id },
-      });
-
-      if (!existing) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Service connection not found" });
-      }
-
-      const nextSecret =
-        input.privateKey === undefined && input.passphrase === undefined
-          ? undefined
-          : encryptSecret(
-              input.privateKey
-                ? JSON.stringify({
-                    privateKey: input.privateKey,
-                    passphrase: input.passphrase ?? null,
-                  })
-                : null,
-            );
-
-      const connection = await ctx.db.serviceConnection.update({
-        where: { id: input.id },
-        data: {
-          name: input.name,
-          status: input.status,
-          config: input.config === undefined ? undefined : (input.config as never),
-          encryptedSecret: nextSecret,
-        },
-      });
-
-      return { success: true, data: publicConnection(connection) };
     }),
 
   delete: protectedProcedure
@@ -187,11 +165,14 @@ export const serviceConnectionsRouter = createTRPCRouter({
       });
 
       if (!connection) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Service connection not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Service connection not found",
+        });
       }
 
       await ctx.db.serviceConnection.delete({ where: { id: input.id } });
-      return { success: true };
+      return { id: input.id };
     }),
 
   test: protectedProcedure
@@ -202,7 +183,10 @@ export const serviceConnectionsRouter = createTRPCRouter({
       });
 
       if (!connection) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Service connection not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Service connection not found",
+        });
       }
 
       const config = connectionConfigSchema.parse(connection.config ?? {});
@@ -226,9 +210,9 @@ export const serviceConnectionsRouter = createTRPCRouter({
       });
 
       return {
-        success: validation.ok,
+        ok: validation.ok,
         message: validation.message,
-        data: publicConnection(updated),
+        connection: publicConnection(updated),
       };
     }),
 });

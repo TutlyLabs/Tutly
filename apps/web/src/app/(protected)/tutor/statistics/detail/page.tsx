@@ -29,11 +29,8 @@ export default function StatisticsDetailPage() {
     studentUsername,
   });
   if (q.isLoading) return <PageLoader />;
-  if (q.data?.success === false) {
-    return <Navigate to={q.data.redirectTo ?? "/"} />;
-  }
-  if (!q.data?.success || !q.data.data)
-    return <div>No statistics data found!</div>;
+  if (q.isError) return <Navigate to="/" />;
+  if (!q.data) return <div>No statistics data found!</div>;
 
   const {
     courseId: id,
@@ -41,7 +38,7 @@ export default function StatisticsDetailPage() {
     studentUsername: student,
     userRole,
     username,
-  } = q.data.data;
+  } = q.data;
 
   return (
     <>

@@ -2,12 +2,9 @@ import day from "@tutly/utils/dayjs";
 
 import type { RouterOutputs } from "@/trpc/react";
 
-type CohortReportSuccess = Extract<
-  RouterOutputs["glimpse"]["getCohortReport"],
-  { success: true }
->;
+type CohortReport = RouterOutputs["glimpse"]["getCohortReport"];
 
-export type CourseReport = CohortReportSuccess["courses"][number];
+export type CourseReport = CohortReport["courses"][number];
 export type MentorRow = CourseReport["mentorRows"][number];
 export type AssignmentRow = CourseReport["assignmentRows"][number];
 
@@ -264,7 +261,7 @@ export function buildShareMessage({
   report,
   scope,
 }: {
-  report: CohortReportSuccess;
+  report: CohortReport;
   scope:
     | { kind: "all" }
     | { kind: "course"; courseId: string }

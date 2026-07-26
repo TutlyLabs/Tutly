@@ -16,15 +16,6 @@ const AssignmentDashboard = () => {
     error,
   } = api.assignments.getAssignmentsDashboardData.useQuery();
 
-  if (dashboardData?.success === false) {
-    if (dashboardData.redirectTo) {
-      router.push(dashboardData.redirectTo);
-    } else {
-      router.push("/assignments");
-    }
-    return null;
-  }
-
   if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-7xl space-y-4">
@@ -52,18 +43,22 @@ const AssignmentDashboard = () => {
   }
 
   if (error) {
+    if (error.data?.code === "FORBIDDEN") {
+      router.push("/assignments");
+      return null;
+    }
     return (
       <div className="text-center">Error loading assignments dashboard</div>
     );
   }
 
-  if (!dashboardData?.success || !dashboardData.data) {
+  if (!dashboardData) {
     return (
       <div className="text-center">No assignments dashboard data found!</div>
     );
   }
 
-  const { students, courses, currentUser } = dashboardData.data;
+  const { students, courses, currentUser } = dashboardData;
 
   if (!currentUser || !courses || !students) {
     return <div className="text-center">Sign in to view assignments!</div>;

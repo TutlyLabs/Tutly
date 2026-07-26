@@ -7,6 +7,7 @@ import { useState } from "react";
 import { IoMdDownload } from "react-icons/io";
 
 import { saveDataUrl } from "@/lib/native-files";
+import type { RouterOutputs } from "@/trpc/react";
 
 import {
   AlertDialog,
@@ -17,30 +18,17 @@ import { Button } from "@tutly/ui/button";
 import { ScrollArea, ScrollBar } from "@tutly/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 
-interface Course {
-  courseId: string;
-  courseTitle: string;
-  assignmentsSubmitted: number;
-  totalPoints: number;
-  totalAssignments: number;
-}
-
-interface User {
-  name: string;
-  username: string;
-}
-
-interface DashboardData {
-  courses: Course[];
-  currentUser: User;
-}
+type CertificateData =
+  RouterOutputs["certificates"]["getStudentCertificateData"];
+type Course = CertificateData["courses"][number];
+type User = CertificateData["currentUser"];
 
 export default function StudentCertificate({
   user,
   data,
 }: {
   user: User;
-  data: DashboardData;
+  data: CertificateData;
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [activeCourse, setActiveCourse] = useState(

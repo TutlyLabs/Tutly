@@ -21,7 +21,7 @@ import { Input } from "@tutly/ui/input";
 import { Skeleton } from "@tutly/ui/skeleton";
 import { cn, dayjs, formatDurationSeconds } from "@tutly/utils";
 
-import { api } from "@/trpc/react";
+import { api, type RouterOutputs } from "@/trpc/react";
 import { Navigate } from "@/components/auth/Navigate";
 import { useAuthSession } from "@/components/auth/ProtectedShell";
 import PageLoader from "@/components/loader/PageLoader";
@@ -281,26 +281,7 @@ function CountChip({
   );
 }
 
-interface RunSummary {
-  id: string;
-  status: "UPLOADING" | "PROCESSING" | "READY" | "FAILED";
-  progress: number;
-  progressStep: string | null;
-  duration: number | null;
-  errorMessage: string | null;
-  processStartedAt: Date | string | null;
-  processEndedAt: Date | string | null;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  hlsPlaylistUrl: string | null;
-  thumbnailUrl: string | null;
-  class: {
-    id: string;
-    title: string;
-    courseId: string | null;
-    course: { title: string } | null;
-  }[];
-}
+type RunSummary = RouterOutputs["videos"]["listRuns"]["runs"][number];
 
 function RunRow({
   run,

@@ -24,10 +24,10 @@ export default function ManageUsersPage() {
     limit,
   });
   if (q.isLoading) return <PageLoader />;
-  if (!q.data?.success || !q.data.data) {
+  if (!q.data) {
     return <div>Failed to load users data or access denied.</div>;
   }
-  const { users, totalItems, userRole, isAdmin } = q.data.data;
+  const { users, totalItems, userRole, isAdmin } = q.data;
   return (
     <UserPage
       data={users}

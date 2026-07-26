@@ -25,14 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@tutly/ui/select";
-import { api } from "@/trpc/react";
+import { api, type RouterOutputs } from "@/trpc/react";
 
-interface Folder {
-  id: string;
-  title: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+type Folder = RouterOutputs["courses"]["foldersByCourseId"][number];
 
 interface NewClassDialogProps {
   courseId: string;

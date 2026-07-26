@@ -42,7 +42,7 @@ export function ProfileViewClient({ username }: { username: string }) {
     );
   }
 
-  return <ProfileView profile={profile as any} />;
+  return <ProfileView profile={profile} />;
 }
 
 function ProfileSkeleton() {

@@ -8,7 +8,7 @@ import { api } from "@/trpc/react";
 export default function StatisticsPage() {
   const q = api.courses.getAllCourses.useQuery();
   if (q.isLoading) return <PageLoader />;
-  const first = q.data?.data?.[0];
+  const first = q.data?.[0];
   if (first) return <Navigate to={`/statistics/detail?id=${first.id}`} />;
   return (
     <div className="flex h-screen items-center justify-center">

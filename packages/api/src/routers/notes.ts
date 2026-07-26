@@ -1,15 +1,12 @@
-import { NoteCategory } from "@tutly/db/browser";
 import { z } from "zod";
 
-import { createLogger } from "@tutly/logger";
+import { NoteCategory } from "@tutly/db/browser";
 
-import { createTRPCRouter, permissionProcedure } from "../trpc";
 import {
   requireRecordOwner,
   requireUserInOrganization,
 } from "../lib/authorization";
-
-const logger = createLogger("api:notes");
+import { createTRPCRouter, permissionProcedure } from "../trpc";
 
 export const notesRouter = createTRPCRouter({
   updateNote: permissionProcedure("note", "update")
@@ -36,50 +33,36 @@ export const notesRouter = createTRPCRouter({
       } = input;
 
       if (!description && !descriptionJson) {
-        try {
-          await ctx.db.notes.delete({
-            where: {
-              userId_objectId: {
-                userId: currentUserId,
-                objectId,
-              },
-            },
-          });
-        } catch (error) {
-          logger.debug({ err: error, objectId }, "note not found for deletion");
-        }
-        return { success: true };
+        // Clearing a note that was never persisted is a no-op, not an error.
+        await ctx.db.notes.deleteMany({
+          where: { userId: currentUserId, objectId },
+        });
+        return null;
       }
 
-      try {
-        await ctx.db.notes.upsert({
-          where: {
-            userId_objectId: {
-              userId: currentUserId,
-              objectId,
-            },
-          },
-          create: {
-            category,
-            description,
-            descriptionJson,
-            tags,
+      return ctx.db.notes.upsert({
+        where: {
+          userId_objectId: {
             userId: currentUserId,
             objectId,
-            causedObjects,
           },
-          update: {
-            description,
-            descriptionJson,
-            tags,
-            causedObjects,
-          },
-        });
-      } catch (error) {
-        logger.error({ err: error, objectId }, "failed to update note");
-        return { error: "Failed to update note" };
-      }
-      return { success: true };
+        },
+        create: {
+          category,
+          description,
+          descriptionJson,
+          tags,
+          userId: currentUserId,
+          objectId,
+          causedObjects,
+        },
+        update: {
+          description,
+          descriptionJson,
+          tags,
+          causedObjects,
+        },
+      });
     }),
 
   getNote: permissionProcedure("note", "read")
@@ -96,32 +79,21 @@ export const notesRouter = createTRPCRouter({
       }
       requireRecordOwner(ctx, { userId: input.userId }, { allowStaff: true });
 
-      try {
-        const note = await ctx.db.notes.findUnique({
-          where: {
-            userId_objectId: {
-              userId: input.userId,
-              objectId: input.objectId,
-            },
+      return ctx.db.notes.findUnique({
+        where: {
+          userId_objectId: {
+            userId: input.userId,
+            objectId: input.objectId,
           },
-        });
-
-        return { success: true, data: note };
-      } catch (error) {
-        logger.error({ err: error }, "failed to get note");
-        return { error: "Failed to get note" };
-      }
+        },
+      });
     }),
 
   getNotes: permissionProcedure("note", "list").query(async ({ ctx }) => {
-    const currentUserId = ctx.session.user.id;
-
-    const notes = await ctx.db.notes.findMany({
+    return ctx.db.notes.findMany({
       where: {
-        userId: currentUserId,
+        userId: ctx.session.user.id,
       },
     });
-
-    return { success: true, data: notes };
   }),
 });

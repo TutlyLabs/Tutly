@@ -67,14 +67,14 @@ export default class Test extends Command {
         const user = await getCurrentUser();
         if (!metadata.userId || !user || metadata.userId === user.id) {
           const api = await createAPIClient();
-          const report = await api.runVisibleTests(
-            metadata.submissionId,
-            result.results,
-          );
-          if (report.error) {
-            this.log(`⚠️  Could not report tests: ${report.error}`);
-          } else {
+          // Reporting is best-effort: a failed report must not fail the run.
+          try {
+            await api.runVisibleTests(metadata.submissionId, result.results);
             this.log("✓ Visible test score reported to Tutly");
+          } catch (error) {
+            this.log(
+              `⚠️  Could not report tests: ${error instanceof Error ? error.message : "Unknown error"}`,
+            );
           }
         } else {
           this.log(

@@ -37,7 +37,7 @@ const StatCard = ({
 };
 
 export function InstructorCards({ selectedCourse }: Props) {
-  const { data: instructorDataResponse, isLoading } =
+  const { data: instructorData, isLoading } =
     api.dashboard.getInstructorDashboardData.useQuery();
 
   if (isLoading) {
@@ -59,11 +59,10 @@ export function InstructorCards({ selectedCourse }: Props) {
     );
   }
 
-  if (!instructorDataResponse?.success || !instructorDataResponse.data) {
+  if (!instructorData) {
     return <div>No instructor data available</div>;
   }
 
-  const instructorData = instructorDataResponse.data;
   const course = instructorData.courses.find(
     (c) => c.courseId === selectedCourse,
   );

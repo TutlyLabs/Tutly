@@ -109,9 +109,12 @@ export default function ProfessionalProfiles({
           return;
         }
         toast.dismiss();
-        await onUpdate({
-          professionalProfiles: form.getValues(),
-        });
+        try {
+          await onUpdate({ professionalProfiles: form.getValues() });
+        } catch {
+          toast.error("Failed to save professional profiles");
+          return;
+        }
         setIsEditing(false);
       },
       onError: (error) => {

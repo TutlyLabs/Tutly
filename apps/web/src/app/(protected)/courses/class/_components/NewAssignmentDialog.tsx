@@ -67,11 +67,11 @@ const NewAssignmentDialog = ({ courseId }: NewAssignmentDialogProps) => {
           <DialogTitle>Create New Assignment</DialogTitle>
         </DialogHeader>
         <div className="mt-4">
-          {classes?.data && classes.data.length > 0 ? (
+          {classes && classes.length > 0 ? (
             <NewAttachmentPage
-              classes={classes.data}
+              classes={classes}
               courseId={courseId}
-              classId={classes.data[0]?.id || ""}
+              classId={classes[0]?.id ?? ""}
               onComplete={handleComplete}
               onCancel={handleCancel}
             />

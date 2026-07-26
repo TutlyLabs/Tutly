@@ -1,5 +1,4 @@
 import { TRPCError } from "@trpc/server";
-import { createLogger } from "@tutly/logger";
 import { z } from "zod";
 
 import {
@@ -8,13 +7,7 @@ import {
   requireCourseManageAccess,
   requireCourseReadAccess,
 } from "../lib/authorization";
-import {
-  createTRPCRouter,
-  permissionProcedure,
-  staffProcedure,
-} from "../trpc";
-
-const logger = createLogger("api:classes");
+import { createTRPCRouter, permissionProcedure } from "../trpc";
 
 export const classesRouter = createTRPCRouter({
   getLatestForCourse: permissionProcedure("class", "read")
@@ -54,87 +47,88 @@ export const classesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Outside the try: the catch below flattens every error into a generic
-      // message, which would turn an authorization failure into a 500.
       await requireCourseManageAccess(ctx, input.courseId);
 
-      try {
-        if (input.videoType === "HLS" && !input.videoId) {
-          throw new Error("HLS class requires a pre-created videoId");
-        }
+      if (input.videoType === "HLS" && !input.videoId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "HLS class requires a pre-created videoId",
+        });
+      }
 
-        const classData = {
-          title: input.classTitle,
-          createdAt: input.createdAt ? new Date(input.createdAt) : new Date(),
-          video:
-            input.videoId
-              ? { connect: { id: input.videoId } }
-              : {
-                  create: {
-                    videoLink: input.videoLink ?? null,
-                    videoType: input.videoType,
-                  },
-                },
-          course: {
-            connect: {
-              id: input.courseId,
-            },
-          },
-          // Live class fields
-          classType: input.classType,
-          liveProvider: input.liveProvider ?? null,
-          startTime: input.startTime ? new Date(input.startTime) : null,
-          endTime: input.endTime ? new Date(input.endTime) : null,
-          meetingUrl: input.meetingUrl ?? null,
-          meetingId: input.meetingId ?? null,
-          meetingPasscode: input.meetingPasscode ?? null,
-        };
-
-        let createdClass;
-        if (input.folderId) {
-          createdClass = await ctx.db.class.create({
-            data: {
-              ...classData,
-              Folder: { connect: { id: input.folderId } },
-            },
-          });
-        } else if (input.folderName) {
-          createdClass = await ctx.db.class.create({
-            data: {
-              ...classData,
-              Folder: {
-                create: {
-                  title: input.folderName,
-                  createdAt: input.createdAt ? new Date(input.createdAt) : new Date(),
-                },
+      const classData = {
+        title: input.classTitle,
+        createdAt: input.createdAt ? new Date(input.createdAt) : new Date(),
+        video: input.videoId
+          ? { connect: { id: input.videoId } }
+          : {
+              create: {
+                videoLink: input.videoLink ?? null,
+                videoType: input.videoType,
               },
             },
-          });
-        } else {
-          createdClass = await ctx.db.class.create({ data: classData });
-        }
+        course: {
+          connect: {
+            id: input.courseId,
+          },
+        },
+        // Live class fields
+        classType: input.classType,
+        liveProvider: input.liveProvider ?? null,
+        startTime: input.startTime ? new Date(input.startTime) : null,
+        endTime: input.endTime ? new Date(input.endTime) : null,
+        meetingUrl: input.meetingUrl ?? null,
+        meetingId: input.meetingId ?? null,
+        meetingPasscode: input.meetingPasscode ?? null,
+      };
 
-        // Post activity to course chat group (fire-and-forget)
-        const group = await ctx.db.chatGroup.findFirst({
-          where: { courseId: input.courseId, type: "COURSE" },
+      let createdClass;
+      if (input.folderId) {
+        createdClass = await ctx.db.class.create({
+          data: {
+            ...classData,
+            Folder: { connect: { id: input.folderId } },
+          },
         });
-        if (group) {
-          await ctx.db.message.create({
-            data: {
-              groupId: group.id,
-              senderId: ctx.session.user.id,
-              content: `📚 New class added: ${input.classTitle}`,
-              type: "ACTIVITY",
-              metadata: { event: "CLASS_CREATED", classId: createdClass.id, courseId: input.courseId },
+      } else if (input.folderName) {
+        createdClass = await ctx.db.class.create({
+          data: {
+            ...classData,
+            Folder: {
+              create: {
+                title: input.folderName,
+                createdAt: input.createdAt
+                  ? new Date(input.createdAt)
+                  : new Date(),
+              },
             },
-          });
-        }
-
-        return createdClass;
-      } catch (error) {
-        logger.error({ err: error, courseId: input.courseId }, "failed to create class");
-        throw new Error("Error creating class");
+          },
+        });
+      } else {
+        createdClass = await ctx.db.class.create({ data: classData });
       }
+
+      // Post activity to course chat group (fire-and-forget)
+      const group = await ctx.db.chatGroup.findFirst({
+        where: { courseId: input.courseId, type: "COURSE" },
+      });
+      if (group) {
+        await ctx.db.message.create({
+          data: {
+            groupId: group.id,
+            senderId: ctx.session.user.id,
+            content: `📚 New class added: ${input.classTitle}`,
+            type: "ACTIVITY",
+            metadata: {
+              event: "CLASS_CREATED",
+              classId: createdClass.id,
+              courseId: input.courseId,
+            },
+          },
+        });
+      }
+
+      return createdClass;
     }),
 
   updateClass: permissionProcedure("class", "update")
@@ -165,86 +159,83 @@ export const classesRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
 
-      try {
-        // First get the existing class
-        const existingClass = await ctx.db.class.findUnique({
-          where: { id: input.classId },
-          include: { video: true },
-        });
+      const existingClass = await ctx.db.class.findUnique({
+        where: { id: input.classId },
+        include: { video: true },
+      });
 
-        if (!existingClass) {
-          throw new Error("Class not found");
-        }
-
-        const switchingToHls =
-          input.videoType === "HLS" && existingClass.video.videoType !== "HLS";
-        if (switchingToHls && !input.videoId) {
-          throw new Error(
-            "Switching to HLS requires uploading a new video first.",
-          );
-        }
-
-        // Update video — for HLS, the upload flow already created the new Video row
-        // and we re-point Class.videoId to it. For other types, mutate existing Video in place.
-        if (input.videoType === "HLS" && input.videoId && input.videoId !== existingClass.video.id) {
-          await ctx.db.class.update({
-            where: { id: input.classId },
-            data: { video: { connect: { id: input.videoId } } },
-          });
-        } else if (input.videoType !== "HLS") {
-          await ctx.db.video.update({
-            where: { id: existingClass.video.id },
-            data: {
-              videoLink: input.videoLink ?? null,
-              videoType: input.videoType,
-            },
-          });
-        }
-
-        // Handle folder logic
-        let finalFolderId: string | null = null;
-
-        if (input.folderName) {
-          // Create new folder
-          const newFolder = await ctx.db.folder.create({
-            data: {
-              title: input.folderName,
-              createdAt: new Date(input.createdAt ?? new Date()),
-            },
-          });
-          finalFolderId = newFolder.id;
-        } else if (input.folderId) {
-          // Use existing folder
-          finalFolderId = input.folderId;
-        }
-        // If neither folderName nor folderId is provided, finalFolderId remains null
-
-        const updatedClass = await ctx.db.class.update({
-          where: { id: input.classId },
-          data: {
-            title: input.classTitle,
-            createdAt: new Date(input.createdAt ?? new Date()),
-            folderId: finalFolderId,
-            // Live class fields
-            classType: input.classType,
-            liveProvider: input.liveProvider ?? null,
-            startTime: input.startTime ? new Date(input.startTime) : null,
-            endTime: input.endTime ? new Date(input.endTime) : null,
-            meetingUrl: input.meetingUrl ?? null,
-            meetingId: input.meetingId ?? null,
-            meetingPasscode: input.meetingPasscode ?? null,
-          },
-          include: {
-            video: true,
-            Folder: true,
-          },
-        });
-
-        return { success: true, data: updatedClass };
-      } catch (error) {
-        logger.error({ err: error, classId: input.classId, courseId: input.courseId }, "failed to update class");
-        return { error: "Failed to update class" };
+      if (!existingClass) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
+
+      const switchingToHls =
+        input.videoType === "HLS" && existingClass.video.videoType !== "HLS";
+      if (switchingToHls && !input.videoId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Switching to HLS requires uploading a new video first.",
+        });
+      }
+
+      // Update video — for HLS, the upload flow already created the new Video row
+      // and we re-point Class.videoId to it. For other types, mutate existing Video in place.
+      if (
+        input.videoType === "HLS" &&
+        input.videoId &&
+        input.videoId !== existingClass.video.id
+      ) {
+        await ctx.db.class.update({
+          where: { id: input.classId },
+          data: { video: { connect: { id: input.videoId } } },
+        });
+      } else if (input.videoType !== "HLS") {
+        await ctx.db.video.update({
+          where: { id: existingClass.video.id },
+          data: {
+            videoLink: input.videoLink ?? null,
+            videoType: input.videoType,
+          },
+        });
+      }
+
+      // Handle folder logic
+      let finalFolderId: string | null = null;
+
+      if (input.folderName) {
+        // Create new folder
+        const newFolder = await ctx.db.folder.create({
+          data: {
+            title: input.folderName,
+            createdAt: new Date(input.createdAt ?? new Date()),
+          },
+        });
+        finalFolderId = newFolder.id;
+      } else if (input.folderId) {
+        // Use existing folder
+        finalFolderId = input.folderId;
+      }
+      // If neither folderName nor folderId is provided, finalFolderId remains null
+
+      return ctx.db.class.update({
+        where: { id: input.classId },
+        data: {
+          title: input.classTitle,
+          createdAt: new Date(input.createdAt ?? new Date()),
+          folderId: finalFolderId,
+          // Live class fields
+          classType: input.classType,
+          liveProvider: input.liveProvider ?? null,
+          startTime: input.startTime ? new Date(input.startTime) : null,
+          endTime: input.endTime ? new Date(input.endTime) : null,
+          meetingUrl: input.meetingUrl ?? null,
+          meetingId: input.meetingId ?? null,
+          meetingPasscode: input.meetingPasscode ?? null,
+        },
+        include: {
+          video: true,
+          Folder: true,
+        },
+      });
     }),
 
   getClassDeletionInfo: permissionProcedure("class", "delete")
@@ -256,63 +247,53 @@ export const classesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       await requireClassManageAccess(ctx, input.classId);
 
-      try {
-        const classInfo = await ctx.db.class.findUnique({
-          where: { id: input.classId },
-          include: {
-            _count: {
-              select: {
-                attachments: true,
-                Attendence: true,
-              },
+      const classInfo = await ctx.db.class.findUnique({
+        where: { id: input.classId },
+        include: {
+          _count: {
+            select: {
+              attachments: true,
+              Attendence: true,
             },
-            attachments: {
-              include: {
-                _count: {
-                  select: {
-                    submissions: {
-                      where: {
-                        status: "SUBMITTED",
-                      },
+          },
+          attachments: {
+            include: {
+              _count: {
+                select: {
+                  submissions: {
+                    where: {
+                      status: "SUBMITTED",
                     },
                   },
                 },
               },
             },
           },
-        });
+        },
+      });
 
-        if (!classInfo) {
-          throw new Error("Class not found");
-        }
-
-        // Count notes for this class
-        const notesCount = await ctx.db.notes.count({
-          where: {
-            objectId: input.classId,
-            category: "CLASS",
-          },
-        });
-
-        // Calculate total submissions across all attachments
-        const totalSubmissions = classInfo.attachments.reduce(
-          (sum: number, attachment: any) => sum + attachment._count.submissions,
-          0,
-        );
-
-        return {
-          success: true,
-          data: {
-            attachmentsCount: classInfo._count.attachments,
-            attendanceCount: classInfo._count.Attendence,
-            notesCount,
-            totalSubmissions,
-          },
-        };
-      } catch (error) {
-        logger.error({ err: error, classId: input.classId }, "failed to get class deletion info");
-        throw new Error("Failed to get class deletion info");
+      if (!classInfo) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
+
+      const notesCount = await ctx.db.notes.count({
+        where: {
+          objectId: input.classId,
+          category: "CLASS",
+        },
+      });
+
+      const totalSubmissions = classInfo.attachments.reduce(
+        (sum, attachment) => sum + attachment._count.submissions,
+        0,
+      );
+
+      return {
+        attachmentsCount: classInfo._count.attachments,
+        attendanceCount: classInfo._count.Attendence,
+        notesCount,
+        totalSubmissions,
+      };
     }),
 
   deleteClass: permissionProcedure("class", "delete")
@@ -324,32 +305,12 @@ export const classesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await requireClassManageAccess(ctx, input.classId);
 
-      try {
-        await ctx.db.class.delete({
-          where: {
-            id: input.classId,
-          },
-        });
-        return { success: true };
-      } catch (error) {
-        logger.error({ err: error, classId: input.classId }, "failed to delete class");
-        throw new Error("Failed to delete class. Please try again later.");
-      }
+      return ctx.db.class.delete({
+        where: {
+          id: input.classId,
+        },
+      });
     }),
-
-  // Counts every class in the deployment, across all organizations, so it is
-  // staff-only rather than a plain class:list read.
-  totalNumberOfClasses: staffProcedure.query(async ({ ctx }) => {
-    try {
-      const res = await ctx.db.class.count();
-      return res;
-    } catch (error) {
-      logger.error({ err: error }, "failed to count classes");
-      throw new Error(
-        "Failed to get total number of classes. Please try again later.",
-      );
-    }
-  }),
 
   getClassesByCourseId: permissionProcedure("class", "list")
     .input(
@@ -360,25 +321,18 @@ export const classesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       await requireCourseReadAccess(ctx, input.courseId);
 
-      try {
-        const classes = await ctx.db.class.findMany({
-          where: {
-            courseId: input.courseId,
-          },
-          include: {
-            video: true,
-            Folder: true,
-          },
-          orderBy: {
-            createdAt: "asc",
-          },
-        });
-
-        return { success: true, data: classes };
-      } catch (error) {
-        logger.error({ err: error, courseId: input.courseId }, "failed to get classes by course id");
-        return { error: "Failed to get classes" };
-      }
+      return ctx.db.class.findMany({
+        where: {
+          courseId: input.courseId,
+        },
+        include: {
+          video: true,
+          Folder: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
     }),
 
   getClassDetails: permissionProcedure("class", "read")
@@ -390,30 +344,29 @@ export const classesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       await requireClassReadAccess(ctx, input.id);
 
-      try {
-        const classDetails = await ctx.db.class.findUnique({
-          where: {
-            id: input.id,
-          },
-          include: {
-            video: true,
-            Folder: true,
-            attachments: {
-              include: {
-                submissions: {
-                  where: {
-                    status: "SUBMITTED",
-                  },
+      const classDetails = await ctx.db.class.findUnique({
+        where: {
+          id: input.id,
+        },
+        include: {
+          video: true,
+          Folder: true,
+          attachments: {
+            include: {
+              submissions: {
+                where: {
+                  status: "SUBMITTED",
                 },
               },
             },
           },
-        });
+        },
+      });
 
-        return { success: true, data: classDetails };
-      } catch (error) {
-        logger.error({ err: error, classId: input.id }, "failed to get class details");
-        return { error: "Failed to get class details" };
+      if (!classDetails) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
+
+      return classDetails;
     }),
 });

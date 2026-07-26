@@ -146,7 +146,7 @@ const NewAttachmentPage = ({
             : 1,
           courseId: courseIdValue,
         });
-        assignmentId = updated.data?.id ?? attachment.id;
+        assignmentId = updated.id;
         toast.success("Assignment updated");
       } else {
         const created = await createAttachment.mutateAsync({
@@ -163,7 +163,7 @@ const NewAttachmentPage = ({
             : 1,
           courseId: courseIdValue,
         });
-        assignmentId = created.data?.id;
+        assignmentId = created.id;
         toast.success("Assignment created");
       }
 
@@ -239,19 +239,17 @@ const NewAttachmentPage = ({
             },
           });
 
-          if (upload.data?.uploadUrl && upload.data?.artifact?.id) {
-            await fetch(upload.data.uploadUrl, {
-              method: "PUT",
-              headers: {
-                "Content-Type": starterFile.type || "application/zip",
-              },
-              body: starterFile,
-            });
-            await confirmArtifactUpload.mutateAsync({
-              artifactId: upload.data.artifact.id,
-              checksum,
-            });
-          }
+          await fetch(upload.uploadUrl, {
+            method: "PUT",
+            headers: {
+              "Content-Type": starterFile.type || "application/zip",
+            },
+            body: starterFile,
+          });
+          await confirmArtifactUpload.mutateAsync({
+            artifactId: upload.artifact.id,
+            checksum,
+          });
         }
       }
 

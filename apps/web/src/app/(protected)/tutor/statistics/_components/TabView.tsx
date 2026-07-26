@@ -4,16 +4,14 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import { api } from "@/trpc/react";
-import type { User } from "@tutly/db/browser";
+import type { RouterOutputs } from "@/trpc/react";
 import Link from "next/link";
 
 import { Card, CardContent } from "@tutly/ui/card";
 import { Input } from "@tutly/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 
-type UserWithMentor = User & {
-  mentorUsername?: string;
-};
+type Mentee = RouterOutputs["statistics"]["getAllMentees"][number];
 
 interface TabViewProps {
   mentorName: string;
@@ -48,19 +46,21 @@ export default function TabView({
     mentorUsername: mentorName,
   });
 
-  const menteesArray = Array.isArray(mentees) ? mentees : [];
+  const filteredMentors = (mentors ?? []).filter((mentor) =>
+    mentor.username.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
-  const filteredMentors = Array.isArray(mentors)
-    ? mentors.filter((mentor: UserWithMentor) =>
-        mentor.username.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    : [];
+  // `mentorUsername` lives on the enrolment row, not the user; reading it off
+  // the user meant this link never rendered.
+  const menteeMentor = (mentee: Mentee) =>
+    mentee.enrolledUsers.find((e) => e.courseId === courseId)?.mentorUsername ??
+    null;
 
-  const filteredMentees = menteesArray.filter(
+  const filteredMentees = (mentees ?? []).filter(
     (mentee) =>
       mentee.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (mentee.mobile || "").toLowerCase().includes(searchQuery.toLowerCase()),
-  ) as UserWithMentor[];
+      (mentee.mobile ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const getHref = (type: "mentor" | "student", username: string) => {
     const params = new URLSearchParams({ id: courseId });
@@ -121,7 +121,7 @@ export default function TabView({
                         </CardContent>
                       </Card>
                     ))
-                  : filteredMentors.map((mentor: UserWithMentor) => (
+                  : filteredMentors.map((mentor) => (
                       <Link
                         key={mentor.username}
                         href={getHref("mentor", mentor.username)}
@@ -258,7 +258,7 @@ export default function TabView({
                             <p className="text-muted-foreground truncate text-sm">
                               username: {mentee.username}
                             </p>
-                            {mentee.mentorUsername && (
+                            {menteeMentor(mentee) && (
                               <p className="text-muted-foreground truncate text-sm">
                                 mentor:{" "}
                                 <button
@@ -267,12 +267,12 @@ export default function TabView({
                                     e.preventDefault();
                                     e.stopPropagation();
                                     window.open(
-                                      `/u/${mentee.mentorUsername}`,
+                                      `/u/${menteeMentor(mentee)}`,
                                       "_blank",
                                     );
                                   }}
                                 >
-                                  @{mentee.mentorUsername}
+                                  @{menteeMentor(mentee)}
                                 </button>
                               </p>
                             )}

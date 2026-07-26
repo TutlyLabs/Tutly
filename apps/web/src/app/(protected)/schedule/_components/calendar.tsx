@@ -57,23 +57,24 @@ import AddHolidayDialog from "@/app/(protected)/dashboard/_components/Holidays";
 import { DayView } from "./day-view";
 import { EventDetails } from "./event-details";
 import { MonthView } from "./month-view";
+import type { Event, Holiday } from "./types";
 import { WeekView } from "./week-view";
 import { YearView } from "./year-view";
 
 type ViewType = "day" | "week" | "month" | "year";
 
-interface Event {
-  name: string;
-  description: string;
-  startDate: Date;
-  endDate: Date;
-  link: string;
-  type: string;
-}
+// The edit dialog is a free-form draft: dates round-trip through ISO strings.
+type HolidayDraft = {
+  id: string;
+  reason: string;
+  description: string | null;
+  startDate: string;
+  endDate: string;
+};
 
 interface CalendarProps {
-  events: any;
-  holidays?: any[];
+  events: Event[];
+  holidays?: Holiday[];
   isAuthorized?: boolean;
 }
 
@@ -89,7 +90,9 @@ export const Calendar = ({
   const [selectedView, setSelectedView] = useState<"calendar" | "holidays">(
     "calendar",
   );
-  const [editingHoliday, setEditingHoliday] = useState<any>(null);
+  const [editingHoliday, setEditingHoliday] = useState<HolidayDraft | null>(
+    null,
+  );
 
   const { mutate: deleteHoliday } = api.holidays.deleteHoliday.useMutation({
     onSuccess: () => {
@@ -145,36 +148,29 @@ export const Calendar = ({
     setSelectedEvent(event);
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      deleteHoliday({ id });
-    } catch (error) {
-      console.error("Error deleting holiday", error);
-    }
+  const handleDelete = (id: string) => {
+    deleteHoliday({ id });
   };
 
-  const handleEditSubmit = async (holidayData: any) => {
-    try {
-      const { id, reason, description, startDate, endDate } = holidayData;
-      editHolidays({
-        id,
-        reason,
-        description,
-        startDate: startDate.toString(),
-        endDate: endDate.toString(),
-      });
-    } catch (error) {
-      console.error("Error editing holiday", error);
-    }
+  const handleEditSubmit = (holidayData: HolidayDraft | null) => {
+    if (!holidayData) return;
+    const { id, reason, description, startDate, endDate } = holidayData;
+    editHolidays({
+      id,
+      reason,
+      description: description ?? undefined,
+      startDate,
+      endDate,
+    });
   };
 
-  const openEditDialog = (holiday: any) => {
+  const openEditDialog = (holiday: Holiday) => {
     setEditingHoliday({
       id: holiday.id,
       reason: holiday.reason,
       description: holiday.description,
-      startDate: holiday.startDate,
-      endDate: holiday.endDate,
+      startDate: holiday.startDate.toISOString(),
+      endDate: holiday.endDate.toISOString(),
     });
   };
 
@@ -311,7 +307,7 @@ export const Calendar = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {holidays.map((holiday: any) => (
+                  {holidays.map((holiday) => (
                     <TableRow key={holiday.id}>
                       <TableCell>{holiday.reason}</TableCell>
                       <TableCell>
@@ -351,9 +347,9 @@ export const Calendar = ({
                                   </DialogDescription>
                                 </DialogHeader>
                                 <form
-                                  onSubmit={async (e) => {
+                                  onSubmit={(e) => {
                                     e.preventDefault();
-                                    await handleEditSubmit(editingHoliday);
+                                    handleEditSubmit(editingHoliday);
                                   }}
                                 >
                                   <ScrollArea className="h-full overflow-auto">
@@ -364,10 +360,14 @@ export const Calendar = ({
                                         className="mt-2"
                                         value={editingHoliday?.reason || ""}
                                         onChange={(e) =>
-                                          setEditingHoliday({
-                                            ...editingHoliday,
-                                            reason: e.target.value,
-                                          })
+                                          setEditingHoliday((prev) =>
+                                            prev
+                                              ? {
+                                                  ...prev,
+                                                  reason: e.target.value,
+                                                }
+                                              : prev,
+                                          )
                                         }
                                         required
                                       />
@@ -383,10 +383,14 @@ export const Calendar = ({
                                           editingHoliday?.description || ""
                                         }
                                         onChange={(e) =>
-                                          setEditingHoliday({
-                                            ...editingHoliday,
-                                            description: e.target.value,
-                                          })
+                                          setEditingHoliday((prev) =>
+                                            prev
+                                              ? {
+                                                  ...prev,
+                                                  description: e.target.value,
+                                                }
+                                              : prev,
+                                          )
                                         }
                                       />
                                     </div>
@@ -398,13 +402,19 @@ export const Calendar = ({
                                         id="startDate"
                                         mode="single"
                                         selected={
-                                          new Date(editingHoliday?.startDate)
+                                          editingHoliday
+                                            ? new Date(editingHoliday.startDate)
+                                            : undefined
                                         }
                                         onSelect={(date) =>
-                                          setEditingHoliday({
-                                            ...editingHoliday,
-                                            startDate: date?.toISOString(),
-                                          })
+                                          setEditingHoliday((prev) =>
+                                            prev && date
+                                              ? {
+                                                  ...prev,
+                                                  startDate: date.toISOString(),
+                                                }
+                                              : prev,
+                                          )
                                         }
                                         className="mt-2"
                                       />
@@ -415,13 +425,19 @@ export const Calendar = ({
                                         id="endDate"
                                         mode="single"
                                         selected={
-                                          new Date(editingHoliday?.endDate)
+                                          editingHoliday
+                                            ? new Date(editingHoliday.endDate)
+                                            : undefined
                                         }
                                         onSelect={(date) =>
-                                          setEditingHoliday({
-                                            ...editingHoliday,
-                                            endDate: date?.toISOString(),
-                                          })
+                                          setEditingHoliday((prev) =>
+                                            prev && date
+                                              ? {
+                                                  ...prev,
+                                                  endDate: date.toISOString(),
+                                                }
+                                              : prev,
+                                          )
                                         }
                                         className="mt-2"
                                       />

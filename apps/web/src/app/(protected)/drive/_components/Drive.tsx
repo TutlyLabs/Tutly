@@ -1,6 +1,5 @@
 "use client";
 
-import type { File } from "@tutly/db/browser";
 import { formatDistanceToNow } from "date-fns";
 import { Download, FileText, Trash2, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
@@ -12,10 +11,12 @@ import { Input } from "@tutly/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 import { useFileUpload } from "@/components/useFileUpload";
 import { openExternalUrl } from "@/lib/native-files";
-import { api } from "@/trpc/react";
+import { api, type RouterOutputs } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 
-const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
+type DriveFile = RouterOutputs["drive"]["getUserFiles"][number];
+
+const Drive = ({ uploadedFiles }: { uploadedFiles: DriveFile[] }) => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteReason, setDeleteReason] = useState("");
@@ -71,10 +72,15 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
   };
 
   const handleArchive = async (fileId: string) => {
-    await archiveFile({
-      fileId,
-      reason: deleteReason,
-    });
+    try {
+      await archiveFile({
+        fileId,
+        reason: deleteReason,
+      });
+    } catch {
+      // onError already surfaced the failure; don't reject out of the handler.
+      return;
+    }
     router.refresh();
   };
 
@@ -97,7 +103,7 @@ const Drive = ({ uploadedFiles }: { uploadedFiles: File[] }) => {
     </Button>
   );
 
-  const FileCard = ({ file }: { file: File }) => (
+  const FileCard = ({ file }: { file: DriveFile }) => (
     <Card
       key={file.id}
       className="bg-card flex items-start gap-3 rounded-xl border p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-4"

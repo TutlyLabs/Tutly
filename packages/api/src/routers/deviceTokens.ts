@@ -21,19 +21,4 @@ export const deviceTokensRouter = createTRPCRouter({
         create: { userId, platform, token: input.token },
       });
     }),
-
-  unregister: protectedProcedure
-    .input(z.object({ token: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      await ctx.db.deviceToken.deleteMany({
-        where: { token: input.token, userId: ctx.session.user.id },
-      });
-    }),
-
-  listMine: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.deviceToken.findMany({
-      where: { userId: ctx.session.user.id },
-      orderBy: { lastSeen: "desc" },
-    });
-  }),
 });

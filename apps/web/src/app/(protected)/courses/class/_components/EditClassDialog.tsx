@@ -23,39 +23,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@tutly/ui/select";
-import { api } from "@/trpc/react";
+import { api, type RouterOutputs } from "@/trpc/react";
 
-interface Folder {
-  id: string;
-  title: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+type Folder = RouterOutputs["courses"]["foldersByCourseId"][number];
 
 interface EditClassDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   courseId: string;
-  classDetails: {
-    id: string;
-    title: string;
-    createdAt: Date;
-    classType?: string;
-    liveProvider?: string | null;
-    startTime?: Date | null;
-    endTime?: Date | null;
-    meetingUrl?: string | null;
-    meetingId?: string | null;
-    meetingPasscode?: string | null;
-    video?: {
-      videoLink: string | null;
-      videoType: string;
-    } | null;
-    Folder?: {
-      id: string;
-      title: string;
-    } | null;
-  };
+  classDetails: RouterOutputs["classes"]["getClassDetails"];
 }
 
 function parseZoomUrl(url: string): {

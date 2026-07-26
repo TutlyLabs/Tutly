@@ -26,7 +26,7 @@ const Header = ({
     <div className="mb-4">
       <ScrollArea className="-mx-3 sm:mx-0">
         <div className="flex items-center gap-2 px-3 pb-2 sm:px-0">
-          {courses?.data?.map((course) => {
+          {courses?.map((course) => {
             const params = new URLSearchParams({ id: course.id });
             if (userRole === "MENTOR" && mentorParam) {
               params.set("mentor", mentorParam);

@@ -121,15 +121,7 @@ export default function LinkAssignmentDialog({
   );
 
   const linkMutation = api.attachments.linkAssignmentToClass.useMutation({
-    onSuccess: (result) => {
-      if (result.success !== true) {
-        const message =
-          "error" in result && typeof result.error === "string"
-            ? result.error
-            : "Failed to link assignment";
-        toast.error(message);
-        return;
-      }
+    onSuccess: () => {
       toast.success("Assignment linked to this class");
       void utils.attachments.invalidate();
       router.refresh();
@@ -143,7 +135,7 @@ export default function LinkAssignmentDialog({
   });
 
   const filtered = useMemo(() => {
-    const list = data?.data ?? [];
+    const list = data ?? [];
     if (!search.trim()) return list;
     const q = search.trim().toLowerCase();
     return list.filter((a) =>

@@ -74,13 +74,7 @@ export default class Save extends Command {
       let submissionId = metadata.submissionId as string | undefined;
       if (!submissionId) {
         const started = await api.startWorkspace(assignmentId);
-        if (started.error || !started.data?.submission?.id) {
-          this.log(
-            `\n❌ Save failed: ${started.error ?? "Unable to start workspace"}\n`,
-          );
-          this.exit(1);
-        }
-        submissionId = started.data.submission.id;
+        submissionId = started.submission.id;
         metadata.submissionId = submissionId;
         await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
       }
@@ -111,27 +105,10 @@ export default class Save extends Command {
         },
       });
 
-      if (result.error) {
-        this.log(`\n❌ Save failed: ${result.error}\n`);
-        this.exit(1);
-      }
-
-      if (
-        result.success &&
-        result.data?.uploadUrl &&
-        result.data?.artifact?.id
-      ) {
-        await api.uploadToSignedUrl(result.data.uploadUrl, zipBuffer);
-        await api.confirmWorkspaceArtifactUpload(
-          result.data.artifact.id,
-          checksum,
-        );
-        this.log("\n✨ Save successful!");
-        this.log(`✓ Your work has been saved to the cloud\n`);
-      } else {
-        this.log(`\n⚠️  Unexpected response from server\n`);
-        this.exit(1);
-      }
+      await api.uploadToSignedUrl(result.uploadUrl, zipBuffer);
+      await api.confirmWorkspaceArtifactUpload(result.artifact.id, checksum);
+      this.log("\n✨ Save successful!");
+      this.log(`✓ Your work has been saved to the cloud\n`);
     } catch (error) {
       this.log(
         `\n❌ Failed to save: ${error instanceof Error ? error.message : "Unknown error"}`,

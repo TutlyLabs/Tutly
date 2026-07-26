@@ -25,17 +25,9 @@ import {
   DialogTrigger,
 } from "@tutly/ui/dialog";
 import { Input } from "@tutly/ui/input";
-import { api } from "@/trpc/react";
+import { api, type RouterOutputs } from "@/trpc/react";
 
-interface Folder {
-  id: string;
-  title: string;
-  createdAt: Date;
-  updatedAt: Date;
-  _count?: {
-    Class: number;
-  };
-}
+type Folder = RouterOutputs["courses"]["foldersByCourseId"][number];
 
 const ManageFolders = ({ courseId }: { courseId: string }) => {
   const [folders, setFolders] = useState<Folder[]>([]);

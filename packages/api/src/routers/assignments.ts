@@ -1,13 +1,29 @@
-import { db } from "@tutly/db";
-import { createLogger } from "@tutly/logger";
-import { readSandpackTemplate, readSubmission } from "@tutly/storage";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { db } from "@tutly/db";
+import { readSandpackTemplate, readSubmission } from "@tutly/storage";
+
+import type { SandpackTemplate } from "../lib/template-policy";
+import {
+  requireAssignmentManageAccess,
+  requireAssignmentReadAccess,
+  requireCourseReadAccess,
+  resolveTargetUsername,
+} from "../lib/authorization";
 import { locatorFrom, locatorSelect } from "../lib/storage-locator";
-import { mergeForAudience, type SandpackTemplate } from "../lib/template-policy";
+import { mergeForAudience } from "../lib/template-policy";
+import {
+  buildWorkspaceObjectKey,
+  getArtifactUploadUrl,
+  workspaceArtifactBucket,
+} from "../lib/workspace-artifacts";
+import { defaultWorkspaceConfig } from "../lib/workspace-config";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
-async function loadSandboxTemplateRaw(assignmentId: string): Promise<string | null> {
+async function loadSandboxTemplateRaw(
+  assignmentId: string,
+): Promise<string | null> {
   const row = await db.attachment.findUnique({
     where: { id: assignmentId },
     select: locatorSelect,
@@ -18,29 +34,6 @@ async function loadSandboxTemplateRaw(assignmentId: string): Promise<string | nu
     ? Buffer.from(JSON.stringify(parsed), "utf-8").toString("base64")
     : null;
 }
-import { defaultWorkspaceConfig } from "../lib/workspace-config";
-import {
-  buildWorkspaceObjectKey,
-  getArtifactUploadUrl,
-  workspaceArtifactBucket,
-} from "../lib/workspace-artifacts";
-import {
-  canManageAssignment,
-  requireAssignmentManageAccess,
-  requireAssignmentReadAccess,
-  requireCourseReadAccess,
-  resolveTargetMentorUsername,
-  resolveTargetUsername,
-} from "../lib/authorization";
-
-import {
-  getEnrolledCourseIds,
-  getEnrolledCourses,
-  getEnrolledCoursesById,
-  getMentorCourses,
-} from "./courses";
-
-const logger = createLogger("api:assignments");
 
 export type AssignmentDetails = {
   sortedAssignments: Array<{
@@ -76,1420 +69,195 @@ const workspaceArtifactUploadInput = z.object({
 });
 
 export const assignmentsRouter = createTRPCRouter({
-  getAllAssignedAssignments: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
-
-      return await ctx.db.course.findMany({
-        where: {
-          enrolledUsers: {
-            some: {
-              username: currentUser.username,
-            },
-          },
-        },
-        select: {
-          id: true,
-          classes: {
-            select: {
-              attachments: {
-                where: {
-                  attachmentType: "ASSIGNMENT",
-                },
-                include: {
-                  class: true,
-                  submissions: {
-                    where: {
-                      enrolledUser: {
-                        username: currentUser.username,
-                      },
-                      status: "SUBMITTED",
-                    },
-                    include: {
-                      points: true,
-                    },
-                  },
-                },
-              },
-            },
-            orderBy: {
-              createdAt: "asc",
-            },
-          },
-        },
-      });
-    } catch (error) {
-      return {
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
-  }),
-
-  getAllAssignedAssignmentsByUserId: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      // `id` is a username here despite the name.
-      const targetUsername = await resolveTargetUsername(ctx, input.id);
-      try {
-        const { data: courses } = await getEnrolledCoursesById(targetUsername);
-
-        const coursesWithAssignments = await ctx.db.course.findMany({
-          where: {
-            enrolledUsers: {
-              some: {
-                user: {
-                  username: targetUsername,
-                },
-              },
-            },
-          },
-          select: {
-            id: true,
-            classes: {
-              select: {
-                attachments: {
-                  where: {
-                    attachmentType: "ASSIGNMENT",
-                  },
-                  include: {
-                    class: true,
-                    submissions: {
-                      where: {
-                        enrolledUser: {
-                          user: {
-                            username: targetUsername,
-                          },
-                        },
-                        status: "SUBMITTED",
-                      },
-                      include: {
-                        points: true,
-                      },
-                    },
-                  },
-                },
-              },
-              orderBy: {
-                createdAt: "asc",
-              },
-            },
-          },
-        });
-
-        return {
-          courses: courses,
-          coursesWithAssignments: coursesWithAssignments,
-        };
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
-
-  getAllAssignmentsForMentor: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
-
-      const { data: courses } = await getMentorCourses(currentUser.username);
-
-      const coursesWithAssignments = await ctx.db.course.findMany({
-        where: {
-          enrolledUsers: {
-            some: {
-              mentorUsername: currentUser.username,
-            },
-          },
-        },
-        select: {
-          id: true,
-          classes: {
-            select: {
-              attachments: {
-                where: {
-                  attachmentType: "ASSIGNMENT",
-                  submissions: {
-                    some: {
-                      enrolledUser: {
-                        mentorUsername: currentUser.username,
-                      },
-                      status: "SUBMITTED",
-                    },
-                  },
-                },
-                include: {
-                  class: true,
-                  submissions: {
-                    where: {
-                      enrolledUser: {
-                        mentorUsername: currentUser.username,
-                      },
-                      status: "SUBMITTED",
-                    },
-                    include: {
-                      points: true,
-                    },
-                  },
-                },
-              },
-              createdAt: true,
-            },
-          },
-        },
-      });
-
-      return { courses, coursesWithAssignments };
-    } catch (error) {
-      return {
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
-  }),
-
-  getAllAssignmentsForInstructor: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
-
-      const { data: courses } = await getEnrolledCourses(currentUser.username);
-
-      const coursesWithAssignments = await ctx.db.course.findMany({
-        where: {
-          id: {
-            in: courses.map((course: { id: string }) => course.id),
-          },
-        },
-        select: {
-          id: true,
-          classes: {
-            select: {
-              attachments: {
-                where: {
-                  attachmentType: "ASSIGNMENT",
-                },
-                include: {
-                  class: true,
-                  submissions: {
-                    where: {
-                      status: "SUBMITTED",
-                    },
-                    include: {
-                      points: true,
-                    },
-                  },
-                },
-              },
-            },
-            orderBy: {
-              createdAt: "asc",
-            },
-          },
-        },
-      });
-
-      return { courses, coursesWithAssignments };
-    } catch (error) {
-      return {
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
-  }),
-
-  getAllAssignments: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
-
-      const { data: courses } = await getEnrolledCourses(currentUser.username);
-
-      return await ctx.db.attachment.findMany({
-        where: {
-          attachmentType: "ASSIGNMENT",
-          courseId: {
-            in: courses.map((course) => course.id),
-          },
-        },
-        include: {
-          course: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-    } catch (error) {
-      return {
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
-  }),
-
-  getAllAssignedAssignmentsForMentor: protectedProcedure.query(
-    async ({ ctx }) => {
-      try {
-        const currentUser = ctx.session.user;
-
-        const { data: courses } = await getEnrolledCoursesById(currentUser.id);
-
-        const coursesWithAssignments = await ctx.db.course.findMany({
-          where: {
-            enrolledUsers: {
-              some: {
-                mentorUsername: currentUser.username,
-              },
-            },
-          },
-          select: {
-            id: true,
-            classes: {
-              select: {
-                attachments: {
-                  where: {
-                    attachmentType: "ASSIGNMENT",
-                  },
-                  include: {
-                    class: true,
-                    submissions: {
-                      where: {
-                        enrolledUser: {
-                          user: {
-                            id: currentUser.username,
-                          },
-                        },
-                        status: "SUBMITTED",
-                      },
-                      include: {
-                        points: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        return { courses, coursesWithAssignments };
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    },
-  ),
-
-  getAllMentorAssignments: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
-
-      const coursesWithAssignments = await ctx.db.course.findMany({
-        where: {
-          enrolledUsers: {
-            some: {
-              mentorUsername: currentUser.username,
-            },
-          },
-        },
-        select: {
-          id: true,
-          classes: {
-            select: {
-              attachments: {
-                where: {
-                  attachmentType: "ASSIGNMENT",
-                },
-                select: {
-                  title: true,
-                  submissions: {
-                    where: {
-                      enrolledUser: {
-                        mentorUsername: currentUser.username,
-                      },
-                      status: "SUBMITTED",
-                    },
-                    select: {
-                      points: true,
-                      enrolledUser: {
-                        include: {
-                          user: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-
-      const submissions = await ctx.db.submission.findMany({
-        where: {
-          enrolledUser: {
-            mentorUsername: currentUser.username,
-          },
-          status: "SUBMITTED",
-        },
-        select: {
-          points: true,
-          enrolledUser: {
-            include: {
-              user: true,
-            },
-          },
-        },
-      });
-
-      return { coursesWithAssignments, submissions };
-    } catch (error) {
-      return {
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
-  }),
-
-  getAllCreatedAssignments: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
-
-      return await ctx.db.course.findMany({
-        where: {
-          createdById: currentUser.id,
-        },
-        select: {
-          id: true,
-          classes: {
-            select: {
-              attachments: {
-                where: {
-                  attachmentType: "ASSIGNMENT",
-                },
-                include: {
-                  class: true,
-                  submissions: {
-                    where: {
-                      enrolledUserId: currentUser.id,
-                      status: "SUBMITTED",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-    } catch (error) {
-      return {
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
-  }),
-
-  getAssignmentDetailsByUserId: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      await requireAssignmentReadAccess(ctx, input.id);
-      try {
-        const currentUser = ctx.session.user;
-
-        return await ctx.db.attachment.findUnique({
-          where: {
-            id: input.id,
-          },
-          include: {
-            class: {
-              include: {
-                course: true,
-              },
-            },
-            submissions: {
-              where: {
-                enrolledUser: {
-                  user: {
-                    id: currentUser.id,
-                  },
-                },
-                status: "SUBMITTED",
-              },
-              include: {
-                enrolledUser: {
-                  include: {
-                    submission: true,
-                  },
-                },
-                points: true,
-              },
-            },
-          },
-        });
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
-
-  getAllAssignmentDetailsBy: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(
-      async ({
-        ctx,
-        input,
-      }): Promise<AssignmentDetails | { error: string }> => {
-        await requireAssignmentReadAccess(ctx, input.id);
-        try {
-          const currentUser = ctx.session.user;
-          if (!currentUser.organization) {
-            return { error: "Unauthorized" };
-          }
-
-          const assignment = await ctx.db.attachment.findUnique({
-            where: {
-              id: input.id,
-            },
-            include: {
-              class: {
-                include: {
-                  course: true,
-                },
-              },
-              submissions: {
-                where: {
-                  enrolledUser: {
-                    mentorUsername: currentUser.username,
-                  },
-                  status: "SUBMITTED",
-                },
-                include: {
-                  enrolledUser: {
-                    include: {
-                      submission: true,
-                    },
-                  },
-                  points: true,
-                },
-              },
-            },
-          });
-
-          const mentees = await ctx.db.user.findMany({
-            where: {
-              enrolledUsers: {
-                some: {
-                  mentorUsername: currentUser.username,
-                },
-              },
-              organization: {
-                id: currentUser.organization.id,
-              },
-            },
-          });
-
-          const notSubmittedMentees = mentees.filter((mentee) => {
-            return !assignment?.submissions.some(
-              (submission) =>
-                submission.enrolledUser.username === mentee.username,
-            );
-          });
-
-          const sortedAssignments =
-            assignment?.submissions.sort((a, b) => {
-              if (b.enrolledUser.username > a.enrolledUser.username) {
-                return -1;
-              } else if (b.enrolledUser.username < a.enrolledUser.username) {
-                return 1;
-              } else {
-                return 0;
-              }
-            }) ?? [];
-
-          const isCourseAdmin = currentUser.adminForCourses.some(
-            (course: { id: string }) => course.id === assignment?.courseId,
-          );
-
-          return {
-            sortedAssignments,
-            notSubmittedMentees,
-            isCourseAdmin,
-          };
-        } catch (error) {
-          return {
-            error:
-              error instanceof Error ? error.message : "Unknown error occurred",
-          };
-        }
-      },
-    ),
-
-  getAllAssignmentDetailsForInstructor: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(
-      async ({
-        ctx,
-        input,
-      }): Promise<AssignmentDetails | { error: string }> => {
-        // Instructor-only view of every submission: needs the manage gate, which
-        // is staff or an owner/admin of the assignment's course.
-        await requireAssignmentManageAccess(ctx, input.id);
-        try {
-          const currentUser = ctx.session.user;
-          if (!currentUser.organization) {
-            return { error: "Unauthorized" };
-          }
-
-          const assignment = await ctx.db.attachment.findUnique({
-            where: {
-              id: input.id,
-            },
-            include: {
-              class: {
-                include: {
-                  course: {
-                    where: {
-                      createdById: currentUser.id,
-                    },
-                  },
-                },
-              },
-              submissions: {
-                where: {
-                  status: "SUBMITTED",
-                },
-                include: {
-                  enrolledUser: {
-                    include: {
-                      submission: true,
-                    },
-                  },
-                  points: true,
-                },
-              },
-            },
-          });
-
-          const allStudents = await ctx.db.enrolledUsers.findMany({
-            where: {
-              courseId: {
-                in: await getEnrolledCourseIds(currentUser.username),
-              },
-              mentorUsername: {
-                not: null,
-              },
-              user: {
-                organizationId: currentUser.organization.id,
-              },
-            },
-          });
-
-          const notSubmittedMentees = allStudents.filter((student) => {
-            return !assignment?.submissions.some(
-              (submission) =>
-                submission.enrolledUser.username === student.username,
-            );
-          });
-
-          const sortedAssignments =
-            assignment?.submissions.sort((a, b) => {
-              if (b.enrolledUser.username > a.enrolledUser.username) {
-                return -1;
-              } else if (b.enrolledUser.username < a.enrolledUser.username) {
-                return 1;
-              } else {
-                return 0;
-              }
-            }) ?? [];
-
-          const isCourseAdmin = currentUser.adminForCourses.some(
-            (course: { id: string }) => course.id === assignment?.courseId,
-          );
-
-          return {
-            sortedAssignments,
-            notSubmittedMentees,
-            isCourseAdmin,
-          };
-        } catch (error) {
-          return {
-            error:
-              error instanceof Error ? error.message : "Unknown error occurred",
-          };
-        }
-      },
-    ),
-
-  getAllAssignmentsByCourseId: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      await requireCourseReadAccess(ctx, input.id);
-      try {
-        const currentUser = ctx.session.user;
-
-        return await ctx.db.course.findMany({
-          where: {
-            id: input.id,
-          },
-          select: {
-            id: true,
-            classes: {
-              select: {
-                attachments: {
-                  where: {
-                    attachmentType: "ASSIGNMENT",
-                  },
-                  include: {
-                    class: true,
-                    submissions: {
-                      where: {
-                        enrolledUser: {
-                          username: currentUser.username,
-                        },
-                        status: "SUBMITTED",
-                      },
-                    },
-                  },
-                },
-              },
-              orderBy: {
-                createdAt: "asc",
-              },
-            },
-          },
-        });
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
-
-  getMentorPieChartData: protectedProcedure
-    .input(z.object({ courseId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      await requireCourseReadAccess(ctx, input.courseId);
-      try {
-        const currentUser = ctx.session.user;
-
-        let assignments, noOfTotalMentees;
-
-        if (currentUser.role === "MENTOR") {
-          assignments = await ctx.db.submission.findMany({
-            where: {
-              enrolledUser: {
-                mentorUsername: currentUser.username,
-                courseId: input.courseId,
-              },
-              status: "SUBMITTED",
-            },
-            include: {
-              points: true,
-            },
-          });
-          noOfTotalMentees = await ctx.db.enrolledUsers.count({
-            where: {
-              mentorUsername: currentUser.username,
-              courseId: input.courseId,
-            },
-          });
-        } else {
-          assignments = await ctx.db.submission.findMany({
-            where: {
-              assignment: {
-                courseId: input.courseId,
-              },
-              status: "SUBMITTED",
-            },
-            include: {
-              points: true,
-            },
-          });
-          noOfTotalMentees = await ctx.db.enrolledUsers.count({
-            where: {
-              courseId: input.courseId,
-            },
-          });
-        }
-
-        let assignmentsWithPoints = 0,
-          assignmentsWithoutPoints = 0;
-        assignments.forEach((assignment) => {
-          if (assignment.points.length > 0) {
-            assignmentsWithPoints += 1;
-          } else {
-            assignmentsWithoutPoints += 1;
-          }
-        });
-
-        const noOfTotalAssignments = await ctx.db.attachment.count({
-          where: {
-            attachmentType: "ASSIGNMENT",
-            courseId: input.courseId,
-          },
-        });
-
-        const notSubmitted =
-          noOfTotalAssignments * noOfTotalMentees -
-          assignmentsWithPoints -
-          assignmentsWithoutPoints;
-
-        return [assignmentsWithPoints, assignmentsWithoutPoints, notSubmitted];
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
-
-  getMentorPieChartById: protectedProcedure
-    .input(z.object({ id: z.string(), courseId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      await requireCourseReadAccess(ctx, input.courseId);
-      // `id` is a mentor username.
-      const targetMentor = await resolveTargetMentorUsername(ctx, input.id);
-      try {
-        const assignments = await ctx.db.submission.findMany({
-          where: {
-            enrolledUser: {
-              mentorUsername: targetMentor,
-            },
-            assignment: {
-              courseId: input.courseId,
-            },
-            status: "SUBMITTED",
-          },
-          include: {
-            points: true,
-            assignment: {
-              select: {
-                maxSubmissions: true,
-              },
-            },
-          },
-        });
-
-        // const noOfTotalMentees = await ctx.db.enrolledUsers.count({
-        //   where: {
-        //     mentorUsername: input.id,
-        //     courseId: input.courseId,
-        //   },
-        // });
-
-        let assignmentsWithPoints = 0,
-          assignmentsWithoutPoints = 0;
-        assignments.forEach((assignment) => {
-          if (assignment.points.length > 0) {
-            assignmentsWithPoints += 1;
-          } else {
-            assignmentsWithoutPoints += 1;
-          }
-        });
-
-        const noOfTotalAssignments = await ctx.db.attachment.findMany({
-          where: {
-            attachmentType: "ASSIGNMENT",
-            courseId: input.courseId,
-          },
-          select: {
-            maxSubmissions: true,
-          },
-        });
-
-        let totalAssignments = 0;
-        noOfTotalAssignments.forEach((a) => {
-          totalAssignments += a.maxSubmissions ?? 0;
-        });
-
-        const notSubmitted =
-          totalAssignments - assignmentsWithPoints - assignmentsWithoutPoints;
-
-        return {
-          evaluated: assignments.length,
-          underReview: assignmentsWithoutPoints,
-          unsubmitted: notSubmitted,
-          totalPoints: assignments.reduce(
-            (total, assignment) =>
-              total +
-              assignment.points.reduce((sum, point) => sum + point.score, 0),
-            0,
-          ),
-        };
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
-
-  getSubmissionsForMentorByIdLineChart: protectedProcedure
-    .input(z.object({ id: z.string(), courseId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      await requireCourseReadAccess(ctx, input.courseId);
-      // `id` is a mentor username.
-      const targetMentor = await resolveTargetMentorUsername(ctx, input.id);
-      try {
-        const submissionCount = await ctx.db.attachment.findMany({
-          where: {
-            attachmentType: "ASSIGNMENT",
-            courseId: input.courseId,
-          },
-          include: {
-            submissions: {
-              where: {
-                enrolledUser: {
-                  mentorUsername: targetMentor,
-                },
-                status: "SUBMITTED",
-              },
-            },
-          },
-          orderBy: {
-            createdAt: "asc",
-          },
-        });
-
-        return {
-          assignments: submissionCount.map((submission) => submission.title),
-          countForEachAssignment: submissionCount.map(
-            (submission) => submission.submissions.length,
-          ),
-        };
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
-
-  getSubmissionsForMentorLineChart: protectedProcedure
-    .input(z.object({ courseId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      await requireCourseReadAccess(ctx, input.courseId);
-      try {
-        const currentUser = ctx.session.user;
-
-        const submissionCount = await ctx.db.attachment.findMany({
-          where: {
-            attachmentType: "ASSIGNMENT",
-            courseId: input.courseId,
-          },
-          include: {
-            submissions:
-              currentUser.role === "MENTOR"
-                ? {
-                    where: {
-                      enrolledUser: {
-                        mentorUsername: currentUser.username,
-                      },
-                    },
-                  }
-                : true,
-          },
-          orderBy: {
-            createdAt: "asc",
-          },
-        });
-
-        return {
-          assignments: submissionCount.map((submission) => submission.title),
-          countForEachAssignment: submissionCount.map(
-            (submission) => submission.submissions.length,
-          ),
-        };
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
-
-  getStudentEvaluatedAssigments: protectedProcedure
-    .input(z.object({ courseId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      await requireCourseReadAccess(ctx, input.courseId);
-      try {
-        const currentUser = ctx.session.user;
-
-        const assignments = await ctx.db.submission.findMany({
-          where: {
-            enrolledUser: {
-              username: currentUser.username,
-            },
-            assignment: {
-              courseId: input.courseId,
-            },
-            status: "SUBMITTED",
-          },
-          include: {
-            points: true,
-          },
-        });
-
-        const evaluatedAssignments = assignments.filter(
-          (assignment) => assignment.points.length > 0,
-        );
-
-        const totalPoints = evaluatedAssignments.reduce(
-          (total, assignment) =>
-            total +
-            assignment.points.reduce((sum, point) => sum + point.score, 0),
-          0,
-        );
-
-        const noOfTotalAssignments = await ctx.db.attachment.findMany({
-          where: {
-            attachmentType: "ASSIGNMENT",
-            courseId: input.courseId,
-          },
-          select: {
-            maxSubmissions: true,
-          },
-        });
-
-        const totalAssignments = noOfTotalAssignments.reduce(
-          (total, assignment) => total + (assignment.maxSubmissions ?? 0),
-          0,
-        );
-
-        return {
-          evaluated: evaluatedAssignments.length,
-          underReview: assignments.length - evaluatedAssignments.length,
-          unsubmitted: totalAssignments - assignments.length,
-          totalPoints,
-        };
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
-
-  getStudentEvaluatedAssigmentsForMentor: protectedProcedure
-    .input(z.object({ id: z.string(), courseId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      await requireCourseReadAccess(ctx, input.courseId);
-      // `id` is the student username being viewed, not the mentor's.
-      const targetStudent = await resolveTargetUsername(
-        ctx,
-        input.id,
-        input.courseId,
-      );
-      try {
-        const assignments = await ctx.db.submission.findMany({
-          where: {
-            enrolledUser: {
-              username: targetStudent,
-            },
-            assignment: {
-              courseId: input.courseId,
-            },
-            status: "SUBMITTED",
-          },
-          include: {
-            points: true,
-            assignment: {
-              select: {
-                maxSubmissions: true,
-              },
-            },
-          },
-        });
-
-        const evaluatedAssignments = assignments.filter(
-          (assignment) => assignment.points.length > 0,
-        );
-
-        const totalPoints = evaluatedAssignments.reduce(
-          (total, assignment) =>
-            total +
-            assignment.points.reduce((sum, point) => sum + point.score, 0),
-          0,
-        );
-
-        const noOfTotalAssignments = await ctx.db.attachment.findMany({
-          where: {
-            attachmentType: "ASSIGNMENT",
-            courseId: input.courseId,
-          },
-          select: {
-            maxSubmissions: true,
-          },
-        });
-
-        const totalAssignments = noOfTotalAssignments.reduce(
-          (total, assignment) => total + (assignment.maxSubmissions ?? 0),
-          0,
-        );
-
-        return {
-          evaluated: evaluatedAssignments.length,
-          underReview: assignments.length - evaluatedAssignments.length,
-          unsubmitted: totalAssignments - assignments.length,
-          totalPoints,
-        };
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
-
-  getAssignmentDetails: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      await requireAssignmentReadAccess(ctx, input.id);
-      try {
-        return await ctx.db.attachment.findUnique({
-          where: {
-            id: input.id,
-          },
-          include: {
-            class: {
-              include: {
-                course: true,
-              },
-            },
-          },
-        });
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
-      }
-    }),
-
   getAssignmentDetailsForSubmission: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       await requireAssignmentReadAccess(ctx, input.id);
-      try {
-        const currentUser = ctx.session.user;
+      const currentUser = ctx.session.user;
 
-        const assignment = await ctx.db.attachment.findUnique({
-          where: {
-            id: input.id,
-          },
-          include: {
-            class: {
-              include: {
-                course: true,
-              },
+      const assignment = await ctx.db.attachment.findUnique({
+        where: {
+          id: input.id,
+        },
+        include: {
+          class: {
+            include: {
+              course: true,
             },
-            submissions: {
-              where: {
-                enrolledUser: {
-                  user: {
-                    id: currentUser.id,
-                  },
+          },
+          submissions: {
+            where: {
+              enrolledUser: {
+                user: {
+                  id: currentUser.id,
                 },
-                status: "SUBMITTED",
               },
-              include: {
-                enrolledUser: {
-                  include: {
-                    submission: true,
-                  },
+              status: "SUBMITTED",
+            },
+            include: {
+              enrolledUser: {
+                include: {
+                  submission: true,
                 },
-                points: true,
               },
+              points: true,
             },
           },
+        },
+      });
+
+      if (!assignment) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Assignment not found",
         });
-
-        if (!assignment) {
-          return { error: "Assignment not Found" };
-        }
-
-        if (!assignment.class?.courseId) {
-          return { error: "Course not found" };
-        }
-
-        const mentorDetails = await ctx.db.enrolledUsers.findFirst({
-          where: {
-            username: currentUser.username,
-            courseId: assignment.class.courseId,
-          },
-          select: {
-            mentor: {
-              select: {
-                username: true,
-              },
-            },
-          },
-        });
-
-        return {
-          assignment: {
-            id: assignment.id,
-            title: assignment.title,
-            link: assignment.link,
-            details: assignment.details,
-            detailsJson: assignment.detailsJson,
-            sandboxTemplate: await loadSandboxTemplateRaw(assignment.id),
-            class: {
-              id: assignment.class.id,
-              title: assignment.class.title,
-              courseId: assignment.class.courseId,
-              course: {
-                id: assignment.class.course?.id,
-                title: assignment.class.course?.title,
-              },
-            },
-            submissions: assignment.submissions.map((submission) => {
-              return { id: submission.id };
-            }),
-            maxSubmissions: assignment.maxSubmissions,
-          },
-          mentorDetails,
-        };
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
       }
-    }),
 
-  submitAssignment: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      await requireAssignmentReadAccess(ctx, input.id);
-      try {
-        const currentUser = ctx.session.user;
-
-        const assignment = await ctx.db.attachment.findUnique({
-          where: {
-            id: input.id,
-          },
-          include: {
-            class: {
-              include: {
-                course: true,
-              },
-            },
-            submissions: {
-              where: {
-                enrolledUser: {
-                  user: {
-                    id: currentUser.id,
-                  },
-                },
-                status: "SUBMITTED",
-              },
-              include: {
-                enrolledUser: {
-                  include: {
-                    submission: true,
-                  },
-                },
-                points: true,
-              },
-            },
-          },
-        });
-
-        if (!assignment) {
-          return { error: "Assignment not Found" };
-        }
-
-        if (!assignment.class?.courseId) {
-          return { error: "Course not found" };
-        }
-
-        const mentorDetails = await ctx.db.enrolledUsers.findFirst({
-          where: {
-            username: currentUser.username,
-            courseId: assignment.class.courseId,
-          },
-          select: {
-            mentor: {
-              select: {
-                username: true,
-              },
-            },
-          },
-        });
-
-        return {
-          assignment: {
-            id: assignment.id,
-            title: assignment.title,
-            link: assignment.link,
-            class: {
-              id: assignment.class.id,
-              title: assignment.class.title,
-              courseId: assignment.class.courseId,
-              course: {
-                id: assignment.class.course?.id,
-                title: assignment.class.course?.title,
-              },
-            },
-            submissions: assignment.submissions.map((submission) => {
-              return { id: submission.id };
-            }),
-            maxSubmissions: assignment.maxSubmissions,
-          },
-          currentUser: {
-            username: currentUser.username,
-            name: currentUser.name,
-            email: currentUser.email,
-          },
-          mentorDetails,
-        };
-      } catch (error) {
-        return {
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        };
+      if (!assignment.class?.courseId) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Course not found" });
       }
+
+      const mentorDetails = await ctx.db.enrolledUsers.findFirst({
+        where: {
+          username: currentUser.username,
+          courseId: assignment.class.courseId,
+        },
+        select: {
+          mentor: {
+            select: {
+              username: true,
+            },
+          },
+        },
+      });
+
+      return {
+        assignment: {
+          id: assignment.id,
+          title: assignment.title,
+          link: assignment.link,
+          details: assignment.details,
+          detailsJson: assignment.detailsJson,
+          sandboxTemplate: await loadSandboxTemplateRaw(assignment.id),
+          class: {
+            id: assignment.class.id,
+            title: assignment.class.title,
+            courseId: assignment.class.courseId,
+            course: {
+              id: assignment.class.course?.id,
+              title: assignment.class.course?.title,
+            },
+          },
+          submissions: assignment.submissions.map((submission) => {
+            return { id: submission.id };
+          }),
+          maxSubmissions: assignment.maxSubmissions,
+        },
+        mentorDetails,
+      };
     }),
 
   getAssignmentsPageData: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
+    const currentUser = ctx.session.user;
 
-      const coursesData = await ctx.db.course.findMany({
-        where: {
-          enrolledUsers: {
-            some: {
-              username: currentUser.username,
-            },
+    const coursesData = await ctx.db.course.findMany({
+      where: {
+        enrolledUsers: {
+          some: {
+            username: currentUser.username,
           },
         },
-        include: {
-          classes: true,
-          createdBy: {
-            select: {
-              id: true,
-              username: true,
-              name: true,
-              image: true,
-              email: true,
-              role: true,
-              createdAt: true,
-              updatedAt: true,
-            },
-          },
-          _count: {
-            select: {
-              classes: true,
-            },
-          },
-          courseAdmins: {
-            select: {
-              id: true,
-              username: true,
-              name: true,
-              image: true,
-              email: true,
-              role: true,
-              createdAt: true,
-              updatedAt: true,
-            },
+      },
+      include: {
+        classes: true,
+        createdBy: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            image: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
+        _count: {
+          select: {
+            classes: true,
+          },
+        },
+        courseAdmins: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            image: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    // Sort classes by creation date
+    coursesData.forEach((course) => {
+      course.classes.sort((a, b) => {
+        return Number(a.createdAt) - Number(b.createdAt);
       });
+    });
 
-      // Sort classes by creation date
-      coursesData.forEach((course) => {
-        course.classes.sort((a, b) => {
-          return Number(a.createdAt) - Number(b.createdAt);
-        });
-      });
+    const publishedCourses = coursesData.filter((course) => course.isPublished);
+    const courses =
+      currentUser.role === "INSTRUCTOR" ? coursesData : publishedCourses;
 
-      const publishedCourses = coursesData.filter(
-        (course) => course.isPublished,
-      );
-      const courses =
-        currentUser.role === "INSTRUCTOR" ? coursesData : publishedCourses;
+    const isInstructorScope = currentUser.role !== "STUDENT";
 
-      const isInstructorScope = currentUser.role !== "STUDENT";
-
-      // Mentors only see their mentees' submissions, matching the detail page.
-      const submissionWhere =
-        currentUser.role === "STUDENT"
+    // Mentors only see their mentees' submissions, matching the detail page.
+    const submissionWhere =
+      currentUser.role === "STUDENT"
+        ? {
+            status: "SUBMITTED" as const,
+            enrolledUser: { username: currentUser.username },
+          }
+        : currentUser.role === "MENTOR"
           ? {
               status: "SUBMITTED" as const,
-              enrolledUser: { username: currentUser.username },
+              enrolledUser: { mentorUsername: currentUser.username },
             }
-          : currentUser.role === "MENTOR"
-            ? {
-                status: "SUBMITTED" as const,
-                enrolledUser: { mentorUsername: currentUser.username },
-              }
-            : { status: "SUBMITTED" as const };
-      const submissionSelect = isInstructorScope
-        ? {
-            id: true,
-            points: { select: { id: true } },
-          }
-        : {
-            id: true,
-            submissionLink: true,
-            submissionDate: true,
-            overallFeedback: true,
-            points: {
-              select: { id: true, score: true, category: true },
-            },
-          };
-
-      const assignments = await ctx.db.course.findMany({
-        where: {
-          enrolledUsers: {
-            some: {
-              username: currentUser.username,
-            },
-          },
-        },
-        select: {
+          : { status: "SUBMITTED" as const };
+    const submissionSelect = isInstructorScope
+      ? {
           id: true,
-          classes: {
-            select: {
-              attachments: {
-                where: {
-                  attachmentType: "ASSIGNMENT",
-                },
-                include: {
-                  class: true,
-                  submissions: {
-                    where: submissionWhere,
-                    select: submissionSelect,
-                  },
-                },
-              },
-            },
-            orderBy: {
-              createdAt: "asc",
-            },
+          points: { select: { id: true } },
+        }
+      : {
+          id: true,
+          submissionLink: true,
+          submissionDate: true,
+          overallFeedback: true,
+          points: {
+            select: { id: true, score: true, category: true },
+          },
+        };
+
+    const assignments = await ctx.db.course.findMany({
+      where: {
+        enrolledUsers: {
+          some: {
+            username: currentUser.username,
           },
         },
-      });
-
-      // Course-scoped assignments without a class link (orphans).
-      const courseIds = courses.map((c) => c.id);
-      const orphanAttachments =
-        courseIds.length > 0
-          ? await ctx.db.attachment.findMany({
+      },
+      select: {
+        id: true,
+        classes: {
+          select: {
+            attachments: {
               where: {
                 attachmentType: "ASSIGNMENT",
-                classId: null,
-                courseId: { in: courseIds },
               },
               include: {
                 class: true,
@@ -1498,49 +266,58 @@ export const assignmentsRouter = createTRPCRouter({
                   select: submissionSelect,
                 },
               },
-            })
-          : [];
-
-      // Inject orphans into their course as a synthetic class entry so the
-      // existing UI shape stays compatible.
-      const orphansByCourse = new Map<string, typeof orphanAttachments>();
-      orphanAttachments.forEach((a) => {
-        if (!a.courseId) return;
-        const list = orphansByCourse.get(a.courseId) ?? [];
-        list.push(a);
-        orphansByCourse.set(a.courseId, list);
-      });
-
-      const assignmentsWithOrphans = assignments.map((course) => {
-        const orphans = orphansByCourse.get(course.id) ?? [];
-        if (orphans.length === 0) return course;
-        return {
-          ...course,
-          classes: [
-            ...course.classes,
-            { attachments: orphans },
-          ],
-        };
-      });
-
-      return {
-        success: true,
-        data: {
-          courses,
-          assignments: assignmentsWithOrphans,
+            },
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
         },
-      };
-    } catch (error) {
-      logger.error(
-        { err: error, userId: ctx.session.user.id },
-        "failed to fetch assignments page data",
-      );
+      },
+    });
+
+    // Course-scoped assignments without a class link (orphans).
+    const courseIds = courses.map((c) => c.id);
+    const orphanAttachments =
+      courseIds.length > 0
+        ? await ctx.db.attachment.findMany({
+            where: {
+              attachmentType: "ASSIGNMENT",
+              classId: null,
+              courseId: { in: courseIds },
+            },
+            include: {
+              class: true,
+              submissions: {
+                where: submissionWhere,
+                select: submissionSelect,
+              },
+            },
+          })
+        : [];
+
+    // Inject orphans into their course as a synthetic class entry so the
+    // existing UI shape stays compatible.
+    const orphansByCourse = new Map<string, typeof orphanAttachments>();
+    orphanAttachments.forEach((a) => {
+      if (!a.courseId) return;
+      const list = orphansByCourse.get(a.courseId) ?? [];
+      list.push(a);
+      orphansByCourse.set(a.courseId, list);
+    });
+
+    const assignmentsWithOrphans = assignments.map((course) => {
+      const orphans = orphansByCourse.get(course.id) ?? [];
+      if (orphans.length === 0) return course;
       return {
-        success: false,
-        error: "Failed to fetch assignments page data",
-        details: error instanceof Error ? error.message : String(error),
+        ...course,
+        classes: [...course.classes, { attachments: orphans }],
       };
-    }
+    });
+
+    return {
+      courses,
+      assignments: assignmentsWithOrphans,
+    };
   }),
 
   getAssignmentDetailData: protectedProcedure
@@ -1556,273 +333,81 @@ export const assignmentsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       await requireAssignmentReadAccess(ctx, input.assignmentId);
-      try {
-        const currentUser = ctx.session.user;
-        const {
-          assignmentId,
-          username,
-          page,
-          limit,
-          selectedMentor,
-          searchQuery,
-        } = input;
-        const skip = (page - 1) * limit;
+      const currentUser = ctx.session.user;
+      const {
+        assignmentId,
+        username,
+        page,
+        limit,
+        selectedMentor,
+        searchQuery,
+      } = input;
+      const skip = (page - 1) * limit;
 
-        const baseInclude = {
-          class: {
-            select: {
-              id: true,
-              course: {
-                select: {
-                  id: true,
-                  title: true,
-                  createdById: true,
-                },
+      const baseInclude = {
+        class: {
+          select: {
+            id: true,
+            course: {
+              select: {
+                id: true,
+                title: true,
+                createdById: true,
               },
             },
           },
-          course: {
-            select: {
-              id: true,
-              title: true,
-              createdById: true,
-            },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            createdById: true,
           },
-        };
+        },
+      };
 
-        let assignmentData: any = null;
-        let totalCount = 0;
+      let assignmentData: any = null;
+      let totalCount = 0;
 
-        if (currentUser.role === "INSTRUCTOR") {
-          const [rawAssignmentData, countResult] = await Promise.all([
-            ctx.db.attachment.findUnique({
-              where: { id: assignmentId },
-              include: {
-                ...baseInclude,
-                submissions: {
-                  where: {
-                    status: "SUBMITTED",
-                    AND: [
-                      selectedMentor && selectedMentor !== "all"
-                        ? {
-                            enrolledUser: {
-                              mentorUsername: selectedMentor,
-                            },
-                          }
-                        : {},
-                      searchQuery
-                        ? {
-                            enrolledUser: {
-                              username: {
-                                contains: searchQuery,
-                                mode: "insensitive",
-                              },
-                            },
-                          }
-                        : {},
-                      username
-                        ? {
-                            enrolledUser: {
-                              username: username,
-                            },
-                          }
-                        : {},
-                    ],
-                  },
-                  take: limit,
-                  skip,
-                  orderBy: { submissionDate: "desc" },
-                  include: {
-                    enrolledUser: {
-                      select: {
-                        username: true,
-                        mentorUsername: true,
-                      },
-                    },
-                    points: {
-                      select: {
-                        category: true,
-                        score: true,
-                      },
-                    },
-                  },
-                },
-                course: {
-                  select: {
-                    id: true,
-                    title: true,
-                    createdById: true,
-                    classes: true,
-                    enrolledUsers: {
-                      where: {
-                        user: {
-                          organizationId: currentUser.organizationId,
-                        },
-                      },
-                      select: {
-                        username: true,
-                        mentorUsername: true,
-                      },
-                    },
-                  },
-                },
-              },
-            }),
-            ctx.db.submission.count({
-              where: {
-                attachmentId: assignmentId,
-                status: "SUBMITTED",
-                AND: [
-                  selectedMentor && selectedMentor !== "all"
-                    ? {
-                        enrolledUser: {
-                          mentorUsername: selectedMentor,
-                        },
-                      }
-                    : {},
-                  searchQuery
-                    ? {
-                        enrolledUser: {
-                          username: {
-                            contains: searchQuery,
-                            mode: "insensitive",
-                          },
-                        },
-                      }
-                    : {},
-                  username
-                    ? {
-                        enrolledUser: {
-                          username: username,
-                        },
-                      }
-                    : {},
-                ],
-              },
-            }),
-          ]);
-
-          assignmentData = rawAssignmentData;
-          totalCount = countResult;
-        } else if (currentUser.role === "MENTOR") {
-          const [rawAssignmentData, countResult] = await Promise.all([
-            ctx.db.attachment.findUnique({
-              where: { id: assignmentId },
-              include: {
-                ...baseInclude,
-                submissions: {
-                  where: {
-                    status: "SUBMITTED",
-                    AND: [
-                      {
-                        enrolledUser: {
-                          mentorUsername: currentUser.username,
-                        },
-                      },
-                      username
-                        ? {
-                            enrolledUser: {
-                              username: username,
-                            },
-                          }
-                        : {},
-                      searchQuery
-                        ? {
-                            enrolledUser: {
-                              username: {
-                                contains: searchQuery,
-                                mode: "insensitive",
-                              },
-                            },
-                          }
-                        : {},
-                    ],
-                  },
-                  take: limit,
-                  skip,
-                  orderBy: { submissionDate: "desc" },
-                  include: {
-                    enrolledUser: {
-                      select: {
-                        username: true,
-                        mentorUsername: true,
-                      },
-                    },
-                    points: {
-                      select: {
-                        category: true,
-                        score: true,
-                      },
-                    },
-                  },
-                },
-                course: {
-                  select: {
-                    id: true,
-                    title: true,
-                    createdById: true,
-                    enrolledUsers: {
-                      where: {
-                        mentorUsername: currentUser.username,
-                      },
-                      select: {
-                        username: true,
-                        mentorUsername: true,
-                      },
-                    },
-                  },
-                },
-              },
-            }),
-            ctx.db.submission.count({
-              where: {
-                attachmentId: assignmentId,
-                status: "SUBMITTED",
-                AND: [
-                  {
-                    enrolledUser: {
-                      mentorUsername: currentUser.username,
-                    },
-                  },
-                  username
-                    ? {
-                        enrolledUser: {
-                          username: username,
-                        },
-                      }
-                    : {},
-                  searchQuery
-                    ? {
-                        enrolledUser: {
-                          username: {
-                            contains: searchQuery,
-                            mode: "insensitive",
-                          },
-                        },
-                      }
-                    : {},
-                ],
-              },
-            }),
-          ]);
-
-          assignmentData = rawAssignmentData;
-          totalCount = countResult;
-        } else {
-          // STUDENT role
-          assignmentData = await ctx.db.attachment.findUnique({
+      if (currentUser.role === "INSTRUCTOR") {
+        const [rawAssignmentData, countResult] = await Promise.all([
+          ctx.db.attachment.findUnique({
             where: { id: assignmentId },
             include: {
               ...baseInclude,
               submissions: {
                 where: {
                   status: "SUBMITTED",
-                  enrolledUser: {
-                    user: {
-                      id: currentUser.id,
-                    },
-                  },
+                  AND: [
+                    selectedMentor && selectedMentor !== "all"
+                      ? {
+                          enrolledUser: {
+                            mentorUsername: selectedMentor,
+                          },
+                        }
+                      : {},
+                    searchQuery
+                      ? {
+                          enrolledUser: {
+                            username: {
+                              contains: searchQuery,
+                              mode: "insensitive",
+                            },
+                          },
+                        }
+                      : {},
+                    username
+                      ? {
+                          enrolledUser: {
+                            username: username,
+                          },
+                        }
+                      : {},
+                  ],
                 },
+                take: limit,
+                skip,
+                orderBy: { submissionDate: "desc" },
                 include: {
                   enrolledUser: {
                     select: {
@@ -1838,83 +423,259 @@ export const assignmentsRouter = createTRPCRouter({
                   },
                 },
               },
+              course: {
+                select: {
+                  id: true,
+                  title: true,
+                  createdById: true,
+                  classes: true,
+                  enrolledUsers: {
+                    where: {
+                      user: {
+                        organizationId: currentUser.organizationId,
+                      },
+                    },
+                    select: {
+                      username: true,
+                      mentorUsername: true,
+                    },
+                  },
+                },
+              },
             },
-          });
-        }
+          }),
+          ctx.db.submission.count({
+            where: {
+              attachmentId: assignmentId,
+              status: "SUBMITTED",
+              AND: [
+                selectedMentor && selectedMentor !== "all"
+                  ? {
+                      enrolledUser: {
+                        mentorUsername: selectedMentor,
+                      },
+                    }
+                  : {},
+                searchQuery
+                  ? {
+                      enrolledUser: {
+                        username: {
+                          contains: searchQuery,
+                          mode: "insensitive",
+                        },
+                      },
+                    }
+                  : {},
+                username
+                  ? {
+                      enrolledUser: {
+                        username: username,
+                      },
+                    }
+                  : {},
+              ],
+            },
+          }),
+        ]);
 
-        if (!assignmentData) {
-          return { success: false, error: "Assignment not found" };
-        }
+        assignmentData = rawAssignmentData;
+        totalCount = countResult;
+      } else if (currentUser.role === "MENTOR") {
+        const [rawAssignmentData, countResult] = await Promise.all([
+          ctx.db.attachment.findUnique({
+            where: { id: assignmentId },
+            include: {
+              ...baseInclude,
+              submissions: {
+                where: {
+                  status: "SUBMITTED",
+                  AND: [
+                    {
+                      enrolledUser: {
+                        mentorUsername: currentUser.username,
+                      },
+                    },
+                    username
+                      ? {
+                          enrolledUser: {
+                            username: username,
+                          },
+                        }
+                      : {},
+                    searchQuery
+                      ? {
+                          enrolledUser: {
+                            username: {
+                              contains: searchQuery,
+                              mode: "insensitive",
+                            },
+                          },
+                        }
+                      : {},
+                  ],
+                },
+                take: limit,
+                skip,
+                orderBy: { submissionDate: "desc" },
+                include: {
+                  enrolledUser: {
+                    select: {
+                      username: true,
+                      mentorUsername: true,
+                    },
+                  },
+                  points: {
+                    select: {
+                      category: true,
+                      score: true,
+                    },
+                  },
+                },
+              },
+              course: {
+                select: {
+                  id: true,
+                  title: true,
+                  createdById: true,
+                  enrolledUsers: {
+                    where: {
+                      mentorUsername: currentUser.username,
+                    },
+                    select: {
+                      username: true,
+                      mentorUsername: true,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+          ctx.db.submission.count({
+            where: {
+              attachmentId: assignmentId,
+              status: "SUBMITTED",
+              AND: [
+                {
+                  enrolledUser: {
+                    mentorUsername: currentUser.username,
+                  },
+                },
+                username
+                  ? {
+                      enrolledUser: {
+                        username: username,
+                      },
+                    }
+                  : {},
+                searchQuery
+                  ? {
+                      enrolledUser: {
+                        username: {
+                          contains: searchQuery,
+                          mode: "insensitive",
+                        },
+                      },
+                    }
+                  : {},
+              ],
+            },
+          }),
+        ]);
 
-        const notSubmittedMentees =
-          assignmentData.course?.enrolledUsers?.filter(
-            (enrolled: { username: string; mentorUsername: string | null }) =>
-              !assignmentData.submissions?.some(
-                (submission: { enrolledUser: { username: string } }) =>
-                  submission.enrolledUser.username === enrolled.username,
-              ),
-          ) ?? [];
-
-        const sortedAssignments = [...(assignmentData.submissions ?? [])].sort(
-          (
-            a: { enrolledUser: { username: string } },
-            b: { enrolledUser: { username: string } },
-          ) => a.enrolledUser.username.localeCompare(b.enrolledUser.username),
-        );
-
-        const isCourseAdmin =
-          currentUser.role === "INSTRUCTOR"
-            ? currentUser.id === assignmentData.course?.createdById
-            : currentUser.adminForCourses.some(
-                (course: { id: string }) =>
-                  course.id === assignmentData.course?.id,
-              );
-
-        const totalPages = Math.ceil(totalCount / limit);
-
-        const mentors = assignmentData?.course?.enrolledUsers
-          ? Array.from(
-              new Set(
-                assignmentData.course.enrolledUsers
-                  .map(
-                    (user: { mentorUsername: string | null }) =>
-                      user.mentorUsername,
-                  )
-                  .filter(Boolean),
-              ),
-            )
-          : [];
-
-        return {
-          success: true,
-          data: {
-            assignment: assignmentData,
-            assignments: sortedAssignments,
-            notSubmittedMentees,
-            isCourseAdmin,
-            mentors: mentors as Array<string>,
-            pagination: {
-              currentPage: page,
-              totalPages,
-              pageSize: limit,
+        assignmentData = rawAssignmentData;
+        totalCount = countResult;
+      } else {
+        // STUDENT role
+        assignmentData = await ctx.db.attachment.findUnique({
+          where: { id: assignmentId },
+          include: {
+            ...baseInclude,
+            submissions: {
+              where: {
+                status: "SUBMITTED",
+                enrolledUser: {
+                  user: {
+                    id: currentUser.id,
+                  },
+                },
+              },
+              include: {
+                enrolledUser: {
+                  select: {
+                    username: true,
+                    mentorUsername: true,
+                  },
+                },
+                points: {
+                  select: {
+                    category: true,
+                    score: true,
+                  },
+                },
+              },
             },
           },
-        };
-      } catch (error) {
-        logger.error(
-          {
-            err: error,
-            userId: ctx.session.user.id,
-            assignmentId: input.assignmentId,
-          },
-          "failed to fetch assignment detail data",
-        );
-        return {
-          success: false,
-          error: "Failed to fetch assignment detail data",
-          details: error instanceof Error ? error.message : String(error),
-        };
+        });
       }
+
+      if (!assignmentData) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Assignment not found",
+        });
+      }
+
+      const notSubmittedMentees =
+        assignmentData.course?.enrolledUsers?.filter(
+          (enrolled: { username: string; mentorUsername: string | null }) =>
+            !assignmentData.submissions?.some(
+              (submission: { enrolledUser: { username: string } }) =>
+                submission.enrolledUser.username === enrolled.username,
+            ),
+        ) ?? [];
+
+      const sortedAssignments = [...(assignmentData.submissions ?? [])].sort(
+        (
+          a: { enrolledUser: { username: string } },
+          b: { enrolledUser: { username: string } },
+        ) => a.enrolledUser.username.localeCompare(b.enrolledUser.username),
+      );
+
+      const isCourseAdmin =
+        currentUser.role === "INSTRUCTOR"
+          ? currentUser.id === assignmentData.course?.createdById
+          : currentUser.adminForCourses.some(
+              (course: { id: string }) =>
+                course.id === assignmentData.course?.id,
+            );
+
+      const totalPages = Math.ceil(totalCount / limit);
+
+      const mentors = assignmentData?.course?.enrolledUsers
+        ? Array.from(
+            new Set(
+              assignmentData.course.enrolledUsers
+                .map(
+                  (user: { mentorUsername: string | null }) =>
+                    user.mentorUsername,
+                )
+                .filter(Boolean),
+            ),
+          )
+        : [];
+
+      return {
+        assignment: assignmentData,
+        assignments: sortedAssignments,
+        notSubmittedMentees,
+        isCourseAdmin,
+        mentors: mentors as Array<string>,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          pageSize: limit,
+        },
+      };
     }),
 
   getAssignmentEvaluateData: protectedProcedure
@@ -1927,198 +688,175 @@ export const assignmentsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       if (ctx.session.user.role === "STUDENT") {
-        return {
-          success: false,
-          error: "Students cannot access evaluation page",
-        };
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Students cannot access evaluation page",
+        });
       }
       await requireAssignmentReadAccess(ctx, input.assignmentId);
-      try {
-        const currentUser = ctx.session.user;
-        const { assignmentId, submissionId, username } = input;
+      const currentUser = ctx.session.user;
+      const { assignmentId, submissionId, username } = input;
 
-        const assignment = await ctx.db.attachment.findUnique({
-          where: {
-            id: assignmentId,
-          },
-          include: {
-            class: {
-              include: {
-                course: true,
-              },
+      const assignment = await ctx.db.attachment.findUnique({
+        where: {
+          id: assignmentId,
+        },
+        include: {
+          class: {
+            include: {
+              course: true,
             },
           },
-        });
+        },
+      });
 
-        const assignmenttemp = await ctx.db.attachment.findUnique({
-          where: {
-            id: assignmentId,
+      const assignmenttemp = await ctx.db.attachment.findUnique({
+        where: {
+          id: assignmentId,
+        },
+      });
+
+      const submissions = await ctx.db.submission.findMany({
+        where: {
+          attachmentId: assignmentId,
+          status: "SUBMITTED",
+        },
+        include: {
+          enrolledUser: {
+            include: {
+              user: true,
+            },
           },
-        });
+          points: true,
+          assignment: true,
+          artifacts: {
+            where: { isLatest: true },
+            orderBy: { createdAt: "desc" },
+          },
+          testRuns: {
+            orderBy: { createdAt: "desc" },
+            take: 5,
+          },
+          review: true,
+        },
+        orderBy: {
+          enrolledUser: {
+            username: "asc",
+          },
+        },
+      });
 
-        const submissions = await ctx.db.submission.findMany({
+      let filteredSubmissions: Array<any> = [];
+
+      if (currentUser.role === "INSTRUCTOR") {
+        filteredSubmissions = submissions;
+      }
+
+      if (currentUser.role === "MENTOR") {
+        filteredSubmissions = submissions.filter(
+          (submission) =>
+            submission.enrolledUser.mentorUsername === currentUser.username,
+        );
+      }
+
+      if (assignmenttemp?.maxSubmissions && assignmenttemp.maxSubmissions > 1) {
+        const submissionCount = await ctx.db.submission.groupBy({
+          by: ["enrolledUserId"],
           where: {
             attachmentId: assignmentId,
             status: "SUBMITTED",
           },
-          include: {
-            enrolledUser: {
-              include: {
-                user: true,
-              },
-            },
-            points: true,
-            assignment: true,
-            artifacts: {
-              where: { isLatest: true },
-              orderBy: { createdAt: "desc" },
-            },
-            testRuns: {
-              orderBy: { createdAt: "desc" },
-              take: 5,
-            },
-            review: true,
-          },
-          orderBy: {
-            enrolledUser: {
-              username: "asc",
-            },
+          _count: {
+            id: true,
           },
         });
 
-        let filteredSubmissions: Array<any> = [];
-
-        if (currentUser.role === "INSTRUCTOR") {
-          filteredSubmissions = submissions;
-        }
-
-        if (currentUser.role === "MENTOR") {
-          filteredSubmissions = submissions.filter(
-            (submission) =>
-              submission.enrolledUser.mentorUsername === currentUser.username,
+        filteredSubmissions.forEach((submission) => {
+          const submissionCountData = submissionCount.find(
+            (data) => data.enrolledUserId === submission.enrolledUserId,
           );
-        }
+          if (submissionCountData) {
+            submission.submissionCount = submissionCountData._count.id;
+          }
+        });
 
-        if (
-          assignmenttemp?.maxSubmissions &&
-          assignmenttemp.maxSubmissions > 1
-        ) {
-          const submissionCount = await ctx.db.submission.groupBy({
-            by: ["enrolledUserId"],
-            where: {
-              attachmentId: assignmentId,
-              status: "SUBMITTED",
-            },
-            _count: {
-              id: true,
-            },
-          });
+        filteredSubmissions.forEach((submission) => {
+          submission.submissionIndex = 1;
+          if (submission.submissionCount && submission.submissionCount > 1) {
+            const submissionIndex =
+              submissions
+                .filter(
+                  (sub) => sub.enrolledUserId === submission.enrolledUserId,
+                )
+                .findIndex((sub) => sub.id === submission.id) || 0;
+            submission.submissionIndex = submissionIndex + 1;
+          }
+        });
+      }
 
-          filteredSubmissions.forEach((submission) => {
-            const submissionCountData = submissionCount.find(
-              (data) => data.enrolledUserId === submission.enrolledUserId,
-            );
-            if (submissionCountData) {
-              submission.submissionCount = submissionCountData._count.id;
-            }
-          });
-
-          filteredSubmissions.forEach((submission) => {
-            submission.submissionIndex = 1;
-            if (submission.submissionCount && submission.submissionCount > 1) {
-              const submissionIndex =
-                submissions
-                  .filter(
-                    (sub) => sub.enrolledUserId === submission.enrolledUserId,
-                  )
-                  .findIndex((sub) => sub.id === submission.id) || 0;
-              submission.submissionIndex = submissionIndex + 1;
-            }
-          });
-        }
-
-        if (username) {
-          filteredSubmissions = filteredSubmissions.filter(
-            (submission) => submission?.enrolledUser.username === username,
-          );
-        }
-
-        const submission = filteredSubmissions.find(
-          (submission) => submission?.id === submissionId,
+      if (username) {
+        filteredSubmissions = filteredSubmissions.filter(
+          (submission) => submission?.enrolledUser.username === username,
         );
-        let hydratedSubmission = submission;
-        // Stored as a JSON string, but the evaluate payload serves the merged
-        // template object so the client renders it without a second read.
-        type MergedAssignment = Partial<
-          Omit<NonNullable<typeof assignment>, "sandboxTemplate">
-        > & { sandboxTemplate: SandpackTemplate };
-        let assignmentWithTemplate: typeof assignment | MergedAssignment =
-          assignment;
+      }
 
-        const submissionMode = assignment?.submissionMode;
-        const isSandboxMode =
-          submissionMode !== "WORKSPACE" && submissionMode !== "EXTERNAL_LINK";
+      const submission = filteredSubmissions.find(
+        (submission) => submission?.id === submissionId,
+      );
+      let hydratedSubmission = submission;
+      // Stored as a JSON string, but the evaluate payload serves the merged
+      // template object so the client renders it without a second read.
+      type MergedAssignment = Partial<
+        Omit<NonNullable<typeof assignment>, "sandboxTemplate">
+      > & { sandboxTemplate: SandpackTemplate };
+      let assignmentWithTemplate: typeof assignment | MergedAssignment =
+        assignment;
 
-        if (isSandboxMode) {
-          const locRow = await ctx.db.attachment.findUnique({
-            where: { id: assignmentId },
-            select: locatorSelect,
-          });
-          const locator = locRow ? locatorFrom(locRow) : null;
+      const submissionMode = assignment?.submissionMode;
+      const isSandboxMode =
+        submissionMode !== "WORKSPACE" && submissionMode !== "EXTERNAL_LINK";
 
-          if (locator) {
-            const sandboxTemplate = await readSandpackTemplate(locator);
-            const submissionFiles =
-              submission && submissionId
-                ? await readSubmission(locator, submissionId)
-                : null;
+      if (isSandboxMode) {
+        const locRow = await ctx.db.attachment.findUnique({
+          where: { id: assignmentId },
+          select: locatorSelect,
+        });
+        const locator = locRow ? locatorFrom(locRow) : null;
 
-            if (sandboxTemplate && typeof sandboxTemplate === "object") {
-              const mergedTemplate = mergeForAudience(
-                sandboxTemplate as SandpackTemplate,
-                submissionFiles,
-                "instructor",
-              );
-              assignmentWithTemplate = {
-                ...assignment,
-                sandboxTemplate: mergedTemplate,
+        if (locator) {
+          const sandboxTemplate = await readSandpackTemplate(locator);
+          const submissionFiles =
+            submission && submissionId
+              ? await readSubmission(locator, submissionId)
+              : null;
+
+          if (sandboxTemplate && typeof sandboxTemplate === "object") {
+            const mergedTemplate = mergeForAudience(
+              sandboxTemplate as SandpackTemplate,
+              submissionFiles,
+              "instructor",
+            );
+            assignmentWithTemplate = {
+              ...assignment,
+              sandboxTemplate: mergedTemplate,
+            };
+            if (submission) {
+              hydratedSubmission = {
+                ...submission,
+                data: mergedTemplate.files ?? submission.data,
               };
-              if (submission) {
-                hydratedSubmission = {
-                  ...submission,
-                  data: mergedTemplate.files ?? submission.data,
-                };
-              }
-            } else if (submission && submissionFiles) {
-              hydratedSubmission = { ...submission, data: submissionFiles };
             }
+          } else if (submission && submissionFiles) {
+            hydratedSubmission = { ...submission, data: submissionFiles };
           }
         }
-
-        return {
-          success: true,
-          data: {
-            assignment: assignmentWithTemplate,
-            submissions: filteredSubmissions,
-            submission: hydratedSubmission,
-          },
-        };
-      } catch (error) {
-        logger.error(
-          {
-            err: error,
-            userId: ctx.session.user.id,
-            assignmentId: input.assignmentId,
-            submissionId: input.submissionId,
-          },
-          "failed to fetch assignment evaluate data",
-        );
-        return {
-          success: false,
-          error: "Failed to fetch assignment evaluate data",
-          details: error instanceof Error ? error.message : String(error),
-        };
       }
+
+      return {
+        assignment: assignmentWithTemplate,
+        submissions: filteredSubmissions,
+        submission: hydratedSubmission,
+      };
     }),
 
   getTutorStudentAssignmentsData: protectedProcedure
@@ -2126,474 +864,372 @@ export const assignmentsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       // Check if current user is a student (should redirect)
       if (ctx.session.user.role === "STUDENT") {
-        return {
-          success: false,
-          error: "Students cannot access this page",
-          redirectTo: "/assignments",
-        };
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Students cannot access this page",
+        });
       }
       // `userId` is a username here; a mentor may only target their own mentees.
       const userId = await resolveTargetUsername(ctx, input.userId);
-      try {
-        const currentUser = ctx.session.user;
+      const currentUser = ctx.session.user;
 
-        // Fetch student profile
-        const student = await ctx.db.user.findUnique({
-          where: { username: userId },
-          select: {
-            username: true,
-            name: true,
-            image: true,
-            email: true,
-            enrolledUsers: {
-              select: {
-                courseId: true,
-                mentorUsername: true,
-              },
+      // Fetch student profile
+      const student = await ctx.db.user.findUnique({
+        where: { username: userId },
+        select: {
+          username: true,
+          name: true,
+          image: true,
+          email: true,
+          enrolledUsers: {
+            select: {
+              courseId: true,
+              mentorUsername: true,
             },
           },
+        },
+      });
+
+      if (!student) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Student not found",
         });
+      }
 
-        if (!student) {
-          return {
-            success: false,
-            error: "Student not found",
-            redirectTo: "/tutor/assignments/submissions",
-          };
-        }
-
-        // Fetch simple courses for the user
-        const courses = await ctx.db.course.findMany({
-          where: {
-            enrolledUsers: {
-              some: {
-                username: userId,
-              },
+      // Fetch simple courses for the user
+      const courses = await ctx.db.course.findMany({
+        where: {
+          enrolledUsers: {
+            some: {
+              username: userId,
             },
           },
-          select: {
-            id: true,
-            title: true,
-          },
-        });
+        },
+        select: {
+          id: true,
+          title: true,
+        },
+      });
 
-        // Fetch courses with assignments based on role
-        const coursesWithAssignments = await ctx.db.course.findMany({
-          where: {
-            id: {
-              in: courses.map((course) => course.id),
-            },
-            ...(currentUser.role === "MENTOR" && {
-              classes: {
-                some: {
-                  attachments: {
-                    some: {
-                      submissions: {
-                        some: {
-                          status: "SUBMITTED",
-                          enrolledUser: {
-                            mentorUsername: currentUser.username,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            }),
+      // Fetch courses with assignments based on role
+      const coursesWithAssignments = await ctx.db.course.findMany({
+        where: {
+          id: {
+            in: courses.map((course) => course.id),
           },
-          select: {
-            id: true,
-            title: true,
-            image: true,
-            startDate: true,
-            endDate: true,
-            isPublished: true,
-            createdAt: true,
-            updatedAt: true,
-            createdById: true,
+          ...(currentUser.role === "MENTOR" && {
             classes: {
-              select: {
-                id: true,
-                createdAt: true,
+              some: {
                 attachments: {
-                  where: {
-                    attachmentType: "ASSIGNMENT",
-                    ...(currentUser.role === "MENTOR" && {
-                      submissions: {
-                        some: {
-                          status: "SUBMITTED",
-                          enrolledUser: {
-                            mentorUsername: currentUser.username,
-                          },
-                        },
-                      },
-                    }),
-                  },
-                  select: {
-                    id: true,
-                    title: true,
-                    submissionMode: true,
-                    dueDate: true,
-                    class: {
-                      select: {
-                        id: true,
-                        title: true,
-                      },
-                    },
+                  some: {
                     submissions: {
-                      where: {
+                      some: {
                         status: "SUBMITTED",
                         enrolledUser: {
-                          user: {
-                            username: userId,
-                          },
-                        },
-                        ...(currentUser.role === "MENTOR" && {
-                          enrolledUser: {
-                            mentorUsername: currentUser.username,
-                          },
-                        }),
-                      },
-                      select: {
-                        id: true,
-                        submissionDate: true,
-                        points: {
-                          select: {
-                            id: true,
-                            score: true,
-                          },
-                        },
-                        enrolledUser: {
-                          select: {
-                            mentorUsername: true,
-                          },
+                          mentorUsername: currentUser.username,
                         },
                       },
                     },
                   },
                 },
               },
-              orderBy: {
-                createdAt: "asc",
+            },
+          }),
+        },
+        select: {
+          id: true,
+          title: true,
+          image: true,
+          startDate: true,
+          endDate: true,
+          isPublished: true,
+          createdAt: true,
+          updatedAt: true,
+          createdById: true,
+          classes: {
+            select: {
+              id: true,
+              createdAt: true,
+              attachments: {
+                where: {
+                  attachmentType: "ASSIGNMENT",
+                  ...(currentUser.role === "MENTOR" && {
+                    submissions: {
+                      some: {
+                        status: "SUBMITTED",
+                        enrolledUser: {
+                          mentorUsername: currentUser.username,
+                        },
+                      },
+                    },
+                  }),
+                },
+                select: {
+                  id: true,
+                  title: true,
+                  submissionMode: true,
+                  dueDate: true,
+                  class: {
+                    select: {
+                      id: true,
+                      title: true,
+                    },
+                  },
+                  submissions: {
+                    where: {
+                      status: "SUBMITTED",
+                      enrolledUser: {
+                        user: {
+                          username: userId,
+                        },
+                      },
+                      ...(currentUser.role === "MENTOR" && {
+                        enrolledUser: {
+                          mentorUsername: currentUser.username,
+                        },
+                      }),
+                    },
+                    select: {
+                      id: true,
+                      submissionDate: true,
+                      points: {
+                        select: {
+                          id: true,
+                          score: true,
+                        },
+                      },
+                      enrolledUser: {
+                        select: {
+                          mentorUsername: true,
+                        },
+                      },
+                    },
+                  },
+                },
               },
             },
+            orderBy: {
+              createdAt: "asc",
+            },
           },
-        });
+        },
+      });
 
-        // Sort assignments
-        const sortedAssignments = coursesWithAssignments.map((course) => ({
-          ...course,
-          classes: course.classes
-            .map((cls) => ({
-              ...cls,
-              attachments: cls.attachments.sort((a, b) =>
-                a.title.localeCompare(b.title),
-              ),
-            }))
-            .sort(
-              (a, b) =>
-                new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime(),
+      // Sort assignments
+      const sortedAssignments = coursesWithAssignments.map((course) => ({
+        ...course,
+        classes: course.classes
+          .map((cls) => ({
+            ...cls,
+            attachments: cls.attachments.sort((a, b) =>
+              a.title.localeCompare(b.title),
             ),
-        }));
+          }))
+          .sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          ),
+      }));
 
-        return {
-          success: true,
-          data: {
-            courses,
-            sortedAssignments,
-            userId,
-            student,
-          },
-        };
-      } catch (error) {
-        logger.error(
-          { err: error, userId: input.userId },
-          "failed to fetch tutor student assignments data",
-        );
-        return {
-          success: false,
-          error: "Failed to fetch tutor student assignments data",
-          details: error instanceof Error ? error.message : String(error),
-        };
-      }
+      return {
+        courses,
+        sortedAssignments,
+        userId,
+        student,
+      };
     }),
 
   getCourseStudentStats: protectedProcedure
     .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }) => {
       if (ctx.session.user.role === "STUDENT") {
-        return { success: false, error: "Unauthorized", data: null };
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Students cannot access course stats",
+        });
       }
       await requireCourseReadAccess(ctx, input.courseId);
-      try {
-        const currentUser = ctx.session.user;
+      const currentUser = ctx.session.user;
 
-        const totalAssignments = await ctx.db.attachment.count({
-          where: {
-            attachmentType: "ASSIGNMENT",
-            OR: [
-              { courseId: input.courseId },
-              { class: { courseId: input.courseId } },
-            ],
+      const totalAssignments = await ctx.db.attachment.count({
+        where: {
+          attachmentType: "ASSIGNMENT",
+          OR: [
+            { courseId: input.courseId },
+            { class: { courseId: input.courseId } },
+          ],
+        },
+      });
+
+      const enrolledUserFilter =
+        currentUser.role === "MENTOR"
+          ? {
+              courseId: input.courseId,
+              mentorUsername: currentUser.username,
+            }
+          : { courseId: input.courseId };
+
+      const submissions = await ctx.db.submission.findMany({
+        where: {
+          status: "SUBMITTED",
+          enrolledUser: enrolledUserFilter,
+        },
+        select: {
+          id: true,
+          enrolledUser: { select: { username: true } },
+          points: { select: { id: true, category: true } },
+          attachmentId: true,
+          testRuns: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { status: true },
           },
-        });
+        },
+      });
 
-        const enrolledUserFilter =
-          currentUser.role === "MENTOR"
-            ? {
-                courseId: input.courseId,
-                mentorUsername: currentUser.username,
-              }
-            : { courseId: input.courseId };
-
-        const submissions = await ctx.db.submission.findMany({
-          where: {
-            status: "SUBMITTED",
-            enrolledUser: enrolledUserFilter,
-          },
-          select: {
-            id: true,
-            enrolledUser: { select: { username: true } },
-            points: { select: { id: true, category: true } },
-            attachmentId: true,
-            testRuns: {
-              orderBy: { createdAt: "desc" },
-              take: 1,
-              select: { status: true },
-            },
-          },
-        });
-
-        const byUser = new Map<
-          string,
-          {
-            submitted: Set<string>;
-            evaluated: Set<string>;
-            testsPassed: Set<string>;
-            testsFailed: Set<string>;
-          }
-        >();
-        submissions.forEach((s) => {
-          const u = s.enrolledUser.username;
-          const cur = byUser.get(u) ?? {
-            submitted: new Set<string>(),
-            evaluated: new Set<string>(),
-            testsPassed: new Set<string>(),
-            testsFailed: new Set<string>(),
-          };
-          cur.submitted.add(s.attachmentId);
-          if (s.points.length > 0) cur.evaluated.add(s.attachmentId);
-          const latestRun = s.testRuns[0]?.status;
-          if (latestRun === "PASSED") cur.testsPassed.add(s.attachmentId);
-          if (latestRun === "FAILED" || latestRun === "ERROR")
-            cur.testsFailed.add(s.attachmentId);
-          byUser.set(u, cur);
-        });
-
-        const stats: Record<
-          string,
-          {
-            submitted: number;
-            evaluated: number;
-            testsPassed: number;
-            testsFailed: number;
-          }
-        > = {};
-        byUser.forEach((v, k) => {
-          stats[k] = {
-            submitted: v.submitted.size,
-            evaluated: v.evaluated.size,
-            testsPassed: v.testsPassed.size,
-            testsFailed: v.testsFailed.size,
-          };
-        });
-
-        return {
-          success: true,
-          data: {
-            totalAssignments,
-            stats,
-          },
+      const byUser = new Map<
+        string,
+        {
+          submitted: Set<string>;
+          evaluated: Set<string>;
+          testsPassed: Set<string>;
+          testsFailed: Set<string>;
+        }
+      >();
+      submissions.forEach((s) => {
+        const u = s.enrolledUser.username;
+        const cur = byUser.get(u) ?? {
+          submitted: new Set<string>(),
+          evaluated: new Set<string>(),
+          testsPassed: new Set<string>(),
+          testsFailed: new Set<string>(),
         };
-      } catch (error) {
-        logger.error(
-          { err: error, courseId: input.courseId },
-          "failed to fetch course student stats",
-        );
-        return {
-          success: false,
-          error: "Failed to fetch course student stats",
-          data: null,
+        cur.submitted.add(s.attachmentId);
+        if (s.points.length > 0) cur.evaluated.add(s.attachmentId);
+        const latestRun = s.testRuns[0]?.status;
+        if (latestRun === "PASSED") cur.testsPassed.add(s.attachmentId);
+        if (latestRun === "FAILED" || latestRun === "ERROR")
+          cur.testsFailed.add(s.attachmentId);
+        byUser.set(u, cur);
+      });
+
+      const stats: Record<
+        string,
+        {
+          submitted: number;
+          evaluated: number;
+          testsPassed: number;
+          testsFailed: number;
+        }
+      > = {};
+      byUser.forEach((v, k) => {
+        stats[k] = {
+          submitted: v.submitted.size,
+          evaluated: v.evaluated.size,
+          testsPassed: v.testsPassed.size,
+          testsFailed: v.testsFailed.size,
         };
-      }
+      });
+
+      return {
+        totalAssignments,
+        stats,
+      };
     }),
 
   getAssignmentsDashboardData: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
+    const currentUser = ctx.session.user;
 
-      // Check if current user is a student (should redirect)
-      if (currentUser.role === "STUDENT") {
-        return {
-          success: false,
-          error: "Students cannot access this page",
-          redirectTo: "/assignments",
-        };
-      }
-
-      // Fetch students with complex includes
-      const students = await ctx.db.user.findMany({
-        where: {
-          role: "STUDENT",
-          organizationId: currentUser.organizationId,
-          ...(currentUser.role === "MENTOR" && {
-            enrolledUsers: {
-              some: {
-                mentorUsername: currentUser.username,
-              },
-            },
-          }),
-        },
-        include: {
-          course: true,
-          enrolledUsers: true,
-        },
+    // Check if current user is a student (should redirect)
+    if (currentUser.role === "STUDENT") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Students cannot access this page",
       });
-
-      // Fetch courses with complex includes
-      const courses = await ctx.db.course.findMany({
-        where: {
-          ...(currentUser.role === "MENTOR"
-            ? {
-                enrolledUsers: {
-                  some: {
-                    mentorUsername: currentUser.username,
-                  },
-                },
-              }
-            : {
-                enrolledUsers: {
-                  some: {
-                    username: currentUser.username,
-                  },
-                },
-              }),
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-        include: {
-          classes: true,
-          createdBy: {
-            select: {
-              id: true,
-              username: true,
-              name: true,
-              image: true,
-              email: true,
-              role: true,
-              createdAt: true,
-              updatedAt: true,
-            },
-          },
-          _count: {
-            select: {
-              classes: true,
-            },
-          },
-          courseAdmins: {
-            select: {
-              id: true,
-              username: true,
-              name: true,
-              image: true,
-              email: true,
-              role: true,
-              createdAt: true,
-              updatedAt: true,
-            },
-          },
-        },
-      });
-
-      return {
-        success: true,
-        data: {
-          students,
-          courses,
-          currentUser,
-        },
-      };
-    } catch (error) {
-      logger.error(
-        { err: error, userId: ctx.session.user.id },
-        "failed to fetch assignments dashboard data",
-      );
-      return {
-        success: false,
-        error: "Failed to fetch assignments dashboard data",
-        details: error instanceof Error ? error.message : String(error),
-      };
     }
-  }),
 
-  getWorkspaceConfig: protectedProcedure
-    .input(z.object({ assignmentId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const assignment = await requireAssignmentReadAccess(ctx, input.assignmentId);
-      const user = ctx.session.user;
-      const canSeeHidden = canManageAssignment(user, assignment) || user.role === "MENTOR";
-      const defaults = defaultWorkspaceConfig();
+    // Fetch students with complex includes
+    const students = await ctx.db.user.findMany({
+      where: {
+        role: "STUDENT",
+        organizationId: currentUser.organizationId,
+        ...(currentUser.role === "MENTOR" && {
+          enrolledUsers: {
+            some: {
+              mentorUsername: currentUser.username,
+            },
+          },
+        }),
+      },
+      include: {
+        course: true,
+        enrolledUsers: true,
+      },
+    });
 
-      const [config, testCases, artifacts] = await Promise.all([
-        ctx.db.assignmentConfig.findUnique({
-          where: { assignmentId: input.assignmentId },
-        }),
-        ctx.db.assignmentTestCase.findMany({
-          where: {
-            assignmentId: input.assignmentId,
-            ...(canSeeHidden ? {} : { visibility: "VISIBLE" as const }),
+    // Fetch courses with complex includes
+    const courses = await ctx.db.course.findMany({
+      where: {
+        ...(currentUser.role === "MENTOR"
+          ? {
+              enrolledUsers: {
+                some: {
+                  mentorUsername: currentUser.username,
+                },
+              },
+            }
+          : {
+              enrolledUsers: {
+                some: {
+                  username: currentUser.username,
+                },
+              },
+            }),
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      include: {
+        classes: true,
+        createdBy: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            image: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
           },
-          orderBy: [{ visibility: "asc" }, { createdAt: "asc" }],
-        }),
-        ctx.db.assignmentArtifact.findMany({
-          where: {
-            assignmentId: input.assignmentId,
-            submissionId: null,
-            isLatest: true,
-            kind: { in: ["STARTER", "MIGRATION"] },
-          },
-          orderBy: { createdAt: "desc" },
-        }),
-      ]);
-
-      return {
-        success: true,
-        data: {
-          assignment: {
-            id: assignment.id,
-            title: assignment.title,
-            submissionMode: assignment.submissionMode,
-            dueDate: assignment.dueDate,
-          },
-          config: {
-            ...defaults,
-            ...(config ?? {}),
-            previewPorts: config?.previewPorts?.length
-              ? config.previewPorts
-              : defaults.previewPorts,
-            readonlyPaths: config?.readonlyPaths?.length
-              ? config.readonlyPaths
-              : defaults.readonlyPaths,
-          },
-          testCases,
-          artifacts,
-          canManage: canManageAssignment(user, assignment),
         },
-      };
-    }),
+        _count: {
+          select: {
+            classes: true,
+          },
+        },
+        courseAdmins: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            image: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    return {
+      students,
+      courses,
+      currentUser,
+    };
+  }),
 
   updateWorkspaceConfig: protectedProcedure
     .input(
@@ -2626,7 +1262,8 @@ export const assignmentsRouter = createTRPCRouter({
           previewPorts: input.previewPorts ?? defaults.previewPorts,
           readonlyPaths: input.readonlyPaths ?? defaults.readonlyPaths,
           grading: (input.grading ?? defaults.grading) as never,
-          publicTestMetadata: (input.publicTestMetadata ?? defaults.publicTestMetadata) as never,
+          publicTestMetadata: (input.publicTestMetadata ??
+            defaults.publicTestMetadata) as never,
           defaultProvider: input.defaultProvider ?? defaults.defaultProvider,
         },
         update: {
@@ -2636,7 +1273,8 @@ export const assignmentsRouter = createTRPCRouter({
           testCommand: input.testCommand,
           previewPorts: input.previewPorts,
           readonlyPaths: input.readonlyPaths,
-          grading: input.grading === undefined ? undefined : (input.grading as never),
+          grading:
+            input.grading === undefined ? undefined : (input.grading as never),
           publicTestMetadata:
             input.publicTestMetadata === undefined
               ? undefined
@@ -2676,11 +1314,8 @@ export const assignmentsRouter = createTRPCRouter({
       });
 
       return {
-        success: true,
-        data: {
-          config,
-          testCases,
-        },
+        config,
+        testCases,
       };
     }),
 
@@ -2733,6 +1368,6 @@ export const assignmentsRouter = createTRPCRouter({
         checksum: input.artifact.checksum,
       });
 
-      return { success: true, data: { artifact, uploadUrl } };
+      return { artifact, uploadUrl };
     }),
 });

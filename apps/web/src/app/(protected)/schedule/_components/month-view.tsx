@@ -8,14 +8,7 @@ import {
   startOfWeek,
 } from "date-fns";
 
-interface Event {
-  type: string;
-  name: string;
-  description: string;
-  startDate: Date;
-  endDate: Date;
-  link: string;
-}
+import type { Event } from "./types";
 
 interface MonthViewProps {
   selectedDate: Date;

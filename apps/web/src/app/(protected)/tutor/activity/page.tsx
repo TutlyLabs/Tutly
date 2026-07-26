@@ -40,10 +40,10 @@ export default function ActivityPage() {
     { placeholderData: keepPreviousData },
   );
   if (!q.data && q.isLoading) return <PageLoader />;
-  if (q.data && (!q.data.success || !q.data.data)) {
+  if (q.error) {
     return <div>Failed to load activity data or access denied.</div>;
   }
-  const data = q.data?.data;
+  const data = q.data;
   return (
     <UserCards
       data={data?.users ?? []}

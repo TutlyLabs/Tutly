@@ -38,11 +38,10 @@ const Dashboard = ({ name, currentUser }: Props) => {
       enabled: isStudent,
     });
   const mentorUsername =
-    isStudent && studentDashboard?.success
-      ? (studentDashboard.data?.courses.find(
-          (c) => c.courseId === selectedCourse,
-        )?.mentorUsername ?? null)
-      : null;
+    (isStudent
+      ? studentDashboard?.courses.find((c) => c.courseId === selectedCourse)
+          ?.mentorUsername
+      : null) ?? null;
 
   const renderCards = () => {
     if (currentUser.role === "STUDENT") {

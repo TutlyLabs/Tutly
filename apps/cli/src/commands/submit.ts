@@ -74,13 +74,7 @@ export default class Submit extends Command {
       let submissionId = metadata.submissionId as string | undefined;
       if (!submissionId) {
         const started = await api.startWorkspace(assignmentId);
-        if (started.error || !started.data?.submission?.id) {
-          this.log(
-            `\n❌ Submission failed: ${started.error ?? "Unable to start workspace"}\n`,
-          );
-          this.exit(1);
-        }
-        submissionId = started.data.submission.id;
+        submissionId = started.submission.id;
         metadata.submissionId = submissionId;
         await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
       }
@@ -114,32 +108,21 @@ export default class Submit extends Command {
         },
       );
 
-      if (result.error) {
-        this.log(`\n❌ Submission failed: ${result.error}\n`);
+      if (!result.upload) {
+        this.log(`\n⚠️  Server did not return an upload target\n`);
         this.exit(1);
       }
 
-      if (
-        result.success &&
-        result.data?.upload?.uploadUrl &&
-        result.data?.upload?.artifact?.id
-      ) {
-        await api.uploadToSignedUrl(result.data.upload.uploadUrl, zipBuffer);
-        await api.confirmWorkspaceArtifactUpload(
-          result.data.upload.artifact.id,
-          checksum,
-        );
-        this.log("\n✨ Submission successful!");
-        this.log(`✓ Your work has been submitted for review\n`);
-        if (result.data?.submission?.id) {
-          this.log(`📝 Submission ID: ${result.data.submission.id}\n`);
-        }
-        if (result.data?.officialRunQueued) {
-          this.log("🧪 Hidden tests were queued on a trusted runner.\n");
-        }
-      } else {
-        this.log(`\n⚠️  Unexpected response from server\n`);
-        this.exit(1);
+      await api.uploadToSignedUrl(result.upload.uploadUrl, zipBuffer);
+      await api.confirmWorkspaceArtifactUpload(
+        result.upload.artifact.id,
+        checksum,
+      );
+      this.log("\n✨ Submission successful!");
+      this.log(`✓ Your work has been submitted for review\n`);
+      this.log(`📝 Submission ID: ${result.submission.id}\n`);
+      if (result.officialRunQueued) {
+        this.log("🧪 Hidden tests were queued on a trusted runner.\n");
       }
     } catch (error) {
       this.log(

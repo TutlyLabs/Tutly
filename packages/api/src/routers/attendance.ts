@@ -1,25 +1,19 @@
 // todo: fix overall attendance for mentor exceeding 100%
-import type { Prisma, Role } from "@tutly/db/browser";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { Prisma, Role } from "@tutly/db/browser";
 import { db } from "@tutly/db";
-import { createLogger } from "@tutly/logger";
+
 import {
-  isStaff,
   requireClassManageAccess,
   requireClassReadAccess,
-  requireCourseReadAccess,
-  requireStudentDataAccess,
-  resolveTargetMentorUsername,
 } from "../lib/authorization";
 import {
   createTRPCRouter,
   permissionProcedure,
   protectedProcedure,
 } from "../trpc";
-
-const logger = createLogger("api:attendance");
 
 type StudentData = {
   Duration: number;
@@ -91,163 +85,7 @@ export const attendanceRouter = createTRPCRouter({
         data: attendanceData,
       });
 
-      return { success: true, data: postAttendance };
-    }),
-
-  getAttendanceForMentorByIdBarChart: permissionProcedure("attendance", "list")
-    .input(
-      z.object({
-        id: z.string(),
-        courseId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      await requireCourseReadAccess(ctx, input.courseId);
-      const mentorUsername = await resolveTargetMentorUsername(ctx, input.id);
-
-      const attendance = await ctx.db.attendance.findMany({
-        where: {
-          user: {
-            enrolledUsers: {
-              some: {
-                mentorUsername,
-                courseId: input.courseId,
-              },
-            },
-          },
-          class: { courseId: input.courseId },
-          attended: true,
-        },
-      });
-
-      const getAllClasses = await ctx.db.class.findMany({
-        where: {
-          courseId: input.courseId,
-        },
-        select: {
-          id: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      });
-
-      const classes: Array<string> = [];
-      const attendanceInEachClass: Array<number> = [];
-      getAllClasses.forEach((classData) => {
-        const dateStr = classData.createdAt
-          .toISOString()
-          .split("T")[0] as string;
-        classes.push(dateStr);
-        const tem = attendance.filter(
-          (attendanceData) => attendanceData.classId === classData.id,
-        );
-        attendanceInEachClass.push(tem.length);
-      });
-
-      return { success: true, data: { classes, attendanceInEachClass } };
-    }),
-
-  getAttendanceForMentorBarChart: permissionProcedure("attendance", "list")
-    .input(
-      z.object({
-        courseId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      await requireCourseReadAccess(ctx, input.courseId);
-
-      let attendance;
-      if (currentUser.role === "MENTOR") {
-        attendance = await ctx.db.attendance.findMany({
-          where: {
-            user: {
-              enrolledUsers: {
-                some: {
-                  mentorUsername: currentUser.username,
-                },
-              },
-            },
-            attended: true,
-            class: {
-              course: {
-                id: input.courseId,
-              },
-            },
-          },
-        });
-      } else {
-        attendance = await ctx.db.attendance.findMany({
-          where: {
-            attended: true,
-            class: {
-              courseId: input.courseId,
-            },
-          },
-        });
-      }
-
-      const getAllClasses = await ctx.db.class.findMany({
-        where: {
-          courseId: input.courseId,
-        },
-        select: {
-          id: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      });
-
-      const classes: Array<string> = [];
-      const attendanceInEachClass: Array<number> = [];
-      getAllClasses.forEach((classData) => {
-        const dateStr = classData.createdAt
-          .toISOString()
-          .split("T")[0] as string;
-        classes.push(dateStr);
-        const tem = attendance.filter(
-          (attendanceData) => attendanceData.classId === classData.id,
-        );
-        attendanceInEachClass.push(tem.length);
-      });
-
-      return { success: true, data: { classes, attendanceInEachClass } };
-    }),
-
-  getAttedanceByClassId: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      await requireClassReadAccess(ctx, input.id);
-
-      const attendance = await ctx.db.attendance.findMany({
-        where: {
-          classId: input.id,
-          // A student may only see their own row; mentors are narrowed to
-          // their mentees, staff see the whole class.
-          ...(isStaff(currentUser)
-            ? {}
-            : currentUser.role === "MENTOR"
-              ? {
-                  user: {
-                    enrolledUsers: {
-                      some: { mentorUsername: currentUser.username },
-                    },
-                  },
-                }
-              : { username: currentUser.username }),
-        },
-      });
-
-      return { success: true, data: attendance };
+      return postAttendance;
     }),
 
   getStudentAttendanceByClassId: protectedProcedure
@@ -289,11 +127,7 @@ export const attendanceRouter = createTRPCRouter({
         },
       });
 
-      return {
-        success: true,
-        data: attendance,
-        attendanceUploaded,
-      };
+      return { attendance, attendanceUploaded };
     }),
 
   getMyCourseAttendance: protectedProcedure
@@ -310,72 +144,7 @@ export const attendanceRouter = createTRPCRouter({
           attendedDuration: true,
         },
       });
-      return { success: true, data: records };
-    }),
-
-  getAttendanceOfStudent: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        courseId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      await requireCourseReadAccess(ctx, input.courseId);
-      await requireStudentDataAccess(ctx, input.id, input.courseId);
-
-      const attendance = await ctx.db.attendance.findMany({
-        where: {
-          username: input.id,
-          AND: {
-            class: {
-              course: {
-                id: input.courseId,
-              },
-            },
-          },
-        },
-        select: {
-          class: {
-            select: {
-              createdAt: true,
-            },
-          },
-        },
-      });
-
-      const attendanceDates: Array<string> = [];
-      attendance.forEach((attendanceData) => {
-        const dateStr = attendanceData.class.createdAt
-          .toISOString()
-          .split("T")[0] as string;
-        attendanceDates.push(dateStr);
-      });
-
-      const getAllClasses = await ctx.db.class.findMany({
-        where: {
-          courseId: input.courseId,
-        },
-        select: {
-          id: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      });
-
-      const classes: Array<string> = [];
-      getAllClasses.forEach((classData) => {
-        const dateStr = classData.createdAt
-          .toISOString()
-          .split("T")[0] as string;
-        if (!attendanceDates.includes(dateStr)) {
-          classes.push(dateStr);
-        }
-      });
-
-      return { success: true, data: { classes, attendanceDates } };
+      return records;
     }),
 
   deleteClassAttendance: permissionProcedure("attendance", "delete")
@@ -393,147 +162,50 @@ export const attendanceRouter = createTRPCRouter({
         },
       });
 
-      return { success: true, data: attendance };
+      return attendance;
     }),
 
-  getTotalNumberOfClassesAttended: permissionProcedure(
-    "attendance",
-    "list",
-  ).query(async ({ ctx }) => {
-    const currentUser = ctx.session.user;
-
-    let attendance;
-    if (currentUser.role === "MENTOR") {
-      attendance = await ctx.db.attendance.findMany({
-        where: {
-          user: {
-            organizationId: currentUser.organizationId,
-            enrolledUsers: {
-              some: {
-                mentorUsername: currentUser.username,
-              },
-            },
-          },
-        },
-        select: {
-          username: true,
-          user: true,
-          attended: true,
-        },
-      });
-    } else {
-      attendance = await ctx.db.attendance.findMany({
-        where: {
-          user: {
-            role: "STUDENT",
-            organizationId: currentUser.organizationId,
-          },
-        },
-        select: {
-          username: true,
-          user: true,
-          attended: true,
-        },
-      });
-    }
-
-    const groupByTotalAttendance: Record<string, AttendanceRecord> = {};
-
-    attendance.forEach((attendanceData) => {
-      if (attendanceData.attended && attendanceData.username) {
-        const existingRecord = groupByTotalAttendance[
-          attendanceData.username
-        ] ?? {
-          count: 0,
-          username: attendanceData.username,
-          name: attendanceData.user.name,
-          mail: attendanceData.user.email,
-          image: attendanceData.user.image,
-          role: attendanceData.user.role,
-        };
-        groupByTotalAttendance[attendanceData.username] = {
-          username: attendanceData.username,
-          name: attendanceData.user.name,
-          mail: attendanceData.user.email,
-          image: attendanceData.user.image,
-          role: attendanceData.user.role,
-          count: existingRecord.count + 1,
-        };
-      }
-    });
-
-    return { success: true, data: groupByTotalAttendance };
-  }),
-
-  getAttendanceForLeaderbaord: permissionProcedure("attendance", "list").query(
+  getAttendanceOfAllStudents: permissionProcedure("attendance", "list").query(
     async ({ ctx }) => {
       const currentUser = ctx.session.user;
 
-      const attendance = await ctx.db.attendance.findMany({
+      const enrolledUsers = await ctx.db.enrolledUsers.findMany({
         where: {
-          attended: true,
-          user: { organizationId: currentUser.organizationId },
-        },
-        select: {
+          username: currentUser.username,
           user: {
-            select: {
-              username: true,
-            },
+            organizationId: currentUser.organization?.id,
           },
+        },
+        orderBy: {
+          createdAt: "asc",
         },
       });
 
-      const groupedAttendance = attendance.reduce(
-        (acc: Record<string, number>, curr) => {
-          const username = curr.user.username;
-          acc[username] = (acc[username] ?? 0) + 1;
-          return acc;
-        },
-        {},
-      );
+      const courseId = enrolledUsers[0]?.courseId ?? "";
 
-      return { success: true, data: groupedAttendance };
+      const totalAttendance =
+        await serverActionOfgetTotalNumberOfClassesAttended(
+          currentUser.username,
+          currentUser.role,
+          courseId,
+        );
+      const totalCount = await serverActionOftotatlNumberOfClasses(courseId);
+
+      const jsonData = Object.entries(totalAttendance).map(([, value]) => ({
+        username: value.username,
+        name: value.name,
+        mail: value.mail,
+        image: value.image,
+        role: value.role,
+        percentage: (Number(value.count) * 100) / Number(totalCount),
+        // The table has always rendered these two; without them it showed 0/0.
+        classesAttended: Number(value.count),
+        totalClasses: Number(totalCount),
+      }));
+
+      return jsonData;
     },
   ),
-
-  getAttendanceOfAllStudents: permissionProcedure(
-    "attendance",
-    "list",
-  ).query(async ({ ctx }) => {
-    const currentUser = ctx.session.user;
-
-    const enrolledUsers = await ctx.db.enrolledUsers.findMany({
-      where: {
-        username: currentUser.username,
-        user: {
-          organizationId: currentUser.organization?.id,
-        },
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    });
-
-    const courseId = enrolledUsers[0]?.courseId ?? "";
-
-    const totalAttendance = await serverActionOfgetTotalNumberOfClassesAttended(
-      currentUser.username,
-      currentUser.role,
-      courseId,
-    );
-    const totalCount = await serverActionOftotatlNumberOfClasses(courseId);
-
-    const jsonData = Object.entries(totalAttendance).map(([, value]) => ({
-      username: value.username,
-      name: value.name,
-      mail: value.mail,
-      image: value.image,
-      role: value.role,
-      percentage: (Number(value.count) * 100) / Number(totalCount),
-    }));
-
-    return { success: true, data: jsonData };
-  }),
 
   viewAttendanceByClassId: permissionProcedure("attendance", "list")
     .input(
@@ -718,93 +390,76 @@ export const attendanceRouter = createTRPCRouter({
       }
 
       return {
-        success: true,
-        data: {
-          attendance,
-          present,
-          totalEnrolledStudents,
-          notAttendedStudents,
-        },
+        attendance,
+        present,
+        totalEnrolledStudents,
+        notAttendedStudents,
       };
     }),
 
   getAttendancePageData: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
+    const currentUser = ctx.session.user;
 
-      // Fetch courses with complex includes
-      let courses = await ctx.db.course.findMany({
-        where: {
-          enrolledUsers: {
-            some: {
-              username: currentUser.username || "",
-            },
+    // Fetch courses with complex includes
+    let courses = await ctx.db.course.findMany({
+      where: {
+        enrolledUsers: {
+          some: {
+            username: currentUser.username || "",
           },
         },
-        include: {
-          classes: true,
-          createdBy: {
-            select: {
-              id: true,
-              username: true,
-              name: true,
-              image: true,
-              email: true,
-              role: true,
-              createdAt: true,
-              updatedAt: true,
-            },
-          },
-          _count: {
-            select: {
-              classes: true,
-            },
-          },
-          courseAdmins: {
-            select: {
-              id: true,
-              username: true,
-              name: true,
-              image: true,
-              email: true,
-              role: true,
-              createdAt: true,
-              updatedAt: true,
-            },
+      },
+      include: {
+        classes: true,
+        createdBy: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            image: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
+        _count: {
+          select: {
+            classes: true,
+          },
+        },
+        courseAdmins: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            image: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    // Sort classes by creation date
+    courses.forEach((course) => {
+      course.classes.sort((a, b) => {
+        return Number(a.createdAt) - Number(b.createdAt);
       });
+    });
 
-      // Sort classes by creation date
-      courses.forEach((course) => {
-        course.classes.sort((a, b) => {
-          return Number(a.createdAt) - Number(b.createdAt);
-        });
-      });
-
-      // Filter published courses for non-instructors
-      if (currentUser.role !== "INSTRUCTOR") {
-        const publishedCourses = courses.filter((course) => course.isPublished);
-        courses = publishedCourses;
-      }
-
-      return {
-        success: true,
-        data: {
-          courses,
-          role: currentUser.role,
-        },
-      };
-    } catch (error) {
-      logger.error(
-        { err: error, userId: ctx.session.user.id },
-        "fetch attendance page data failed",
-      );
-      return {
-        success: false,
-        error: "Failed to fetch attendance page data",
-      };
+    // Filter published courses for non-instructors
+    if (currentUser.role !== "INSTRUCTOR") {
+      const publishedCourses = courses.filter((course) => course.isPublished);
+      courses = publishedCourses;
     }
+
+    return {
+      courses,
+      role: currentUser.role,
+    };
   }),
 });
 

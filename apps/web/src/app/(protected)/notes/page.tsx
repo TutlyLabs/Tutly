@@ -7,5 +7,5 @@ import { NotesComponent } from "./_components/Notes";
 export default function NotesPage() {
   const q = api.notes.getNotes.useQuery();
   if (q.isLoading) return <PageLoader />;
-  return <NotesComponent notes={q.data?.data ?? []} />;
+  return <NotesComponent notes={q.data ?? []} />;
 }

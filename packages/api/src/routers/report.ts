@@ -1,6 +1,7 @@
-import { Role } from "@tutly/db/browser";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { Role } from "@tutly/db/browser";
 import { createLogger } from "@tutly/logger";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -29,7 +30,10 @@ export const reportRouter = createTRPCRouter({
       const currentUser = ctx.session.user;
 
       if (currentUser.role !== "INSTRUCTOR" && currentUser.role !== "MENTOR") {
-        return { error: "You are not authorized to generate report" };
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not authorized to generate report",
+        });
       }
 
       // First, get the courses the current user is enrolled in
@@ -218,7 +222,10 @@ export const reportRouter = createTRPCRouter({
             userPoints.map((point) => point.submissions?.id).filter(Boolean),
           ).size;
         } catch (e) {
-          logger.error({ err: e, courseId: input.courseId }, "failed to aggregate report scores");
+          logger.error(
+            { err: e, courseId: input.courseId },
+            "failed to aggregate report scores",
+          );
         }
       });
 
@@ -260,7 +267,7 @@ export const reportRouter = createTRPCRouter({
         (a.mentorUsername ?? "").localeCompare(b.mentorUsername ?? ""),
       );
 
-      return { success: true, data: SelectedFields };
+      return SelectedFields;
     }),
 
   getReportPageData: protectedProcedure
@@ -270,62 +277,45 @@ export const reportRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
-        const { courseId } = input;
+      const currentUser = ctx.session.user;
+      const { courseId } = input;
 
-        if (!courseId) {
-          return {
-            success: false,
-            error: "Invalid course ID or user not authenticated",
-            redirectTo: "/404",
-          };
-        }
-
-        // Check if user has appropriate role
-        if (
-          currentUser.role !== "INSTRUCTOR" &&
-          currentUser.role !== "MENTOR"
-        ) {
-          return {
-            success: false,
-            error: "Unauthorized access",
-            redirectTo: "/404",
-          };
-        }
-
-        // Fetch enrolled courses for the user
-        const enrolledCourses = await ctx.db.enrolledUsers.findMany({
-          where: {
-            username: currentUser.username,
-            courseId: {
-              not: null,
-            },
-          },
-          include: {
-            course: true,
-          },
+      if (!courseId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid course ID",
         });
-
-        const courses = enrolledCourses.map((enrolled) => enrolled.course);
-        const isMentor = currentUser.role === "MENTOR";
-
-        return {
-          success: true,
-          data: {
-            courseId,
-            courses,
-            isMentor,
-            user: currentUser,
-          },
-        };
-      } catch (error) {
-        logger.error({ err: error, courseId: input.courseId }, "failed to fetch report page data");
-        return {
-          success: false,
-          error: "Failed to fetch report page data",
-          details: error instanceof Error ? error.message : String(error),
-        };
       }
+
+      // Check if user has appropriate role
+      if (currentUser.role !== "INSTRUCTOR" && currentUser.role !== "MENTOR") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Unauthorized access",
+        });
+      }
+
+      // Fetch enrolled courses for the user
+      const enrolledCourses = await ctx.db.enrolledUsers.findMany({
+        where: {
+          username: currentUser.username,
+          courseId: {
+            not: null,
+          },
+        },
+        include: {
+          course: true,
+        },
+      });
+
+      const courses = enrolledCourses.map((enrolled) => enrolled.course);
+      const isMentor = currentUser.role === "MENTOR";
+
+      return {
+        courseId,
+        courses,
+        isMentor,
+        user: currentUser,
+      };
     }),
 });

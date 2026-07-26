@@ -25,12 +25,11 @@ export default function CourseSelector({
 
   useEffect(() => {
     if (
-      courseSelectorData?.success &&
-      courseSelectorData.data &&
-      courseSelectorData.data.courses.length > 0 &&
+      courseSelectorData &&
+      courseSelectorData.courses.length > 0 &&
       !selectedCourse
     ) {
-      onCourseChange(courseSelectorData.data!.courses[0]?.courseId ?? "");
+      onCourseChange(courseSelectorData.courses[0]?.courseId ?? "");
     }
   }, [courseSelectorData, selectedCourse, onCourseChange]);
 
@@ -38,14 +37,11 @@ export default function CourseSelector({
     return <Skeleton className="h-9 w-full bg-white/30 sm:w-44" />;
   }
 
-  if (
-    !courseSelectorData?.success ||
-    !courseSelectorData.data?.courses.length
-  ) {
+  if (!courseSelectorData?.courses.length) {
     return null;
   }
 
-  const { courses } = courseSelectorData.data;
+  const { courses } = courseSelectorData;
 
   return (
     <Select
@@ -60,7 +56,7 @@ export default function CourseSelector({
         align="end"
         className="border-slate-200 bg-white text-slate-900"
       >
-        {courses.map((course: { courseId: string; courseTitle: string }) => (
+        {courses.map((course) => (
           <SelectItem
             key={course.courseId}
             value={course.courseId}

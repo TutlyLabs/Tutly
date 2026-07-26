@@ -36,7 +36,7 @@ export default function AddHolidayDialog() {
     },
   });
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const formValues = Object.fromEntries(formData.entries());
@@ -45,19 +45,13 @@ export default function AddHolidayDialog() {
       return;
     }
 
-    try {
-      addHoliday({
-        reason: formValues.reason as string,
-        description: formValues.description as string,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      });
-    } catch (error) {
-      console.error("Error adding holiday:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Something went wrong",
-      );
-    }
+    // Failures surface through the mutation's onError, not a throw.
+    addHoliday({
+      reason: formValues.reason as string,
+      description: formValues.description as string,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+    });
   };
 
   return (

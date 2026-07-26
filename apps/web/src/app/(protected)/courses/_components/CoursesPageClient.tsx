@@ -1,16 +1,18 @@
 "use client";
 
-import type { Course } from "@tutly/db/browser";
 import { useRouter } from "next/navigation";
 import type { SessionUser } from "@/lib/auth";
+import type { RouterOutputs } from "@/trpc/react";
 
 import AddCourse from "./AddCourse";
 import CourseCard from "./CourseCard";
 import NoDataFound from "../../../../components/NoDataFound";
 
+type EnrolledCourse = RouterOutputs["courses"]["getEnrolledCourses"][number];
+
 interface CoursesPageClientProps {
   user: SessionUser;
-  coursesData: { success: boolean; data: Course[] } | undefined;
+  coursesData: EnrolledCourse[] | undefined;
 }
 
 export default function CoursesPageClient({
@@ -24,13 +26,12 @@ export default function CoursesPageClient({
     return null;
   }
 
-  if (!coursesData?.data) return null;
+  if (!coursesData) return null;
 
-  const publishedCourses = coursesData.data.filter(
-    (course: Course) => course.isPublished,
-  );
   const coursesFinal =
-    user.role === "INSTRUCTOR" ? coursesData.data : publishedCourses;
+    user.role === "INSTRUCTOR"
+      ? coursesData
+      : coursesData.filter((course) => course.isPublished);
 
   const isInstructor = user.role === "INSTRUCTOR" && !user.isAdmin;
   const showEmpty = coursesFinal?.length === 0;
@@ -67,7 +68,7 @@ export default function CoursesPageClient({
         )
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {coursesFinal.map((course: Course) => (
+          {coursesFinal.map((course) => (
             <CourseCard key={course.id} course={course} currentUser={user} />
           ))}
           {isInstructor && <AddCourse />}

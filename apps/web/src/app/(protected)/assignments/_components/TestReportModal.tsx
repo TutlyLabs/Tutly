@@ -50,7 +50,7 @@ export function TestReportModal({
     { enabled: open && Boolean(submissionId) },
   );
 
-  const run = query.data?.data?.[0];
+  const run = query.data?.[0];
   const summary = (run?.outputSummary ?? {}) as { results?: Result[] };
   const results = summary.results ?? [];
 

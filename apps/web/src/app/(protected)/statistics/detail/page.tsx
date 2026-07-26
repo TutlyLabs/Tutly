@@ -19,8 +19,8 @@ export default function StatisticsDetailPage() {
 
   if (!courseId) return <Navigate to="/404" />;
   if (q.isLoading) return <FullPageSpinnerSkeleton />;
-  const courses = q.data?.data ?? [];
-  const hasAccess = courses.some((c: { id: string }) => c.id === courseId);
+  const courses = q.data ?? [];
+  const hasAccess = courses.some((c) => c.id === courseId);
   if (!hasAccess) return <Navigate to="/404" />;
 
   return (
@@ -37,7 +37,7 @@ export default function StatisticsDetailPage() {
       {/* Course chips — horizontal scroll, no wrap */}
       <ScrollArea className="-mx-3 sm:mx-0">
         <div className="flex items-center gap-2 px-3 pb-2 sm:px-0">
-          {courses.map((course: { id: string; title: string }) => {
+          {courses.map((course) => {
             const active = course.id === courseId;
             return (
               <Link

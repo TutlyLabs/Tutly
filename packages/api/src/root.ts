@@ -19,12 +19,10 @@ import { geminiRouter } from "./routers/gemini";
 import { glimpseRouter } from "./routers/glimpse";
 import { leaderboardRouter } from "./routers/getLeaderboard";
 import { holidaysRouter } from "./routers/holidays";
-import { mentorsRouter } from "./routers/mentors";
 import { notesRouter } from "./routers/notes";
 import { notificationsRouter } from "./routers/notifications";
 import { oauthRouter } from "./routers/oauth";
 import { pointsRouter } from "./routers/points";
-import { portSessionsRouter } from "./routers/portSessions";
 import { reportRouter } from "./routers/report";
 import { reviewsRouter } from "./routers/reviews";
 import { sandboxRouter } from "./routers/sandbox";
@@ -64,12 +62,10 @@ export const appRouter = createTRPCRouter({
   glimpse: glimpseRouter,
   leaderboard: leaderboardRouter,
   holidays: holidaysRouter,
-  mentors: mentorsRouter,
   notes: notesRouter,
   notifications: notificationsRouter,
   oauth: oauthRouter,
   points: pointsRouter,
-  portSessions: portSessionsRouter,
   report: reportRouter,
   reviews: reviewsRouter,
   sandbox: sandboxRouter,

@@ -75,7 +75,7 @@ function WorkspaceSubmissionReview({ submission }: { submission: any }) {
     const result = await downloadArtifact.mutateAsync({
       artifactId: latestSubmissionArtifact.id,
     });
-    if (result.data?.signedUrl) window.open(result.data.signedUrl, "_blank");
+    window.open(result.signedUrl, "_blank");
   };
 
   return (

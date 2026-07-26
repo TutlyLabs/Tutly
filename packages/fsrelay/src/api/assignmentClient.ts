@@ -1,10 +1,10 @@
-import { TutlyAPIClient } from './client';
+import { TutlyAPIClient } from "./client";
 
 export interface AssignmentDetails {
   assignment: {
     id: string;
     title: string;
-    details: string;
+    details: string | null;
     detailsJson?: any;
   } | null;
   mentorDetails?: {
@@ -12,7 +12,6 @@ export interface AssignmentDetails {
       username: string;
     } | null;
   } | null;
-  error?: string;
 }
 
 export class AssignmentApiClient extends TutlyAPIClient {
@@ -25,14 +24,19 @@ export class AssignmentApiClient extends TutlyAPIClient {
   async getAssignmentDetails(
     assignmentId: string,
     webOrigin: string,
-    authToken?: string
+    authToken?: string,
   ): Promise<AssignmentDetails> {
     // Create a new instance with the provided baseUrl and token
-    const client = new TutlyAPIClient(webOrigin, authToken);
-    return client['trpcRequest']<AssignmentDetails>(
-      'assignments.getAssignmentDetailsForSubmission',
-      { id: assignmentId }
+    const client = new AssignmentApiClient(webOrigin, authToken);
+    return client.fetchAssignmentDetails(assignmentId);
+  }
+
+  protected fetchAssignmentDetails(
+    assignmentId: string,
+  ): Promise<AssignmentDetails> {
+    return this.trpcRequest<AssignmentDetails>(
+      "assignments.getAssignmentDetailsForSubmission",
+      { id: assignmentId },
     );
   }
 }
-

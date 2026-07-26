@@ -17,19 +17,23 @@ import {
 import { ScrollArea } from "@tutly/ui/scroll-area";
 
 import { EventDetails } from "./event-details";
+import type { Event } from "./types";
 
 dayjs.extend(isBetween);
+
+const eventKey = (event: Event) =>
+  `${event.type}-${event.link}-${event.startDate.toISOString()}`;
 
 export const EventsSidebar = ({
   events,
   fullWidth = false,
 }: {
-  events: any[];
+  events: Event[];
   fullWidth?: boolean;
 }) => {
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
-  const getStatusBadge = (startDate: string, endDate: string, type: string) => {
+  const getStatusBadge = (startDate: Date, endDate: Date, type: string) => {
     const now = dayjs();
     const start = dayjs(startDate);
     const end = dayjs(endDate);
@@ -63,9 +67,9 @@ export const EventsSidebar = ({
     }
   };
 
-  const renderEventItem = (event: any) => (
+  const renderEventItem = (event: Event) => (
     <div
-      key={event.id}
+      key={eventKey(event)}
       className="bg-muted/40 hover:bg-muted/70 mb-2 flex cursor-pointer items-center gap-3 rounded-md p-3 transition-colors"
       onClick={() => setSelectedEvent(event)}
     >
@@ -79,9 +83,9 @@ export const EventsSidebar = ({
     </div>
   );
 
-  const renderAssignmentItem = (assignment: any) => (
+  const renderAssignmentItem = (assignment: Event) => (
     <div
-      key={assignment.id}
+      key={eventKey(assignment)}
       className="bg-muted/40 hover:bg-muted/70 mb-2 flex cursor-pointer items-center gap-3 rounded-md p-3 transition-colors"
       onClick={() => setSelectedEvent(assignment)}
     >
@@ -128,7 +132,7 @@ export const EventsSidebar = ({
 
   const renderEventSection = (
     title: string,
-    eventList: any[],
+    eventList: Event[],
     emptyMessage: string,
     defaultOpen = false,
   ) => (
@@ -145,7 +149,10 @@ export const EventsSidebar = ({
     </Collapsible>
   );
 
-  const renderAssignmentSection = (assignments: any[], defaultOpen = false) => (
+  const renderAssignmentSection = (
+    assignments: Event[],
+    defaultOpen = false,
+  ) => (
     <Collapsible defaultOpen={defaultOpen} className="space-y-1">
       <CollapsibleTrigger className="hover:bg-accent flex w-full items-center justify-between rounded-md p-2 text-left">
         <h2 className="text-foreground text-base font-bold">Assignments</h2>

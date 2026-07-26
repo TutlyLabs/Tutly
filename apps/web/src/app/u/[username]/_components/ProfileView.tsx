@@ -60,6 +60,7 @@ import { toast } from "sonner";
 import { useClientSession } from "@/lib/auth/client";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
+import type { RouterOutputs } from "@/trpc/react";
 import { UserAvatar } from "@/components/UserAvatar";
 
 interface SocialLinks {
@@ -108,45 +109,10 @@ interface ActivityDay {
   count: number;
 }
 
-interface Profile {
-  id: string;
-  name: string;
-  username: string;
-  image: string | null;
-  role: string;
-  createdAt: string;
-  activityHeatmap?: ActivityDay[];
-  profile: {
-    headline?: string | null;
-    skills?: string[];
-    aboutMe?: string | null;
-    hobbies?: string[];
-    socialLinks?: SocialLinks | null;
-    professionalProfiles?: ProfessionalProfiles | null;
-    academicDetails?: AcademicDetails | null;
-    experiences?: Experience[];
-    dateOfBirth?: string | null;
-    gender?: string | null;
-    address?: { city?: string; state?: string; country?: string } | null;
-    metadata?: { projects?: Project[] } | null;
-  } | null;
-  enrolledUsers?: Array<{
-    course: { id: string; title: string; image: string | null } | null;
-    startDate: string;
-  }>;
-  taughtCourses?: Array<{ id: string; title: string; image: string | null }>;
-  stats?: {
-    totalPoints: number;
-    totalSubmissions: number;
-    assignmentsEvaluated: number;
-    attendancePercentage: number | null;
-  } | null;
-  instructorStats?: {
-    totalStudents: number;
-    totalCourses: number;
-    totalAssignments: number;
-  } | null;
-}
+type Profile = Extract<
+  RouterOutputs["users"]["getPublicProfile"],
+  { username: string }
+>;
 
 const ROLE_BADGE_COLORS: Record<string, string> = {
   INSTRUCTOR:

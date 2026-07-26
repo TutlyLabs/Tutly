@@ -1,6 +1,5 @@
 "use client";
 
-import type { Role } from "@tutly/db/browser";
 import { MessageCircle, Search, UserPlus, UserX, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -33,28 +32,11 @@ import {
   TableRow,
 } from "@tutly/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@tutly/ui/tabs";
-import { api } from "@/trpc/react";
+import { api, type RouterOutputs } from "@/trpc/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-type EnrolledUser = {
-  id: string;
-  courseId: string | null;
-  username: string;
-  mentorUsername: string | null;
-  startDate: Date;
-  endDate: Date | null;
-};
-
-type User = {
-  id: string;
-  username: string;
-  name: string | null;
-  email: string | null;
-  role: Role;
-  image: string | null;
-  enrolledUsers: EnrolledUser[];
-};
+type User = RouterOutputs["courses"]["getCourseManagementUsers"][number];
 
 type UserTableProps = {
   users: User[];

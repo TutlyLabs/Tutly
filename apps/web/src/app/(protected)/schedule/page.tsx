@@ -24,14 +24,14 @@ export default function SchedulePage() {
   const [open, setOpen] = useState(false);
 
   if (q.isLoading) return <CalendarSkeleton />;
-  if (!q.data?.success || !q.data.data) {
+  if (q.isError || !q.data) {
     return (
       <div className="text-muted-foreground bg-card flex h-64 items-center justify-center rounded-xl border text-sm">
         Failed to load schedule data.
       </div>
     );
   }
-  const { events, isAuthorized, holidays } = q.data.data;
+  const { events, isAuthorized, holidays } = q.data;
 
   if (isMobile) {
     return (

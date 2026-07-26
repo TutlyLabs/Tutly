@@ -50,38 +50,25 @@ export default class Assignment extends Command {
 
       this.log(`  • Starting S3-backed workspace...`);
       const workspace = await api.startWorkspace(assignmentId);
-      if (workspace.error || !workspace.data?.submission?.id) {
-        this.log(
-          `\n❌ Failed to initialize workspace: ${workspace.error ?? "Unknown error"}`,
-        );
-        this.exit(1);
-      }
 
       const details = await api.getAssignmentDetailsForSubmission(assignmentId);
       const assignmentTitle =
-        workspace.data.assignment?.title ??
-        details.assignment?.title ??
-        `assignment-${assignmentId}`;
+        details.assignment?.title ?? `assignment-${assignmentId}`;
 
       const outputDir = flags.output || `./${assignmentId}`;
 
       this.log(`  • Downloading files to: ${outputDir}`);
       await mkdir(outputDir, { recursive: true });
 
-      const starterArtifacts = workspace.data.starterArtifacts ?? [];
+      const starterArtifacts = workspace.starterArtifacts ?? [];
       const starterArtifact =
-        starterArtifacts.find((artifact: any) => artifact.kind === "STARTER") ??
+        starterArtifacts.find((artifact) => artifact.kind === "STARTER") ??
         starterArtifacts[0];
       if (starterArtifact?.id) {
         const download = await api.getWorkspaceArtifactDownloadUrl(
           starterArtifact.id,
         );
-        if (download.data?.signedUrl) {
-          await api.downloadAndExtractArchive(
-            download.data.signedUrl,
-            outputDir,
-          );
-        }
+        await api.downloadAndExtractArchive(download.signedUrl, outputDir);
       }
 
       const absoluteOutputDir = resolve(outputDir);
@@ -90,13 +77,13 @@ export default class Assignment extends Command {
 
       const metadata = {
         assignmentId: assignmentId,
-        submissionId: workspace.data.submission.id,
+        submissionId: workspace.submission.id,
         title: assignmentTitle,
         courseId: details.assignment?.class?.courseId,
         path: absoluteOutputDir,
         clonedAt: new Date().toISOString(),
         userId: user?.id,
-        workspaceToken: workspace.data.workspaceToken,
+        workspaceToken: workspace.workspaceToken,
       };
 
       await writeFile(
@@ -108,11 +95,11 @@ export default class Assignment extends Command {
       await writeFile(
         join(tutlyDir, "config.yaml"),
         renderTutlyConfigYaml({
-          setupCommand: workspace.data.config?.setupCommand,
-          devCommand: workspace.data.config?.devCommand,
-          testCommand: workspace.data.config?.testCommand,
-          previewPorts: workspace.data.config?.previewPorts,
-          readonlyPaths: workspace.data.config?.readonlyPaths,
+          setupCommand: workspace.config?.setupCommand,
+          devCommand: workspace.config?.devCommand,
+          testCommand: workspace.config?.testCommand,
+          previewPorts: workspace.config?.previewPorts,
+          readonlyPaths: workspace.config?.readonlyPaths,
         }),
       );
       this.log(`  ✓ Created: .tutly/config.yaml`);

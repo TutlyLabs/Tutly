@@ -14,14 +14,7 @@ import {
   AlertDialogTitle,
 } from "@tutly/ui/alert-dialog";
 
-interface Event {
-  name: string;
-  description: string;
-  startDate: Date;
-  endDate: Date;
-  link: string;
-  type: string;
-}
+import type { Event } from "./types";
 
 interface EventDetailsProps {
   event: Event;

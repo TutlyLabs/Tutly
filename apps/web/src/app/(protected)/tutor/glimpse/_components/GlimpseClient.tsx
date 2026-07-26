@@ -52,7 +52,7 @@ export default function GlimpseClient() {
     recentDays,
   });
 
-  const report = reportQ.data?.success ? reportQ.data : null;
+  const report = reportQ.data ?? null;
 
   const courses = report?.courses ?? [];
   const selectedCourse =
@@ -184,9 +184,9 @@ export default function GlimpseClient() {
         </div>
       )}
 
-      {reportQ.data?.success === false && (
+      {reportQ.isError && (
         <div className="border-destructive/40 bg-destructive/5 text-destructive rounded-xl border p-4 text-sm">
-          {reportQ.data.error}
+          {reportQ.error.message}
         </div>
       )}
 

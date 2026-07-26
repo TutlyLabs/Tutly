@@ -1,6 +1,5 @@
 "use client";
 
-import type { Class, Folder } from "@tutly/db/browser";
 import { useEffect, useState } from "react";
 import { FaFolder, FaFolderOpen } from "react-icons/fa6";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
@@ -23,7 +22,9 @@ import { cn } from "@tutly/utils";
 import ManageFolders from "./ManageFolders";
 import NewClassDialog from "./newClass";
 import NewAssignmentDialog from "./NewAssignmentDialog";
-import { api } from "@/trpc/react";
+import { api, type RouterOutputs } from "@/trpc/react";
+
+type ClassListItem = RouterOutputs["classes"]["getClassesByCourseId"][number];
 import { useSearchParams } from "next/navigation";
 
 function ClassSidebar({
@@ -45,7 +46,7 @@ function ClassSidebar({
   const currentClassId = sp.get("classId");
 
   const { data } = api.classes.getClassesByCourseId.useQuery({ courseId });
-  const classes = data?.data ?? [];
+  const classes = data ?? [];
 
   useEffect(() => {
     const currentClass = classes.find((c) => c.id === currentClassId);
@@ -70,27 +71,23 @@ function ClassSidebar({
       return acc;
     },
     {
-      folderClasses: {} as Record<string, Class[]>,
-      unfolderClasses: [] as Class[],
+      folderClasses: {} as Record<string, ClassListItem[]>,
+      unfolderClasses: [] as ClassListItem[],
     },
   );
 
-  const getLiveStatus = (classItem: Class) => {
-    const ct = (classItem as any).classType;
+  const getLiveStatus = (classItem: ClassListItem) => {
+    const ct = classItem.classType;
     if (ct !== "LIVE") return null;
     const now = new Date();
-    const start = (classItem as any).startTime
-      ? new Date((classItem as any).startTime)
-      : null;
-    const end = (classItem as any).endTime
-      ? new Date((classItem as any).endTime)
-      : null;
+    const start = classItem.startTime ? new Date(classItem.startTime) : null;
+    const end = classItem.endTime ? new Date(classItem.endTime) : null;
     if (start && end && now >= start && now <= end) return "live";
     if (start && now < start) return "upcoming";
     return null;
   };
 
-  const renderClassButton = (classItem: Class) => {
+  const renderClassButton = (classItem: ClassListItem) => {
     const liveStatus = getLiveStatus(classItem);
     return (
       <div key={classItem.id} className="relative flex items-center gap-1">

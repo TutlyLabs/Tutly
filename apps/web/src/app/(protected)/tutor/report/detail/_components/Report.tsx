@@ -58,10 +58,9 @@ const Report = ({
 
   useEffect(() => {
     if (reportData) {
-      const sortedData =
-        reportData.data?.sort((a, b) => a.username.localeCompare(b.username)) ||
-        [];
-      setData(sortedData);
+      setData(
+        [...reportData].sort((a, b) => a.username.localeCompare(b.username)),
+      );
     }
   }, [reportData]);
 

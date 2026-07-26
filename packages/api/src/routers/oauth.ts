@@ -2,9 +2,6 @@ import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { db } from "@tutly/db";
-import { createLogger } from "@tutly/logger";
-
-const logger = createLogger("api:oauth");
 
 function maskToken(token: string | null | undefined): string | null {
   if (!token) return null;
@@ -48,25 +45,5 @@ export const oauthRouter = createTRPCRouter({
         select: { payload: true },
       });
       return (flag?.payload as Record<string, boolean> | null) ?? null;
-    }),
-
-  unlinkAccount: protectedProcedure
-    .input(z.object({ provider: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const { provider } = input;
-      const currentUser = ctx.session.user;
-
-      try {
-        await db.account.deleteMany({
-          where: {
-            userId: currentUser.id,
-            providerId: provider,
-          },
-        });
-        return { success: true };
-      } catch (error) {
-        logger.error({ err: error, provider }, "failed to unlink oauth account");
-        return { success: false, error: "Failed to unlink account" };
-      }
     }),
 });

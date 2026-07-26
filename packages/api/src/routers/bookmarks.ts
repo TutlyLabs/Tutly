@@ -1,15 +1,12 @@
-import { BookMarkCategory } from "@tutly/db/browser";
 import { z } from "zod";
 
-import { createLogger } from "@tutly/logger";
+import { BookMarkCategory } from "@tutly/db/browser";
 
-import { createTRPCRouter, permissionProcedure } from "../trpc";
 import {
   requireRecordOwner,
   requireUserInOrganization,
 } from "../lib/authorization";
-
-const logger = createLogger("api:bookmarks");
+import { createTRPCRouter, permissionProcedure } from "../trpc";
 
 export const bookmarksRouter = createTRPCRouter({
   toggleBookmark: permissionProcedure("bookmark", "toggle")
@@ -37,18 +34,19 @@ export const bookmarksRouter = createTRPCRouter({
             id: existingBookmark.id,
           },
         });
-      } else {
-        await ctx.db.bookMarks.create({
-          data: {
-            category: input.category,
-            objectId: input.objectId,
-            userId: currentUser.id,
-            causedObjects: input.causedObjects,
-          },
-        });
+        return { bookmarked: false };
       }
 
-      return { success: true };
+      await ctx.db.bookMarks.create({
+        data: {
+          category: input.category,
+          objectId: input.objectId,
+          userId: currentUser.id,
+          causedObjects: input.causedObjects,
+        },
+      });
+
+      return { bookmarked: true };
     }),
 
   getBookmark: permissionProcedure("bookmark", "read")
@@ -65,47 +63,21 @@ export const bookmarksRouter = createTRPCRouter({
       }
       requireRecordOwner(ctx, { userId: input.userId }, { allowStaff: true });
 
-      try {
-        const bookmark = await ctx.db.bookMarks.findFirst({
-          where: {
-            userId: input.userId,
-            objectId: input.objectId,
-          },
-        });
-
-        return { success: true, data: bookmark };
-      } catch (error) {
-        logger.error(
-          { err: error, userId: input.userId, objectId: input.objectId },
-          "get bookmark failed",
-        );
-        return { error: "Failed to get bookmark" };
-      }
-    }),
-
-  getUserBookmarks: permissionProcedure("bookmark", "list").query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
-
-      const bookmarks = await ctx.db.bookMarks.findMany({
+      return ctx.db.bookMarks.findFirst({
         where: {
-          userId: currentUser.id,
+          userId: input.userId,
+          objectId: input.objectId,
         },
       });
+    }),
 
-      return {
-        success: true,
-        data: bookmarks,
-      };
-    } catch (error) {
-      logger.error(
-        { err: error, userId: ctx.session.user.id },
-        "fetch user bookmarks failed",
-      );
-      return {
-        success: false,
-        error: "Failed to fetch user bookmarks",
-      };
-    }
-  }),
+  getUserBookmarks: permissionProcedure("bookmark", "list").query(
+    async ({ ctx }) => {
+      return ctx.db.bookMarks.findMany({
+        where: {
+          userId: ctx.session.user.id,
+        },
+      });
+    },
+  ),
 });

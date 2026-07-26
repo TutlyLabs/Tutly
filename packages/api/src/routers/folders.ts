@@ -1,12 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { TRPCContext } from "../trpc";
 import { requireCourseManageAccess } from "../lib/authorization";
-import {
-  createTRPCRouter,
-  permissionProcedure,
-  type TRPCContext,
-} from "../trpc";
+import { createTRPCRouter, permissionProcedure } from "../trpc";
 
 /**
  * A Folder has no course column of its own, only the classes that point at it,
@@ -48,11 +45,10 @@ export const foldersRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await requireFolderManageAccess(ctx, input.id);
 
-      const updatedFolder = await ctx.db.folder.update({
+      return ctx.db.folder.update({
         where: { id: input.id },
         data: { title: input.title },
       });
-      return { success: true, data: updatedFolder };
     }),
 
   deleteFolder: permissionProcedure("folder", "delete")
@@ -72,10 +68,8 @@ export const foldersRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db.folder.delete({
+      return ctx.db.folder.delete({
         where: { id: input.id },
       });
-
-      return { success: true };
     }),
 });

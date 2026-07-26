@@ -49,13 +49,13 @@ export default function CourseManageClient({ courseId, currentUser }: Props) {
     );
   }
 
-  if (!usersData?.success || !usersData.data) {
+  if (!usersData) {
     return <div>Failed to load course management data or access denied.</div>;
   }
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4">
-      <UsersTable users={usersData.data} courseId={courseId} />
+      <UsersTable users={usersData} courseId={courseId} />
     </div>
   );
 }

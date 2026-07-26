@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { createLogger } from "@tutly/logger";
+
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 const logger = createLogger("api:search");
@@ -419,166 +420,146 @@ export const searchRouter = createTRPCRouter({
           });
         }
 
-        return {
-          success: true,
-          data: results,
-        };
+        return results;
       } catch (error) {
+        // Degrade to whatever categories resolved before the failure.
         logger.error(
           { err: error, userId: ctx.session.user.id },
           "global search failed",
         );
-        return {
-          success: false,
-          error: "Failed to perform search",
-          data: results,
-        };
+        return results;
       }
     }),
 
   getRecentItems: protectedProcedure.query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
 
-    try {
-      // Get user's courses
-      const userCourses = await ctx.db.course.findMany({
-        where:
-          currentUser.role === "INSTRUCTOR"
-            ? {
-                OR: [
-                  { createdById: currentUser.id },
-                  {
-                    enrolledUsers: {
-                      some: { username: currentUser.username },
-                    },
-                  },
-                ],
-              }
-            : currentUser.role === "MENTOR"
-              ? {
-                  enrolledUsers: {
-                    some: { mentorUsername: currentUser.username },
-                  },
-                }
-              : {
+    // Get user's courses
+    const userCourses = await ctx.db.course.findMany({
+      where:
+        currentUser.role === "INSTRUCTOR"
+          ? {
+              OR: [
+                { createdById: currentUser.id },
+                {
                   enrolledUsers: {
                     some: { username: currentUser.username },
                   },
                 },
-        take: 5,
-        select: {
-          id: true,
-          title: true,
-          image: true,
-          updatedAt: true,
-          _count: {
+              ],
+            }
+          : currentUser.role === "MENTOR"
+            ? {
+                enrolledUsers: {
+                  some: { mentorUsername: currentUser.username },
+                },
+              }
+            : {
+                enrolledUsers: {
+                  some: { username: currentUser.username },
+                },
+              },
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        image: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            classes: true,
+            enrolledUsers: currentUser.role === "INSTRUCTOR",
+          },
+        },
+        ...(currentUser.role === "MENTOR" && {
+          enrolledUsers: {
+            where: {
+              mentorUsername: currentUser.username,
+            },
             select: {
-              classes: true,
-              enrolledUsers: currentUser.role === "INSTRUCTOR",
+              id: true,
             },
           },
-          ...(currentUser.role === "MENTOR" && {
-            enrolledUsers: {
-              where: {
-                mentorUsername: currentUser.username,
-              },
+        }),
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    const coursesWithCounts = userCourses.map((course: any) => ({
+      ...course,
+      _count: {
+        classes: course._count.classes,
+        enrolledUsers: course._count.enrolledUsers,
+        mentees:
+          currentUser.role === "MENTOR"
+            ? course.enrolledUsers?.length || 0
+            : undefined,
+      },
+      enrolledUsers: undefined,
+    }));
+
+    const courseIds = userCourses.map((c) => c.id);
+
+    // Get recent classes
+    const recentClasses = courseIds.length
+      ? await ctx.db.class.findMany({
+          where: {
+            courseId: {
+              in: courseIds,
+            },
+          },
+          take: 5,
+          select: {
+            id: true,
+            title: true,
+            courseId: true,
+            course: {
               select: {
-                id: true,
+                title: true,
               },
             },
-          }),
-        },
-        orderBy: {
-          updatedAt: "desc",
-        },
-      });
+            updatedAt: true,
+          },
+          orderBy: {
+            updatedAt: "desc",
+          },
+        })
+      : [];
 
-      const coursesWithCounts = userCourses.map((course: any) => ({
-        ...course,
-        _count: {
-          classes: course._count.classes,
-          enrolledUsers: course._count.enrolledUsers,
-          mentees:
-            currentUser.role === "MENTOR"
-              ? course.enrolledUsers?.length || 0
-              : undefined,
-        },
-        enrolledUsers: undefined,
-      }));
-
-      const courseIds = userCourses.map((c) => c.id);
-
-      // Get recent classes
-      const recentClasses = courseIds.length
-        ? await ctx.db.class.findMany({
-            where: {
-              courseId: {
-                in: courseIds,
+    // Get recent assignments
+    const recentAssignments = courseIds.length
+      ? await ctx.db.attachment.findMany({
+          where: {
+            courseId: {
+              in: courseIds,
+            },
+            attachmentType: "ASSIGNMENT",
+          },
+          take: 5,
+          select: {
+            id: true,
+            title: true,
+            courseId: true,
+            dueDate: true,
+            course: {
+              select: {
+                title: true,
               },
             },
-            take: 5,
-            select: {
-              id: true,
-              title: true,
-              courseId: true,
-              course: {
-                select: {
-                  title: true,
-                },
-              },
-              updatedAt: true,
-            },
-            orderBy: {
-              updatedAt: "desc",
-            },
-          })
-        : [];
+            updatedAt: true,
+          },
+          orderBy: {
+            updatedAt: "desc",
+          },
+        })
+      : [];
 
-      // Get recent assignments
-      const recentAssignments = courseIds.length
-        ? await ctx.db.attachment.findMany({
-            where: {
-              courseId: {
-                in: courseIds,
-              },
-              attachmentType: "ASSIGNMENT",
-            },
-            take: 5,
-            select: {
-              id: true,
-              title: true,
-              courseId: true,
-              dueDate: true,
-              course: {
-                select: {
-                  title: true,
-                },
-              },
-              updatedAt: true,
-            },
-            orderBy: {
-              updatedAt: "desc",
-            },
-          })
-        : [];
-
-      return {
-        success: true,
-        data: {
-          courses: coursesWithCounts,
-          classes: recentClasses,
-          assignments: recentAssignments,
-        },
-      };
-    } catch (error) {
-      logger.error(
-        { err: error, userId: ctx.session.user.id },
-        "get recent items failed",
-      );
-      return {
-        success: false,
-        error: "Failed to get recent items",
-      };
-    }
+    return {
+      courses: coursesWithCounts,
+      classes: recentClasses,
+      assignments: recentAssignments,
+    };
   }),
 });

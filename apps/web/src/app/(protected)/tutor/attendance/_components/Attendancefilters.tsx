@@ -66,7 +66,7 @@ export default function AttendanceClient({
 
   const { data: attendanceData } =
     api.attendances.getAttendanceOfAllStudents.useQuery();
-  const attendance: any = attendanceData?.data ?? [];
+  const attendance = attendanceData ?? [];
   const [fileData, setFileData] = useState<any>([]);
   const [selectedFile, setSelectedFile] = useState<any>();
   const [currentCourse, setCurrentCourse] = useState<any>(null);
@@ -90,10 +90,8 @@ export default function AttendanceClient({
   );
 
   useEffect(() => {
-    if (classIdFromUrl && classesData?.data) {
-      const classItem = classesData.data.find(
-        (c: any) => c.id === classIdFromUrl,
-      );
+    if (classIdFromUrl && classesData) {
+      const classItem = classesData.find((c) => c.id === classIdFromUrl);
       if (classItem) {
         setCurrentClass(classItem);
       }
@@ -115,9 +113,9 @@ export default function AttendanceClient({
       return;
     }
 
-    if (role === "MENTOR" && getMentorStudents.data?.data) {
+    if (role === "MENTOR" && getMentorStudents.data) {
       setUsers(
-        getMentorStudents.data.data.map((student: any) => ({
+        getMentorStudents.data.map((student) => ({
           ...student,
           username: student.username || "",
           name: student.name || "",
@@ -216,9 +214,8 @@ export default function AttendanceClient({
   );
 
   useEffect(() => {
-    if (viewAttendance.data?.data) {
-      const { attendance, present: presentCount = 0 } =
-        viewAttendance.data.data;
+    if (viewAttendance.data) {
+      const { attendance, present: presentCount = 0 } = viewAttendance.data;
       setPastPresentStudents(attendance);
       setPresent(presentCount);
 

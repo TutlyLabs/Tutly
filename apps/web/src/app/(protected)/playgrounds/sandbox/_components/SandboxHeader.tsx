@@ -91,19 +91,16 @@ function SandboxActions({
     } as SandpackProps;
 
     try {
-      const result = await updateAttachmentMutation.mutateAsync({
+      await updateAttachmentMutation.mutateAsync({
         id: assignmentId,
         sandboxTemplate: templateToSave,
       });
-      if (!result.success) {
-        toast.error(result.error ?? "Failed to save template");
-        return;
-      }
       toast.success("Template saved");
       onConfigUpdate(templateToSave);
     } catch (error) {
-      console.error("Error saving template:", error);
-      toast.error("Failed to save template");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save template",
+      );
     }
   };
 

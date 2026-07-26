@@ -1,11 +1,11 @@
 import {
-  PutObjectCommand,
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
+  CreateMultipartUploadCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
-  CreateMultipartUploadCommand,
+  PutObjectCommand,
   UploadPartCommand,
-  CompleteMultipartUploadCommand,
-  AbortMultipartUploadCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
@@ -14,9 +14,13 @@ import { z } from "zod";
 import { createLogger } from "@tutly/logger";
 
 import type { TRPCContext } from "../trpc";
-import { createTRPCRouter, permissionProcedure, protectedProcedure } from "../trpc";
 import { requireCourseManageAccess } from "../lib/authorization";
 import { AWS_BUCKET_NAME, AWS_S3_URL, s3Client } from "../lib/s3";
+import {
+  createTRPCRouter,
+  permissionProcedure,
+  protectedProcedure,
+} from "../trpc";
 
 const logger = createLogger("api:videos");
 
@@ -59,7 +63,8 @@ async function requireVideoManageAccess(ctx: TRPCContext, videoId: string) {
       class: { select: { courseId: true } },
     },
   });
-  if (!video) throw new TRPCError({ code: "NOT_FOUND", message: "Video not found" });
+  if (!video)
+    throw new TRPCError({ code: "NOT_FOUND", message: "Video not found" });
 
   const courseIds = video.class
     .map((c) => c.courseId)
@@ -284,7 +289,9 @@ export const videosRouter = createTRPCRouter({
       let allowed = isStaff || isUploader;
 
       if (!allowed && videoClasses.length > 0) {
-        const courseIds = videoClasses.map((c) => c.courseId).filter(Boolean) as string[];
+        const courseIds = videoClasses
+          .map((c) => c.courseId)
+          .filter(Boolean) as string[];
         if (courseIds.length > 0) {
           const adminCourseIds = (user.adminForCourses ?? []).map(
             (c: { id: string }) => c.id,
@@ -448,7 +455,10 @@ export const videosRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
       if (video.class.length > 0) {
-        return { success: false as const, reason: "linked-to-class" };
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Video is already linked to a class",
+        });
       }
 
       if (video.rawObjectKey) {
@@ -468,7 +478,7 @@ export const videosRouter = createTRPCRouter({
       }
 
       await ctx.db.video.delete({ where: { id: input.videoId } });
-      return { success: true as const };
+      return { success: true };
     }),
 
   saveProgress: permissionProcedure("video", "progress")
@@ -514,18 +524,6 @@ export const videosRouter = createTRPCRouter({
         select: { positionSec: true, durationSec: true, updatedAt: true },
       });
       return row;
-    }),
-
-  setCaptions: permissionProcedure("video", "captions")
-    .input(z.object({ videoId: z.string(), captionsUrl: z.string().url().nullable() }))
-    .mutation(async ({ ctx, input }) => {
-      await requireVideoManageAccess(ctx, input.videoId);
-
-      await ctx.db.video.update({
-        where: { id: input.videoId },
-        data: { captionsUrl: input.captionsUrl },
-      });
-      return { success: true };
     }),
 
   startMultipartUpload: protectedProcedure
@@ -582,7 +580,10 @@ export const videosRouter = createTRPCRouter({
       z.object({
         videoId: z.string(),
         uploadId: z.string(),
-        partNumbers: z.array(z.number().int().min(1).max(10000)).min(1).max(100),
+        partNumbers: z
+          .array(z.number().int().min(1).max(10000))
+          .min(1)
+          .max(100),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -695,24 +696,6 @@ export const videosRouter = createTRPCRouter({
         )
         .catch(() => undefined);
       return { success: true };
-    }),
-
-  requestCaptionsUpload: permissionProcedure("video", "captions")
-    .input(z.object({ videoId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      await requireVideoManageAccess(ctx, input.videoId);
-
-      const captionsKey = `videos/captions/${input.videoId}.vtt`;
-      const command = new PutObjectCommand({
-        Bucket: AWS_BUCKET_NAME,
-        Key: captionsKey,
-        ContentType: "text/vtt",
-        CacheControl: "public, max-age=300",
-      });
-      const uploadUrl = await getSignedUrl(s3Client, command, {
-        expiresIn: 600,
-      });
-      return { uploadUrl, captionsKey };
     }),
 });
 

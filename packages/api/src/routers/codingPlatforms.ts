@@ -1,9 +1,9 @@
 import { z } from "zod";
 
+import type { PlatformScores } from "../lib/coding-platforms";
 import {
   getPlatformScores,
   validatePlatformHandles,
-  type PlatformScores,
 } from "../lib/coding-platforms";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -82,25 +82,40 @@ export const codingPlatformsRouter = createTRPCRouter({
       },
     });
 
-    const CODING_PLATFORMS = ["leetcode", "codeforces", "codechef", "hackerrank", "interviewbit"] as const;
+    const CODING_PLATFORMS = [
+      "leetcode",
+      "codeforces",
+      "codechef",
+      "hackerrank",
+      "interviewbit",
+    ] as const;
 
     return profiles
       .map((p) => {
-        const handles = (p.professionalProfiles as Record<string, string> | null) ?? {};
+        const handles =
+          (p.professionalProfiles as Record<string, string> | null) ?? {};
         const configured = CODING_PLATFORMS.filter((pl) => !!handles[pl]);
         if (configured.length === 0) return null;
         return {
           user: p.user,
-          handles: Object.fromEntries(configured.map((pl) => [pl, handles[pl]])) as Record<string, string>,
+          handles: Object.fromEntries(
+            configured.map((pl) => [pl, handles[pl]]),
+          ) as Record<string, string>,
           configuredCount: configured.length,
         };
       })
       .filter(Boolean)
       .sort((a, b) => b!.configuredCount - a!.configuredCount) as Array<{
-        user: { id: string; name: string | null; username: string; image: string | null; role: string };
-        handles: Record<string, string>;
-        configuredCount: number;
-      }>;
+      user: {
+        id: string;
+        name: string | null;
+        username: string;
+        image: string | null;
+        role: string;
+      };
+      handles: Record<string, string>;
+      configuredCount: number;
+    }>;
   }),
 
   validatePlatformHandles: protectedProcedure
@@ -136,10 +151,7 @@ export const codingPlatformsRouter = createTRPCRouter({
         hackerrank: null,
         interviewbit: null,
       };
-      return {
-        success: true,
-        data: emptyPlatformScores,
-      };
+      return emptyPlatformScores;
     }
 
     const { codechef, leetcode, codeforces, hackerrank, interviewbit } =
@@ -155,7 +167,6 @@ export const codingPlatformsRouter = createTRPCRouter({
       }).filter(([, value]) => value !== ""),
     ) as Record<string, string>;
 
-    const result = await getPlatformScores(platformHandles);
-    return { success: true, data: result };
+    return await getPlatformScores(platformHandles);
   }),
 });

@@ -50,21 +50,13 @@ import {
 } from "@tutly/ui/table";
 import ProfessionalProfiles from "@/app/(protected)/profile/_components/ProfessionalProfiles";
 import { api } from "@/trpc/react";
+import type { RouterOutputs } from "@/trpc/react";
 
 import Component from "./charts";
 import { Skeleton } from "@tutly/ui/skeleton";
 
-interface Assignment {
-  id: string;
-  title: string;
-  submissions: {
-    id: string;
-    points: {
-      score: number;
-    }[];
-  }[];
-  points?: number;
-}
+type Assignment =
+  RouterOutputs["dashboard"]["getStudentDashboardData"]["courses"][number]["assignments"][number];
 
 interface Props {
   selectedCourse: string;
@@ -127,7 +119,7 @@ const AssignmentTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {searchFilteredAssignments.map((assignment: any) => (
+          {searchFilteredAssignments.map((assignment) => (
             <TableRow
               key={assignment.id}
               className="hover:bg-accent/40 cursor-pointer text-left transition-colors"
@@ -152,8 +144,8 @@ const AssignmentTable = ({
               </TableCell>
               <TableCell className="whitespace-nowrap">
                 {assignment.submissions?.reduce(
-                  (total: any, submission: any) =>
-                    total + (submission.points?.[0]?.score || 0),
+                  (total, submission) =>
+                    total + (submission.points?.[0]?.score ?? 0),
                   0,
                 )}
               </TableCell>
@@ -292,6 +284,8 @@ const ProfessionalProfilesModal = ({
   );
 };
 
+type PlatformScoresData = RouterOutputs["codingPlatforms"]["getPlatformScores"];
+
 const PlatformScores = () => {
   const { data: platformScoresData, isLoading } =
     api.codingPlatforms.getPlatformScores.useQuery();
@@ -317,13 +311,12 @@ const PlatformScores = () => {
   }));
 
   const shouldShowUpdateProfile =
-    !platformScoresData?.success ||
-    !platformScoresData.data ||
-    Object.keys(platformScoresData.data.percentages).length === 0;
+    !platformScoresData ||
+    Object.keys(platformScoresData.percentages).length === 0;
 
   const platformData = platforms.map((platform) => ({
     name: platform,
-    value: platformScoresData?.data?.percentages[platform] ?? 0,
+    value: platformScoresData?.percentages[platform] ?? 0,
     originalIndex: platforms.indexOf(platform),
   }));
 
@@ -381,7 +374,8 @@ const PlatformScores = () => {
       </div>
       <div className="w-full space-y-2">
         {sortedPlatformData.map((platform, index) => {
-          const score = platformScoresData?.data?.[platform.name];
+          const score =
+            platformScoresData?.[platform.name as keyof PlatformScoresData];
           const percentage = platform.value;
           const isPlatformConfigured =
             score !== null && score !== undefined && percentage > 0;
@@ -449,7 +443,7 @@ const PlatformScores = () => {
 };
 
 export function StudentCards({ selectedCourse }: Props) {
-  const { data: studentDataResponse, isLoading } =
+  const { data: studentData, isLoading } =
     api.dashboard.getStudentDashboardData.useQuery();
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -510,11 +504,10 @@ export function StudentCards({ selectedCourse }: Props) {
     );
   }
 
-  if (!studentDataResponse?.success || !studentDataResponse.data) {
+  if (!studentData) {
     return <div>No student data available</div>;
   }
 
-  const studentData = studentDataResponse.data;
   const course = studentData.courses.find((c) => c.courseId === selectedCourse);
 
   const groupedAssignments: Record<

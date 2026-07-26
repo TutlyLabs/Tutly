@@ -74,7 +74,6 @@ interface ClassProps {
     username: string;
     adminForCourses?: { id: string }[];
   };
-  initialNotesData?: any;
   onOpenClassMenu?: () => void;
 }
 
@@ -82,7 +81,6 @@ export default function Class({
   courseId,
   classId,
   currentUser,
-  initialNotesData,
   onOpenClassMenu,
 }: ClassProps) {
   const [selectedAttachment, setSelectedAttachment] =
@@ -152,12 +150,10 @@ export default function Class({
     );
 
   useEffect(() => {
-    // Use initialNotesData if available, otherwise fall back to notesData query
-    const dataToUse = initialNotesData || notesData;
-    if (dataToUse?.data) {
-      const description = dataToUse.data.description ?? "";
-      const descriptionJson = dataToUse.data.descriptionJson ?? null;
-      const tagsData = dataToUse.data.tags ?? [];
+    if (notesData) {
+      const description = notesData.description ?? "";
+      const descriptionJson = notesData.descriptionJson ?? null;
+      const tagsData = notesData.tags;
 
       setNotes(description);
       setNotesJson(descriptionJson);
@@ -169,7 +165,7 @@ export default function Class({
         tags: tagsData,
       };
     }
-  }, [initialNotesData, notesData]);
+  }, [notesData]);
 
   const updateNote = api.notes.updateNote.useMutation();
   const toggleBookmark = api.bookmarks.toggleBookmark.useMutation();
@@ -204,7 +200,7 @@ export default function Class({
 
         try {
           setNotesStatus("Saving...");
-          updateNote.mutate({
+          await updateNote.mutateAsync({
             objectId: classId,
             category: "CLASS",
             description: null,
@@ -241,7 +237,7 @@ export default function Class({
     notesData,
   ]);
 
-  if (!classDetails?.data) {
+  if (!classDetails) {
     return (
       <div className="flex flex-col gap-2 md:mx-5">
         {/* Class Header */}
@@ -300,9 +296,9 @@ export default function Class({
     meetingUrl,
     meetingId,
     meetingPasscode,
-  } = classDetails.data;
+  } = classDetails;
   const { videoLink, videoType } = video ?? {};
-  const isBookmarked = !!bookmarkData?.data;
+  const isBookmarked = !!bookmarkData;
   const isLiveClass = classType === "LIVE";
 
   const isCourseAdmin = currentUser?.adminForCourses?.some(
@@ -437,18 +433,14 @@ export default function Class({
 
   const toggleBookMark = async () => {
     try {
-      const response = await toggleBookmark.mutateAsync({
+      const { bookmarked } = await toggleBookmark.mutateAsync({
         objectId: classId,
         category: "CLASS",
         causedObjects: { classId: classId, courseId: courseId },
       });
 
-      if (!response.success) {
-        toast.error("failed to add bookmark");
-      } else {
-        toast.success(isBookmarked ? "Bookmark removed" : "Bookmark added");
-        router.refresh();
-      }
+      toast.success(bookmarked ? "Bookmark added" : "Bookmark removed");
+      router.refresh();
     } catch (error) {
       toast.error("Failed to toggle bookmark");
     }
@@ -473,7 +465,7 @@ export default function Class({
       setNotes("");
       setNotesJson(null);
 
-      updateNote.mutate({
+      await updateNote.mutateAsync({
         objectId: classId,
         category: "CLASS",
         description: null,
@@ -532,7 +524,9 @@ export default function Class({
                   {currentUser.role === "STUDENT" && (
                     <StudentAttendanceIndicator
                       courseId={courseId}
-                      attendance={studentAttendanceData?.data || undefined}
+                      attendance={
+                        studentAttendanceData?.attendance ?? undefined
+                      }
                       attendanceUploaded={
                         studentAttendanceData?.attendanceUploaded || false
                       }
@@ -540,7 +534,7 @@ export default function Class({
                   )}
 
                   {haveAdminAccess &&
-                    attendanceData?.data?.attendance?.length === 0 && (
+                    attendanceData?.attendance?.length === 0 && (
                       <Badge
                         variant="outline"
                         className="bg-muted/40 h-7 gap-1 text-[11px]"
@@ -595,7 +589,7 @@ export default function Class({
                   )}
 
                   {haveAdminAccess &&
-                    attendanceData?.data?.attendance?.length === 0 && (
+                    attendanceData?.attendance?.length === 0 && (
                       <Link
                         href={`/tutor/attendance?courseId=${courseId}&classId=${classId}`}
                         target="_blank"
@@ -629,8 +623,8 @@ export default function Class({
                         size="icon"
                         onClick={async () => {
                           const result = await fetchClassDeletionInfo();
-                          if (result.data?.success) {
-                            setClassDeletionInfo(result.data.data);
+                          if (result.data) {
+                            setClassDeletionInfo(result.data);
                           }
                           setIsDeleteClassDialogOpen(true);
                         }}
@@ -647,13 +641,13 @@ export default function Class({
                 <div className="mb-2 max-w-[710px] overflow-x-auto">
                   <AttendanceIndicator
                     classId={classId}
-                    attendance={attendanceData?.data?.attendance || []}
-                    present={attendanceData?.data?.present || 0}
+                    attendance={attendanceData?.attendance || []}
+                    present={attendanceData?.present || 0}
                     totalEnrolledStudents={
-                      attendanceData?.data?.totalEnrolledStudents || 0
+                      attendanceData?.totalEnrolledStudents || 0
                     }
                     notAttendedStudents={
-                      attendanceData?.data?.notAttendedStudents || []
+                      attendanceData?.notAttendedStudents || []
                     }
                     role={currentUser.role}
                     courseId={courseId}
@@ -720,7 +714,7 @@ export default function Class({
                     </DialogHeader>
                     <ScrollArea className="max-h-[70vh] overflow-y-auto">
                       <NewAttachmentPage
-                        classes={classes?.data}
+                        classes={classes}
                         courseId={courseId}
                         classId={classId}
                         onCancel={() => {
@@ -912,7 +906,7 @@ export default function Class({
           </div>
         </div>
 
-        {initialNotesData || notesData ? (
+        {notesData ? (
           <RichTextEditor
             initialValue={notesJson ?? notes ?? ""}
             onChange={(jsonValue: string) => {
@@ -938,7 +932,7 @@ export default function Class({
         isOpen={isEditClassDialogOpen}
         onOpenChange={setIsEditClassDialogOpen}
         courseId={courseId}
-        classDetails={classDetails.data}
+        classDetails={classDetails}
       />
 
       {/* Edit Assignment Dialog */}
@@ -955,7 +949,7 @@ export default function Class({
           </DialogHeader>
           <ScrollArea className="max-h-[70vh] overflow-y-auto">
             <NewAttachmentPage
-              classes={classes?.data}
+              classes={classes}
               courseId={courseId}
               classId={classId}
               isEditing

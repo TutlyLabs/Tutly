@@ -28,11 +28,11 @@ export default function HtmlCssJsPlaygroundPage() {
 
   if (!user) return <PageLoader />;
   if (submissionId && submissionQ.isLoading) return <PageLoader />;
-  if (submissionId && (!submissionQ.data?.success || !submissionQ.data.data)) {
+  if (submissionId && !submissionQ.data) {
     return <div>Access Denied or submission not found</div>;
   }
 
-  const initialFiles = submissionQ.data?.data?.initialFiles as
+  const initialFiles = submissionQ.data?.initialFiles as
     | SandpackFiles
     | undefined;
 

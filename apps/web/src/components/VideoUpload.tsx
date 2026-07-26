@@ -300,7 +300,10 @@ export function VideoUpload({
 
   const requestUpload = api.videos.requestUpload.useMutation();
   const uploadComplete = api.videos.uploadComplete.useMutation();
-  const abandon = api.videos.abandon.useMutation();
+  // Cancelling is best-effort, but a refusal must not disappear silently.
+  const abandon = api.videos.abandon.useMutation({
+    onError: (e) => toast.error(e.message),
+  });
   const startMultipart = api.videos.startMultipartUpload.useMutation();
   const signMultipartParts = api.videos.signMultipartParts.useMutation();
   const completeMultipart = api.videos.completeMultipartUpload.useMutation();

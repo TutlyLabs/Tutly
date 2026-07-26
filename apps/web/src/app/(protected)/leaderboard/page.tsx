@@ -7,10 +7,10 @@ import Leaderboard from "./_components/leaderboard";
 export default function LeaderboardPage() {
   const q = api.leaderboard.getLeaderboardData.useQuery();
   if (q.isLoading) return <PageLoader />;
-  if (!q.data?.success || !q.data.data) {
+  if (!q.data) {
     return <div>Failed to load leaderboard data.</div>;
   }
-  const { currentUser, submissions, courses } = q.data.data;
+  const { currentUser, submissions, courses } = q.data;
   return (
     <Leaderboard
       currentUser={currentUser}

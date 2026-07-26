@@ -66,7 +66,7 @@ export default function AssignmentDetailClient({
     );
   }
 
-  if (!assignmentData?.success || !assignmentData.data) {
+  if (!assignmentData) {
     return <div>Assignment not found or you don&apos;t have access to it.</div>;
   }
 
@@ -77,7 +77,7 @@ export default function AssignmentDetailClient({
     isCourseAdmin,
     mentors,
     pagination,
-  } = assignmentData.data;
+  } = assignmentData;
 
   return (
     <AssignmentPage

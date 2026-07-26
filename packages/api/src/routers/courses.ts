@@ -1,23 +1,18 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { db } from "@tutly/db";
-import { createLogger } from "@tutly/logger";
+
 import {
-  requireClassReadAccess,
   requireCourseManageAccess,
   requireCourseReadAccess,
-  requireStudentDataAccess,
-  requireUserInOrganization,
   requireUsernameInOrganization,
-  resolveTargetMentorUsername,
 } from "../lib/authorization";
 import {
   createTRPCRouter,
   permissionProcedure,
   protectedProcedure,
 } from "../trpc";
-
-const logger = createLogger("api:courses");
 
 export async function getEnrolledCourseIds(username: string) {
   const enrolledCourses = await db.enrolledUsers.findMany({
@@ -37,177 +32,35 @@ export async function getEnrolledCourseIds(username: string) {
     .filter((id): id is string => id !== null);
 }
 
-export async function getEnrolledCourses(username: string) {
-  const courses = await db.course.findMany({
-    where: {
-      enrolledUsers: {
-        some: {
-          username: username,
-        },
-      },
-    },
-    include: {
-      classes: true,
-      createdBy: true,
-      _count: {
-        select: {
-          classes: true,
-        },
-      },
-    },
-  });
-
-  return { success: true, data: courses };
-}
-
-export async function getEnrolledCoursesById(id: string) {
-  const courses = await db.course.findMany({
-    where: {
-      enrolledUsers: {
-        some: {
-          user: {
-            id: id,
-          },
-        },
-      },
-    },
-    include: {
-      classes: true,
-      createdBy: true,
-      _count: {
-        select: {
-          classes: true,
-        },
-      },
-    },
-  });
-
-  return { success: true, data: courses };
-}
-
-export async function getMentorCourses(username: string) {
-  const courses = await db.course.findMany({
-    where: {
-      enrolledUsers: {
-        some: {
-          mentorUsername: username,
-        },
-      },
-    },
-    include: {
-      classes: true,
-      createdBy: true,
-      _count: {
-        select: {
-          classes: true,
-        },
-      },
-    },
-  });
-
-  return { success: true, data: courses };
-}
-
 export const coursesRouter = createTRPCRouter({
   getAllCourses: protectedProcedure.query(async ({ ctx }) => {
     const currentUser = ctx.session.user;
-    try {
-      let courses;
-      if (currentUser.role === "INSTRUCTOR") {
-        courses = await ctx.db.course.findMany({
-          where: {
+
+    const where =
+      currentUser.role === "INSTRUCTOR"
+        ? {
             OR: [
               { createdById: currentUser.id },
-              {
-                enrolledUsers: {
-                  some: {
-                    username: currentUser.username,
-                  },
-                },
-              },
+              { enrolledUsers: { some: { username: currentUser.username } } },
             ],
-          },
-          include: {
-            _count: {
-              select: {
-                classes: true,
-              },
-            },
-          },
-        });
-      } else if (currentUser.role === "MENTOR") {
-        courses = await ctx.db.course.findMany({
-          where: {
-            enrolledUsers: {
-              some: {
-                mentorUsername: currentUser.username,
-              },
-            },
-          },
-          include: {
-            _count: {
-              select: {
-                classes: true,
-              },
-            },
-          },
-        });
-      } else {
-        courses = await ctx.db.course.findMany({
-          where: {
-            enrolledUsers: {
-              some: {
-                user: {
-                  id: currentUser.id,
-                },
-              },
-            },
-          },
-          include: {
-            _count: {
-              select: {
-                classes: true,
-              },
-            },
-          },
-        });
-      }
+          }
+        : currentUser.role === "MENTOR"
+          ? {
+              enrolledUsers: { some: { mentorUsername: currentUser.username } },
+            }
+          : { enrolledUsers: { some: { user: { id: currentUser.id } } } };
 
-      return { success: true, data: courses };
-    } catch (e) {
-      logger.error({ err: e, userId: currentUser.id }, "failed to fetch courses");
-      return {
-        error: "Failed to fetch courses",
-        details: e instanceof Error ? e.message : String(e),
-      };
-    }
+    return ctx.db.course.findMany({
+      where,
+      include: {
+        _count: {
+          select: {
+            classes: true,
+          },
+        },
+      },
+    });
   }),
-
-  getCourseClasses: permissionProcedure("class", "list")
-    .input(
-      z.object({
-        id: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      await requireCourseReadAccess(ctx, input.id);
-
-      const classes = await ctx.db.class.findMany({
-        where: {
-          courseId: input.id,
-        },
-        include: {
-          course: true,
-          video: true,
-          attachments: true,
-          Folder: true,
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      });
-      return { success: true, data: classes };
-    }),
 
   foldersByCourseId: permissionProcedure("folder", "list")
     .input(
@@ -266,93 +119,11 @@ export const coursesRouter = createTRPCRouter({
       });
     });
 
-    const publishedCourses = courses.filter((course) => course.isPublished);
-
     if (currentUser.role === "INSTRUCTOR") {
-      return { success: true, data: courses };
+      return courses;
     }
-    return { success: true, data: publishedCourses };
+    return courses.filter((course) => course.isPublished);
   }),
-
-  getCreatedCourses: protectedProcedure.query(async ({ ctx }) => {
-    const currentUser = ctx.session.user;
-
-    const courseIds = await ctx.db.enrolledUsers
-      .findMany({
-        where: {
-          username: currentUser.username,
-          courseId: {
-            not: null,
-          },
-        },
-        select: {
-          courseId: true,
-        },
-      })
-      .then((enrolledCourses) =>
-        enrolledCourses
-          .map((enrolled) => enrolled.courseId)
-          .filter((id): id is string => id !== null),
-      );
-
-    const courses = await ctx.db.course.findMany({
-      where: {
-        id: {
-          in: courseIds,
-        },
-      },
-      include: {
-        classes: true,
-        createdBy: true,
-        _count: {
-          select: {
-            classes: true,
-          },
-        },
-      },
-    });
-
-    courses.forEach((course) => {
-      course.classes.sort((a, b) => {
-        return Number(a.createdAt) - Number(b.createdAt);
-      });
-    });
-
-    return { success: true, data: courses };
-  }),
-
-  getEnrolledCoursesById: permissionProcedure("course", "list")
-    .input(
-      z.object({
-        id: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const target = await requireUserInOrganization(ctx, input.id);
-      await requireStudentDataAccess(ctx, target.username);
-
-      const courses = await ctx.db.course.findMany({
-        where: {
-          enrolledUsers: {
-            some: {
-              user: {
-                id: input.id,
-              },
-            },
-          },
-        },
-        include: {
-          classes: true,
-          createdBy: true,
-          _count: {
-            select: {
-              classes: true,
-            },
-          },
-        },
-      });
-      return { success: true, data: courses };
-    }),
 
   getMentorStudents: permissionProcedure("user", "list")
     .input(
@@ -363,12 +134,15 @@ export const coursesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (!currentUser.organization) {
-        throw new Error("User must belong to an organization");
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "User must belong to an organization",
+        });
       }
 
       await requireCourseReadAccess(ctx, input.courseId);
 
-      const students = await ctx.db.user.findMany({
+      return ctx.db.user.findMany({
         where: {
           role: "STUDENT",
           enrolledUsers: {
@@ -389,145 +163,6 @@ export const coursesRouter = createTRPCRouter({
           username: "asc",
         },
       });
-
-      return { success: true, data: students };
-    }),
-
-  getMentorStudentsById: permissionProcedure("user", "list")
-    .input(
-      z.object({
-        id: z.string(),
-        courseId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      if (!currentUser.organization) {
-        throw new Error("User must belong to an organization");
-      }
-
-      // `id` is a mentor username taken straight from input.
-      const mentorUsername = await resolveTargetMentorUsername(ctx, input.id);
-      await requireCourseReadAccess(ctx, input.courseId);
-
-      const students = await ctx.db.user.findMany({
-        where: {
-          enrolledUsers: {
-            some: {
-              mentorUsername,
-              courseId: input.courseId,
-            },
-          },
-          organization: {
-            id: currentUser.organization.id,
-          },
-        },
-        include: {
-          course: true,
-          enrolledUsers: true,
-        },
-        orderBy: {
-          username: "asc",
-        },
-      });
-
-      return { success: true, data: students };
-    }),
-
-  getEnrolledStudents: permissionProcedure("enrollment", "list")
-    .input(
-      z.object({
-        courseId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      if (!currentUser.organization) {
-        throw new Error("User must belong to an organization");
-      }
-
-      await requireCourseReadAccess(ctx, input.courseId);
-
-      const students = await ctx.db.user.findMany({
-        where: {
-          enrolledUsers: {
-            some: {
-              course: {
-                id: input.courseId,
-              },
-            },
-          },
-          role: "STUDENT",
-          organization: {
-            id: currentUser.organization.id,
-          },
-        },
-        include: {
-          course: true,
-          enrolledUsers: true,
-        },
-      });
-
-      return { success: true, data: students };
-    }),
-
-  getAllStudents: permissionProcedure("user", "list").query(async ({ ctx }) => {
-    const currentUser = ctx.session.user;
-    if (!currentUser.organization) {
-      throw new Error("User must belong to an organization");
-    }
-
-    const students = await ctx.db.user.findMany({
-      where: {
-        role: "STUDENT",
-        organization: {
-          id: currentUser.organization.id,
-        },
-      },
-      include: {
-        course: true,
-        enrolledUsers: true,
-      },
-    });
-
-    return { success: true, data: students };
-  }),
-
-  getEnrolledMentees: permissionProcedure("enrollment", "list")
-    .input(
-      z.object({
-        courseId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      if (!currentUser.organization) {
-        throw new Error("User must belong to an organization");
-      }
-
-      await requireCourseReadAccess(ctx, input.courseId);
-
-      const students = await ctx.db.user.findMany({
-        where: {
-          role: "MENTOR",
-          enrolledUsers: {
-            some: {
-              course: {
-                id: input.courseId,
-              },
-            },
-          },
-          organization: {
-            id: currentUser.organization.id,
-          },
-        },
-        include: {
-          course: true,
-          enrolledUsers: true,
-        },
-      });
-
-      return { success: true, data: students };
     }),
 
   createCourse: protectedProcedure
@@ -540,12 +175,20 @@ export const coursesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") return { error: "Unauthorized" };
+      if (currentUser.role !== "INSTRUCTOR") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only instructors can create courses",
+        });
+      }
       if (!input.title.trim()) {
-        return { error: "Title is required" };
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Title is required",
+        });
       }
 
-      const newCourse = await ctx.db.course.create({
+      return ctx.db.course.create({
         data: {
           title: input.title,
           createdById: currentUser.id,
@@ -558,7 +201,6 @@ export const coursesRouter = createTRPCRouter({
           },
         },
       });
-      return { success: true, data: newCourse };
     }),
 
   updateCourse: permissionProcedure("course", "update")
@@ -574,10 +216,13 @@ export const coursesRouter = createTRPCRouter({
       await requireCourseManageAccess(ctx, input.id);
 
       if (!input.title.trim()) {
-        return { error: "Title is required" };
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Title is required",
+        });
       }
 
-      const course = await ctx.db.course.update({
+      return ctx.db.course.update({
         where: {
           id: input.id,
         },
@@ -587,70 +232,6 @@ export const coursesRouter = createTRPCRouter({
           image: input.image ?? null,
         },
       });
-      return { success: true, data: course };
-    }),
-
-  getMentorCourses: protectedProcedure.query(async ({ ctx }) => {
-    const currentUser = ctx.session.user;
-
-    const courses = await ctx.db.course.findMany({
-      where: {
-        enrolledUsers: {
-          some: {
-            mentorUsername: currentUser.username,
-          },
-        },
-      },
-      include: {
-        classes: true,
-        createdBy: true,
-        _count: {
-          select: {
-            classes: true,
-          },
-        },
-      },
-    });
-
-    courses.forEach((course) => {
-      course.classes.sort((a, b) => {
-        return Number(a.createdAt) - Number(b.createdAt);
-      });
-    });
-
-    return { success: true, data: courses };
-  }),
-
-  getClassDetails: permissionProcedure("class", "read")
-    .input(
-      z.object({
-        id: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      await requireClassReadAccess(ctx, input.id);
-
-      try {
-        const classDetails = await ctx.db.class.findUnique({
-          where: {
-            id: input.id,
-          },
-          include: {
-            video: true,
-            attachments: true,
-            Folder: true,
-          },
-        });
-
-        if (!classDetails) {
-          return { success: false, error: "Class not found" };
-        }
-
-        return { success: true, data: classDetails };
-      } catch (error) {
-        logger.error({ err: error, classId: input.id }, "failed to fetch class details");
-        return { success: false, error: "Failed to fetch class details" };
-      }
     }),
 
   getCourseByCourseId: permissionProcedure("course", "read")
@@ -667,7 +248,10 @@ export const coursesRouter = createTRPCRouter({
           id: input.id,
         },
       });
-      return { success: true, data: course };
+      if (!course) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Course not found" });
+      }
+      return course;
     }),
 
   enrollStudentToCourse: protectedProcedure
@@ -680,74 +264,73 @@ export const coursesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (currentUser.role !== "INSTRUCTOR") {
-        return { error: "Unauthorized to enroll student to course" };
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Unauthorized to enroll student to course",
+        });
       }
 
-      // Outside the try: the catch below would turn a tenancy failure into a
-      // generic "failed" envelope.
       await requireCourseManageAccess(ctx, input.courseId);
       await requireUsernameInOrganization(ctx, input.username);
 
-      try {
-        const user = await ctx.db.user.findUnique({
-          where: { username: input.username },
-        });
+      const user = await ctx.db.user.findUnique({
+        where: { username: input.username },
+      });
 
-        if (!user) {
-          return { error: "User not found" };
-        }
-
-        const course = await ctx.db.course.findUnique({
-          where: { id: input.courseId },
-        });
-
-        if (!course) {
-          return { error: "Course not found" };
-        }
-
-        const existingEnrollment = await ctx.db.enrolledUsers.findFirst({
-          where: {
-            courseId: input.courseId,
-            username: input.username,
-          },
-        });
-
-        if (existingEnrollment) {
-          return { error: "User is already enrolled in the course" };
-        }
-
-        const newEnrollment = await ctx.db.enrolledUsers.create({
-          data: {
-            courseId: input.courseId,
-            username: input.username,
-          },
-        });
-
-        await ctx.db.events.create({
-          data: {
-            eventCategory: "STUDENT_ENROLLMENT_IN_COURSE",
-            causedById: currentUser.id,
-            eventCategoryDataId: newEnrollment.id,
-          },
-        });
-
-        // Auto-join course chat group if it exists
-        const enrolledUser = await ctx.db.user.findUnique({ where: { username: input.username } });
-        if (enrolledUser) {
-          const group = await ctx.db.chatGroup.findFirst({ where: { courseId: input.courseId, type: "COURSE" } });
-          if (group) {
-            await ctx.db.groupMember.upsert({
-              where: { groupId_userId: { groupId: group.id, userId: enrolledUser.id } },
-              create: { groupId: group.id, userId: enrolledUser.id, role: "MEMBER" },
-              update: {},
-            });
-          }
-        }
-
-        return { success: true, data: newEnrollment };
-      } catch {
-        return { error: "Failed to enroll student" };
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
       }
+
+      const course = await ctx.db.course.findUnique({
+        where: { id: input.courseId },
+      });
+
+      if (!course) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Course not found" });
+      }
+
+      const existingEnrollment = await ctx.db.enrolledUsers.findFirst({
+        where: {
+          courseId: input.courseId,
+          username: input.username,
+        },
+      });
+
+      if (existingEnrollment) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "User is already enrolled in the course",
+        });
+      }
+
+      const newEnrollment = await ctx.db.enrolledUsers.create({
+        data: {
+          courseId: input.courseId,
+          username: input.username,
+        },
+      });
+
+      await ctx.db.events.create({
+        data: {
+          eventCategory: "STUDENT_ENROLLMENT_IN_COURSE",
+          causedById: currentUser.id,
+          eventCategoryDataId: newEnrollment.id,
+        },
+      });
+
+      // Auto-join course chat group if it exists
+      const group = await ctx.db.chatGroup.findFirst({
+        where: { courseId: input.courseId, type: "COURSE" },
+      });
+      if (group) {
+        await ctx.db.groupMember.upsert({
+          where: { groupId_userId: { groupId: group.id, userId: user.id } },
+          create: { groupId: group.id, userId: user.id, role: "MEMBER" },
+          update: {},
+        });
+      }
+
+      return newEnrollment;
     }),
 
   unenrollStudentFromCourse: protectedProcedure
@@ -760,90 +343,34 @@ export const coursesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (currentUser.role !== "INSTRUCTOR") {
-        return { error: "Unauthorized to unenroll student from course" };
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Unauthorized to unenroll student from course",
+        });
       }
 
       await requireCourseManageAccess(ctx, input.courseId);
       await requireUsernameInOrganization(ctx, input.username);
 
-      try {
-        const user = await ctx.db.user.findUnique({
-          where: { username: input.username },
+      const existingEnrollment = await ctx.db.enrolledUsers.findFirst({
+        where: {
+          courseId: input.courseId,
+          username: input.username,
+        },
+      });
+
+      if (!existingEnrollment) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User is not enrolled in the course",
         });
-
-        if (!user) {
-          return { error: "User not found" };
-        }
-
-        const course = await ctx.db.course.findUnique({
-          where: { id: input.courseId },
-        });
-
-        if (!course) {
-          return { error: "Course not found" };
-        }
-
-        const existingEnrollment = await ctx.db.enrolledUsers.findFirst({
-          where: {
-            courseId: input.courseId,
-            username: input.username,
-          },
-        });
-
-        if (!existingEnrollment) {
-          return { error: "User is not enrolled in the course" };
-        }
-
-        await ctx.db.enrolledUsers.delete({
-          where: {
-            id: existingEnrollment.id,
-          },
-        });
-
-        return { success: true, data: existingEnrollment };
-      } catch {
-        return { error: "Failed to unenroll student" };
-      }
-    }),
-
-  updateRole: protectedProcedure
-    .input(
-      z.object({
-        username: z.string(),
-        role: z.enum(["STUDENT", "MENTOR"]),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") {
-        return { error: "Unauthorized to update user role" };
       }
 
-      // Without this an instructor could re-role a user in any organization.
-      await requireUsernameInOrganization(ctx, input.username);
-
-      try {
-        const user = await ctx.db.user.findUnique({
-          where: { username: input.username },
-        });
-
-        if (!user) {
-          return { error: "User not found" };
-        }
-
-        const updatedUser = await ctx.db.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            role: input.role,
-          },
-        });
-
-        return { success: true, data: updatedUser };
-      } catch {
-        return { error: "Failed to update user role" };
-      }
+      return ctx.db.enrolledUsers.delete({
+        where: {
+          id: existingEnrollment.id,
+        },
+      });
     }),
 
   updateMentor: protectedProcedure
@@ -857,56 +384,58 @@ export const coursesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
       if (currentUser.role !== "INSTRUCTOR") {
-        return { error: "Unauthorized to update mentor" };
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Unauthorized to update mentor",
+        });
       }
 
       await requireCourseManageAccess(ctx, input.courseId);
       await requireUsernameInOrganization(ctx, input.username);
       await requireUsernameInOrganization(ctx, input.mentorUsername);
 
-      try {
-        const enrolledUser = await ctx.db.enrolledUsers.findFirst({
-          where: {
-            courseId: input.courseId,
-            username: input.username,
-          },
+      const enrolledUser = await ctx.db.enrolledUsers.findFirst({
+        where: {
+          courseId: input.courseId,
+          username: input.username,
+        },
+      });
+
+      if (!enrolledUser) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User is not enrolled in the course",
         });
-
-        if (!enrolledUser) {
-          return { error: "User is not enrolled in the course" };
-        }
-
-        const updatedUser = await ctx.db.enrolledUsers.update({
-          where: {
-            id: enrolledUser.id,
-          },
-          data: {
-            mentorUsername: input.mentorUsername,
-          },
-        });
-
-        // Auto-join mentor to the course chat group
-        const mentor = await ctx.db.user.findUnique({
-          where: { username: input.mentorUsername },
-          select: { id: true },
-        });
-        if (mentor) {
-          const group = await ctx.db.chatGroup.findFirst({
-            where: { courseId: input.courseId, type: "COURSE" },
-          });
-          if (group) {
-            await ctx.db.groupMember.upsert({
-              where: { groupId_userId: { groupId: group.id, userId: mentor.id } },
-              create: { groupId: group.id, userId: mentor.id, role: "MEMBER" },
-              update: {},
-            });
-          }
-        }
-
-        return { success: true, data: updatedUser };
-      } catch {
-        return { error: "Failed to update mentor" };
       }
+
+      const updatedUser = await ctx.db.enrolledUsers.update({
+        where: {
+          id: enrolledUser.id,
+        },
+        data: {
+          mentorUsername: input.mentorUsername,
+        },
+      });
+
+      // Auto-join mentor to the course chat group
+      const mentor = await ctx.db.user.findUnique({
+        where: { username: input.mentorUsername },
+        select: { id: true },
+      });
+      if (mentor) {
+        const group = await ctx.db.chatGroup.findFirst({
+          where: { courseId: input.courseId, type: "COURSE" },
+        });
+        if (group) {
+          await ctx.db.groupMember.upsert({
+            where: { groupId_userId: { groupId: group.id, userId: mentor.id } },
+            create: { groupId: group.id, userId: mentor.id, role: "MEMBER" },
+            update: {},
+          });
+        }
+      }
+
+      return updatedUser;
     }),
 
   deleteCourse: protectedProcedure
@@ -917,111 +446,84 @@ export const coursesRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const currentUser = ctx.session.user;
-      if (currentUser.role !== "INSTRUCTOR") return { error: "Unauthorized" };
-
-      try {
-        await ctx.db.course.delete({
-          where: {
-            id: input.id,
-            createdById: currentUser.id,
-          },
+      if (currentUser.role !== "INSTRUCTOR") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only instructors can delete courses",
         });
+      }
 
-        return { success: true };
-      } catch {
-        return { error: "Failed to delete course" };
+      // Scoped to the creator, and reported as NOT_FOUND so a non-owner is not
+      // told that the course exists.
+      const { count } = await ctx.db.course.deleteMany({
+        where: { id: input.id, createdById: currentUser.id },
+      });
+      if (count === 0) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Course not found" });
       }
     }),
 
   getCourseManagementUsers: protectedProcedure
     .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }) => {
-      try {
-        const currentUser = ctx.session.user;
+      const currentUser = ctx.session.user;
 
-        if (currentUser.role !== "INSTRUCTOR") {
-          return {
-            success: false,
-            error: "Only instructors can manage courses",
-          };
-        }
+      if (currentUser.role !== "INSTRUCTOR") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only instructors can manage courses",
+        });
+      }
 
-        const allUsers = await ctx.db.user.findMany({
-          where: {
-            organizationId: currentUser.organizationId,
-          },
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            email: true,
-            role: true,
-            image: true,
-            enrolledUsers: {
-              where: { courseId: input.courseId },
-              select: {
-                id: true,
-                courseId: true,
-                mentorUsername: true,
-                username: true,
-                startDate: true,
-                endDate: true,
-              },
+      return ctx.db.user.findMany({
+        where: {
+          organizationId: currentUser.organizationId,
+        },
+        select: {
+          id: true,
+          username: true,
+          name: true,
+          email: true,
+          role: true,
+          image: true,
+          enrolledUsers: {
+            where: { courseId: input.courseId },
+            select: {
+              id: true,
+              courseId: true,
+              mentorUsername: true,
+              username: true,
+              startDate: true,
+              endDate: true,
             },
           },
-          orderBy: [
-            { role: "asc" },
-            { username: "asc" },
-          ],
-        });
-
-        return {
-          success: true,
-          data: allUsers,
-        };
-      } catch (error) {
-        logger.error({ err: error, courseId: input.courseId }, "failed to fetch course management users");
-        return {
-          success: false,
-          error: "Failed to fetch course management users",
-          details: error instanceof Error ? error.message : String(error),
-        };
-      }
+        },
+        orderBy: [{ role: "asc" }, { username: "asc" }],
+      });
     }),
 
   checkUserEnrolledCourses: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const currentUser = ctx.session.user;
+    const currentUser = ctx.session.user;
 
-      if (currentUser.role !== "INSTRUCTOR" && currentUser.role !== "MENTOR") {
-        return { success: false, error: "Unauthorized access" };
-      }
-
-      const enrolledCourses = await ctx.db.enrolledUsers.findMany({
-        where: {
-          username: currentUser.username,
-          courseId: {
-            not: null,
-          },
-        },
-        select: {
-          courseId: true,
-        },
+    if (currentUser.role !== "INSTRUCTOR" && currentUser.role !== "MENTOR") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Unauthorized access",
       });
-
-      return {
-        success: true,
-        data: {
-          hasEnrolledCourses: enrolledCourses.length > 0,
-        },
-      };
-    } catch (error) {
-      logger.error({ err: error }, "failed to check enrolled courses");
-      return {
-        success: false,
-        error: "Failed to check enrolled courses",
-        details: error instanceof Error ? error.message : String(error),
-      };
     }
+
+    const enrolledCourses = await ctx.db.enrolledUsers.findMany({
+      where: {
+        username: currentUser.username,
+        courseId: {
+          not: null,
+        },
+      },
+      select: {
+        courseId: true,
+      },
+    });
+
+    return { hasEnrolledCourses: enrolledCourses.length > 0 };
   }),
 });

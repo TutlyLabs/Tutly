@@ -21,7 +21,7 @@ export const holidaysRouter = createTRPCRouter({
           endDate: input.endDate,
         },
       });
-      return { success: true, data: holiday };
+      return holiday;
     }),
 
   deleteHoliday: permissionProcedure("holiday", "delete")
@@ -34,15 +34,8 @@ export const holidaysRouter = createTRPCRouter({
       const holiday = await ctx.db.holidays.delete({
         where: { id: input.id },
       });
-      return { success: true, data: holiday };
+      return holiday;
     }),
-
-  getAllHolidays: permissionProcedure("holiday", "list").query(
-    async ({ ctx }) => {
-      const holidays = await ctx.db.holidays.findMany();
-      return { success: true, data: holidays };
-    },
-  ),
 
   editHolidays: permissionProcedure("holiday", "update")
     .input(
@@ -64,6 +57,6 @@ export const holidaysRouter = createTRPCRouter({
           endDate: input.endDate,
         },
       });
-      return { success: true, data: holiday };
+      return holiday;
     }),
 });

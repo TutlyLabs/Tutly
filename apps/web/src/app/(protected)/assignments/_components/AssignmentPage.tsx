@@ -1,5 +1,6 @@
 "use client";
 
+import { isTRPCClientError } from "@trpc/client";
 import day from "dayjs";
 import * as React from "react";
 import { useState, useEffect } from "react";
@@ -693,16 +694,11 @@ const WorkspaceSubmissionSection = ({ assignment }: { assignment: any }) => {
         assignmentId: assignment.id,
         provider: "LOCAL",
       });
-      if (started.error) {
-        toast.error(started.error);
-        return;
-      }
-
       const query = new URLSearchParams({
         assignmentId: assignment.id,
       });
-      if (started.data?.workspaceToken) {
-        query.set("workspaceToken", started.data.workspaceToken);
+      if (started.workspaceToken) {
+        query.set("workspaceToken", started.workspaceToken);
       }
 
       const response = await fetch(`/api/config?${query.toString()}`);
@@ -717,7 +713,8 @@ const WorkspaceSubmissionSection = ({ assignment }: { assignment: any }) => {
         "_blank",
       );
     } catch (error) {
-      toast.error("Failed to open workspace");
+      // tRPC failures already toast via the global mutation handler.
+      if (!isTRPCClientError(error)) toast.error("Failed to open workspace");
     } finally {
       setIsOpening(false);
     }

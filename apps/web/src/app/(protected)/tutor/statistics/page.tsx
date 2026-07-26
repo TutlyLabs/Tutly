@@ -11,7 +11,7 @@ export default function StatisticsPage() {
   const sp = useSearchParams();
   const q = api.courses.getAllCourses.useQuery();
   if (q.isLoading) return <PageLoader />;
-  const first = q.data?.data?.[0];
+  const first = q.data?.[0];
   if (first) {
     const params = new URLSearchParams(sp);
     params.set("id", first.id);

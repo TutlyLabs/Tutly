@@ -6,7 +6,8 @@ import { toast } from "sonner";
 
 import { Button } from "@tutly/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
-import { api, type RouterOutputs } from "@/trpc/react";
+import { api } from "@/trpc/react";
+import type { RouterOutputs } from "@/trpc/react";
 import { extractDeviceLabel } from "@/utils/device";
 
 const providers = [
@@ -14,18 +15,11 @@ const providers = [
   // , "google"
 ];
 
-/**
- * Derived from the router rather than the Prisma models: `getUserSessions`
- * selects a narrow subset because the full rows carry session bearer tokens
- * and password hashes, which must never reach the browser.
- */
-type SessionsPayload = NonNullable<
-  Extract<RouterOutputs["users"]["getUserSessions"], { data: unknown }>["data"]
->;
+type UserSessions = RouterOutputs["users"]["getUserSessions"];
 
 type SessionsModalProps = {
-  sessions: SessionsPayload["sessions"];
-  accounts: SessionsPayload["accounts"];
+  sessions: UserSessions["sessions"];
+  accounts: UserSessions["accounts"];
   currentSessionId?: string | null;
 };
 

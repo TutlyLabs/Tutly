@@ -7,17 +7,6 @@ import CalendarHeatmap from "./heatmap";
 import { Radialchart } from "./radialchart";
 import { StudentBarchart } from "./studentBarchart";
 
-interface AttendanceData {
-  attendanceDates: string[];
-  classes: string[];
-  classesNoAttendance?: string[];
-  attendanceDetails?: Record<
-    string,
-    { duration: number | null; classId: string; title: string }
-  >;
-  classDetails?: Record<string, { classId: string; title: string }>;
-}
-
 function StudentStats({
   courseId,
   studentUsername,
@@ -54,7 +43,7 @@ function StudentStats({
     );
   }
 
-  const typedAttendanceData = attendanceData as AttendanceData;
+  const typedAttendanceData = attendanceData;
 
   const attendancePercentage = (
     (typedAttendanceData.attendanceDates.length * 100) /

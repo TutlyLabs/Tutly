@@ -1,35 +1,40 @@
+import { createHmac, randomUUID } from "node:crypto";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
 import type {
+  AssignmentArtifact,
   Attachment,
   EnrolledUsers,
   Point,
   submission,
   User,
 } from "@tutly/db/browser";
-import { createHmac, randomUUID } from "node:crypto";
-
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
-
 import {
   readSandpackTemplate,
   readSubmission,
   writeSubmission,
 } from "@tutly/storage";
-import { createLogger } from "@tutly/logger";
 import {
   isCodeSandboxHost,
   isValidCodeSandboxUrl,
 } from "@tutly/utils/codesandbox";
 
+import type { SandpackTemplate } from "../lib/template-policy";
+import {
+  canManageAssignment,
+  getStudentEnrollmentForAssignment,
+  requireAssignmentReadAccess,
+  requireSubmissionReadAccess,
+  requireSubmissionReviewAccess,
+} from "../lib/authorization";
+import { enqueueTestRun } from "../lib/runner-client";
 import { locatorFrom, locatorSelect } from "../lib/storage-locator";
 import {
   filterSubmissionInput,
   isTemplateOnly,
   mergeForAudience,
-  type SandpackTemplate,
 } from "../lib/template-policy";
-
-import { enqueueTestRun } from "../lib/runner-client";
 import {
   buildWorkspaceObjectKey,
   getArtifactDownloadUrl,
@@ -38,19 +43,10 @@ import {
 } from "../lib/workspace-artifacts";
 import { defaultWorkspaceConfig } from "../lib/workspace-config";
 import {
-  canManageAssignment,
-  getStudentEnrollmentForAssignment,
-  requireAssignmentReadAccess,
-  requireSubmissionReadAccess,
-  requireSubmissionReviewAccess,
-} from "../lib/authorization";
-import {
   createTRPCRouter,
   permissionProcedure,
   protectedProcedure,
 } from "../trpc";
-
-const logger = createLogger("api:submission");
 
 export type AssignmentDetails = {
   id: string;
@@ -96,7 +92,9 @@ function signWorkspaceToken(input: {
     userId: input.userId,
     expiresAt,
   };
-  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString(
+    "base64url",
+  );
   const secret =
     process.env.WORKSPACE_AGENT_SECRET ??
     process.env.AUTH_SECRET ??
@@ -110,7 +108,9 @@ function signWorkspaceToken(input: {
 function sandpackFilesToFilesMap(input: unknown): Record<string, string> {
   if (!input || typeof input !== "object") return {};
   const out: Record<string, string> = {};
-  for (const [path, entry] of Object.entries(input as Record<string, unknown>)) {
+  for (const [path, entry] of Object.entries(
+    input as Record<string, unknown>,
+  )) {
     if (typeof entry === "string") {
       out[path] = entry;
     } else if (entry && typeof entry === "object" && "code" in entry) {
@@ -129,9 +129,10 @@ function findDeletedTemplatePaths(
   const have = new Set(Object.keys(submitted));
   const deleted: string[] = [];
   for (const [path, entry] of Object.entries(files)) {
-    const sf = typeof entry === "string" || (entry && typeof entry === "object")
-      ? (entry as Parameters<typeof isTemplateOnly>[1])
-      : undefined;
+    const sf =
+      typeof entry === "string" || (entry && typeof entry === "object")
+        ? (entry as Parameters<typeof isTemplateOnly>[1])
+        : undefined;
     if (isTemplateOnly(path, sf)) continue;
     if (!have.has(path)) deleted.push(path);
   }
@@ -198,7 +199,9 @@ export const submissionRouter = createTRPCRouter({
         where: { id: input.assignmentDetails.id },
         select: locatorSelect,
       });
-      const locator = templateAttachment ? locatorFrom(templateAttachment) : null;
+      const locator = templateAttachment
+        ? locatorFrom(templateAttachment)
+        : null;
       type Template = Awaited<ReturnType<typeof readSandpackTemplate>>;
       let template: Template = null;
       if (locator) {
@@ -231,7 +234,8 @@ export const submissionRouter = createTRPCRouter({
       if (!locator) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Assignment is missing storage locator (org/course mapping).",
+          message:
+            "Assignment is missing storage locator (org/course mapping).",
         });
       }
 
@@ -291,7 +295,7 @@ export const submissionRouter = createTRPCRouter({
         void enqueueTestRun(run.id);
       }
 
-      return { success: true, data: submission };
+      return submission;
     }),
 
   addOverallFeedback: permissionProcedure("submission", "feedback")
@@ -312,7 +316,10 @@ export const submissionRouter = createTRPCRouter({
       });
 
       if (!submission) {
-        return { error: "submission not found" };
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Submission not found",
+        });
       }
 
       const updatedSubmission = await ctx.db.submission.update({
@@ -325,230 +332,7 @@ export const submissionRouter = createTRPCRouter({
         },
       });
 
-      return { success: true, data: updatedSubmission };
-    }),
-
-  getAssignmentSubmissions: permissionProcedure("submission", "list")
-    .input(
-      z.object({
-        assignmentId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { user } = ctx.session;
-      const assignment = await requireAssignmentReadAccess(
-        ctx,
-        input.assignmentId,
-      );
-
-      const submissions = await ctx.db.submission.findMany({
-        where: {
-          attachmentId: input.assignmentId,
-          status: "SUBMITTED",
-        },
-        include: {
-          enrolledUser: {
-            include: {
-              user: true,
-            },
-          },
-          points: true,
-          assignment: true,
-          artifacts: {
-            where: { isLatest: true },
-            orderBy: { createdAt: "desc" },
-          },
-          testRuns: {
-            orderBy: { createdAt: "desc" },
-            take: 3,
-          },
-          review: true,
-        },
-        orderBy: {
-          enrolledUser: {
-            username: "asc",
-          },
-        },
-      });
-
-      let filteredSubmissions: Array<SubmissionWithDetails> = [];
-
-      if (user.role === "INSTRUCTOR") {
-        filteredSubmissions = submissions as Array<SubmissionWithDetails>;
-      }
-
-      if (user.role === "MENTOR") {
-        filteredSubmissions = submissions.filter(
-          (submission) =>
-            submission.enrolledUser.mentorUsername === user.username,
-        ) as Array<SubmissionWithDetails>;
-      }
-
-      if (assignment?.maxSubmissions && assignment.maxSubmissions > 1) {
-        const submissionCount = await ctx.db.submission.groupBy({
-          by: ["enrolledUserId"],
-          where: {
-            attachmentId: input.assignmentId,
-            status: "SUBMITTED",
-          },
-          _count: {
-            id: true,
-          },
-        });
-
-        filteredSubmissions.forEach((submission) => {
-          const submissionCountData = submissionCount.find(
-            (data) => data.enrolledUserId === submission.enrolledUserId,
-          );
-          if (submissionCountData) {
-            submission.submissionCount = submissionCountData._count.id;
-          }
-        });
-
-        filteredSubmissions.forEach((submission) => {
-          submission.submissionIndex = 1;
-          if (submission.submissionCount && submission.submissionCount > 1) {
-            const submissionIndex = submissions
-              .filter((sub) => sub.enrolledUserId === submission.enrolledUserId)
-              .findIndex((sub) => sub.id === submission.id);
-            submission.submissionIndex =
-              (submissionIndex >= 0 ? submissionIndex : 0) + 1;
-          }
-        });
-      }
-
-      return { success: true, data: filteredSubmissions };
-    }),
-
-  getAllAssignmentSubmissions: permissionProcedure(
-    "submission",
-    "list",
-  ).query(async ({ ctx }) => {
-    const { user } = ctx.session;
-
-    const submissions = await ctx.db.submission.findMany({
-      where: {
-        status: "SUBMITTED",
-        enrolledUser: { user: { organizationId: user.organizationId } },
-      },
-      include: {
-        enrolledUser: {
-          include: {
-            user: true,
-          },
-        },
-        points: true,
-        assignment: true,
-        artifacts: {
-          where: { isLatest: true },
-          orderBy: { createdAt: "desc" },
-        },
-        testRuns: {
-          orderBy: { createdAt: "desc" },
-          take: 3,
-        },
-        review: true,
-      },
-      orderBy: {
-        enrolledUser: {
-          username: "asc",
-        },
-      },
-    });
-
-    let filteredSubmissions: Array<SubmissionWithDetails> = [];
-
-    if (user.role === "INSTRUCTOR") {
-      filteredSubmissions = submissions as Array<SubmissionWithDetails>;
-    }
-
-    if (user.role === "MENTOR") {
-      filteredSubmissions = submissions.filter(
-        (submission) =>
-          submission.enrolledUser.mentorUsername === user.username,
-      ) as Array<SubmissionWithDetails>;
-    }
-
-    const submissionsByAssignment = filteredSubmissions.reduce<
-      Record<string, Array<SubmissionWithDetails>>
-    >((acc, submission) => {
-      const attachmentId = submission.attachmentId;
-      acc[attachmentId] = acc[attachmentId] ?? [];
-      acc[attachmentId].push(submission);
-      return acc;
-    }, {});
-
-    for (const [attachmentId, assignmentSubmissions] of Object.entries(
-      submissionsByAssignment,
-    )) {
-      const assignment = await ctx.db.attachment.findUnique({
-        where: {
-          id: attachmentId,
-        },
-      });
-
-      if (assignment?.maxSubmissions && assignment.maxSubmissions > 1) {
-        const submissionCount = await ctx.db.submission.groupBy({
-          by: ["enrolledUserId"],
-          where: {
-            attachmentId: attachmentId,
-            status: "SUBMITTED",
-          },
-          _count: {
-            id: true,
-          },
-        });
-
-        assignmentSubmissions.forEach((submission) => {
-          const submissionCountData = submissionCount.find(
-            (data) => data.enrolledUserId === submission.enrolledUserId,
-          );
-          if (submissionCountData) {
-            submission.submissionCount = submissionCountData._count.id;
-          }
-        });
-
-        assignmentSubmissions.forEach((submission) => {
-          submission.submissionIndex = 1;
-          if (submission.submissionCount && submission.submissionCount > 1) {
-            const submissionIndex = assignmentSubmissions
-              .filter((sub) => sub.enrolledUserId === submission.enrolledUserId)
-              .findIndex((sub) => sub.id === submission.id);
-            submission.submissionIndex =
-              (submissionIndex >= 0 ? submissionIndex : 0) + 1;
-          }
-        });
-      }
-    }
-
-    return { success: true, data: filteredSubmissions };
-  }),
-
-  getSubmissionById: protectedProcedure
-    .input(
-      z.object({
-        submissionId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      await requireSubmissionReadAccess(ctx, input.submissionId);
-
-      const submission = await ctx.db.submission.findUnique({
-        where: {
-          id: input.submissionId,
-          status: "SUBMITTED",
-        },
-        include: {
-          enrolledUser: true,
-          points: true,
-        },
-      });
-
-      if (!submission && input.submissionId) {
-        return { error: "Submission not found" };
-      }
-
-      return { success: true, data: submission };
+      return updatedSubmission;
     }),
 
   // Same rule as points.deleteSubmission: the static `submission:delete` grant
@@ -569,7 +353,7 @@ export const submissionRouter = createTRPCRouter({
         },
       });
 
-      return { success: true };
+      return { id: input.submissionId };
     }),
 
   submitExternalLink: protectedProcedure
@@ -655,7 +439,7 @@ export const submissionRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db.submission.create({
+      return await ctx.db.submission.create({
         data: {
           enrolledUserId: enrolledUser.id,
           attachmentId: input.assignmentId,
@@ -663,8 +447,6 @@ export const submissionRouter = createTRPCRouter({
           status: "SUBMITTED",
         },
       });
-
-      return { success: true };
     }),
 
   getSubmissionForPlayground: protectedProcedure
@@ -678,68 +460,53 @@ export const submissionRouter = createTRPCRouter({
         scoped.assignment,
       );
 
-      try {
-        const submission = await ctx.db.submission.findUnique({
-          where: { id: input.submissionId, status: "SUBMITTED" },
-          include: {
-            enrolledUser: true,
-            points: true,
-          },
+      const submission = await ctx.db.submission.findUnique({
+        where: { id: input.submissionId, status: "SUBMITTED" },
+        include: {
+          enrolledUser: true,
+          points: true,
+        },
+      });
+
+      if (!submission) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Submission not found",
         });
-
-        if (!submission) {
-          return { success: false, error: "Submission not found" };
-        }
-
-        // Merge: hidden/solution come from current template (so instructor
-        // edits propagate); visible files come from the submission.
-        let initialFiles: unknown = null;
-        const locRow = await ctx.db.attachment.findUnique({
-          where: { id: submission.attachmentId },
-          select: locatorSelect,
-        });
-        if (locRow) {
-          const loc = locatorFrom(locRow);
-          const submissionFiles = await readSubmission(loc, submission.id);
-          const template = (await readSandpackTemplate(
-            loc,
-          )) as SandpackTemplate | null;
-
-          const audience: "student" | "instructor" = isInstructorAccess
-            ? "instructor"
-            : "student";
-          if (template) {
-            initialFiles = mergeForAudience(
-              template,
-              submissionFiles,
-              audience,
-            ).files;
-          } else {
-            initialFiles = submissionFiles;
-          }
-        }
-
-        return {
-          success: true,
-          data: {
-            submission,
-            initialFiles,
-          },
-        };
-      } catch (error) {
-        logger.error(
-          {
-            err: error,
-            userId: ctx.session.user.id,
-            submissionId: input.submissionId,
-          },
-          "fetch submission for playground failed",
-        );
-        return {
-          success: false,
-          error: "Failed to fetch submission data",
-        };
       }
+
+      // Merge: hidden/solution come from current template (so instructor
+      // edits propagate); visible files come from the submission.
+      let initialFiles: unknown = null;
+      const locRow = await ctx.db.attachment.findUnique({
+        where: { id: submission.attachmentId },
+        select: locatorSelect,
+      });
+      if (locRow) {
+        const loc = locatorFrom(locRow);
+        const submissionFiles = await readSubmission(loc, submission.id);
+        const template = (await readSandpackTemplate(
+          loc,
+        )) as SandpackTemplate | null;
+
+        const audience: "student" | "instructor" = isInstructorAccess
+          ? "instructor"
+          : "student";
+        if (template) {
+          initialFiles = mergeForAudience(
+            template,
+            submissionFiles,
+            audience,
+          ).files;
+        } else {
+          initialFiles = submissionFiles;
+        }
+      }
+
+      return {
+        submission,
+        initialFiles,
+      };
     }),
 
   startWorkspace: protectedProcedure
@@ -752,10 +519,8 @@ export const submissionRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { user } = ctx.session;
-      const { assignment, enrollment } = await getStudentEnrollmentForAssignment(
-        ctx,
-        input.assignmentId,
-      );
+      const { assignment, enrollment } =
+        await getStudentEnrollmentForAssignment(ctx, input.assignmentId);
 
       if (input.serviceConnectionId) {
         const connection = await ctx.db.serviceConnection.findFirst({
@@ -765,7 +530,12 @@ export const submissionRouter = createTRPCRouter({
             status: "ACTIVE",
           },
         });
-        if (!connection) return { error: "Active service connection not found" };
+        if (!connection) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Active service connection not found",
+          });
+        }
       }
 
       const submittedCount = await ctx.db.submission.count({
@@ -777,7 +547,10 @@ export const submissionRouter = createTRPCRouter({
       });
       const maxSubmissions = assignment.maxSubmissions ?? 1;
       if (submittedCount >= maxSubmissions) {
-        return { error: "Maximum submission limit reached" };
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Maximum submission limit reached",
+        });
       }
 
       const workspaceSubmission =
@@ -836,27 +609,24 @@ export const submissionRouter = createTRPCRouter({
       const defaults = defaultWorkspaceConfig();
 
       return {
-        success: true,
-        data: {
-          submission: workspaceSubmission,
-          config: {
-            ...defaults,
-            ...(config ?? {}),
-            previewPorts: config?.previewPorts?.length
-              ? config.previewPorts
-              : defaults.previewPorts,
-            readonlyPaths: config?.readonlyPaths?.length
-              ? config.readonlyPaths
-              : defaults.readonlyPaths,
-          },
-          testCases,
-          starterArtifacts,
-          workspaceToken: signWorkspaceToken({
-            assignmentId: input.assignmentId,
-            submissionId: workspaceSubmission.id,
-            userId: user.id,
-          }),
+        submission: workspaceSubmission,
+        config: {
+          ...defaults,
+          ...(config ?? {}),
+          previewPorts: config?.previewPorts?.length
+            ? config.previewPorts
+            : defaults.previewPorts,
+          readonlyPaths: config?.readonlyPaths?.length
+            ? config.readonlyPaths
+            : defaults.readonlyPaths,
         },
+        testCases,
+        starterArtifacts,
+        workspaceToken: signWorkspaceToken({
+          assignmentId: input.assignmentId,
+          submissionId: workspaceSubmission.id,
+          userId: user.id,
+        }),
       };
     }),
 
@@ -868,9 +638,15 @@ export const submissionRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const submission = await requireSubmissionReadAccess(ctx, input.submissionId);
+      const submission = await requireSubmissionReadAccess(
+        ctx,
+        input.submissionId,
+      );
       if (submission.enrolledUser.username !== ctx.session.user.username) {
-        return { error: "Only the enrolled student can save this workspace" };
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only the enrolled student can save this workspace",
+        });
       }
       const objectKey = buildWorkspaceObjectKey({
         assignmentId: submission.attachmentId,
@@ -913,7 +689,7 @@ export const submissionRouter = createTRPCRouter({
         checksum: input.artifact.checksum,
       });
 
-      return { success: true, data: { artifact, uploadUrl } };
+      return { artifact, uploadUrl };
     }),
 
   submitWorkspace: protectedProcedure
@@ -926,7 +702,10 @@ export const submissionRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       if (!input.assignmentId && !input.submissionId) {
-        return { error: "assignmentId or submissionId is required" };
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "assignmentId or submissionId is required",
+        });
       }
 
       let workspaceSubmission = input.submissionId
@@ -934,7 +713,10 @@ export const submissionRouter = createTRPCRouter({
         : null;
 
       if (!workspaceSubmission && input.assignmentId) {
-        const started = await getStudentEnrollmentForAssignment(ctx, input.assignmentId);
+        const started = await getStudentEnrollmentForAssignment(
+          ctx,
+          input.assignmentId,
+        );
         const inProgress = await ctx.db.submission.findFirst({
           where: {
             attachmentId: input.assignmentId,
@@ -981,9 +763,19 @@ export const submissionRouter = createTRPCRouter({
           }));
       }
 
-      if (!workspaceSubmission) return { error: "Submission not found" };
-      if (workspaceSubmission.enrolledUser.username !== ctx.session.user.username) {
-        return { error: "Only the enrolled student can submit this workspace" };
+      if (!workspaceSubmission) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Submission not found",
+        });
+      }
+      if (
+        workspaceSubmission.enrolledUser.username !== ctx.session.user.username
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only the enrolled student can submit this workspace",
+        });
       }
 
       const submittedCount = await ctx.db.submission.count({
@@ -994,16 +786,18 @@ export const submissionRouter = createTRPCRouter({
         },
       });
       const maxSubmissions = workspaceSubmission.assignment.maxSubmissions ?? 1;
-      if (submittedCount >= maxSubmissions && workspaceSubmission.status !== "SUBMITTED") {
-        return { error: "Maximum submission limit reached" };
+      if (
+        submittedCount >= maxSubmissions &&
+        workspaceSubmission.status !== "SUBMITTED"
+      ) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Maximum submission limit reached",
+        });
       }
 
-      let upload:
-        | {
-            artifact: unknown;
-            uploadUrl: string;
-          }
-        | null = null;
+      let upload: { artifact: AssignmentArtifact; uploadUrl: string } | null =
+        null;
 
       if (input.artifact) {
         const objectKey = buildWorkspaceObjectKey({
@@ -1095,7 +889,8 @@ export const submissionRouter = createTRPCRouter({
             hiddenTotal: hiddenCount,
             outputSummary: {
               trustedRunnerRequired: true,
-              reason: "Hidden tests stay server-side and are not sent to local workspaces.",
+              reason:
+                "Hidden tests stay server-side and are not sent to local workspaces.",
             } as never,
           },
         });
@@ -1110,12 +905,9 @@ export const submissionRouter = createTRPCRouter({
       });
 
       return {
-        success: true,
-        data: {
-          submission: submitted,
-          upload,
-          officialRunQueued: hiddenCount > 0,
-        },
+        submission: submitted,
+        upload,
+        officialRunQueued: hiddenCount > 0,
       };
     }),
 
@@ -1132,7 +924,12 @@ export const submissionRouter = createTRPCRouter({
         include: { submission: true },
       });
 
-      if (!artifact) return { error: "Artifact not found" };
+      if (!artifact) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Artifact not found",
+        });
+      }
       if (artifact.submissionId) {
         await requireSubmissionReadAccess(ctx, artifact.submissionId);
       } else if (artifact.assignmentId) {
@@ -1148,7 +945,7 @@ export const submissionRouter = createTRPCRouter({
         },
       });
 
-      return { success: true, data: updated };
+      return updated;
     }),
 
   getWorkspaceArtifactDownloadUrl: protectedProcedure
@@ -1157,7 +954,12 @@ export const submissionRouter = createTRPCRouter({
       const artifact = await ctx.db.assignmentArtifact.findUnique({
         where: { id: input.artifactId },
       });
-      if (!artifact) return { error: "Artifact not found" };
+      if (!artifact) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Artifact not found",
+        });
+      }
       if (artifact.submissionId) {
         await requireSubmissionReadAccess(ctx, artifact.submissionId);
       } else if (artifact.assignmentId) {
@@ -1168,6 +970,6 @@ export const submissionRouter = createTRPCRouter({
         objectKey: artifact.objectKey,
       });
 
-      return { success: true, data: { signedUrl } };
+      return { signedUrl };
     }),
 });

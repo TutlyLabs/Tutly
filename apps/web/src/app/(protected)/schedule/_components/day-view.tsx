@@ -1,13 +1,6 @@
 import { endOfDay, format, startOfDay } from "date-fns";
 
-interface Event {
-  name: string;
-  description: string;
-  startDate: Date;
-  endDate: Date;
-  link: string;
-  type: string;
-}
+import type { Event } from "./types";
 
 interface DayViewProps {
   selectedDate: Date;

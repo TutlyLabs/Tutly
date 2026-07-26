@@ -13,12 +13,19 @@ export default function StudentAssignmentsPage() {
   const q = api.assignments.getTutorStudentAssignmentsData.useQuery({ userId });
 
   if (q.isLoading) return <PageLoader />;
-  if (q.data?.success === false) {
+  // FORBIDDEN means a student landed here; NOT_FOUND means the mentee is unknown.
+  if (q.error) {
     return (
-      <Navigate to={q.data.redirectTo ?? "/tutor/assignments/submissions"} />
+      <Navigate
+        to={
+          q.error.data?.code === "FORBIDDEN"
+            ? "/assignments"
+            : "/tutor/assignments/submissions"
+        }
+      />
     );
   }
-  if (!q.data?.success || !q.data.data) {
+  if (!q.data) {
     return (
       <div className="mx-auto w-full max-w-7xl py-12 text-center">
         <NoDataFound message="No assignments found" />
@@ -26,12 +33,7 @@ export default function StudentAssignmentsPage() {
     );
   }
 
-  const {
-    courses,
-    sortedAssignments,
-    userId: studentId,
-    student,
-  } = q.data.data;
+  const { courses, sortedAssignments, userId: studentId, student } = q.data;
 
   return (
     <StudentWiseAssignments

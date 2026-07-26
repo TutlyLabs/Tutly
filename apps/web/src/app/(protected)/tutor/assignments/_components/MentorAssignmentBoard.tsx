@@ -88,9 +88,9 @@ const MentorAssignmentBoard = ({
     { enabled: Boolean(currentCourse) },
   );
 
-  const totalAssignments = statsQuery.data?.data?.totalAssignments ?? 0;
+  const totalAssignments = statsQuery.data?.totalAssignments ?? 0;
   const statsByUser = useMemo(
-    () => statsQuery.data?.data?.stats ?? {},
+    () => statsQuery.data?.stats ?? {},
     [statsQuery.data],
   );
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { isTRPCClientError } from "@trpc/client";
 import { useSandpack } from "@codesandbox/sandpack-react";
 import { useState } from "react";
 import Confetti from "react-confetti";
@@ -63,16 +64,6 @@ const Submit = ({
 
       toast.dismiss();
 
-      if (
-        result &&
-        typeof result === "object" &&
-        "error" in result &&
-        result.error
-      ) {
-        toast.error(String(result.error));
-        return;
-      }
-
       setConfetti(true);
       setTimeout(() => setConfetti(false), 5000);
       toast.success("Assignment submitted successfully");
@@ -80,11 +71,8 @@ const Submit = ({
       router.push("/assignments");
     } catch (e) {
       toast.dismiss();
-      const message =
-        e instanceof Error && e.message
-          ? e.message
-          : "Error submitting assignment";
-      toast.error(message);
+      // tRPC failures already toast via the global mutation handler.
+      if (!isTRPCClientError(e)) toast.error("Error submitting assignment");
     } finally {
       setSubmitting(false);
     }

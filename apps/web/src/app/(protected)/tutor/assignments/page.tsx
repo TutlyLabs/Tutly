@@ -20,7 +20,7 @@ export default function TutorAssignmentsPage() {
       </div>
     );
   }
-  if (!q.data?.success || !q.data.data) {
+  if (!q.data) {
     return (
       <div className="mt-20 p-4 text-center font-semibold">
         <NoDataFound message="No Assignments available" />
@@ -28,7 +28,7 @@ export default function TutorAssignmentsPage() {
     );
   }
 
-  const { courses, assignments } = q.data.data;
+  const { courses, assignments } = q.data;
 
   return (
     <PullToRefresh onRefresh={() => q.refetch()}>

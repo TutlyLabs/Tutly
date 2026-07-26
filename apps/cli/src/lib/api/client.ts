@@ -1,7 +1,7 @@
-import { z } from "zod";
 import fs from "node:fs";
 import path from "node:path";
 import AdmZip from "adm-zip";
+import { z } from "zod";
 
 import { getAuthTokens, getGlobalConfig } from "../config/global";
 import { CLI_USER_AGENT } from "../constants";
@@ -54,6 +54,58 @@ export interface WorkspaceArtifactUpload {
   manifest?: Record<string, unknown>;
 }
 
+interface ArtifactRef {
+  id: string;
+}
+
+interface ArtifactUploadTarget {
+  artifact: ArtifactRef;
+  uploadUrl: string;
+}
+
+interface WorkspaceConfig {
+  setupCommand?: string | null;
+  devCommand?: string | null;
+  testCommand?: string | null;
+  previewPorts?: Array<number>;
+  readonlyPaths?: Array<string>;
+}
+
+interface StarterArtifact extends ArtifactRef {
+  kind: string;
+}
+
+export interface StartWorkspaceResult {
+  submission: { id: string };
+  config: WorkspaceConfig;
+  testCases: Array<unknown>;
+  starterArtifacts: Array<StarterArtifact>;
+  workspaceToken: string;
+}
+
+export interface SubmitWorkspaceResult {
+  submission: { id: string };
+  upload: ArtifactUploadTarget | null;
+  officialRunQueued: boolean;
+}
+
+/**
+ * A thrown TRPCError arrives as an HTTP error whose body is
+ * `{"error":{"json":{"message":...}}}`. Pull the human-readable message out so
+ * commands can print it directly; fall back to the raw text when parsing fails.
+ */
+function trpcErrorMessage(body: string, response: Response): string {
+  try {
+    const parsed = JSON.parse(body);
+    const message =
+      parsed?.error?.json?.message ?? parsed?.error?.message ?? parsed?.message;
+    if (typeof message === "string" && message.length > 0) return message;
+  } catch {
+    // not JSON - fall through to the raw text
+  }
+  return `tRPC request failed: ${response.status} ${response.statusText} - ${body}`;
+}
+
 export class TutlyAPI {
   private baseUrl: string;
   private accessToken?: string;
@@ -89,26 +141,20 @@ export class TutlyAPI {
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "Unknown error");
-      throw new Error(
-        `tRPC request failed: ${response.status} ${response.statusText} - ${errorText}`,
-      );
+      throw new Error(trpcErrorMessage(errorText, response));
     }
 
     const data = await response.json();
     return data.result?.data?.json ?? data.result?.data ?? data;
   }
 
-  async getAssignmentDetailsForSubmission(
-    assignmentId: string,
-  ): Promise<{
+  async getAssignmentDetailsForSubmission(assignmentId: string): Promise<{
     assignment: AssignmentTemplate | null;
     mentorDetails: MentorDetails | null;
-    error?: string;
   }> {
     return this.trpcRequest<{
       assignment: AssignmentTemplate | null;
       mentorDetails: MentorDetails | null;
-      error?: string;
     }>("assignments.getAssignmentDetailsForSubmission", { id: assignmentId });
   }
 
@@ -117,8 +163,8 @@ export class TutlyAPI {
     files: Array<AssignmentFile>,
     assignmentDetails: AssignmentTemplate,
     mentorDetails: MentorDetails,
-  ): Promise<{ success?: boolean; error?: string; data?: any }> {
-    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+  ): Promise<{ id: string }> {
+    return this.trpcRequest<{ id: string }>(
       "submissions.createSubmission",
       {
         assignmentDetails: {
@@ -138,20 +184,19 @@ export class TutlyAPI {
     assignmentId: string,
     type: "SUBMISSION" | "TEMPLATE" = "SUBMISSION",
   ): Promise<{ success: boolean; repoUrl?: string; error?: string }> {
-    const response = await fetch(
-      `${this.baseUrl}/git/create`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
-        },
-        body: JSON.stringify({
-          assignmentId,
-          type,
+    const response = await fetch(`${this.baseUrl}/git/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(this.accessToken && {
+          Authorization: `Bearer ${this.accessToken}`,
         }),
       },
-    );
+      body: JSON.stringify({
+        assignmentId,
+        type,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "Unknown error");
@@ -163,7 +208,10 @@ export class TutlyAPI {
     return response.json();
   }
 
-  async downloadAndExtractArchive(url: string, outputDir: string): Promise<void> {
+  async downloadAndExtractArchive(
+    url: string,
+    outputDir: string,
+  ): Promise<void> {
     const urlObj = new URL(url);
     const headers: Record<string, string> = {
       ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
@@ -197,7 +245,10 @@ export class TutlyAPI {
 
     // Move files from the root folder (e.g. repo-name/) to outputDir
     const files = fs.readdirSync(tempDir);
-    if (files.length === 1 && fs.statSync(path.join(tempDir, files[0])).isDirectory()) {
+    if (
+      files.length === 1 &&
+      fs.statSync(path.join(tempDir, files[0])).isDirectory()
+    ) {
       const rootFolder = path.join(tempDir, files[0]);
       const content = fs.readdirSync(rootFolder);
 
@@ -222,12 +273,18 @@ export class TutlyAPI {
     const formData = new FormData();
     formData.append("assignmentId", assignmentId);
     formData.append("action", action);
-    formData.append("file", new Blob([new Uint8Array(zipBuffer)]), "submission.zip");
+    formData.append(
+      "file",
+      new Blob([new Uint8Array(zipBuffer)]),
+      "submission.zip",
+    );
 
     const response = await fetch(`${this.baseUrl}/git/upload`, {
       method: "POST",
       headers: {
-        ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
+        ...(this.accessToken && {
+          Authorization: `Bearer ${this.accessToken}`,
+        }),
       },
       body: formData,
     });
@@ -238,19 +295,20 @@ export class TutlyAPI {
         const jsonError = JSON.parse(errorText);
         if (jsonError.error) return { success: false, error: jsonError.error };
       } catch {
-        // Body was not JSON; fall through to the status-line message.
+        // Not a JSON error body; fall through to the raw text below.
       }
 
-      return { success: false, error: `${response.status} ${response.statusText} - ${errorText}` };
+      return {
+        success: false,
+        error: `${response.status} ${response.statusText} - ${errorText}`,
+      };
     }
 
     return response.json();
   }
 
-  async startWorkspace(
-    assignmentId: string,
-  ): Promise<{ success?: boolean; error?: string; data?: any }> {
-    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+  async startWorkspace(assignmentId: string): Promise<StartWorkspaceResult> {
+    return this.trpcRequest<StartWorkspaceResult>(
       "submissions.startWorkspace",
       { assignmentId, provider: "LOCAL" },
       "POST",
@@ -260,8 +318,8 @@ export class TutlyAPI {
   async saveWorkspaceSnapshot(
     submissionId: string,
     artifact: WorkspaceArtifactUpload,
-  ): Promise<{ success?: boolean; error?: string; data?: any }> {
-    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+  ): Promise<ArtifactUploadTarget> {
+    return this.trpcRequest<ArtifactUploadTarget>(
       "submissions.saveSnapshot",
       { submissionId, artifact },
       "POST",
@@ -271,8 +329,8 @@ export class TutlyAPI {
   async submitWorkspace(
     input: { assignmentId?: string; submissionId?: string },
     artifact: WorkspaceArtifactUpload,
-  ): Promise<{ success?: boolean; error?: string; data?: any }> {
-    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+  ): Promise<SubmitWorkspaceResult> {
+    return this.trpcRequest<SubmitWorkspaceResult>(
       "submissions.submitWorkspace",
       { ...input, artifact },
       "POST",
@@ -282,8 +340,8 @@ export class TutlyAPI {
   async confirmWorkspaceArtifactUpload(
     artifactId: string,
     checksum?: string,
-  ): Promise<{ success?: boolean; error?: string; data?: any }> {
-    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+  ): Promise<ArtifactRef> {
+    return this.trpcRequest<ArtifactRef>(
       "submissions.confirmWorkspaceArtifactUpload",
       { artifactId, checksum },
       "POST",
@@ -292,19 +350,19 @@ export class TutlyAPI {
 
   async getWorkspaceArtifactDownloadUrl(
     artifactId: string,
-  ): Promise<{ success?: boolean; error?: string; data?: { signedUrl: string } }> {
-    return this.trpcRequest<{
-      success?: boolean;
-      error?: string;
-      data?: { signedUrl: string };
-    }>("submissions.getWorkspaceArtifactDownloadUrl", { artifactId }, "POST");
+  ): Promise<{ signedUrl: string }> {
+    return this.trpcRequest<{ signedUrl: string }>(
+      "submissions.getWorkspaceArtifactDownloadUrl",
+      { artifactId },
+      "POST",
+    );
   }
 
   async runVisibleTests(
     submissionId: string,
     results: Array<Record<string, unknown>>,
-  ): Promise<{ success?: boolean; error?: string; data?: any }> {
-    return this.trpcRequest<{ success?: boolean; error?: string; data?: any }>(
+  ): Promise<{ id: string; status: string }> {
+    return this.trpcRequest<{ id: string; status: string }>(
       "testRuns.runVisible",
       { submissionId, provider: "LOCAL", results },
       "POST",
@@ -326,7 +384,9 @@ export class TutlyAPI {
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
-      throw new Error(`Upload failed: ${response.status} ${response.statusText} ${errorText}`);
+      throw new Error(
+        `Upload failed: ${response.status} ${response.statusText} ${errorText}`,
+      );
     }
   }
 }

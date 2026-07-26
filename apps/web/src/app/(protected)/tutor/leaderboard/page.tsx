@@ -16,7 +16,7 @@ export default function TutorLeaderboardPage() {
     mentor,
   });
   if (q.isLoading) return <PageLoader />;
-  if (!q.data?.success || !q.data.data) {
+  if (!q.data) {
     return <div>Failed to load leaderboard data.</div>;
   }
   const {
@@ -26,7 +26,7 @@ export default function TutorLeaderboardPage() {
     mentors,
     selectedCourse,
     selectedMentor,
-  } = q.data.data;
+  } = q.data;
   return (
     <Leaderboard
       submissions={submissions}

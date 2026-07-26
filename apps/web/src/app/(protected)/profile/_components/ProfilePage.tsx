@@ -1,6 +1,5 @@
 "use client";
 
-import type { Profile } from "@tutly/db/browser";
 import { FileType } from "@tutly/db/browser";
 import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -38,6 +37,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
 import { Textarea } from "@tutly/ui/textarea";
 import { useFileUpload } from "@/components/useFileUpload";
 import { api } from "@/trpc/react";
+import type { RouterOutputs } from "@/trpc/react";
 import Link from "next/link";
 
 import AcademicDetails from "./AcademicDetails";
@@ -170,7 +170,13 @@ function computeCompleteness(opts: {
   return { percentage: Math.round((earned / total) * 100), items };
 }
 
-export default function ProfilePage({ userProfile }: { userProfile?: any }) {
+type UserProfile = RouterOutputs["users"]["getUserProfile"];
+
+export default function ProfilePage({
+  userProfile,
+}: {
+  userProfile?: UserProfile;
+}) {
   const [profile, setProfile] = useState(userProfile?.profile);
   const [avatar, setAvatar] = useState<string>(
     userProfile?.image ?? "/placeholder.jpg",
@@ -270,7 +276,7 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
 
   const { mutate: updateProfile } = api.users.updateUserProfile.useMutation({
     onSuccess: (data) => {
-      setProfile(data as Profile);
+      setProfile(data);
       toast.success("Profile updated");
     },
     onError: (error) => {
@@ -323,10 +329,7 @@ export default function ProfilePage({ userProfile }: { userProfile?: any }) {
   const name = userProfile?.name ?? userProfile?.username ?? "Profile";
   const email = userProfile?.email ?? "";
   const mobile = profile?.mobile ?? "";
-  const role =
-    typeof userProfile?.role === "string"
-      ? userProfile.role
-      : userProfile?.role?.name;
+  const role = userProfile?.role;
 
   const completeness = computeCompleteness({
     avatar,

@@ -8,18 +8,10 @@ import {
   Clock,
 } from "lucide-react";
 
+import type { RouterOutputs } from "@/trpc/react";
 import { api } from "@/trpc/react";
 
-type Run = {
-  status: string;
-  score: number;
-  maxScore: number;
-  visiblePassed: number;
-  visibleTotal: number;
-  hiddenPassed: number;
-  hiddenTotal: number;
-  errorMessage?: string | null;
-};
+type Run = RouterOutputs["testRuns"]["getForSubmission"][number];
 
 function isTerminal(status: string | undefined): boolean {
   return (
@@ -106,7 +98,7 @@ export function TestRunStatusBadge({
     { submissionId },
     {
       refetchInterval: (q) => {
-        const latest = q.state.data?.data?.[0] as Run | undefined;
+        const latest = q.state.data?.[0];
         return isTerminal(latest?.status) ? false : 3000;
       },
       refetchOnWindowFocus: false,
@@ -114,7 +106,7 @@ export function TestRunStatusBadge({
   );
 
   const latest =
-    (query.data?.data?.[0] as Run | undefined) ?? initialRun ?? undefined;
+    query.data?.[0] ?? initialRun ?? undefined;
   const badge = badgeFor(latest);
 
   return (

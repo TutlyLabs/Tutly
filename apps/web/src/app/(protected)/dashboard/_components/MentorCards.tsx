@@ -37,7 +37,7 @@ const StatCard = ({
 };
 
 export function MentorCards({ selectedCourse }: Props) {
-  const { data: mentorDataResponse, isLoading } =
+  const { data: mentorData, isLoading } =
     api.dashboard.getMentorDashboardData.useQuery();
 
   if (isLoading) {
@@ -59,11 +59,10 @@ export function MentorCards({ selectedCourse }: Props) {
     );
   }
 
-  if (!mentorDataResponse?.success || !mentorDataResponse.data) {
+  if (!mentorData) {
     return <div>No mentor data available</div>;
   }
 
-  const mentorData = mentorDataResponse.data;
   const course = mentorData.courses.find((c) => c.courseId === selectedCourse);
 
   return (

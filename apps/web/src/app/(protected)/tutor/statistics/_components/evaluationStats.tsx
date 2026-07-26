@@ -16,7 +16,7 @@ export function EvaluationStats({
     mentorUsername,
   });
 
-  if (isLoading || !data || Array.isArray(data) === false) {
+  if (isLoading || !data) {
     return null;
   }
 

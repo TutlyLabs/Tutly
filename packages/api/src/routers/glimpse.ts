@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -21,10 +22,10 @@ export const glimpseRouter = createTRPCRouter({
         currentUser.role === "SUPER_ADMIN";
 
       if (!isPrivileged && !isMentor) {
-        return {
-          success: false as const,
-          error: "Only instructors and mentors can view the cohort report",
-        };
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only instructors and mentors can view the cohort report",
+        });
       }
 
       const orgId = currentUser.organizationId;
@@ -71,12 +72,12 @@ export const glimpseRouter = createTRPCRouter({
       });
 
       if (input.courseId && !accessibleIds.includes(input.courseId)) {
-        return {
-          success: false as const,
-          error: isMentor
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: isMentor
             ? "You don't mentor anyone in this course"
             : "You don't manage this course",
-        };
+        });
       }
 
       const now = new Date();
@@ -111,67 +112,67 @@ export const glimpseRouter = createTRPCRouter({
             classesPendingAttendance,
             totalClasses,
           ] = await Promise.all([
-              ctx.db.enrolledUsers.findMany({
-                where: studentWhere,
-                select: {
-                  id: true,
-                  username: true,
-                  mentorUsername: true,
-                  user: {
-                    select: {
-                      username: true,
-                      name: true,
-                      email: true,
-                      role: true,
-                      lastSeen: true,
-                    },
+            ctx.db.enrolledUsers.findMany({
+              where: studentWhere,
+              select: {
+                id: true,
+                username: true,
+                mentorUsername: true,
+                user: {
+                  select: {
+                    username: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    lastSeen: true,
                   },
                 },
-              }),
-              ctx.db.attachment.findMany({
-                where: {
-                  courseId: course.id,
-                  attachmentType: "ASSIGNMENT",
+              },
+            }),
+            ctx.db.attachment.findMany({
+              where: {
+                courseId: course.id,
+                attachmentType: "ASSIGNMENT",
+              },
+              select: {
+                id: true,
+                title: true,
+                createdAt: true,
+                dueDate: true,
+                maxSubmissions: true,
+              },
+              orderBy: { createdAt: "asc" },
+            }),
+            ctx.db.submission.findMany({
+              where: submissionWhere,
+              select: {
+                id: true,
+                attachmentId: true,
+                submissionDate: true,
+                enrolledUser: {
+                  select: { username: true, mentorUsername: true },
                 },
-                select: {
-                  id: true,
-                  title: true,
-                  createdAt: true,
-                  dueDate: true,
-                  maxSubmissions: true,
-                },
-                orderBy: { createdAt: "asc" },
-              }),
-              ctx.db.submission.findMany({
-                where: submissionWhere,
-                select: {
-                  id: true,
-                  attachmentId: true,
-                  submissionDate: true,
-                  enrolledUser: {
-                    select: { username: true, mentorUsername: true },
-                  },
-                  points: { select: { id: true } },
-                },
-              }),
-              ctx.db.class.findFirst({
-                where: { courseId: course.id },
-                orderBy: { createdAt: "desc" },
-                select: { id: true, title: true, createdAt: true },
-              }),
-              ctx.db.class.findMany({
-                where: {
-                  courseId: course.id,
-                  Attendence: { none: {} },
-                },
-                select: { id: true, title: true, createdAt: true },
-                orderBy: { createdAt: "desc" },
-                take: 8,
-              }),
-              ctx.db.class.count({
-                where: { courseId: course.id, Attendence: { none: {} } },
-              }),
-            ]);
+                points: { select: { id: true } },
+              },
+            }),
+            ctx.db.class.findFirst({
+              where: { courseId: course.id },
+              orderBy: { createdAt: "desc" },
+              select: { id: true, title: true, createdAt: true },
+            }),
+            ctx.db.class.findMany({
+              where: {
+                courseId: course.id,
+                Attendence: { none: {} },
+              },
+              select: { id: true, title: true, createdAt: true },
+              orderBy: { createdAt: "desc" },
+              take: 8,
+            }),
+            ctx.db.class.count({
+              where: { courseId: course.id, Attendence: { none: {} } },
+            }),
+          ]);
 
           const students = enrollments.filter((e) => e.user.role === "STUDENT");
           const mentorEnrollments = enrollments.filter(
@@ -333,9 +334,7 @@ export const glimpseRouter = createTRPCRouter({
               mentor: s.mentorUsername,
               lastSeen: s.user.lastSeen ? s.user.lastSeen.toISOString() : null,
             }))
-            .sort((a, b) =>
-              (a.lastSeen ?? "").localeCompare(b.lastSeen ?? ""),
-            );
+            .sort((a, b) => (a.lastSeen ?? "").localeCompare(b.lastSeen ?? ""));
 
           return {
             id: course.id,
@@ -383,7 +382,6 @@ export const glimpseRouter = createTRPCRouter({
       );
 
       return {
-        success: true as const,
         viewerScope: isMentor ? ("mentor" as const) : ("instructor" as const),
         generatedAt: now.toISOString(),
         staleDays: input.staleDays,

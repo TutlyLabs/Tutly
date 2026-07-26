@@ -1,8 +1,4 @@
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  PutObjectCommand,
-} from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
 
@@ -187,30 +183,6 @@ export const fileUploadRouter = createTRPCRouter({
       });
 
       return updatedFile;
-    }),
-
-  deleteFile: protectedProcedure
-    .input(
-      z.object({
-        fileId: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const file = await requireFileManageAccess(ctx, input.fileId);
-
-      // Delete from S3
-      const command = new DeleteObjectCommand({
-        Bucket: AWS_BUCKET_NAME,
-        Key: `${file.fileType}/${file.internalName}`,
-      });
-      await s3Client.send(command);
-
-      // Delete from database
-      await ctx.db.file.delete({
-        where: { id: input.fileId },
-      });
-
-      return true;
     }),
 
   updateAssociatingId: protectedProcedure
