@@ -123,9 +123,11 @@ export default function LinkAssignmentDialog({
   const linkMutation = api.attachments.linkAssignmentToClass.useMutation({
     onSuccess: (result) => {
       if (result.success !== true) {
-        toast.error(
-          ("error" in result && result.error) || "Failed to link assignment",
-        );
+        const message =
+          "error" in result && typeof result.error === "string"
+            ? result.error
+            : "Failed to link assignment";
+        toast.error(message);
         return;
       }
       toast.success("Assignment linked to this class");

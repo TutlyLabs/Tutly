@@ -1,13 +1,12 @@
 "use client";
 
-import type { Account, Session } from "@tutly/db/browser";
 import { HardDrive, Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@tutly/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tutly/ui/tabs";
-import { api } from "@/trpc/react";
+import { api, type RouterOutputs } from "@/trpc/react";
 import { extractDeviceLabel } from "@/utils/device";
 
 const providers = [
@@ -15,10 +14,19 @@ const providers = [
   // , "google"
 ];
 
+/**
+ * Derived from the router rather than the Prisma models: `getUserSessions`
+ * selects a narrow subset because the full rows carry session bearer tokens
+ * and password hashes, which must never reach the browser.
+ */
+type SessionsPayload = NonNullable<
+  Extract<RouterOutputs["users"]["getUserSessions"], { data: unknown }>["data"]
+>;
+
 type SessionsModalProps = {
-  sessions: Session[];
-  accounts: Account[];
-  currentSessionId?: string;
+  sessions: SessionsPayload["sessions"];
+  accounts: SessionsPayload["accounts"];
+  currentSessionId?: string | null;
 };
 
 export default function Sessions({
