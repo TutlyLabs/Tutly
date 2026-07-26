@@ -22,7 +22,7 @@
     }
   },
   "scripts": {
-    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings 37",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings 29",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
