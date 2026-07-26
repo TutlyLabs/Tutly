@@ -1,12 +1,16 @@
 import type { Attendance, submission, User } from "@tutly/db/browser";
 import { z } from "zod";
 
+import { createLogger } from "@tutly/logger";
+
 import {
   requireCourseReadAccess,
   resolveTargetMentorUsername,
   resolveTargetUsername,
 } from "../lib/authorization";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const logger = createLogger("api:statistics");
 
 type AttendanceWithClass = {
   class: {
@@ -634,7 +638,10 @@ export const statisticsRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching statistics page data:", error);
+        logger.error(
+          { err: error, courseId: input.courseId, userId: ctx.session.user.id },
+          "failed to fetch statistics page data",
+        );
         return {
           success: false,
           error: "Failed to fetch statistics page data",

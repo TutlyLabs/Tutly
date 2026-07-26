@@ -1,5 +1,9 @@
 import { z } from "zod";
+
+import { createLogger } from "@tutly/logger";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const logger = createLogger("api:search");
 
 export const searchRouter = createTRPCRouter({
   globalSearch: protectedProcedure
@@ -82,7 +86,7 @@ export const searchRouter = createTRPCRouter({
 
         // Search Courses
         if (categories.includes("all") || categories.includes("courses")) {
-          let coursesQuery: any = {
+          const coursesQuery: any = {
             where: {
               title: {
                 contains: query,
@@ -420,7 +424,10 @@ export const searchRouter = createTRPCRouter({
           data: results,
         };
       } catch (error) {
-        console.error("Error in global search:", error);
+        logger.error(
+          { err: error, userId: ctx.session.user.id },
+          "global search failed",
+        );
         return {
           success: false,
           error: "Failed to perform search",
@@ -564,7 +571,10 @@ export const searchRouter = createTRPCRouter({
         },
       };
     } catch (error) {
-      console.error("Error getting recent items:", error);
+      logger.error(
+        { err: error, userId: ctx.session.user.id },
+        "get recent items failed",
+      );
       return {
         success: false,
         error: "Failed to get recent items",

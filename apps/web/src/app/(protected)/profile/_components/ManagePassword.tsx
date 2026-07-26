@@ -126,7 +126,7 @@ const ManagePassword = ({
           Reset Your Password
         </h2>
         <p className="text-muted-foreground text-sm">
-          Enter your email address and we'll send you a link to reset your
+          Enter your email address and we&apos;ll send you a link to reset your
           password.
         </p>
       </div>
@@ -167,7 +167,7 @@ const ManagePassword = ({
         Check Your Email
       </h2>
       <p className="text-muted-foreground mb-4 text-sm">
-        We've sent a password reset link to <strong>{email}</strong>
+        We&apos;ve sent a password reset link to <strong>{email}</strong>
       </p>
       <p className="text-muted-foreground mb-6 text-xs">
         Click the link in your email to continue with resetting your password.

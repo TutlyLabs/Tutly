@@ -4,6 +4,8 @@ import { writeSandpackTemplate } from "@tutly/storage";
 import { z } from "zod";
 
 import { sandpackTemplateSchema } from "../lib/sandpack-template-schema";
+import { createLogger } from "@tutly/logger";
+
 import { locatorFrom, locatorSelect } from "../lib/storage-locator";
 
 import { createTRPCRouter, permissionProcedure, protectedProcedure } from "../trpc";
@@ -13,6 +15,8 @@ import {
   requireClassManageAccess,
   requireCourseManageAccess,
 } from "../lib/authorization";
+
+const logger = createLogger("api:attachments");
 
 export const attachmentsRouter = createTRPCRouter({
   createAttachment: permissionProcedure("assignment", "create")
@@ -84,7 +88,7 @@ export const attachmentsRouter = createTRPCRouter({
 
         return { success: true, data: attachment };
       } catch (error) {
-        console.error("Error creating attachment:", error);
+        logger.error({ err: error, courseId: input.courseId }, "failed to create attachment");
         return { error: "Failed to create attachment" };
       }
     }),
@@ -183,7 +187,7 @@ export const attachmentsRouter = createTRPCRouter({
 
         return { success: true, data: attachment };
       } catch (error) {
-        console.error("Error updating attachment:", error);
+        logger.error({ err: error, attachmentId: input.id }, "failed to update attachment");
         return { error: "Failed to update attachment" };
       }
     }),
@@ -229,7 +233,7 @@ export const attachmentsRouter = createTRPCRouter({
 
         return { success: true, data: assignments };
       } catch (error) {
-        console.error("Error getting course assignments:", error);
+        logger.error({ err: error, courseId: input.courseId }, "failed to get course assignments");
         return { error: "Failed to get course assignments" };
       }
     }),

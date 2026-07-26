@@ -11,10 +11,14 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { createLogger } from "@tutly/logger";
+
 import type { TRPCContext } from "../trpc";
 import { createTRPCRouter, permissionProcedure, protectedProcedure } from "../trpc";
 import { requireCourseManageAccess } from "../lib/authorization";
 import { AWS_BUCKET_NAME, AWS_S3_URL, s3Client } from "../lib/s3";
+
+const logger = createLogger("api:videos");
 
 const VIDEO_WORKER_URL = process.env.VIDEO_WORKER_URL;
 const VIDEO_WORKER_SECRET = process.env.VIDEO_WORKER_SECRET;
@@ -270,15 +274,17 @@ export const videosRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
+      const { uploadedById, class: videoClasses, ...rest } = video;
+
       const isStaff =
         user.role === "INSTRUCTOR" ||
         user.role === "ADMIN" ||
         user.role === "SUPER_ADMIN";
-      const isUploader = video.uploadedById === user.id;
+      const isUploader = uploadedById === user.id;
       let allowed = isStaff || isUploader;
 
-      if (!allowed && video.class.length > 0) {
-        const courseIds = video.class.map((c) => c.courseId).filter(Boolean) as string[];
+      if (!allowed && videoClasses.length > 0) {
+        const courseIds = videoClasses.map((c) => c.courseId).filter(Boolean) as string[];
         if (courseIds.length > 0) {
           const adminCourseIds = (user.adminForCourses ?? []).map(
             (c: { id: string }) => c.id,
@@ -303,7 +309,6 @@ export const videosRouter = createTRPCRouter({
       }
 
       // Strip internal fields from the wire response.
-      const { uploadedById: _u, class: _c, ...rest } = video;
       return rest;
     }),
 
@@ -455,7 +460,10 @@ export const videosRouter = createTRPCRouter({
             }),
           );
         } catch (e) {
-          console.warn("[videos.abandon] failed to delete raw object", e);
+          logger.warn(
+            { err: e, videoId: input.videoId, rawObjectKey: video.rawObjectKey },
+            "failed to delete raw video object",
+          );
         }
       }
 

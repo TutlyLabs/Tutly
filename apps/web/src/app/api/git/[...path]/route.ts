@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "process";
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import { auth } from "@/server/auth";
+
+const logger = createLogger("web:api:git");
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +51,7 @@ async function handleGitRequest(
           headers.set("authorization", `Bearer ${password}`);
         }
       } catch (e) {
-        console.error("[GitAuth] Failed to parse Basic Auth header:", e);
+        logger.warn({ err: e }, "failed to parse basic auth header");
       }
     }
   }
@@ -235,7 +238,8 @@ async function handleGitRequest(
       method: req.method,
       headers: headers,
       body: req.body,
-      // @ts-ignore
+      // @ts-expect-error duplex is required when streaming a request body but is
+      // absent from the DOM RequestInit type.
       duplex: "half",
     });
 
@@ -262,7 +266,7 @@ async function handleGitRequest(
       headers: safeHeaders,
     });
   } catch (error) {
-    console.error("Git Proxy Error:", error);
+    logger.error({ err: error, repoPath: targetRepoPath }, "git proxy request failed");
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

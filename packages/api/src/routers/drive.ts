@@ -1,4 +1,7 @@
+import { createLogger } from "@tutly/logger";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const logger = createLogger("api:drive");
 
 export const driveRouter = createTRPCRouter({
   getUserFiles: protectedProcedure.query(async ({ ctx }) => {
@@ -20,7 +23,10 @@ export const driveRouter = createTRPCRouter({
         data: uploadedFiles,
       };
     } catch (error) {
-      console.error("Error fetching user files:", error);
+      logger.error(
+        { err: error, userId: ctx.session.user.id },
+        "fetch user files failed",
+      );
       return {
         success: false,
         error: "Failed to fetch user files",

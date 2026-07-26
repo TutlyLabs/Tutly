@@ -24,7 +24,7 @@ const moves = [];
 function stashFolder(rel) {
   const src = path.join(root, rel);
   if (!fs.existsSync(src)) return;
-  const safe = rel.replace(/[\/\[\]]/g, "_");
+  const safe = rel.replace(/[/[\]]/g, "_");
   const bak = path.join(stash, safe);
   fs.mkdirSync(stash, { recursive: true });
   fs.renameSync(src, bak);

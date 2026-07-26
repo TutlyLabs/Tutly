@@ -40,7 +40,9 @@ fs.writeFileSync(keystorePath, Buffer.from(ks64, "base64"));
 process.on("exit", () => {
   try {
     fs.unlinkSync(keystorePath);
-  } catch {}
+  } catch {
+    // Best-effort temp keystore cleanup on exit; nothing useful to do if it fails.
+  }
 });
 
 execSync("pnpm build:cap", {

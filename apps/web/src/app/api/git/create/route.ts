@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "process";
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import { auth } from "@/server/auth";
 import { giteaClient } from "@/lib/gitea";
+
+const logger = createLogger("web:api:git");
 
 export const dynamic = "force-dynamic";
 
@@ -106,7 +109,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   } catch (error) {
-    console.error("Error fetching repo info:", error);
+    logger.error({ err: error }, "failed to fetch repo info");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -225,7 +228,7 @@ readonly:
           },
         );
       } catch (configError) {
-        console.log("Failed to add initial config.yaml:", configError);
+        logger.warn({ err: configError, repoName }, "failed to add initial config.yaml");
         // Don't fail the whole operation if config creation fails
       }
 
@@ -384,7 +387,7 @@ readonly:
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   } catch (error: any) {
-    console.error("Repo Creation Error:", error);
+    logger.error({ err: error }, "repo creation failed");
     return NextResponse.json(
       { error: "Failed to create repository" },
       { status: 500 },

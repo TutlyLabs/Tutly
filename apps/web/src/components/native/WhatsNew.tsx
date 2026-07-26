@@ -103,7 +103,7 @@ export default function WhatsNew() {
             </div>
             <SheetHeader className="space-y-0.5 p-0 text-left">
               <SheetTitle className="text-foreground text-lg">
-                What's new in v{version}
+                What&apos;s new in v{version}
               </SheetTitle>
               <SheetDescription className="text-muted-foreground text-xs">
                 The latest improvements to Tutly.

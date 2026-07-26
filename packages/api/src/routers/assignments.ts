@@ -1,4 +1,5 @@
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import { readSandpackTemplate, readSubmission } from "@tutly/storage";
 import { z } from "zod";
 
@@ -38,6 +39,8 @@ import {
   getEnrolledCoursesById,
   getMentorCourses,
 } from "./courses";
+
+const logger = createLogger("api:assignments");
 
 export type AssignmentDetails = {
   sortedAssignments: Array<{
@@ -1528,7 +1531,10 @@ export const assignmentsRouter = createTRPCRouter({
         },
       };
     } catch (error) {
-      console.error("Error fetching assignments page data:", error);
+      logger.error(
+        { err: error, userId: ctx.session.user.id },
+        "failed to fetch assignments page data",
+      );
       return {
         success: false,
         error: "Failed to fetch assignments page data",
@@ -1895,7 +1901,14 @@ export const assignmentsRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching assignment detail data:", error);
+        logger.error(
+          {
+            err: error,
+            userId: ctx.session.user.id,
+            assignmentId: input.assignmentId,
+          },
+          "failed to fetch assignment detail data",
+        );
         return {
           success: false,
           error: "Failed to fetch assignment detail data",
@@ -2091,7 +2104,15 @@ export const assignmentsRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching assignment evaluate data:", error);
+        logger.error(
+          {
+            err: error,
+            userId: ctx.session.user.id,
+            assignmentId: input.assignmentId,
+            submissionId: input.submissionId,
+          },
+          "failed to fetch assignment evaluate data",
+        );
         return {
           success: false,
           error: "Failed to fetch assignment evaluate data",
@@ -2287,7 +2308,10 @@ export const assignmentsRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching tutor student assignments data:", error);
+        logger.error(
+          { err: error, userId: input.userId },
+          "failed to fetch tutor student assignments data",
+        );
         return {
           success: false,
           error: "Failed to fetch tutor student assignments data",
@@ -2394,7 +2418,10 @@ export const assignmentsRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching course student stats:", error);
+        logger.error(
+          { err: error, courseId: input.courseId },
+          "failed to fetch course student stats",
+        );
         return {
           success: false,
           error: "Failed to fetch course student stats",
@@ -2500,7 +2527,10 @@ export const assignmentsRouter = createTRPCRouter({
         },
       };
     } catch (error) {
-      console.error("Error fetching assignments dashboard data:", error);
+      logger.error(
+        { err: error, userId: ctx.session.user.id },
+        "failed to fetch assignments dashboard data",
+      );
       return {
         success: false,
         error: "Failed to fetch assignments dashboard data",

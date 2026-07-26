@@ -1,8 +1,11 @@
 import { z } from "zod";
 
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import { createTRPCRouter, staffProcedure } from "../trpc";
 import { PRISMA_SCHEMA, SCHEMA_CONTEXT } from "../lib/prismaSchema";
+
+const logger = createLogger("api:aiQuery");
 
 export const aiQueryRouter = createTRPCRouter({
   getAvailableModels: staffProcedure.query(async ({ ctx }) => {
@@ -63,7 +66,7 @@ export const aiQueryRouter = createTRPCRouter({
         models: availableModels,
       };
     } catch (error) {
-      console.error("Failed to fetch models:", error);
+      logger.error({ err: error, userId: currentUser.id }, "failed to fetch available models");
       return {
         ok: false,
         error: "Failed to fetch models",
@@ -138,16 +141,18 @@ export const aiQueryRouter = createTRPCRouter({
                 if (response.status === 503 && attempt < maxRetries) {
                   // Service unavailable - wait and retry
                   const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
-                  console.log(
-                    `Gemini API 503 error on attempt ${attempt}/${maxRetries}, retrying in ${waitTime}ms`,
+                  logger.warn(
+                    { attempt, maxRetries, waitTime, status: response.status },
+                    "gemini api unavailable, retrying",
                   );
                   await new Promise((resolve) => setTimeout(resolve, waitTime));
                   continue;
                 } else if (response.status >= 500 && attempt < maxRetries) {
                   // Other server errors - retry with backoff
                   const waitTime = Math.pow(2, attempt) * 1000;
-                  console.log(
-                    `Gemini API ${response.status} error on attempt ${attempt}/${maxRetries}, retrying in ${waitTime}ms`,
+                  logger.warn(
+                    { attempt, maxRetries, waitTime, status: response.status },
+                    "gemini api server error, retrying",
                   );
                   await new Promise((resolve) => setTimeout(resolve, waitTime));
                   continue;
@@ -166,8 +171,9 @@ export const aiQueryRouter = createTRPCRouter({
               }
               // Network error - wait 500ms base + exponential backoff and retry
               const waitTime = 500 + Math.pow(2, attempt) * 1000;
-              console.log(
-                `Network error on attempt ${attempt}/${maxRetries}, retrying in ${waitTime}ms`,
+              logger.warn(
+                { err: error, attempt, maxRetries, waitTime },
+                "gemini api network error, retrying",
               );
               await new Promise((resolve) => setTimeout(resolve, waitTime));
             }
@@ -361,8 +367,9 @@ Query:`;
 
             // Wait 500ms before each attempt (except the first one)
             if (queryGenerationAttempts > 1) {
-              console.log(
-                `Query execution attempt ${queryGenerationAttempts}/${maxQueryAttempts}, waiting 500ms...`,
+              logger.debug(
+                { attempt: queryGenerationAttempts, maxQueryAttempts },
+                "retrying generated query execution",
               );
               await new Promise((resolve) => setTimeout(resolve, 500));
             }
@@ -370,18 +377,18 @@ Query:`;
             // UNSAFE: executes LLM-generated code with full db access. Staff-only
             // gating is a stopgap; this must be replaced by a whitelisted query
             // builder that validates model/field/operator before execution.
-            const executeQuery = (db: any) => {
+            const executeQuery = () => {
               return eval(currentQuery);
             };
-            queryResults = await executeQuery(db);
+            queryResults = await executeQuery();
 
             // Success - update the final query used
             generatedQuery = currentQuery;
             break; // Exit the retry loop
           } catch (queryError) {
-            console.error(
-              `Query execution error on attempt ${queryGenerationAttempts}:`,
-              queryError,
+            logger.error(
+              { err: queryError, attempt: queryGenerationAttempts, maxQueryAttempts },
+              "generated query execution failed",
             );
 
             if (queryGenerationAttempts === maxQueryAttempts) {
@@ -457,18 +464,20 @@ CORRECTED QUERY (return ONLY the corrected Prisma query, nothing else):`;
 
               if (correctedQuery.startsWith("db.")) {
                 currentQuery = correctedQuery;
-                console.log(
-                  `Generated corrected query attempt ${queryGenerationAttempts + 1}: ${correctedQuery}`,
+                logger.debug(
+                  { attempt: queryGenerationAttempts + 1 },
+                  "generated corrected query",
                 );
               } else {
-                console.error(
-                  "Failed to generate valid corrected query, using original",
+                logger.error(
+                  { attempt: queryGenerationAttempts },
+                  "corrected query was not a valid db query, using original",
                 );
               }
             } catch (correctionError) {
-              console.error(
-                "Failed to generate corrected query:",
-                correctionError,
+              logger.error(
+                { err: correctionError, attempt: queryGenerationAttempts },
+                "failed to generate corrected query",
               );
               // Continue with original query for final attempt
             }
@@ -564,7 +573,7 @@ Based on the query results, provide a helpful, conversational response to the us
           userQuery,
         };
       } catch (error) {
-        console.error("Combined AI Query error:", error);
+        logger.error({ err: error }, "combined ai query failed");
         return {
           ok: false,
           error: "Failed to execute AI query",

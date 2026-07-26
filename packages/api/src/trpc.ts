@@ -9,6 +9,9 @@ import type {
 } from "@tutly/auth/permissions";
 import type { SessionUser, SessionWithUser } from "@tutly/auth/session";
 import { db, type Db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
+
+const logger = createLogger("api:trpc");
 
 export interface SessionContext {
   user: SessionUser | null;
@@ -35,6 +38,11 @@ export const createTRPCContext = async (opts: {
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
   const token = opts.headers.get("authorization") ?? null;
 
+  logger.debug(
+    { source, userId: opts.session?.user?.id ?? null },
+    "trpc request received",
+  );
+
   return {
     session: opts.session,
     db,
@@ -54,7 +62,10 @@ export const createTRPCRouter = t.router;
 const timingMiddleware = t.middleware(async ({ next, path }) => {
   const start = Date.now();
   const result = await next();
-  console.log(`[TRPC] ${path} took ${Date.now() - start}ms to execute`);
+  logger.info(
+    { path, durationMs: Date.now() - start },
+    "trpc request completed",
+  );
   return result;
 });
 
@@ -66,8 +77,13 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 const errorLoggingMiddleware = t.middleware(async ({ next, path, ctx }) => {
   const result = await next();
   if (!result.ok) {
-    console.error(
-      `[TRPC] ${path} failed code=${result.error.code} userId=${ctx.session?.user?.id ?? "anonymous"}`,
+    logger.error(
+      {
+        path,
+        code: result.error.code,
+        userId: ctx.session?.user?.id ?? "anonymous",
+      },
+      "trpc request failed",
     );
   }
   return result;

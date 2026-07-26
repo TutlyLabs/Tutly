@@ -872,7 +872,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                       Nothing to showcase yet
                     </p>
                     <p className="text-muted-foreground mt-1 text-xs">
-                      {profile.name} hasn't added portfolio details yet.
+                      {profile.name} hasn&apos;t added portfolio details yet.
                     </p>
                   </div>
                 </div>

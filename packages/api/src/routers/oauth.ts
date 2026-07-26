@@ -2,6 +2,9 @@ import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
+
+const logger = createLogger("api:oauth");
 
 function maskToken(token: string | null | undefined): string | null {
   if (!token) return null;
@@ -62,7 +65,7 @@ export const oauthRouter = createTRPCRouter({
         });
         return { success: true };
       } catch (error) {
-        console.error(`Failed to unlink ${provider} account:`, error);
+        logger.error({ err: error, provider }, "failed to unlink oauth account");
         return { success: false, error: "Failed to unlink account" };
       }
     }),

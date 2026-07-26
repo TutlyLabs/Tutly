@@ -1,11 +1,15 @@
 import { BookMarkCategory } from "@tutly/db/browser";
 import { z } from "zod";
 
+import { createLogger } from "@tutly/logger";
+
 import { createTRPCRouter, permissionProcedure } from "../trpc";
 import {
   requireRecordOwner,
   requireUserInOrganization,
 } from "../lib/authorization";
+
+const logger = createLogger("api:bookmarks");
 
 export const bookmarksRouter = createTRPCRouter({
   toggleBookmark: permissionProcedure("bookmark", "toggle")
@@ -71,7 +75,10 @@ export const bookmarksRouter = createTRPCRouter({
 
         return { success: true, data: bookmark };
       } catch (error) {
-        console.error("Error getting bookmark:", error);
+        logger.error(
+          { err: error, userId: input.userId, objectId: input.objectId },
+          "get bookmark failed",
+        );
         return { error: "Failed to get bookmark" };
       }
     }),
@@ -91,7 +98,10 @@ export const bookmarksRouter = createTRPCRouter({
         data: bookmarks,
       };
     } catch (error) {
-      console.error("Error fetching user bookmarks:", error);
+      logger.error(
+        { err: error, userId: ctx.session.user.id },
+        "fetch user bookmarks failed",
+      );
       return {
         success: false,
         error: "Failed to fetch user bookmarks",

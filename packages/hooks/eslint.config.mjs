@@ -12,6 +12,8 @@ const config = [
       // TS handles unused-vars and undef checking better than base ESLint.
       "no-unused-vars": "off",
       "no-undef": "off",
+      // Known backlog, capped by --max-warnings so it cannot grow.
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 ];

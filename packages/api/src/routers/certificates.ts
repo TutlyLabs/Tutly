@@ -1,4 +1,7 @@
+import { createLogger } from "@tutly/logger";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const logger = createLogger("api:certificates");
 
 export const certificatesRouter = createTRPCRouter({
   getStudentCertificateData: protectedProcedure.query(async ({ ctx }) => {
@@ -92,7 +95,10 @@ export const certificatesRouter = createTRPCRouter({
         },
       };
     } catch (error) {
-      console.error("Error fetching student certificate data:", error);
+      logger.error(
+        { err: error, userId: ctx.session.user.id },
+        "fetch student certificate data failed",
+      );
       return {
         success: false,
         error: "Failed to fetch student certificate data",

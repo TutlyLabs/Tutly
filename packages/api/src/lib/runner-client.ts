@@ -1,3 +1,7 @@
+import { createLogger } from "@tutly/logger";
+
+const logger = createLogger("api:runner-client");
+
 type EnqueueResult = { ok: boolean; status?: number; error?: string };
 
 const RUNNER_URL = process.env.TEST_RUNNER_URL;
@@ -5,9 +9,7 @@ const RUNNER_SECRET = process.env.TEST_RUNNER_SECRET;
 
 async function postRunner(path: string, body: unknown): Promise<EnqueueResult> {
   if (!RUNNER_URL || !RUNNER_SECRET) {
-    console.warn(
-      "[runner] TEST_RUNNER_URL/SECRET not configured; skipping enqueue",
-    );
+    logger.warn({ path }, "runner url/secret not configured; skipping enqueue");
     return { ok: false, error: "runner-not-configured" };
   }
 
@@ -27,7 +29,7 @@ async function postRunner(path: string, body: unknown): Promise<EnqueueResult> {
     return { ok: res.ok, status: res.status };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.warn("[runner] enqueue failed:", message);
+    logger.warn({ err, path }, "runner enqueue failed");
     return { ok: false, error: message };
   } finally {
     clearTimeout(timer);

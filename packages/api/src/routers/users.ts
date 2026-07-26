@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import { randomInt } from "crypto";
 import { z } from "zod";
 
+import { createLogger } from "@tutly/logger";
+
 import {
   requireCourseReadAccess,
   requireUserInOrganization,
@@ -37,6 +39,8 @@ function assertCanAssignRole(actorRole: string, requested: string) {
     });
   }
 }
+
+const logger = createLogger("api:users");
 
 export const generateRandomPassword = (length = 8) => {
   const lowercase = "abcdefghijklmnopqrstuvwxyz";
@@ -354,7 +358,7 @@ export const usersRouter = createTRPCRouter({
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Failed to create user";
-        console.error("[createUser] Error:", errorMessage, error);
+        logger.error({ err: error, username: input.username }, "failed to create user");
         throw new Error(errorMessage);
       }
     }),
@@ -533,12 +537,9 @@ export const usersRouter = createTRPCRouter({
                 return createdUser;
               });
             } catch (error) {
-              const errorMessage =
-                error instanceof Error ? error.message : "Unknown error";
-              console.error(
-                `[bulkUpsert] Error processing user ${userData.username}:`,
-                errorMessage,
-                error
+              logger.error(
+                { err: error, username: userData.username },
+                "failed to process user during bulk upsert",
               );
               throw error;
             }
@@ -549,7 +550,7 @@ export const usersRouter = createTRPCRouter({
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Failed to bulk upsert users";
-        console.error("[bulkUpsert] Error:", errorMessage, error);
+        logger.error({ err: error, userCount: input.length }, "failed to bulk upsert users");
         throw new Error(errorMessage);
       }
     }),
@@ -734,7 +735,10 @@ export const usersRouter = createTRPCRouter({
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
-        console.error("Error changing password:", error);
+        logger.error(
+          { err: error, userId: user.id },
+          "failed to change password",
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "An error occurred while changing password",
@@ -781,7 +785,7 @@ export const usersRouter = createTRPCRouter({
         },
       };
     } catch (error) {
-      console.error("Error checking user password:", error);
+      logger.error({ err: error, userId: ctx.session.user.id }, "failed to check user password");
       return {
         success: false,
         error: "Failed to check user password",
@@ -823,7 +827,7 @@ export const usersRouter = createTRPCRouter({
         },
       };
     } catch (error) {
-      console.error("Error fetching user sessions:", error);
+      logger.error({ err: error, userId: ctx.session.user.id }, "failed to fetch user sessions");
       return {
         success: false,
         error: "Failed to fetch user sessions",
@@ -859,7 +863,7 @@ export const usersRouter = createTRPCRouter({
 
         return { success: true };
       } catch (error) {
-        console.error("Error deleting session:", error);
+        logger.error({ err: error, sessionId: input.sessionId }, "failed to delete session");
         throw new Error(
           error instanceof Error ? error.message : "Failed to delete session",
         );
@@ -1073,7 +1077,7 @@ export const usersRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching tutor activity data:", error);
+        logger.error({ err: error, userId: ctx.session.user.id }, "failed to fetch tutor activity data");
         return {
           success: false,
           error: "Failed to fetch tutor activity data",
@@ -1329,7 +1333,7 @@ export const usersRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching tutor manage users data:", error);
+        logger.error({ err: error, userId: ctx.session.user.id }, "failed to fetch tutor manage users data");
         return {
           success: false,
           error: "Failed to fetch tutor manage users data",
@@ -1555,6 +1559,7 @@ export const usersRouter = createTRPCRouter({
           };
         }
       } catch (error) {
+        logger.error({ err: error, userId: id }, "failed to update user status");
         throw new Error("Failed to update user status");
       }
     }),

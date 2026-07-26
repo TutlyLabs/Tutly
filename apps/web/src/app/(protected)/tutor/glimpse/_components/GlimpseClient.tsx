@@ -132,12 +132,12 @@ export default function GlimpseClient() {
                 <p className="font-medium">Idle threshold</p>
                 <p className="mt-1">
                   A student is <b>Idle</b> if their last login was more than{" "}
-                  <b>{staleDays} days</b> ago. Affects the "Idle" stat and the
-                  "Students idle ≥{staleDays}d" list. Never-signed-in students
-                  are counted separately.
+                  <b>{staleDays} days</b> ago. Affects the &quot;Idle&quot; stat
+                  and the &quot;Students idle ≥{staleDays}d&quot; list.
+                  Never-signed-in students are counted separately.
                 </p>
                 <p className="text-muted-foreground mt-1">
-                  Doesn't affect any submission counts.
+                  Doesn&apos;t affect any submission counts.
                 </p>
               </>
             }
@@ -151,13 +151,13 @@ export default function GlimpseClient() {
                 <p className="font-medium">Recent-activity window</p>
                 <p className="mt-1">
                   Only used to compute the per-mentor{" "}
-                  <b>"Active in last {recentDays}d"</b> column — i.e. how many
-                  of their mentees submitted anything in this window.
+                  <b>&quot;Active in last {recentDays}d&quot;</b> column — i.e.
+                  how many of their mentees submitted anything in this window.
                 </p>
                 <p className="text-muted-foreground mt-1">
-                  Submission totals, evaluated/pending counts, "submitted ever"
-                  and the assignment-wise table are <b>not</b> filtered by this
-                  window.
+                  Submission totals, evaluated/pending counts, &quot;submitted
+                  ever&quot; and the assignment-wise table are <b>not</b>{" "}
+                  filtered by this window.
                 </p>
               </>
             }

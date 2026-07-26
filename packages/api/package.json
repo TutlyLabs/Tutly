@@ -22,7 +22,7 @@
     }
   },
   "scripts": {
-    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings 0",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings 37",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
@@ -34,6 +34,7 @@
     "@trpc/server": "11.8.0",
     "@tutly/auth": "workspace:*",
     "@tutly/db": "workspace:*",
+    "@tutly/logger": "workspace:*",
     "@tutly/storage": "workspace:*",
     "@tutly/utils": "workspace:*",
     "bcryptjs": "^3.0.3",

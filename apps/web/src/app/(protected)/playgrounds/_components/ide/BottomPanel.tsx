@@ -338,7 +338,6 @@ function TestsPanel({
     if (runRequest === 0) return;
 
     let didRun = false;
-    let timeoutId: number | undefined;
 
     const runFromSandpackClient = () => {
       const runButton = rootRef.current?.querySelector<HTMLButtonElement>(
@@ -370,14 +369,14 @@ function TestsPanel({
       attributeFilter: ["disabled"],
     });
 
-    timeoutId = window.setTimeout(() => {
+    const timeoutId = window.setTimeout(() => {
       observer.disconnect();
       if (!didRun) onRunUnavailable();
     }, 5000);
 
     return () => {
       observer.disconnect();
-      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+      window.clearTimeout(timeoutId);
     };
   }, [onRunUnavailable, runRequest]);
 

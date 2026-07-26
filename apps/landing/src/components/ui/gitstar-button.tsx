@@ -42,7 +42,6 @@ interface GithubButtonProps
   extends React.ComponentProps<"button">,
     VariantProps<typeof githubButtonVariants> {
   /** Whether to round stars */
-  roundStars?: boolean;
   /** Whether to show Github icon */
   fixedWidth?: boolean;
   /** Initial number of stars */
@@ -88,7 +87,6 @@ function GithubButton({
   size = "default",
   showGithubIcon = true,
   showStarIcon = true,
-  roundStars = false,
   separator = false,
   filled = false,
   repoUrl,

@@ -25,8 +25,8 @@ export function currentAppVersion(): string {
 
 /** Compare semver-ish strings, returns -1 / 0 / +1 like Array.sort. */
 export function compareVersions(a: string, b: string): number {
-  const pa = a.split(/[.\-]/).map((p) => parseInt(p, 10) || 0);
-  const pb = b.split(/[.\-]/).map((p) => parseInt(p, 10) || 0);
+  const pa = a.split(/[.-]/).map((p) => parseInt(p, 10) || 0);
+  const pb = b.split(/[.-]/).map((p) => parseInt(p, 10) || 0);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
     const ai = pa[i] ?? 0;
     const bi = pb[i] ?? 0;

@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { createLogger } from "@tutly/logger";
 import { z } from "zod";
 
 import {
@@ -12,6 +13,8 @@ import {
   permissionProcedure,
   staffProcedure,
 } from "../trpc";
+
+const logger = createLogger("api:classes");
 
 export const classesRouter = createTRPCRouter({
   getLatestForCourse: permissionProcedure("class", "read")
@@ -129,7 +132,7 @@ export const classesRouter = createTRPCRouter({
 
         return createdClass;
       } catch (error) {
-        console.error("Error creating class:", error);
+        logger.error({ err: error, courseId: input.courseId }, "failed to create class");
         throw new Error("Error creating class");
       }
     }),
@@ -239,7 +242,7 @@ export const classesRouter = createTRPCRouter({
 
         return { success: true, data: updatedClass };
       } catch (error) {
-        console.error("Error updating class:", error);
+        logger.error({ err: error, classId: input.classId, courseId: input.courseId }, "failed to update class");
         return { error: "Failed to update class" };
       }
     }),
@@ -307,7 +310,7 @@ export const classesRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error getting class deletion info:", error);
+        logger.error({ err: error, classId: input.classId }, "failed to get class deletion info");
         throw new Error("Failed to get class deletion info");
       }
     }),
@@ -329,7 +332,7 @@ export const classesRouter = createTRPCRouter({
         });
         return { success: true };
       } catch (error) {
-        console.error("Error deleting class:", error);
+        logger.error({ err: error, classId: input.classId }, "failed to delete class");
         throw new Error("Failed to delete class. Please try again later.");
       }
     }),
@@ -341,7 +344,7 @@ export const classesRouter = createTRPCRouter({
       const res = await ctx.db.class.count();
       return res;
     } catch (error) {
-      console.error("Error getting total number of classes:", error);
+      logger.error({ err: error }, "failed to count classes");
       throw new Error(
         "Failed to get total number of classes. Please try again later.",
       );
@@ -373,7 +376,7 @@ export const classesRouter = createTRPCRouter({
 
         return { success: true, data: classes };
       } catch (error) {
-        console.error("Error getting classes by course ID:", error);
+        logger.error({ err: error, courseId: input.courseId }, "failed to get classes by course id");
         return { error: "Failed to get classes" };
       }
     }),
@@ -409,7 +412,7 @@ export const classesRouter = createTRPCRouter({
 
         return { success: true, data: classDetails };
       } catch (error) {
-        console.error("Error getting class details:", error);
+        logger.error({ err: error, classId: input.id }, "failed to get class details");
         return { error: "Failed to get class details" };
       }
     }),

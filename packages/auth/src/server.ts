@@ -11,7 +11,7 @@ import { username } from "better-auth/plugins/username";
 import type { Db } from "@tutly/db";
 
 import type { CustomSessionInput, CustomSessionResult } from "./session";
-import { ac, ROLE_NAMES, ROLES } from "./permissions";
+import { ac, ROLES } from "./permissions";
 
 export interface CreateServerAuthOptions {
   secret: string;
@@ -78,7 +78,6 @@ export function createServerAuth(opts: CreateServerAuthOptions) {
     emailVerification: {
       afterEmailVerification: opts.afterEmailVerification,
     },
-    roles: ROLE_NAMES,
     socialProviders: {
       ...(opts.google?.clientId &&
         opts.google.clientSecret && {

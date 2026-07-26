@@ -2,6 +2,8 @@ import type { EventAttachmentType } from "@tutly/db/browser";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { createLogger } from "@tutly/logger";
+
 import { requireUser } from "../lib/authorization";
 import {
   createTRPCRouter,
@@ -43,6 +45,8 @@ async function requireEventAccess(ctx: TRPCContext, eventId: string) {
 
   return event;
 }
+
+const logger = createLogger("api:schedule");
 
 export const scheduleRouter = createTRPCRouter({
   getSchedule: protectedProcedure
@@ -333,7 +337,10 @@ export const scheduleRouter = createTRPCRouter({
         },
       };
     } catch (error) {
-      console.error("Error fetching schedule data:", error);
+      logger.error(
+        { err: error, userId: ctx.session.user.id },
+        "fetch schedule data failed",
+      );
       return {
         success: false,
         error: "Failed to fetch schedule data",

@@ -47,7 +47,7 @@ export default function DoubtDetailPage({
           Doubt not found
         </h2>
         <p className="text-muted-foreground text-sm">
-          This doubt may have been deleted or you don't have access to it.
+          This doubt may have been deleted or you don&apos;t have access to it.
         </p>
         <Button asChild variant="outline">
           <Link href="/community">Go to Community</Link>

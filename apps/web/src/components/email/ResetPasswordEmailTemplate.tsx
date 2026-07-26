@@ -126,8 +126,8 @@ const ResetPasswordEmailTemplate = ({
             }}
           >
             <p style={{ margin: "0", fontSize: "15px", color: "#4a5568" }}>
-              <strong>Alternative:</strong> If the button doesn't work, copy and
-              paste this link into your browser:
+              <strong>Alternative:</strong> If the button doesn&apos;t work,
+              copy and paste this link into your browser:
             </p>
             <p
               style={{
@@ -160,8 +160,8 @@ const ResetPasswordEmailTemplate = ({
           >
             <p style={{ margin: "0" }}>
               <strong>Security Note:</strong> This password reset link will
-              expire in 1 hour for security reasons. If you didn't request this
-              reset, please ignore this email and your password will remain
+              expire in 1 hour for security reasons. If you didn&apos;t request
+              this reset, please ignore this email and your password will remain
               unchanged.
             </p>
           </div>
@@ -174,8 +174,8 @@ const ResetPasswordEmailTemplate = ({
               lineHeight: "1.5",
             }}
           >
-            If you're having trouble with the button above, copy and paste the
-            URL below into your web browser:
+            If you&apos;re having trouble with the button above, copy and paste
+            the URL below into your web browser:
           </p>
         </div>
 

@@ -80,7 +80,8 @@ export function VSCodeLoadingScreen({
             Ready to Code?
           </h1>
           <p className="mx-auto max-w-lg text-xl font-light tracking-wide text-white/60">
-            We're preparing your workspace. Here are a few things to remember:
+            We&apos;re preparing your workspace. Here are a few things to
+            remember:
           </p>
         </div>
 

@@ -1,11 +1,21 @@
 {
   "$schema": "https://turborepo.org/schema.json",
   "ui": "stream",
-  "globalDependencies": [".nvmrc", "pnpm-lock.yaml", "tooling/**"],
+  "globalDependencies": [
+    ".nvmrc",
+    "pnpm-lock.yaml",
+    "tooling/**"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "!**/*.md", "!**/__tests__/**"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.md",
+        "!**/__tests__/**"
+      ],
       "outputs": [
         "dist/**",
         "build/**",
@@ -44,25 +54,44 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "passThroughEnv": ["*"]
+      "passThroughEnv": [
+        "*"
+      ]
     },
     "format": {
-      "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": [".cache/.prettiercache"],
+      "inputs": [
+        "$TURBO_DEFAULT$"
+      ],
+      "outputs": [
+        ".cache/.prettiercache"
+      ],
       "outputLogs": "new-only"
     },
     "lint": {
-      "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.md"
+      ],
       "outputs": []
     },
     "typecheck": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.md"
+      ],
       "outputs": []
     },
     "test": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.md"
+      ],
       "outputs": []
     },
     "clean": {
@@ -110,6 +139,11 @@
     "VIDEO_WORKER_SECRET",
     "WORKER_SECRET",
     "WORKSPACE_AGENT_SECRET",
-    "ZOOM_CLIENT_SECRET"
+    "ZOOM_CLIENT_SECRET",
+    "SANDPACK_BUNDLER_SRC",
+    "ANDROID_KEYSTORE_BASE64",
+    "ANDROID_KEYSTORE_PASSWORD",
+    "ANDROID_KEY_ALIAS",
+    "ANDROID_KEY_PASSWORD"
   ]
 }

@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { createLogger } from "@tutly/logger";
+
+const logger = createLogger("web:api:cli");
+
 export async function GET() {
   try {
     const response = await fetch("https://registry.npmjs.org/tutly/latest", {
@@ -16,7 +20,7 @@ export async function GET() {
     const data = await response.json();
     return NextResponse.json({ version: data.version });
   } catch (error) {
-    console.error("Error fetching latest CLI version:", error);
+    logger.error({ err: error }, "failed to fetch latest cli version");
     return NextResponse.json(
       { error: "Failed to fetch latest version" },
       { status: 500 },

@@ -19,6 +19,9 @@
   "jest": {
     "preset": "@tutly/jest-presets/node"
   },
+  "dependencies": {
+    "pino": "^9.5.0"
+  },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
     "@tutly/eslint-config": "workspace:*",

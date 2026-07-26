@@ -32,7 +32,7 @@ export default function SearchPanel() {
       const code = file.code ?? "";
       const haystack = caseSensitive ? code : code.toLowerCase();
       let idx = 0;
-      let firstHitsForFile: Hit[] = [];
+      const firstHitsForFile: Hit[] = [];
       while (true) {
         const found = haystack.indexOf(q, idx);
         if (found === -1) break;

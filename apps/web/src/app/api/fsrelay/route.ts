@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/server/auth";
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import { giteaClient } from "@/lib/gitea";
 
 /**
@@ -8,6 +9,8 @@ import { giteaClient } from "@/lib/gitea";
  * Endpoints:
  * - GET /api/fsrelay/contents?assignmentId=...&path=...&ref=...&type=TEMPLATE
  */
+
+const logger = createLogger("web:api:fsrelay");
 
 export const dynamic = "force-dynamic";
 
@@ -145,7 +148,7 @@ export async function GET(req: NextRequest) {
         );
     }
   } catch (error: any) {
-    console.error("Tutly FS API Error:", error);
+    logger.error({ err: error, method: "GET", operation }, "fs relay request failed");
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: 500 },
@@ -288,7 +291,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error: any) {
-    console.error("Tutly FS API Error:", error);
+    logger.error({ err: error, method: "POST", operation }, "fs relay request failed");
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: error.status || 500 },

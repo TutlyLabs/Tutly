@@ -192,7 +192,11 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
 
   const togglePlay = () => {
     if (videoType === "YOUTUBE" && player) {
-      isPlaying ? player.pauseVideo() : player.playVideo();
+      if (isPlaying) {
+        player.pauseVideo();
+      } else {
+        player.playVideo();
+      }
     }
   };
 
@@ -217,7 +221,11 @@ const VideoPlayer = ({ videoId, videoType }: VideoPlayerProps) => {
     const newVolume = value[0];
     if (videoType === "YOUTUBE" && player) {
       player.setVolume(newVolume * 100);
-      newVolume === 0 ? player.mute() : player.unMute();
+      if (newVolume === 0) {
+        player.mute();
+      } else {
+        player.unMute();
+      }
     }
     setVolume(newVolume);
     setIsMuted(newVolume === 0);

@@ -1,5 +1,6 @@
-import throttle from "lodash.throttle";
 import * as React from "react";
+import throttle from "lodash.throttle";
+
 import { useUnmount } from "./use-unmount";
 
 interface ThrottleSettings {
@@ -21,7 +22,7 @@ const defaultOptions: ThrottleSettings = {
  * @param options The throttle options
  */
 
-export function useThrottledCallback<T extends (...args: any[]) => any>(
+export function useThrottledCallback<T extends (...args: never[]) => unknown>(
   fn: T,
   wait = 250,
   dependencies: React.DependencyList = [],

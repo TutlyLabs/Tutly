@@ -15,6 +15,7 @@ import {
   readSubmission,
   writeSubmission,
 } from "@tutly/storage";
+import { createLogger } from "@tutly/logger";
 import {
   isCodeSandboxHost,
   isValidCodeSandboxUrl,
@@ -48,6 +49,8 @@ import {
   permissionProcedure,
   protectedProcedure,
 } from "../trpc";
+
+const logger = createLogger("api:submission");
 
 export type AssignmentDetails = {
   id: string;
@@ -724,7 +727,14 @@ export const submissionRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching submission for playground:", error);
+        logger.error(
+          {
+            err: error,
+            userId: ctx.session.user.id,
+            submissionId: input.submissionId,
+          },
+          "fetch submission for playground failed",
+        );
         return {
           success: false,
           error: "Failed to fetch submission data",

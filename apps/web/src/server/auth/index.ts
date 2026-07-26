@@ -2,7 +2,6 @@ import { compare, hash } from "bcryptjs";
 import { Resend } from "resend";
 
 import { createServerAuth } from "@tutly/auth/server";
-import type { SessionWithUser } from "@tutly/auth/session";
 
 import {
   RESEND_API_KEY,
@@ -16,7 +15,10 @@ import {
   BETTER_AUTH_URL,
 } from "@/lib/constants";
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import ResetPasswordEmailTemplate from "@/components/email/ResetPasswordEmailTemplate";
+
+const logger = createLogger("web:auth");
 
 const resend = new Resend(RESEND_API_KEY);
 
@@ -43,12 +45,12 @@ export const auth = createServerAuth({
         react: ResetPasswordEmailTemplate({ resetLink: url, name: userName }),
       });
       if (error) {
-        console.error("Error sending password reset email:", error);
+        logger.error({ err: error, userId: user.id }, "failed to send password reset email");
         throw new Error("Failed to send password reset email");
       }
-      console.log("Password reset email sent successfully:", data);
+      logger.info({ userId: user.id, messageId: data?.id }, "password reset email sent");
     } catch (error) {
-      console.error("Error in sendResetPassword:", error);
+      logger.error({ err: error, userId: user.id }, "send password reset failed");
       throw error;
     }
   },
@@ -59,16 +61,16 @@ export const auth = createServerAuth({
     });
   },
   customSessionHandler: async ({ user, session }) => {
-    // Degraded pass-through for the two unreachable-in-practice paths below:
-    // the better-auth user lacks the enriched columns, so every permission
-    // check fails closed. Kept as-is (with a cast) rather than changed here.
-    const passThrough = () => ({ user, session }) as unknown as SessionWithUser;
+    // The two failure paths below cannot produce a SessionWithUser: the
+    // better-auth user has none of the enriched columns authorization reads.
+    // Returning the anonymous shape fails closed without asserting a lie.
+    const anonymous = { user: null, session: null } as const;
     try {
       const prismaUser = await db.user.findUnique({
         where: { id: user.id },
         include: { organization: true, adminForCourses: true },
       });
-      if (!prismaUser) return passThrough();
+      if (!prismaUser) return anonymous;
       if (prismaUser.disabledAt) {
         await db.session.deleteMany({ where: { userId: user.id } });
         return { session: null, user: null };
@@ -81,7 +83,9 @@ export const auth = createServerAuth({
       ) {
         db.user
           .update({ where: { id: user.id }, data: { lastSeen: now } })
-          .catch(console.error);
+          .catch((err: unknown) =>
+            logger.error({ err, userId: user.id }, "failed to update last seen"),
+          );
       }
       return {
         user: {
@@ -93,8 +97,8 @@ export const auth = createServerAuth({
         session,
       };
     } catch (error) {
-      console.error("customSession error:", error);
-      return passThrough();
+      logger.error({ err: error, userId: user.id }, "custom session handler failed");
+      return anonymous;
     }
   },
   google:

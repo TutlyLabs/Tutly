@@ -112,8 +112,8 @@ export function PlaygroundHelpDialog() {
                           1
                         </div>
                         <span className="text-sm text-white/80">
-                          Open <strong>"Site information"</strong> in the URL
-                          bar (lock/tune icon)
+                          Open <strong>&quot;Site information&quot;</strong> in
+                          the URL bar (lock/tune icon)
                         </span>
                       </div>
                       <div className="flex items-center gap-4 rounded-lg border border-white/5 bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.04]">
@@ -121,7 +121,8 @@ export function PlaygroundHelpDialog() {
                           2
                         </div>
                         <span className="text-sm text-white/80">
-                          Make sure <strong>"Local network access"</strong> is
+                          Make sure{" "}
+                          <strong>&quot;Local network access&quot;</strong> is
                           enabled
                         </span>
                       </div>

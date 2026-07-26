@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@tutly/db";
 import { SignJWT } from "jose";
+import { createLogger } from "@tutly/logger";
 import { auth } from "@/server/auth";
+
+const logger = createLogger("web:api:config");
 
 export const dynamic = "force-dynamic";
 
@@ -95,7 +98,7 @@ export async function GET(req: NextRequest) {
       config: token,
     });
   } catch (error) {
-    console.error("Error in config endpoint:", error);
+    logger.error({ err: error }, "config endpoint failed");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

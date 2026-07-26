@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import {
   isStaff,
   requireClassManageAccess,
@@ -17,6 +18,8 @@ import {
   permissionProcedure,
   protectedProcedure,
 } from "../trpc";
+
+const logger = createLogger("api:attendance");
 
 type StudentData = {
   Duration: number;
@@ -520,7 +523,7 @@ export const attendanceRouter = createTRPCRouter({
     );
     const totalCount = await serverActionOftotatlNumberOfClasses(courseId);
 
-    const jsonData = Object.entries(totalAttendance).map(([_, value]) => ({
+    const jsonData = Object.entries(totalAttendance).map(([, value]) => ({
       username: value.username,
       name: value.name,
       mail: value.mail,
@@ -793,7 +796,10 @@ export const attendanceRouter = createTRPCRouter({
         },
       };
     } catch (error) {
-      console.error("Error fetching attendance page data:", error);
+      logger.error(
+        { err: error, userId: ctx.session.user.id },
+        "fetch attendance page data failed",
+      );
       return {
         success: false,
         error: "Failed to fetch attendance page data",

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/server/auth";
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import { commitAndPushZip } from "@/lib/git-operations";
+
+const logger = createLogger("web:api:git");
 
 export const dynamic = "force-dynamic";
 
@@ -131,7 +134,7 @@ export async function POST(req: NextRequest) {
       filesProcessed: updatedCount,
     });
   } catch (error) {
-    console.error("Upload error:", error);
+    logger.error({ err: error }, "git upload failed");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

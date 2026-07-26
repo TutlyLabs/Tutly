@@ -284,7 +284,7 @@ export const chatRouter = createTRPCRouter({
               }
             }
           }
-        } catch (e) {
+        } catch {
           // Notification errors should never fail the message send
         }
       })();

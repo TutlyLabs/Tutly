@@ -1,11 +1,15 @@
 import { NoteCategory } from "@tutly/db/browser";
 import { z } from "zod";
 
+import { createLogger } from "@tutly/logger";
+
 import { createTRPCRouter, permissionProcedure } from "../trpc";
 import {
   requireRecordOwner,
   requireUserInOrganization,
 } from "../lib/authorization";
+
+const logger = createLogger("api:notes");
 
 export const notesRouter = createTRPCRouter({
   updateNote: permissionProcedure("note", "update")
@@ -42,7 +46,7 @@ export const notesRouter = createTRPCRouter({
             },
           });
         } catch (error) {
-          console.log("Note doesn't exist to delete:", error);
+          logger.debug({ err: error, objectId }, "note not found for deletion");
         }
         return { success: true };
       }
@@ -72,6 +76,7 @@ export const notesRouter = createTRPCRouter({
           },
         });
       } catch (error) {
+        logger.error({ err: error, objectId }, "failed to update note");
         return { error: "Failed to update note" };
       }
       return { success: true };
@@ -103,6 +108,7 @@ export const notesRouter = createTRPCRouter({
 
         return { success: true, data: note };
       } catch (error) {
+        logger.error({ err: error }, "failed to get note");
         return { error: "Failed to get note" };
       }
     }),

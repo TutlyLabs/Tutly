@@ -34,10 +34,10 @@
     "@changesets/cli": "^2.31.0",
     "@turbo/gen": "^2.6.3",
     "@tutly/prettier-config": "workspace:*",
-    "prettier": "catalog:",
+    "prettier": "3.5.3",
     "sherif": "^1.13.0",
     "turbo": "^2.6.3",
-    "typescript": "catalog:"
+    "typescript": "5.9.3"
   },
   "prettier": "@tutly/prettier-config",
   "resolutions": {

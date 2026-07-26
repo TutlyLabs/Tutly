@@ -1,7 +1,11 @@
 import { Role } from "@tutly/db/browser";
 import { z } from "zod";
 
+import { createLogger } from "@tutly/logger";
+
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const logger = createLogger("api:report");
 
 export type ReportData = {
   username: string;
@@ -214,7 +218,7 @@ export const reportRouter = createTRPCRouter({
             userPoints.map((point) => point.submissions?.id).filter(Boolean),
           ).size;
         } catch (e) {
-          console.log("Error while generating report : ", e);
+          logger.error({ err: e, courseId: input.courseId }, "failed to aggregate report scores");
         }
       });
 
@@ -316,7 +320,7 @@ export const reportRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching report page data:", error);
+        logger.error({ err: error, courseId: input.courseId }, "failed to fetch report page data");
         return {
           success: false,
           error: "Failed to fetch report page data",

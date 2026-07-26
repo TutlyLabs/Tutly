@@ -411,8 +411,8 @@ export default function AttendanceIndicator({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs">
-                    Students who attended but didn't meet the minimum duration
-                    criteria
+                    Students who attended but didn&apos;t meet the minimum
+                    duration criteria
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -434,7 +434,7 @@ export default function AttendanceIndicator({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs">
-                    Enrolled students who didn't attend the class at all
+                    Enrolled students who didn&apos;t attend the class at all
                   </p>
                 </TooltipContent>
               </Tooltip>

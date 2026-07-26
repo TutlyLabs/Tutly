@@ -309,7 +309,7 @@ export function LocalPlaygroundSetupScreen({
               <span className="mb-2 block text-2xl font-medium text-white/40">
                 Hi {userName},
               </span>
-              Let's get you <br />
+              Let&apos;s get you <br />
               <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                 ready to code.
               </span>

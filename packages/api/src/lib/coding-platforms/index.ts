@@ -1,3 +1,7 @@
+import { createLogger } from "@tutly/logger";
+
+const logger = createLogger("api:coding-platforms");
+
 export type ValidationResult = {
   valid: boolean;
   invalidFields: Array<string>;
@@ -81,7 +85,7 @@ export async function getPlatformScores(
         scores[platform] = score;
         scores.totalScore += parseInt(score.score);
       } catch (error) {
-        console.error(`Error fetching score for ${platform}:`, error);
+        logger.error({ err: error, platform }, "failed to fetch platform score");
         scores[platform] = null;
       }
     },

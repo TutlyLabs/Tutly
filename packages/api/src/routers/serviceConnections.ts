@@ -56,10 +56,10 @@ function decryptSecret(value?: string | null) {
 }
 
 function publicConnection<T extends { encryptedSecret?: string | null }>(connection: T) {
-  const { encryptedSecret: _secret, ...rest } = connection;
+  const { encryptedSecret, ...rest } = connection;
   return {
     ...rest,
-    hasSecret: Boolean(connection.encryptedSecret),
+    hasSecret: Boolean(encryptedSecret),
   };
 }
 

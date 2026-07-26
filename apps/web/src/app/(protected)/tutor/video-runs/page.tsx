@@ -232,8 +232,8 @@ export default function VideoRunsPage() {
               No runs match the current filter
             </p>
             <p className="mt-1 text-xs">
-              Upload an HLS class video and you'll see it here while it's being
-              transcoded.
+              Upload an HLS class video and you&apos;ll see it here while
+              it&apos;s being transcoded.
             </p>
           </div>
         ) : (

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { createLogger } from "@tutly/logger";
 import { createTRPCRouter, superAdminProcedure } from "../trpc";
 import {
   createSubdomainRecord,
@@ -8,6 +9,8 @@ import {
   getCnameTarget,
   getCustomDomainInstructions,
 } from "../lib/cloudflare";
+
+const logger = createLogger("api:superAdmin");
 
 export const superAdminRouter = createTRPCRouter({
   // ─── Dashboard ───────────────────────────────────────────────
@@ -341,7 +344,10 @@ export const superAdminRouter = createTRPCRouter({
           org?.name,
         );
       } catch (error) {
-        console.error("Failed to create Cloudflare DNS record:", error);
+        logger.error(
+          { err: error, orgId: input.orgId, subdomain: input.subdomain },
+          "failed to create cloudflare dns record",
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
@@ -458,7 +464,10 @@ export const superAdminRouter = createTRPCRouter({
         try {
           await deleteRecord(domain.cloudflareRecordId);
         } catch (error) {
-          console.error("Failed to delete Cloudflare DNS record:", error);
+          logger.error(
+            { err: error, cloudflareRecordId: domain.cloudflareRecordId },
+            "failed to delete cloudflare dns record",
+          );
         }
       }
 

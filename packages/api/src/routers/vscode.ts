@@ -2,8 +2,12 @@ import { TRPCError } from "@trpc/server";
 import { jwtVerify } from "jose";
 import { z } from "zod";
 
+import { createLogger } from "@tutly/logger";
+
 import { requireAssignmentReadAccess } from "../lib/authorization";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const logger = createLogger("api:vscode");
 
 export const vscodeRouter = createTRPCRouter({
   resolveConfig: protectedProcedure
@@ -39,9 +43,10 @@ export const vscodeRouter = createTRPCRouter({
             new TextEncoder().encode(secret),
           );
           decoded = payload as typeof decoded;
-        } catch {
+        } catch (error) {
           // Previously this only flipped an `isAuthorized` flag and the assignment
           // was still returned, so an unsigned config token read like a valid one.
+          logger.error({ err: error }, "failed to verify vscode config param");
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Invalid VS Code config token",

@@ -4,7 +4,7 @@ import React, { useRef } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import ImageResizer from "./ImageResizer";
 
-export default (props: any) => {
+const ImageResize = (props: any) => {
   const imageRef = useRef<HTMLImageElement>(null);
 
   const handleResizeEnd = (width: number, height: number) => {
@@ -42,3 +42,5 @@ export default (props: any) => {
     </NodeViewWrapper>
   );
 };
+
+export default ImageResize;

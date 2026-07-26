@@ -71,7 +71,9 @@ if (typeof window !== "undefined") {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) current = { ...DEFAULT_PREFS, ...JSON.parse(raw) };
-  } catch {}
+  } catch {
+    // Unreadable or corrupt stored prefs: fall back to DEFAULT_PREFS.
+  }
 }
 
 function notify() {
@@ -86,7 +88,9 @@ export function setEditorPrefs(patch: Partial<EditorPrefs>) {
   current = { ...current, ...patch };
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-  } catch {}
+  } catch {
+    // Persistence is optional (private mode / quota); in-memory prefs still apply.
+  }
   notify();
 }
 
@@ -94,7 +98,9 @@ export function resetEditorPrefs() {
   current = DEFAULT_PREFS;
   try {
     window.localStorage.removeItem(STORAGE_KEY);
-  } catch {}
+  } catch {
+    // Persistence is optional (private mode / quota); in-memory reset still applies.
+  }
   notify();
 }
 

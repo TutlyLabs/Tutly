@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import {
   requireCourseReadAccess,
   requireUserInOrganization,
@@ -23,6 +24,8 @@ function requireSelf(callerId: string, targetUserId: string) {
     });
   }
 }
+
+const logger = createLogger("api:notifications");
 
 export const notificationsRouter = createTRPCRouter({
   getNotifications: protectedProcedure.query(async ({ ctx }) => {
@@ -179,7 +182,9 @@ export const notificationsRouter = createTRPCRouter({
       void sendPushToUser(ctx.db, input.userId, {
         title: "Tutly",
         body: input.message,
-      }).catch((err) => console.error("push send failed:", err));
+      }).catch((err: unknown) =>
+        logger.error({ err, userId: input.userId }, "push send failed"),
+      );
 
       return notification;
     }),
@@ -253,7 +258,9 @@ export const notificationsRouter = createTRPCRouter({
             title: "Tutly",
             body: input.message,
             url: input.customLink ?? undefined,
-          }).catch((err) => console.error("push send failed:", err)),
+          }).catch((err: unknown) =>
+            logger.error({ err, userId: enrolled.user.id }, "push send failed"),
+          ),
         ),
       );
 
@@ -292,7 +299,10 @@ export const notificationsRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error handling notification redirect:", error);
+        logger.error(
+          { err: error, notificationId: input.notificationId },
+          "failed to handle notification redirect",
+        );
         return {
           success: false,
           error: "Failed to handle notification redirect",
@@ -347,7 +357,10 @@ export const notificationsRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching notification redirect data:", error);
+        logger.error(
+          { err: error, notificationId: input.notificationId },
+          "failed to fetch notification redirect data",
+        );
         return {
           success: false,
           error: "Failed to fetch notification redirect data",

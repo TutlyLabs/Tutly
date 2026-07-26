@@ -1,7 +1,6 @@
 import js from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
 import turboPlugin from "eslint-config-turbo/flat";
-import onlyWarn from "eslint-plugin-only-warn";
 import tseslint from "typescript-eslint";
 import globals from "globals";
 import nextVitals from "eslint-config-next/core-web-vitals";
@@ -12,13 +11,11 @@ import nextVitals from "eslint-config-next/core-web-vitals";
  */
 export default [
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   eslintConfigPrettier,
   ...turboPlugin,
   ...nextVitals,
   {
-    plugins: {
-      "only-warn": onlyWarn,
-    },
     languageOptions: {
       globals: {
         ...globals.node,

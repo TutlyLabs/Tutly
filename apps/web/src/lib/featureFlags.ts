@@ -17,7 +17,9 @@ export async function isFeatureEnabled(
         !roles || roles.length === 0 || roles.includes(user.role);
       return Boolean(flag.enabled && roleAllowed);
     }
-  } catch {}
+  } catch {
+    // Flags must never break a request: an unreachable/failing lookup means disabled.
+  }
   return false;
 }
 
@@ -30,6 +32,8 @@ export async function getFeatureFlagPayload<T = unknown>(
     if (flag && flag.payload != null) {
       return flag.payload as T;
     }
-  } catch {}
+  } catch {
+    // Flags must never break a request: an unreachable/failing lookup means no payload.
+  }
   return undefined;
 }

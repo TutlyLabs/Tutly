@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import {
   requireClassReadAccess,
   requireCourseManageAccess,
@@ -15,6 +16,8 @@ import {
   permissionProcedure,
   protectedProcedure,
 } from "../trpc";
+
+const logger = createLogger("api:courses");
 
 export async function getEnrolledCourseIds(username: string) {
   const enrolledCourses = await db.enrolledUsers.findMany({
@@ -172,7 +175,7 @@ export const coursesRouter = createTRPCRouter({
 
       return { success: true, data: courses };
     } catch (e) {
-      console.error("Detailed error while fetching courses:", e);
+      logger.error({ err: e, userId: currentUser.id }, "failed to fetch courses");
       return {
         error: "Failed to fetch courses",
         details: e instanceof Error ? e.message : String(e),
@@ -645,7 +648,7 @@ export const coursesRouter = createTRPCRouter({
 
         return { success: true, data: classDetails };
       } catch (error) {
-        console.error("Error fetching class details:", error);
+        logger.error({ err: error, classId: input.id }, "failed to fetch class details");
         return { success: false, error: "Failed to fetch class details" };
       }
     }),
@@ -977,7 +980,7 @@ export const coursesRouter = createTRPCRouter({
           data: allUsers,
         };
       } catch (error) {
-        console.error("Error fetching course management users:", error);
+        logger.error({ err: error, courseId: input.courseId }, "failed to fetch course management users");
         return {
           success: false,
           error: "Failed to fetch course management users",
@@ -1013,7 +1016,7 @@ export const coursesRouter = createTRPCRouter({
         },
       };
     } catch (error) {
-      console.error("Error checking user enrolled courses:", error);
+      logger.error({ err: error }, "failed to check enrolled courses");
       return {
         success: false,
         error: "Failed to check enrolled courses",

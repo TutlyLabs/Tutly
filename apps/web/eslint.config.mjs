@@ -4,28 +4,20 @@ import baseConfig from "@tutly/eslint-config/next";
 const config = [
   ...baseConfig,
   {
+    // Known backlogs. These stay reported and the package is capped with
+    // --max-warnings, so the count cannot grow, but clearing them is a
+    // separate piece of work: the `any` and unused-binding counts are in the
+    // hundreds, and the react-hooks compiler rules require behavioural changes
+    // that cannot be made mechanically.
     files: ["**/*.ts", "**/*.tsx"],
     rules: {
-      "@typescript-eslint/array-type": "off",
-      "@typescript-eslint/consistent-type-definitions": "off",
-      "@typescript-eslint/consistent-type-imports": "off",
-      "@typescript-eslint/require-await": "off",
-      "@typescript-eslint/no-misused-promises": "off",
-      "@typescript-eslint/no-non-null-assertion": "off",
-      "@typescript-eslint/no-unused-expressions": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/no-unsafe-call": "off",
-      "@typescript-eslint/no-unsafe-member-access": "off",
-      "@typescript-eslint/no-unsafe-return": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unsafe-argument": "off",
-      "@typescript-eslint/prefer-nullish-coalescing": "off",
-      "@typescript-eslint/consistent-indexed-object-style": "off",
-      "@typescript-eslint/non-nullable-type-assertion-style": "off",
-      "@typescript-eslint/no-unnecessary-type-assertion": "off",
-      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/immutability": "warn",
     },
   },
   {

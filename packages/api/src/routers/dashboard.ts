@@ -1,6 +1,10 @@
 import { Role } from "@tutly/db/browser";
 
+import { createLogger } from "@tutly/logger";
+
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const logger = createLogger("api:dashboard");
 
 export const dashboardRouter = createTRPCRouter({
   getStudentDashboardData: protectedProcedure.query(async ({ ctx }) => {
@@ -79,7 +83,7 @@ export const dashboardRouter = createTRPCRouter({
 
       return { success: true, data: dashboardData };
     } catch (error) {
-      console.error("Error fetching student dashboard data:", error);
+      logger.error({ err: error, userId: currentUser.id }, "failed to fetch student dashboard data");
       return {
         success: false,
         error: "Failed to fetch student dashboard data",
@@ -164,7 +168,7 @@ export const dashboardRouter = createTRPCRouter({
 
       return { success: true, data: dashboardData };
     } catch (error) {
-      console.error("Error fetching mentor dashboard data:", error);
+      logger.error({ err: error, userId: currentUser.id }, "failed to fetch mentor dashboard data");
       return {
         success: false,
         error: "Failed to fetch mentor dashboard data",
@@ -232,7 +236,7 @@ export const dashboardRouter = createTRPCRouter({
 
       return { success: true, data: dashboardData };
     } catch (error) {
-      console.error("Error fetching instructor dashboard data:", error);
+      logger.error({ err: error, userId: currentUser.id }, "failed to fetch instructor dashboard data");
       return {
         success: false,
         error: "Failed to fetch instructor dashboard data",
@@ -338,7 +342,7 @@ export const dashboardRouter = createTRPCRouter({
 
       return { success: true, data: { courses } };
     } catch (error) {
-      console.error("Error fetching course selector data:", error);
+      logger.error({ err: error, userId: currentUser.id }, "failed to fetch course selector data");
       return {
         success: false,
         error: "Failed to fetch course selector data",

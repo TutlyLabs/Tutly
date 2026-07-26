@@ -315,8 +315,8 @@ export default function Class({
 
     const PATTERNS = {
       YOUTUBE:
-        /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-      DRIVE: /\/file\/d\/([^\/]+)/,
+        /(?:youtube\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+      DRIVE: /\/file\/d\/([^/]+)/,
     };
 
     const pattern = PATTERNS[videoType as keyof typeof PATTERNS];

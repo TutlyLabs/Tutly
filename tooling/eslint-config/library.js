@@ -1,7 +1,6 @@
 import js from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
 import turboPlugin from "eslint-config-turbo/flat";
-import onlyWarn from "eslint-plugin-only-warn";
 import tseslint from "typescript-eslint";
 import globals from "globals";
 
@@ -11,12 +10,10 @@ import globals from "globals";
  */
 export default [
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   eslintConfigPrettier,
   ...turboPlugin,
   {
-    plugins: {
-      "only-warn": onlyWarn,
-    },
     languageOptions: {
       globals: {
         ...globals.node,

@@ -307,7 +307,6 @@ export default function BulkImport({
             (value) => value !== undefined && value !== "",
           ),
         );
-        console.log("Imported data:", validData);
         onImport(validData);
         setIsOpen(false);
         setGridData([{}]);

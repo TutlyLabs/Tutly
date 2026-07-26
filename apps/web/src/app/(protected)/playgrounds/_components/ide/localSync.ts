@@ -188,11 +188,15 @@ export async function startLocalSync(): Promise<LocalSyncSession | null> {
         if (!prev) {
           try {
             added[path] = await readText(info.handle);
-          } catch {}
+          } catch {
+            // File vanished or is unreadable mid-scan; skip it and pick it up next poll.
+          }
         } else if (prev.mtime !== info.mtime || prev.size !== info.size) {
           try {
             changed[path] = await readText(info.handle);
-          } catch {}
+          } catch {
+            // File vanished or is unreadable mid-scan; skip it and pick it up next poll.
+          }
         }
       }
       const snapshotPaths = Array.from(snapshot.keys());

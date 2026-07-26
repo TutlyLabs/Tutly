@@ -112,7 +112,9 @@ export const useFileUpload = (options: FileUploadOptions) => {
       if (!updatedFile) throw new Error("Failed to mark file as uploaded");
 
       toast.success("File uploaded successfully");
-      onUpload && (await onUpload(updatedFile));
+      if (onUpload) {
+        await onUpload(updatedFile);
+      }
       return updatedFile;
     } catch (error) {
       toast.error(

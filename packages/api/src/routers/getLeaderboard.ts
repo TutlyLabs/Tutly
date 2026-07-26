@@ -2,8 +2,11 @@ import type { Course, submission, User } from "@tutly/db/browser";
 import { z } from "zod";
 
 import { db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
 import { requireCourseReadAccess } from "../lib/authorization";
 import { createTRPCRouter, permissionProcedure } from "../trpc";
+
+const logger = createLogger("api:leaderboard");
 
 export type LeaderboardSubmission = {
   totalPoints: number;
@@ -103,7 +106,10 @@ async function getLeaderboardDataForUser(
 
     return { success: true, data: sortedSubmissions };
   } catch (error) {
-    console.error("Error in getLeaderboardData:", error);
+    logger.error(
+      { err: error, username, organizationId },
+      "failed to get leaderboard data",
+    );
     return { error: "Failed to get leaderboard data" };
   }
 }
@@ -274,7 +280,7 @@ export const leaderboardRouter = createTRPCRouter({
         },
       };
     } catch (error) {
-      console.error("Error fetching leaderboard data:", error);
+      logger.error({ err: error, userId: ctx.session.user.id }, "failed to fetch leaderboard data");
       return {
         success: false,
         error: "Failed to fetch leaderboard data",
@@ -634,7 +640,7 @@ export const leaderboardRouter = createTRPCRouter({
           },
         };
       } catch (error) {
-        console.error("Error fetching tutor leaderboard data:", error);
+        logger.error({ err: error, userId: ctx.session.user.id }, "failed to fetch tutor leaderboard data");
         return {
           success: false,
           error: "Failed to fetch tutor leaderboard data",

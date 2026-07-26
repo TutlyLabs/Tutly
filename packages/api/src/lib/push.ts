@@ -1,7 +1,10 @@
-import { cert, getApp, getApps, initializeApp } from "firebase-admin/app";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getMessaging, type Message } from "firebase-admin/messaging";
 
 import type { db as Db } from "@tutly/db";
+import { createLogger } from "@tutly/logger";
+
+const logger = createLogger("api:push");
 
 const APP_NAME = "tutly-fcm";
 
@@ -11,7 +14,7 @@ const getServiceAccount = () => {
   try {
     return JSON.parse(raw) as Record<string, string>;
   } catch (err) {
-    console.error("FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON:", err);
+    logger.error({ err }, "firebase service account json is not valid json");
     return null;
   }
 };

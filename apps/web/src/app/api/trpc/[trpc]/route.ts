@@ -2,7 +2,10 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { type NextRequest } from "next/server";
 
 import { appRouter, createTRPCContext } from "@tutly/api";
+import { createLogger } from "@tutly/logger";
 import { auth } from "@/server/auth";
+
+const logger = createLogger("web:api:trpc");
 
 const handler = async (req: NextRequest) => {
   const session = await auth.api.getSession({ headers: req.headers });
@@ -23,9 +26,7 @@ const handler = async (req: NextRequest) => {
     onError:
       process.env.NODE_ENV === "development"
         ? ({ path, error }) => {
-            console.error(
-              `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`,
-            );
+            logger.error({ err: error, path: path ?? "<no-path>" }, "trpc handler failed");
           }
         : undefined,
   });
