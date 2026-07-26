@@ -253,7 +253,10 @@ I'm your **smart AI assistant** for Tutly. I can help you explore your learning 
         const assistantMessage: Message = {
           id: `assistant-${Date.now()}`,
           role: "assistant",
-          content: aiResponse,
+          // The planner can return results without a prose summary; show the
+          // table rather than an empty assistant bubble.
+          content:
+            aiResponse ?? "Here are the results for your question.",
           timestamp: new Date(),
         };
         messages.push(assistantMessage);
