@@ -10,6 +10,7 @@ import {
   ProtectedShell,
   useAuthSession,
 } from "@/components/auth/ProtectedShell";
+import { useCan } from "@/lib/permissions/client";
 
 export default function SuperAdminLayout({
   children,
@@ -25,8 +26,11 @@ export default function SuperAdminLayout({
 
 function SuperAdminContent({ children }: { children: React.ReactNode }) {
   const { user } = useAuthSession();
+  // `organization:list` is granted to SUPER_ADMIN alone.
+  const isSuperAdmin = useCan("organization", "list");
+
   if (!user) return null;
-  if (user.role !== "SUPER_ADMIN") return <Navigate to="/dashboard" />;
+  if (!isSuperAdmin) return <Navigate to="/dashboard" />;
 
   return (
     <LayoutProvider>

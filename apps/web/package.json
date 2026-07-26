@@ -31,7 +31,8 @@
     "postinstall": "node scripts/copy-vscode-assets.js && node scripts/copy-sandpack-assets.js",
     "preview": "next build --webpack && next start",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
@@ -199,7 +200,8 @@
     "sharp": "^0.34.5",
     "tailwindcss": "^4.1.18",
     "typescript": "5.9.3",
-    "typescript-eslint": "^8.49.0"
+    "typescript-eslint": "^8.49.0",
+    "vitest": "4.1.10"
   },
   "ct3aMetadata": {
     "initVersion": "7.39.3"
