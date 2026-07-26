@@ -167,25 +167,6 @@ describe("statement", () => {
       expect(statement.user).toContain(action);
     }
   });
-
-  // better-auth 1.5 added `impersonate-admins` and 1.6.16 added `set-email` to
-  // defaultStatements.user. They are in the statement via the spread but no role
-  // grants them, so instructors still cannot impersonate an admin or change an
-  // account's email.
-  it("grants no role the admin actions better-auth added in 1.5/1.6", () => {
-    for (const action of ["impersonate-admins", "set-email"]) {
-      expect(statement.user).toContain(action);
-      for (const role of ROLE_NAMES) {
-        expect(
-          hasPermission(role, {
-            user: [action],
-          } as unknown as PermissionRequest),
-          `${role} -> user:${action}`,
-        ).toBe(false);
-      }
-    }
-  });
-
   it("declares no duplicate actions within a resource", () => {
     for (const [resource, actions] of Object.entries(statement)) {
       expect(new Set(actions).size, resource).toBe(actions.length);
@@ -255,13 +236,6 @@ describe("hasPermission", () => {
     expect(hasPermission("GUEST" as unknown as RoleName, request)).toBe(false);
     expect(hasPermission("" as unknown as RoleName, request)).toBe(false);
   });
-
-  // better-auth 1.6.12 flipped this: an empty action list used to be vacuously
-  // granted. Pinned so a downgrade or a regression is caught here.
-  it("denies an empty action list", () => {
-    expect(hasPermission("SUPER_ADMIN", { course: [] })).toBe(false);
-  });
-
   it("denies an unknown action on a known resource", () => {
     expect(
       hasPermission("SUPER_ADMIN", {

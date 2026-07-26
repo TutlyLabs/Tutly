@@ -108,6 +108,7 @@
     "@tutly/db": "workspace:*",
     "@tutly/fsrelay": "workspace:*",
     "@tutly/hooks": "workspace:*",
+    "@tutly/logger": "workspace:*",
     "@tutly/storage": "workspace:*",
     "@tutly/ui": "workspace:*",
     "@tutly/utils": "workspace:*",

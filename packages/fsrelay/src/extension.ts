@@ -133,7 +133,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 async function activateGitFsMode(context: vscode.ExtensionContext, config?: ExtensionConfig) {
-  let assignmentId = config?.assignmentId;
+  const assignmentId = config?.assignmentId;
   const isInstructor = config?.isInstructor || false;
 
   if (!assignmentId) {
