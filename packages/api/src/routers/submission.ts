@@ -31,6 +31,12 @@ import {
 import { enqueueTestRun } from "../lib/runner-client";
 import { locatorFrom, locatorSelect } from "../lib/storage-locator";
 import {
+  assignmentIdSchema,
+  courseIdSchema,
+  sandpackFilesSchema,
+  usernameSchema,
+} from "../schemas/common";
+import {
   filterSubmissionInput,
   isTemplateOnly,
   mergeForAudience,
@@ -144,16 +150,16 @@ export const submissionRouter = createTRPCRouter({
     .input(
       z.object({
         assignmentDetails: z.object({
-          id: z.string(),
+          id: assignmentIdSchema,
           maxSubmissions: z.number(),
           class: z.object({
-            courseId: z.string(),
+            courseId: courseIdSchema,
           }),
         }),
-        files: z.any(),
+        files: sandpackFilesSchema,
         mentorDetails: z.object({
           mentor: z.object({
-            username: z.string(),
+            username: usernameSchema,
           }),
         }),
       }),

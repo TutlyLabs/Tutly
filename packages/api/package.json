@@ -19,6 +19,10 @@
     "./lib/template-policy": {
       "types": "./src/lib/template-policy.ts",
       "default": "./src/lib/template-policy.ts"
+    },
+    "./schemas": {
+      "types": "./src/schemas/common.ts",
+      "default": "./src/schemas/common.ts"
     }
   },
   "scripts": {
