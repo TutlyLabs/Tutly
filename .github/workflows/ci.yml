@@ -1,8 +1,11 @@
 name: CI
 
 on:
+  # "**" not "*": in GitHub glob syntax `*` does not match `/`, so a base
+  # branch like `refactor/01-permissions` matched nothing and stacked PRs
+  # silently ran no CI at all.
   pull_request:
-    branches: ["*"]
+    branches: ["**"]
   push:
     branches: ["main"]
   merge_group:
