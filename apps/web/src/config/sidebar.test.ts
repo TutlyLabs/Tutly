@@ -26,28 +26,44 @@ const LEGACY_NAV: Record<Role, NavShape[]> = {
   INSTRUCTOR: [
     { title: "Dashboard", url: "/dashboard" },
     { title: "Schedule", url: "/schedule" },
-    { title: "Learning", url: "#", items: [
+    {
+      title: "Learning",
+      url: "#",
+      items: [
         { title: "Courses", url: "/courses" },
         { title: "Notes", url: "/notes" },
-    ] },
-    { title: "Assessment", url: "#", items: [
+      ],
+    },
+    {
+      title: "Assessment",
+      url: "#",
+      items: [
         { title: "Assignments", url: "/tutor/assignments" },
         { title: "Submissions", url: "/tutor/assignments/submissions" },
         { title: "Leaderboard", url: "/tutor/leaderboard" },
         { title: "Attendance", url: "/tutor/attendance" },
         { title: "Video runs", url: "/tutor/video-runs" },
-    ] },
-    { title: "Analytics", url: "#", items: [
+      ],
+    },
+    {
+      title: "Analytics",
+      url: "#",
+      items: [
         { title: "Glimpse", url: "/tutor/glimpse" },
         { title: "Statistics", url: "/tutor/statistics" },
         { title: "Report", url: "/tutor/report" },
-    ] },
+      ],
+    },
     { title: "Community", url: "/community" },
     { title: "Notifications", url: "/notifications" },
-    { title: "Management", url: "#", items: [
+    {
+      title: "Management",
+      url: "#",
+      items: [
         { title: "Activity", url: "/tutor/activity" },
         { title: "Manage", url: "/tutor/manage-users" },
-    ] },
+      ],
+    },
     { title: "Bookmarks", url: "/bookmarks" },
     { title: "Downloads", url: "/downloads" },
     { title: "Playgrounds", url: "/playgrounds" },
@@ -56,28 +72,44 @@ const LEGACY_NAV: Record<Role, NavShape[]> = {
   ADMIN: [
     { title: "Dashboard", url: "/dashboard" },
     { title: "Schedule", url: "/schedule" },
-    { title: "Learning", url: "#", items: [
+    {
+      title: "Learning",
+      url: "#",
+      items: [
         { title: "Courses", url: "/courses" },
         { title: "Notes", url: "/notes" },
-    ] },
-    { title: "Assessment", url: "#", items: [
+      ],
+    },
+    {
+      title: "Assessment",
+      url: "#",
+      items: [
         { title: "Assignments", url: "/tutor/assignments" },
         { title: "Submissions", url: "/tutor/assignments/submissions" },
         { title: "Leaderboard", url: "/tutor/leaderboard" },
         { title: "Attendance", url: "/tutor/attendance" },
         { title: "Video runs", url: "/tutor/video-runs" },
-    ] },
-    { title: "Analytics", url: "#", items: [
+      ],
+    },
+    {
+      title: "Analytics",
+      url: "#",
+      items: [
         { title: "Glimpse", url: "/tutor/glimpse" },
         { title: "Statistics", url: "/tutor/statistics" },
         { title: "Report", url: "/tutor/report" },
-    ] },
+      ],
+    },
     { title: "Community", url: "/community" },
     { title: "Notifications", url: "/notifications" },
-    { title: "Management", url: "#", items: [
+    {
+      title: "Management",
+      url: "#",
+      items: [
         { title: "Activity", url: "/tutor/activity" },
         { title: "Manage", url: "/tutor/manage-users" },
-    ] },
+      ],
+    },
     { title: "Bookmarks", url: "/bookmarks" },
     { title: "Downloads", url: "/downloads" },
     { title: "Playgrounds", url: "/playgrounds" },
@@ -86,27 +118,43 @@ const LEGACY_NAV: Record<Role, NavShape[]> = {
   MENTOR: [
     { title: "Dashboard", url: "/dashboard" },
     { title: "Schedule", url: "/schedule" },
-    { title: "Learning", url: "#", items: [
+    {
+      title: "Learning",
+      url: "#",
+      items: [
         { title: "Courses", url: "/courses" },
         { title: "Notes", url: "/notes" },
-    ] },
-    { title: "Assessment", url: "#", items: [
+      ],
+    },
+    {
+      title: "Assessment",
+      url: "#",
+      items: [
         { title: "Assignments", url: "/tutor/assignments" },
         { title: "Submissions", url: "/tutor/assignments/submissions" },
         { title: "Leaderboard", url: "/tutor/leaderboard" },
         { title: "Attendance", url: "/tutor/attendance" },
-    ] },
-    { title: "Analytics", url: "#", items: [
+      ],
+    },
+    {
+      title: "Analytics",
+      url: "#",
+      items: [
         { title: "Glimpse", url: "/tutor/glimpse" },
         { title: "Statistics", url: "/tutor/statistics" },
         { title: "Report", url: "/tutor/report" },
-    ] },
+      ],
+    },
     { title: "Community", url: "/community" },
     { title: "Notifications", url: "/notifications" },
-    { title: "Management", url: "#", items: [
+    {
+      title: "Management",
+      url: "#",
+      items: [
         { title: "Activity", url: "/tutor/activity" },
         { title: "Manage", url: "/tutor/manage-users" },
-    ] },
+      ],
+    },
     { title: "Bookmarks", url: "/bookmarks" },
     { title: "Downloads", url: "/downloads" },
     { title: "Playgrounds", url: "/playgrounds" },
@@ -115,18 +163,28 @@ const LEGACY_NAV: Record<Role, NavShape[]> = {
   STUDENT: [
     { title: "Dashboard", url: "/dashboard" },
     { title: "Schedule", url: "/schedule" },
-    { title: "Learning", url: "#", items: [
+    {
+      title: "Learning",
+      url: "#",
+      items: [
         { title: "Courses", url: "/courses" },
         { title: "Notes", url: "/notes" },
-    ] },
-    { title: "Assessment", url: "#", items: [
+      ],
+    },
+    {
+      title: "Assessment",
+      url: "#",
+      items: [
         { title: "Assignments", url: "/assignments" },
         { title: "Leaderboard", url: "/leaderboard" },
         { title: "Coding Profiles", url: "/coding-platforms/leaderboard" },
-    ] },
-    { title: "Analytics", url: "#", items: [
-        { title: "Statistics", url: "/statistics" },
-    ] },
+      ],
+    },
+    {
+      title: "Analytics",
+      url: "#",
+      items: [{ title: "Statistics", url: "/statistics" }],
+    },
     { title: "Community", url: "/community" },
     { title: "Notifications", url: "/notifications" },
     { title: "Bookmarks", url: "/bookmarks" },
@@ -139,9 +197,7 @@ const LEGACY_NAV: Record<Role, NavShape[]> = {
 /** Titles and urls only — icons are React components and never varied by role. */
 function shape(items: readonly NavShape[]): NavShape[] {
   return items.map(({ title, url, items: children }) =>
-    children
-      ? { title, url, items: shape(children) }
-      : { title, url },
+    children ? { title, url, items: shape(children) } : { title, url },
   );
 }
 

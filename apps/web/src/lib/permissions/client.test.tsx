@@ -65,16 +65,24 @@ describe("useCanAny / useCanAll", () => {
   it("useCanAny needs one passing check", () => {
     expect(
       hook(() =>
-        useCanAny([{ all: [{ course: ["manage"] }] }, { all: [{ course: ["list"] }] }]),
+        useCanAny([
+          { all: [{ course: ["manage"] }] },
+          { all: [{ course: ["list"] }] },
+        ]),
       ),
     ).toBe(true);
-    expect(hook(() => useCanAny([{ all: [{ course: ["manage"] }] }]))).toBe(false);
+    expect(hook(() => useCanAny([{ all: [{ course: ["manage"] }] }]))).toBe(
+      false,
+    );
   });
 
   it("useCanAll needs every check, and denies an empty list", () => {
     expect(
       hook(() =>
-        useCanAll([{ all: [{ course: ["list"] }] }, { all: [{ note: ["list"] }] }]),
+        useCanAll([
+          { all: [{ course: ["list"] }] },
+          { all: [{ note: ["list"] }] },
+        ]),
       ),
     ).toBe(true);
     expect(hook(() => useCanAll([]))).toBe(false);
@@ -128,14 +136,24 @@ describe("<Can>", () => {
   it("supports any / all / check forms", () => {
     expect(
       render(
-        <Can any={[{ all: [{ course: ["manage"] }] }, { all: [{ course: ["list"] }] }]}>
+        <Can
+          any={[
+            { all: [{ course: ["manage"] }] },
+            { all: [{ course: ["list"] }] },
+          ]}
+        >
           <b>ok</b>
         </Can>,
       ),
     ).toBe("<b>ok</b>");
     expect(
       render(
-        <Can all={[{ all: [{ course: ["list"] }] }, { all: [{ course: ["manage"] }] }]}>
+        <Can
+          all={[
+            { all: [{ course: ["list"] }] },
+            { all: [{ course: ["manage"] }] },
+          ]}
+        >
           <b>ok</b>
         </Can>,
       ),

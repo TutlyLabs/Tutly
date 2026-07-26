@@ -266,7 +266,10 @@ async function handleGitRequest(
       headers: safeHeaders,
     });
   } catch (error) {
-    logger.error({ err: error, repoPath: targetRepoPath }, "git proxy request failed");
+    logger.error(
+      { err: error, repoPath: targetRepoPath },
+      "git proxy request failed",
+    );
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

@@ -28,7 +28,11 @@ describe("can", () => {
   });
 
   it("fails closed for an unknown role", () => {
-    const unknown = { role: "PRINCIPAL", isAdmin: false, adminForCourseIds: [] };
+    const unknown = {
+      role: "PRINCIPAL",
+      isAdmin: false,
+      adminForCourseIds: [],
+    };
     expect(
       can(unknown as unknown as PermissionContext, {
         all: [{ course: ["list"] }],
@@ -66,7 +70,10 @@ describe("can", () => {
 
   it("rejects when any entry of `none` is granted", () => {
     expect(
-      can(ctx(), { all: [{ course: ["list"] }], none: [{ submission: ["list"] }] }),
+      can(ctx(), {
+        all: [{ course: ["list"] }],
+        none: [{ submission: ["list"] }],
+      }),
     ).toBe(true);
     expect(
       can(ctx({ role: "MENTOR" }), {
@@ -120,9 +127,9 @@ describe("canDo", () => {
   });
 
   it("requires every action listed", () => {
-    expect(canDo(ctx({ role: "MENTOR" }), "submission", "list", "evaluate")).toBe(
-      true,
-    );
+    expect(
+      canDo(ctx({ role: "MENTOR" }), "submission", "list", "evaluate"),
+    ).toBe(true);
     expect(canDo(ctx({ role: "MENTOR" }), "submission", "list", "update")).toBe(
       false,
     );
@@ -179,9 +186,9 @@ describe("isCourseAdmin", () => {
 
 describe("the two isAdmin readings", () => {
   it("canActAsInstructor restricts an isAdmin instructor", () => {
-    expect(canActAsInstructor(ctx({ role: "INSTRUCTOR", isAdmin: false }))).toBe(
-      true,
-    );
+    expect(
+      canActAsInstructor(ctx({ role: "INSTRUCTOR", isAdmin: false })),
+    ).toBe(true);
     expect(canActAsInstructor(ctx({ role: "INSTRUCTOR", isAdmin: true }))).toBe(
       false,
     );
@@ -195,7 +202,9 @@ describe("the two isAdmin readings", () => {
     expect(
       canEscalateViaIsAdmin(ctx({ role: "STUDENT", isAdmin: true }), check),
     ).toBe(true);
-    expect(canEscalateViaIsAdmin(ctx({ role: "INSTRUCTOR" }), check)).toBe(true);
+    expect(canEscalateViaIsAdmin(ctx({ role: "INSTRUCTOR" }), check)).toBe(
+      true,
+    );
   });
 
   it("the two readings genuinely disagree for an isAdmin instructor", () => {

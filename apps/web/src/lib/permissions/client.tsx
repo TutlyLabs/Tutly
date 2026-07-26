@@ -64,10 +64,34 @@ interface CanBaseProps {
  */
 export type CanProps<R extends Resource> = CanBaseProps &
   (
-    | { resource: R; action: ActionsOf<R>; check?: never; any?: never; all?: never }
-    | { resource?: never; action?: never; check: PermissionCheck; any?: never; all?: never }
-    | { resource?: never; action?: never; check?: never; any: readonly PermissionCheck[]; all?: never }
-    | { resource?: never; action?: never; check?: never; any?: never; all: readonly PermissionCheck[] }
+    | {
+        resource: R;
+        action: ActionsOf<R>;
+        check?: never;
+        any?: never;
+        all?: never;
+      }
+    | {
+        resource?: never;
+        action?: never;
+        check: PermissionCheck;
+        any?: never;
+        all?: never;
+      }
+    | {
+        resource?: never;
+        action?: never;
+        check?: never;
+        any: readonly PermissionCheck[];
+        all?: never;
+      }
+    | {
+        resource?: never;
+        action?: never;
+        check?: never;
+        any?: never;
+        all: readonly PermissionCheck[];
+      }
   );
 
 /**

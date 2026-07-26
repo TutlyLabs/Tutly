@@ -26,16 +26,22 @@ jobs:
       # ${{ secrets.RELEASE_TOKEN }} in both places below.
       - name: Generate release token
         id: app-token
+        if: vars.RELEASE_APP_ID != ''
         uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
+      # Both uses below fall back to GITHUB_TOKEN until the App is configured,
+      # so this workflow stays green. Tags pushed with the fallback will NOT
+      # trigger the production deploys — that is the whole reason the App
+      # exists. See docs/ci-remediation.md.
+
       - name: Checkout Repo
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          token: ${{ steps.app-token.outputs.token }}
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
 
       - name: Setup
         uses: ./tooling/github/setup
@@ -48,5 +54,5 @@ jobs:
           commit: "chore(release): version packages"
           title: "chore(release): version packages"
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -26,7 +26,10 @@ const handler = async (req: NextRequest) => {
     onError:
       process.env.NODE_ENV === "development"
         ? ({ path, error }) => {
-            logger.error({ err: error, path: path ?? "<no-path>" }, "trpc handler failed");
+            logger.error(
+              { err: error, path: path ?? "<no-path>" },
+              "trpc handler failed",
+            );
           }
         : undefined,
   });

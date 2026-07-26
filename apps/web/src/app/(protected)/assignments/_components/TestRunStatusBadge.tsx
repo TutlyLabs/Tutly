@@ -105,8 +105,7 @@ export function TestRunStatusBadge({
     },
   );
 
-  const latest =
-    query.data?.[0] ?? initialRun ?? undefined;
+  const latest = query.data?.[0] ?? initialRun ?? undefined;
   const badge = badgeFor(latest);
 
   return (

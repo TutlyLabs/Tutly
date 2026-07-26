@@ -148,7 +148,10 @@ export async function GET(req: NextRequest) {
         );
     }
   } catch (error: any) {
-    logger.error({ err: error, method: "GET", operation }, "fs relay request failed");
+    logger.error(
+      { err: error, method: "GET", operation },
+      "fs relay request failed",
+    );
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: 500 },
@@ -291,7 +294,10 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error: any) {
-    logger.error({ err: error, method: "POST", operation }, "fs relay request failed");
+    logger.error(
+      { err: error, method: "POST", operation },
+      "fs relay request failed",
+    );
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: error.status || 500 },

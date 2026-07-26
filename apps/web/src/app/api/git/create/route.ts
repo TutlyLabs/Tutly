@@ -228,7 +228,10 @@ readonly:
           },
         );
       } catch (configError) {
-        logger.warn({ err: configError, repoName }, "failed to add initial config.yaml");
+        logger.warn(
+          { err: configError, repoName },
+          "failed to add initial config.yaml",
+        );
         // Don't fail the whole operation if config creation fails
       }
 
