@@ -1,37 +1,19 @@
 name: 🐞 Bug Report
-description: Create a bug report to help us improve
+description: Something is broken? Tell us about it.
 title: "bug: "
 labels: ["🐞❔ unconfirmed bug"]
 body:
   - type: textarea
     attributes:
-      label: Provide environment information
-      description: |
-        Run this command in your project root and paste the results in a code block:
-        ```bash
-        npx envinfo --system --binaries
-        ```
+      label: What happened?
+      description: What went wrong, and what did you expect instead? Screenshots or a screen recording help a lot.
     validations:
       required: true
   - type: textarea
     attributes:
-      label: Describe the bug
-      description: A clear and concise description of the bug, as well as what you expected to happen when encountering it.
-    validations:
-      required: true
-  - type: input
-    attributes:
-      label: Link to reproduction
-      description: Please provide a link to a reproduction of the bug. Issues without a reproduction repo may be ignored.
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: To reproduce
-      description: Describe how to reproduce your bug. Steps, code snippets, reproduction repos etc.
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: Additional information
-      description: Add any other information related to the bug here, screenshots if applicable.
+      label: How can we reproduce it?
+      description: Rough steps are fine — where you were, what you clicked. Skip this if you're not sure.
+      placeholder: |
+        1. Go to ...
+        2. Click on ...
+        3. See error
