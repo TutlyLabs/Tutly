@@ -53,7 +53,7 @@ export default function EvaluatePage() {
     : null;
 
   return (
-    <PageLayout forceClose>
+    <PageLayout forceClose className="overflow-hidden !p-0">
       <ResizablePanelLayout
         assignmentId={assignmentId}
         assignment={assignmentWithDecodedTemplate}

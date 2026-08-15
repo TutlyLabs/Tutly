@@ -321,6 +321,14 @@ function BundledConsole() {
   );
 }
 
+// Sandpack drops the `title="Run tests"` on its run control, so match the
+// classes it does emit (title kept in case a future version forwards it).
+const SANDPACK_RUN_BUTTON_SELECTOR =
+  '.sp-tests > div > button[title="Run tests"], .sp-tests > div > button.sp-button.sp-icon-standalone';
+
+// Cold bundler boots take a while before the run control mounts.
+const RUN_BUTTON_WAIT_MS = 20000;
+
 function TestsPanel({
   showDetails,
   runRequest,
@@ -341,7 +349,7 @@ function TestsPanel({
 
     const runFromSandpackClient = () => {
       const runButton = rootRef.current?.querySelector<HTMLButtonElement>(
-        'button[title="Run tests"]',
+        SANDPACK_RUN_BUTTON_SELECTOR,
       );
       if (!runButton || runButton.disabled) return false;
 
@@ -372,7 +380,7 @@ function TestsPanel({
     const timeoutId = window.setTimeout(() => {
       observer.disconnect();
       if (!didRun) onRunUnavailable();
-    }, 5000);
+    }, RUN_BUTTON_WAIT_MS);
 
     return () => {
       observer.disconnect();

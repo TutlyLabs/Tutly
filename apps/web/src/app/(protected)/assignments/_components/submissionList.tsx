@@ -48,7 +48,7 @@ export const SubmissionList = ({
   });
 
   return (
-    <div className="max-h-[90vh] overflow-y-scroll">
+    <div className="h-full overflow-y-auto">
       <SortBy />
       <div className="border-b p-2">
         <p className="text-sm font-semibold">

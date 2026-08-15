@@ -29,7 +29,7 @@ const ResizablePanelLayout = ({
   submissionMode,
 }: ResizablePanelLayoutProps) => {
   return (
-    <ResizablePanelGroup direction="horizontal" className="max-h-[95vh] w-full">
+    <ResizablePanelGroup direction="horizontal" className="h-full w-full">
       <ResizablePanel defaultSize={15}>
         <SubmissionList
           assignmentId={assignmentId}

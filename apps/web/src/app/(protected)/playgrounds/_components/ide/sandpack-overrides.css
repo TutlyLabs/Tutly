@@ -11,9 +11,13 @@
   display: block !important;
 }
 
-/* Tutly owns the visible Run Tests button. Keep Sandpack's internal run
-   control mounted so test commands still go through its own client. */
-.tutly-tests-panel > .sp-preview-actions {
+/* Tutly owns the visible Run Tests button; Sandpack's stays mounted (and
+   hidden) so we can click it programmatically. Its wrapper only has a
+   generated class, so match it by the button inside. */
+.tutly-tests-panel > div:has(> button.sp-button.sp-icon-standalone) {
+  display: none !important;
+}
+.tutly-tests-panel > div > button.sp-button.sp-icon-standalone {
   display: none !important;
 }
 

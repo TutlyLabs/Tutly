@@ -188,9 +188,9 @@ const PlaygroundPage = ({
   if (!submission) return <NoDataFound message="No submission found" />;
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <EvaluateSubmission submission={submission} showActions={showActions} />
-      <div className="flex-1 overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-hidden">
         {submission.assignment.submissionMode === "WORKSPACE" ? (
           <WorkspaceSubmissionReview submission={submission} />
         ) : submission.assignment.submissionMode === "EXTERNAL_LINK" ? (
