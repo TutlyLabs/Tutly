@@ -5,25 +5,26 @@ import express from "express";
 
 import { dashboardHtml, getDashboardState } from "./dashboard.js";
 import { db } from "./db.js";
-import { env } from "./env.js";
+import { env, runnerImage } from "./env.js";
 import { logger } from "./logger.js";
 import { enqueue, getQueueSnapshot } from "./queue.js";
 
-function pullJestImage(): Promise<void> {
+function pullRunnerImage(): Promise<void> {
+  const image = runnerImage();
   return new Promise((resolve) => {
-    logger.info({ image: env.BROWSER_IMAGE }, "pulling browser image");
-    const child = spawn("docker", ["pull", env.BROWSER_IMAGE], { stdio: "pipe" });
+    logger.info({ image, mode: env.RUNNER_MODE }, "pulling runner image");
+    const child = spawn("docker", ["pull", image], { stdio: "pipe" });
     let stderr = "";
     child.stderr?.on("data", (c: Buffer) => {
       stderr += c.toString();
     });
     child.on("exit", (code) => {
       if (code === 0) {
-        logger.info({ image: env.BROWSER_IMAGE }, "browser image pull complete");
+        logger.info({ image }, "runner image pull complete");
       } else {
         logger.warn(
-          { image: env.BROWSER_IMAGE, exitCode: code, stderr: stderr.slice(-400) },
-          "browser image pull failed; falling back to local cache",
+          { image, exitCode: code, stderr: stderr.slice(-400) },
+          "runner image pull failed; falling back to local cache",
         );
       }
       resolve();
@@ -46,8 +47,18 @@ await rm(env.WORK_DIR, { recursive: true, force: true }).catch(() => undefined);
 await mkdir(env.WORK_DIR, { recursive: true }).catch(() => undefined);
 logger.info({ workDir: env.WORK_DIR }, "work dir reset");
 
+logger.info(
+  {
+    mode: env.RUNNER_MODE,
+    image: runnerImage(),
+    memoryMb: env.JOB_MEMORY_MB,
+    concurrency: env.CONCURRENCY,
+  },
+  "runner mode",
+);
+
 if (env.USE_DOCKER) {
-  await pullJestImage();
+  await pullRunnerImage();
 }
 
 // Mark abandoned RUNNING rows as ERROR (previous orchestrator crashed mid-job).
@@ -106,7 +117,7 @@ function checkSecret(
 }
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, ...getQueueSnapshot() });
+  res.json({ ok: true, mode: env.RUNNER_MODE, ...getQueueSnapshot() });
 });
 
 app.post("/enqueue", checkSecret, (req, res) => {

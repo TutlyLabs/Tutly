@@ -1,6 +1,7 @@
 name: Deploy Runner Orchestrator to Production
 
-# Builds orchestrator + browser-runner images from the same tag so they stay in sync.
+# Builds orchestrator + both runner images (jest, browser) from the same tag so
+# they stay in sync. RUNNER_MODE on the orchestrator picks which one runs jobs.
 
 on:
   push:
@@ -25,6 +26,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+
+      - name: Build and push jest runner image
+        uses: ./tooling/github/docker-publish
+        with:
+          image: ghcr.io/${{ github.repository_owner }}/tutly-jest-runner
+          dockerfile: apps/runner-orchestrator/Dockerfile.jest
+          tag-pattern: runner-orchestrator@(.*)
+          cache-scope: jest
+          registry-username: ${{ github.actor }}
+          registry-password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout Sandpack fork (prebuilt bundler)
         uses: actions/checkout@v7

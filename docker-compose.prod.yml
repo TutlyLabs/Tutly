@@ -27,6 +27,15 @@ services:
     command: ["--version"]
     profiles: ["build-only"]
 
+  # Needs apps/web/public/sandpack vendored from TutlyLabs/sandbox first.
+  browser-runner-image:
+    image: tutly-browser-runner:1
+    build:
+      context: .
+      dockerfile: ./apps/runner-orchestrator/Dockerfile.browser
+    command: ["--version"]
+    profiles: ["build-only"]
+
   runner-orchestrator:
     container_name: runner-orchestrator
     build:
@@ -39,7 +48,9 @@ services:
       - app_network
     environment:
       USE_DOCKER: "true"
+      RUNNER_MODE: ${RUNNER_MODE:-jest}
       JEST_IMAGE: tutly-jest-runner:1
+      BROWSER_IMAGE: tutly-browser-runner:1
       WORK_DIR: /tmp/tutly-runner
       WORK_DIR_HOST: /tmp/tutly-runner
     volumes:

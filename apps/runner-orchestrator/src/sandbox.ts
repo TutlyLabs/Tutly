@@ -1,4 +1,12 @@
-import { chmod, mkdir, rm, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import {
+  chmod,
+  copyFile,
+  mkdir,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 
 import { env } from "./env.js";
@@ -61,6 +69,8 @@ export type AssembledWorkspace = {
   cwd: string;
   visibleTestPaths: string[];
   hiddenTestPaths: string[];
+  // Counts student-added test files too, not just the template's.
+  hasTestFiles: boolean;
 };
 
 export async function assembleWorkspace(opts: {
@@ -130,20 +140,52 @@ export async function assembleWorkspace(opts: {
     await writeFile(onDisk, content, "utf-8");
   }
 
-  const manifest = {
-    template: template?.template ?? "vanilla",
-    options: template?.options ?? undefined,
-    files: Object.fromEntries(
-      Object.entries(merged).map(([k, v]) => [k, { code: v }]),
-    ),
-  };
-  await writeFile(
-    safeJoin(cwd, "manifest.json"),
-    JSON.stringify(manifest),
-    "utf-8",
-  );
+  if (env.RUNNER_MODE === "browser") {
+    const manifest = {
+      template: template?.template ?? "vanilla",
+      options: template?.options ?? undefined,
+      files: Object.fromEntries(
+        Object.entries(merged).map(([k, v]) => [k, { code: v }]),
+      ),
+    };
+    await writeFile(
+      safeJoin(cwd, "manifest.json"),
+      JSON.stringify(manifest),
+      "utf-8",
+    );
+  } else {
+    await linkJestRuntime(cwd);
+  }
 
-  return { cwd, visibleTestPaths, hiddenTestPaths };
+  const hasTestFiles = Object.keys(merged).some((p) => TEST_FILE_REGEX.test(p));
+
+  return { cwd, visibleTestPaths, hiddenTestPaths, hasTestFiles };
+}
+
+// Docker mode gets these from the image entrypoint; needed for USE_DOCKER=false.
+async function linkJestRuntime(cwd: string): Promise<void> {
+  const sourceModules = path.resolve(env.RUNTIME_DIR, "node_modules");
+  if (existsSync(sourceModules)) {
+    await symlink(sourceModules, safeJoin(cwd, "node_modules"), "dir").catch(
+      () => undefined,
+    );
+  }
+
+  const configFiles = [
+    "jest.config.cjs",
+    "babel.config.cjs",
+    "jest.setup.js",
+    "tsconfig.json",
+    "package.json",
+  ];
+  for (const file of configFiles) {
+    const src = path.resolve(env.RUNTIME_DIR, file);
+    const dest = safeJoin(cwd, file);
+    // Never clobber a file the template or student supplied.
+    if (existsSync(src) && !existsSync(dest)) {
+      await copyFile(src, dest).catch(() => undefined);
+    }
+  }
 }
 
 function sandpackPath(filePath: string): string {

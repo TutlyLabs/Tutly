@@ -1,3 +1,6 @@
+import type { MappedReport, MappedTest } from "./report.js";
+import { visibilityFor } from "./report.js";
+
 type SandpackTest = {
   name: string;
   blocks?: string[];
@@ -32,30 +35,11 @@ export type DriverOutcome = {
   pageErrors?: string[];
 };
 
-export type MappedTest = {
-  testCaseId?: string;
-  title: string;
-  visibility: "VISIBLE" | "HIDDEN";
-  passed: boolean;
-  durationMs?: number;
-  error?: string;
-};
-
-export type MappedReport = {
-  status: "PASSED" | "FAILED" | "ERROR";
-  results: MappedTest[];
-  errorMessage?: string;
-  raw: DriverOutcome;
-};
-
-const HIDDEN_PREFIX = "__hidden__";
-
-function visibilityFor(path: string): "VISIBLE" | "HIDDEN" {
-  const norm = path.startsWith("/") ? path.slice(1) : path;
-  return norm.startsWith(HIDDEN_PREFIX) ? "HIDDEN" : "VISIBLE";
-}
-
-function formatTitle(path: string, blocks: string[] | undefined, name: string): string {
+function formatTitle(
+  path: string,
+  blocks: string[] | undefined,
+  name: string,
+): string {
   const trail = [...(blocks ?? []), name].filter(Boolean).join(" > ");
   return `${path} > ${trail}`;
 }
@@ -75,7 +59,9 @@ export function mapDriverOutcome(outcome: DriverOutcome): MappedReport {
       errorMessage:
         outcome.error ??
         outcome.bootError ??
-        (outcome.pageErrors?.[0] ? `page error: ${outcome.pageErrors[0]}` : "browser runner crashed"),
+        (outcome.pageErrors?.[0]
+          ? `page error: ${outcome.pageErrors[0]}`
+          : "browser runner crashed"),
       raw: outcome,
     };
   }
@@ -105,7 +91,8 @@ export function mapDriverOutcome(outcome: DriverOutcome): MappedReport {
         title: formatTitle(path, t.blocks, t.name),
         visibility: visibilityFor(path),
         passed: t.status === "pass",
-        durationMs: typeof t.duration === "number" ? Math.round(t.duration) : undefined,
+        durationMs:
+          typeof t.duration === "number" ? Math.round(t.duration) : undefined,
         error: t.status === "pass" ? undefined : formatError(t),
       });
     }
