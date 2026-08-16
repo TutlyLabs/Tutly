@@ -63,16 +63,16 @@ function SandboxActions({
       return;
     }
 
-    const allFiles = { ...sandpack.files } as Record<
+    const rawFiles = { ...sandpack.files } as Record<
       string,
-      { code: string } | string
+      { code: string; hidden?: unknown; readOnly?: unknown; active?: unknown } | string
     >;
 
     // /tutly.json — the instructor's edit surface for template/options/customSetup/fileMeta.
-    const tutlyEntry = allFiles[TUTLY_CONFIG_PATH];
+    const tutlyEntry = rawFiles[TUTLY_CONFIG_PATH];
     const tutlyRaw =
       typeof tutlyEntry === "string" ? tutlyEntry : (tutlyEntry?.code ?? null);
-    delete allFiles[TUTLY_CONFIG_PATH];
+    delete rawFiles[TUTLY_CONFIG_PATH];
 
     let configOverrides: Record<string, unknown> = {};
     if (tutlyRaw != null) {
@@ -82,6 +82,28 @@ function SandboxActions({
         return;
       }
       configOverrides = parsed.config;
+    }
+
+    // Strip stale per-file flags (hidden, readOnly, active) that Sandpack carries
+    // on file objects but never clears when the instructor toggles them off in
+    // the FileFlagsBar. The authoritative source for these flags is configOverrides
+    // (derived from the current /tutly.json). Keeping the stale flags here causes
+    // splitFromSandpack to re-extract them into fileMeta and write hidden:true
+    // back to disk even after the toggle was turned off.
+    const FILE_FLAG_KEYS = new Set(["hidden", "readOnly", "active"]);
+    const allFiles: Record<string, { code: string } | string> = {};
+    for (const [path, entry] of Object.entries(rawFiles)) {
+      if (typeof entry === "string" || entry === null) {
+        allFiles[path] = entry as string;
+      } else {
+        // Keep only the `code` field; all flag fields come from configOverrides.fileMeta.
+        const { code, ...rest } = entry as Record<string, unknown>;
+        const stripped: Record<string, unknown> = { code: code ?? "" };
+        for (const [k, v] of Object.entries(rest)) {
+          if (!FILE_FLAG_KEYS.has(k)) stripped[k] = v;
+        }
+        allFiles[path] = stripped as { code: string };
+      }
     }
 
     const templateToSave = {
