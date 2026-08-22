@@ -1,5 +1,33 @@
 # web
 
+## 4.8.0
+
+### Minor Changes
+
+- [#158](https://github.com/TutlyLabs/Tutly/pull/158) [`98f5b7c`](https://github.com/TutlyLabs/Tutly/commit/98f5b7ca02a2b3bd17a47a0fbfb8e4f1f58a1489) Thanks [@UdaySagar-Git](https://github.com/UdaySagar-Git)! - Add API-key authentication and an agent-facing tRPC surface.
+
+  Requests to `/api/trpc` now authenticate with a browser cookie, a session
+  bearer token, or a `tutly_sk_*` API key. All three resolve to an identically
+  enriched session, and `ctx.authMethod` records which was used.
+
+  Adds `agent.*` procedures for class and assignment authoring: name-to-id
+  lookup, plus list/get/upsert/delete for both. `agent.assignments.upsert`
+  creates an assignment, its workspace config and its whole test suite in one
+  transaction. Writes accept `dryRun` and deletes report their blast radius
+  first.
+
+- [#159](https://github.com/TutlyLabs/Tutly/pull/159) [`62920bd`](https://github.com/TutlyLabs/Tutly/commit/62920bd006db6daebf7c2a2e6ea12a03a4bbbb01) Thanks [@UdaySagar-Git](https://github.com/UdaySagar-Git)! - Add attendance import and ship the Tutly MCP server.
+
+  `agent.attendance.import` reconciles a meeting participant report against the
+  course roster. Identities resolve in confidence order (email, username, full
+  name, roll-number prefix) and every row is reported as matched, ambiguous or
+  unmatched, with absentees listed and prefix-only matches counted separately.
+  Re-importing overwrites instead of failing.
+
+  `@tutly/mcp` exposes the `agent.*` router as 13 MCP tools over stdio, so Claude
+  Code, Claude Desktop, Cursor and other MCP clients can drive class, assignment
+  and attendance work with an API key.
+
 ## 4.7.1
 
 ### Patch Changes

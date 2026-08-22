@@ -1,6 +1,6 @@
 {
   "name": "@tutly/mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Tutly MCP server - class, assignment and attendance tools for AI agents",
   "license": "MIT",
   "type": "module",
