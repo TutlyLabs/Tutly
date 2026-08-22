@@ -3,6 +3,7 @@ import type { User } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { apiKey } from "better-auth/plugins";
 import { admin } from "better-auth/plugins/admin";
 import { bearer } from "better-auth/plugins/bearer";
 import { customSession } from "better-auth/plugins/custom-session";
@@ -35,6 +36,12 @@ export interface CreateServerAuthOptions {
   afterEmailVerification?: (user: User) => Promise<void>;
   trustedOrigins?: (request?: Request) => string[];
 }
+
+/** Identifies a Tutly agent/automation key at a glance in logs and configs. */
+export const API_KEY_PREFIX = "tutly_sk_";
+
+/** 90 days. Long enough to be practical, short enough that leaks age out. */
+export const API_KEY_DEFAULT_EXPIRY_MS = 90 * 24 * 60 * 60 * 1000;
 
 const NATIVE_TRUSTED_ORIGINS = [
   "tutly://",
@@ -120,6 +127,29 @@ export function createServerAuth(opts: CreateServerAuthOptions) {
         },
       }),
       bearer(),
+      apiKey({
+        defaultPrefix: API_KEY_PREFIX,
+        requireName: true,
+        // Records which client a key was minted for, so a stale key is
+        // identifiable at revocation time.
+        enableMetadata: true,
+        keyExpiration: {
+          defaultExpiresIn: API_KEY_DEFAULT_EXPIRY_MS,
+          maxExpiresIn: 365,
+        },
+        rateLimit: {
+          enabled: true,
+          // The plugin default is 10 requests *per day*, which one agent run
+          // would exhaust.
+          timeWindow: 60 * 60 * 1000,
+          maxRequests: 3600,
+        },
+        // Enabling this installs a `before` hook that short-circuits
+        // /get-session, bypassing customSession below and yielding a user with
+        // no role/organization/adminForCourses. `resolveApiKeySession` handles
+        // key sessions instead, through the same enrichment path.
+        enableSessionForAPIKeys: false,
+      }),
       admin({
         ac,
         adminRoles: ["ADMIN", "INSTRUCTOR", "SUPER_ADMIN"],

@@ -24,12 +24,21 @@
       "types": "./src/server.ts",
       "default": "./src/server.ts"
     },
+    "./enrich-session": {
+      "types": "./src/enrich-session.ts",
+      "default": "./src/enrich-session.ts"
+    },
+    "./api-key-session": {
+      "types": "./src/api-key-session.ts",
+      "default": "./src/api-key-session.ts"
+    },
     "./client": {
       "types": "./src/client.ts",
       "default": "./src/client.ts"
     }
   },
   "scripts": {
+    "auth:generate-schema": "better-auth generate --config better-auth.config.ts --output ../db/prisma/schema.prisma",
     "lint": "eslint \"src/**/*.ts*\" --max-warnings 0",
     "lint:fix": "eslint \"src/**/*.ts*\" --fix",
     "test": "vitest run",
@@ -41,6 +50,7 @@
     "better-auth": "1.4.22"
   },
   "devDependencies": {
+    "@better-auth/cli": "1.4.22",
     "@tutly/eslint-config": "workspace:*",
     "@tutly/typescript-config": "workspace:*",
     "eslint": "^9.39.2",

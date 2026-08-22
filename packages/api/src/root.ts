@@ -1,10 +1,11 @@
-import { chatRouter } from "./routers/chat";
+import { agentRouter } from "./routers/agent";
 import { aiQueryRouter } from "./routers/aiQuery";
 import { assignmentsRouter } from "./routers/assignments";
 import { attachmentsRouter } from "./routers/attachments";
 import { attendanceRouter } from "./routers/attendance";
 import { bookmarksRouter } from "./routers/bookmarks";
 import { certificatesRouter } from "./routers/certificates";
+import { chatRouter } from "./routers/chat";
 import { classesRouter } from "./routers/classes";
 import { codingPlatformsRouter } from "./routers/codingPlatforms";
 import { coursesRouter } from "./routers/courses";
@@ -12,12 +13,12 @@ import { dashboardRouter } from "./routers/dashboard";
 import { deviceTokensRouter } from "./routers/deviceTokens";
 import { doubtsRouter } from "./routers/doubts";
 import { driveRouter } from "./routers/drive";
-import { fileUploadRouter } from "./routers/fileupload";
 import { featureFlagsRouter } from "./routers/featureFlags";
+import { fileUploadRouter } from "./routers/fileupload";
 import { foldersRouter } from "./routers/folders";
 import { geminiRouter } from "./routers/gemini";
-import { glimpseRouter } from "./routers/glimpse";
 import { leaderboardRouter } from "./routers/getLeaderboard";
+import { glimpseRouter } from "./routers/glimpse";
 import { holidaysRouter } from "./routers/holidays";
 import { notesRouter } from "./routers/notes";
 import { notificationsRouter } from "./routers/notifications";
@@ -31,15 +32,15 @@ import { searchRouter } from "./routers/search";
 import { serviceConnectionsRouter } from "./routers/serviceConnections";
 import { statisticsRouter } from "./routers/statistics";
 import { submissionRouter } from "./routers/submission";
+import { superAdminRouter } from "./routers/superAdmin";
 import { testRunsRouter } from "./routers/testRuns";
 import { usersRouter } from "./routers/users";
 import { videosRouter } from "./routers/videos";
 import { vscodeRouter } from "./routers/vscode";
-import { superAdminRouter } from "./routers/superAdmin";
-
 import { createCallerFactory, createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
+  agent: agentRouter,
   superAdmin: superAdminRouter,
   aiQuery: aiQueryRouter,
   chat: chatRouter,

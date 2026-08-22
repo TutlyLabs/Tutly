@@ -131,27 +131,29 @@ model User {
   bookMarks           BookMarks[]
   notes               Notes[]
 
-  uploadedFiles File[]          @relation("uploadedFiles")
-  archivedFiles File[]          @relation("archivedFiles")
-  ScheduleEvent ScheduleEvent[]
+  uploadedFiles      File[]               @relation("uploadedFiles")
+  archivedFiles      File[]               @relation("archivedFiles")
+  ScheduleEvent      ScheduleEvent[]
   serviceConnections ServiceConnection[]
   portSessions       PortSession[]
-  submissionReviews  SubmissionReview[] @relation("SubmissionReviewer")
+  submissionReviews  SubmissionReview[]   @relation("SubmissionReviewer")
   createdArtifacts   AssignmentArtifact[]
-  triggeredTestRuns  SubmissionTestRun[] @relation("TestRunTriggeredBy")
+  triggeredTestRuns  SubmissionTestRun[]  @relation("TestRunTriggeredBy")
 
   displayUsername String?
   sessions        Session[]
   accounts        Account[]
 
-  groupsCreated   ChatGroup[]     @relation("GroupsCreated")
-  groupMemberships GroupMember[]  @relation("GroupMemberships")
-  messagesSent    Message[]       @relation("MessagesSent")
-  reactions       MessageReaction[] @relation("Reactions")
+  groupsCreated    ChatGroup[]       @relation("GroupsCreated")
+  groupMemberships GroupMember[]     @relation("GroupMemberships")
+  messagesSent     Message[]         @relation("MessagesSent")
+  reactions        MessageReaction[] @relation("Reactions")
 
   banned     Boolean?  @default(false)
   banReason  String?
   banExpires DateTime?
+
+  apikeys Apikey[]
 
   @@map("User")
 }
@@ -229,57 +231,57 @@ enum MessageType {
 }
 
 model ChatGroup {
-  id              String    @id @default(cuid())
-  name            String
-  description     String?
-  type            GroupType
-  image           String?
-  courseId        String?
-  course          Course?   @relation(fields: [courseId], references: [id])
+  id             String        @id @default(cuid())
+  name           String
+  description    String?
+  type           GroupType
+  image          String?
+  courseId       String?
+  course         Course?       @relation(fields: [courseId], references: [id])
   // For MENTOR-type groups: the mentor who owns the cohort.
-  mentorUsername  String?
-  postingPolicy   PostingPolicy @default(EVERYONE)
-  organizationId  String?
-  createdById     String
-  createdBy       User      @relation("GroupsCreated", fields: [createdById], references: [id])
-  archivedAt      DateTime?
-  members         GroupMember[]
-  messages        Message[]
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  mentorUsername String?
+  postingPolicy  PostingPolicy @default(EVERYONE)
+  organizationId String?
+  createdById    String
+  createdBy      User          @relation("GroupsCreated", fields: [createdById], references: [id])
+  archivedAt     DateTime?
+  members        GroupMember[]
+  messages       Message[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 }
 
 model GroupMember {
-  id            String     @id @default(cuid())
-  groupId       String
-  group         ChatGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  userId        String
-  user          User       @relation("GroupMemberships", fields: [userId], references: [id])
-  role          MemberRole @default(MEMBER)
-  joinedAt      DateTime   @default(now())
-  lastReadAt    DateTime?
-  lastTypingAt  DateTime?
+  id           String     @id @default(cuid())
+  groupId      String
+  group        ChatGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation("GroupMemberships", fields: [userId], references: [id])
+  role         MemberRole @default(MEMBER)
+  joinedAt     DateTime   @default(now())
+  lastReadAt   DateTime?
+  lastTypingAt DateTime?
 
   @@unique([groupId, userId])
 }
 
 model Message {
-  id        String      @id @default(cuid())
+  id        String            @id @default(cuid())
   groupId   String
-  group     ChatGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group     ChatGroup         @relation(fields: [groupId], references: [id], onDelete: Cascade)
   senderId  String
-  sender    User        @relation("MessagesSent", fields: [senderId], references: [id])
-  content   String      @db.Text
-  type      MessageType @default(TEXT)
-  isPinned  Boolean     @default(false)
+  sender    User              @relation("MessagesSent", fields: [senderId], references: [id])
+  content   String            @db.Text
+  type      MessageType       @default(TEXT)
+  isPinned  Boolean           @default(false)
   metadata  Json?
   replyToId String?
-  replyTo   Message?    @relation("MessageReplies", fields: [replyToId], references: [id])
-  replies   Message[]   @relation("MessageReplies")
+  replyTo   Message?          @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies   Message[]         @relation("MessageReplies")
   reactions MessageReaction[]
   deletedAt DateTime?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 }
 
 model MessageReaction {
@@ -613,18 +615,18 @@ model Video {
   class      Class[]
 
   // HLS pipeline fields (used only when videoType = HLS)
-  status         VideoStatus @default(READY)
-  hlsPlaylistUrl String?
-  thumbnailUrl   String?
-  captionsUrl    String?
-  duration       Int?
-  errorMessage   String?
-  rawObjectKey   String?
-  uploadedById   String?
-  progress       Int         @default(0) // 0–100, refreshed by worker during PROCESSING
-  progressStep   String?                  // human label, e.g. "Encoding 720p"
-  processStartedAt DateTime?              // PROCESSING start; for elapsed time
-  processEndedAt   DateTime?              // READY or FAILED end
+  status           VideoStatus @default(READY)
+  hlsPlaylistUrl   String?
+  thumbnailUrl     String?
+  captionsUrl      String?
+  duration         Int?
+  errorMessage     String?
+  rawObjectKey     String?
+  uploadedById     String?
+  progress         Int         @default(0) // 0–100, refreshed by worker during PROCESSING
+  progressStep     String? // human label, e.g. "Encoding 720p"
+  processStartedAt DateTime? // PROCESSING start; for elapsed time
+  processEndedAt   DateTime? // READY or FAILED end
 
   progressEntries VideoProgress[]
 
@@ -708,11 +710,11 @@ model submission {
 
   data Json?
 
-  points Point[]
-  artifacts AssignmentArtifact[]
-  testRuns  SubmissionTestRun[]
+  points       Point[]
+  artifacts    AssignmentArtifact[]
+  testRuns     SubmissionTestRun[]
   portSessions PortSession[]
-  review SubmissionReview?
+  review       SubmissionReview?
 
   overallFeedback String?
 
@@ -808,19 +810,19 @@ enum SubmissionReviewStatus {
 }
 
 model AssignmentConfig {
-  id           String   @id @default(uuid())
-  assignmentId String   @unique
+  id           String     @id @default(uuid())
+  assignmentId String     @unique
   assignment   Attachment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
 
-  framework       String?
-  setupCommand    String?
-  devCommand      String?
-  testCommand     String?
-  previewPorts    Int[]    @default([])
-  readonlyPaths   String[] @default([])
-  grading         Json?    @default("{}")
-  publicTestMetadata Json? @default("{}")
-  defaultProvider WorkspaceProviderType @default(LOCAL)
+  framework          String?
+  setupCommand       String?
+  devCommand         String?
+  testCommand        String?
+  previewPorts       Int[]                 @default([])
+  readonlyPaths      String[]              @default([])
+  grading            Json?                 @default("{}")
+  publicTestMetadata Json?                 @default("{}")
+  defaultProvider    WorkspaceProviderType @default(LOCAL)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -842,14 +844,14 @@ model AssignmentArtifact {
   mimeType   String?
   sizeBytes  BigInt?
   checksum   String?
-  manifest   Json?   @default("{}")
-  version    Int     @default(1)
-  isLatest   Boolean @default(true)
+  manifest   Json?                    @default("{}")
+  version    Int                      @default(1)
+  isLatest   Boolean                  @default(true)
   status     AssignmentArtifactStatus @default(PENDING_UPLOAD)
   uploadedAt DateTime?
 
   createdById String?
-  createdBy   User? @relation(fields: [createdById], references: [id])
+  createdBy   User?   @relation(fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -864,15 +866,15 @@ model ServiceConnection {
   id String @id @default(uuid())
 
   userId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  provider WorkspaceProviderType
-  name     String
-  status   ServiceConnectionStatus @default(ACTIVE)
-  config   Json? @default("{}")
-  encryptedSecret String? @db.Text
-  lastCheckedAt DateTime?
-  lastError     String? @db.Text
+  provider        WorkspaceProviderType
+  name            String
+  status          ServiceConnectionStatus @default(ACTIVE)
+  config          Json?                   @default("{}")
+  encryptedSecret String?                 @db.Text
+  lastCheckedAt   DateTime?
+  lastError       String?                 @db.Text
 
   testRuns     SubmissionTestRun[]
   portSessions PortSession[]
@@ -892,9 +894,9 @@ model AssignmentTestCase {
   title      String
   visibility AssignmentTestVisibility @default(VISIBLE)
   command    String
-  points     Int @default(1)
-  timeoutMs  Int @default(120000)
-  metadata   Json? @default("{}")
+  points     Int                      @default(1)
+  timeoutMs  Int                      @default(120000)
+  metadata   Json?                    @default("{}")
 
   artifactId String?
   artifact   AssignmentArtifact? @relation(fields: [artifactId], references: [id])
@@ -917,9 +919,9 @@ model SubmissionTestRun {
   serviceConnectionId String?
   serviceConnection   ServiceConnection? @relation(fields: [serviceConnectionId], references: [id])
 
-  provider WorkspaceProviderType @default(LOCAL)
+  provider WorkspaceProviderType   @default(LOCAL)
   status   SubmissionTestRunStatus @default(QUEUED)
-  trigger  String @default("manual")
+  trigger  String                  @default("manual")
 
   visiblePassed Int @default(0)
   visibleTotal  Int @default(0)
@@ -928,7 +930,7 @@ model SubmissionTestRun {
   score         Int @default(0)
   maxScore      Int @default(0)
 
-  outputSummary Json? @default("{}")
+  outputSummary Json?   @default("{}")
   jestReport    Json?
   errorMessage  String? @db.Text
   attempt       Int     @default(1)
@@ -936,10 +938,10 @@ model SubmissionTestRun {
   triggeredByUserId String?
   triggeredBy       User?   @relation("TestRunTriggeredBy", fields: [triggeredByUserId], references: [id])
 
-  logsArtifactId String?
+  logsArtifactId   String?
   reportArtifactId String?
-  startedAt DateTime?
-  completedAt DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -953,7 +955,7 @@ model PortSession {
   id String @id @default(uuid())
 
   userId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   assignmentId String?
   assignment   Attachment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
@@ -964,14 +966,14 @@ model PortSession {
   serviceConnectionId String?
   serviceConnection   ServiceConnection? @relation(fields: [serviceConnectionId], references: [id])
 
-  provider WorkspaceProviderType @default(LOCAL)
-  port     Int
-  targetUrl String?
-  proxyPath String
-  status PortSessionStatus @default(OPEN)
-  lastHeartbeatAt DateTime @default(now())
-  expiresAt DateTime?
-  metadata Json? @default("{}")
+  provider        WorkspaceProviderType @default(LOCAL)
+  port            Int
+  targetUrl       String?
+  proxyPath       String
+  status          PortSessionStatus     @default(OPEN)
+  lastHeartbeatAt DateTime              @default(now())
+  expiresAt       DateTime?
+  metadata        Json?                 @default("{}")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -983,22 +985,22 @@ model PortSession {
 model SubmissionReview {
   id String @id @default(uuid())
 
-  submissionId String @unique
+  submissionId String     @unique
   submission   submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   assignmentId String
   assignment   Attachment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
 
   reviewerId String?
-  reviewer   User? @relation("SubmissionReviewer", fields: [reviewerId], references: [id])
+  reviewer   User?   @relation("SubmissionReviewer", fields: [reviewerId], references: [id])
 
-  status SubmissionReviewStatus @default(NEEDS_REVIEW)
-  autoScore Int?
-  maxScore  Int?
+  status      SubmissionReviewStatus @default(NEEDS_REVIEW)
+  autoScore   Int?
+  maxScore    Int?
   manualScore Int?
-  feedback String? @db.Text
-  testRunId String?
-  reviewedAt DateTime?
+  feedback    String?                @db.Text
+  testRunId   String?
+  reviewedAt  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1160,4 +1162,33 @@ model Jwks {
   expiresAt  DateTime?
 
   @@map("jwks")
+}
+
+model Apikey {
+  id                  String    @id
+  name                String?
+  start               String?
+  prefix              String?
+  key                 String
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refillInterval      Int?
+  refillAmount        Int?
+  lastRefillAt        DateTime?
+  enabled             Boolean?  @default(true)
+  rateLimitEnabled    Boolean?  @default(true)
+  rateLimitTimeWindow Int?      @default(3600000)
+  rateLimitMax        Int?      @default(3600)
+  requestCount        Int?      @default(0)
+  remaining           Int?
+  lastRequest         DateTime?
+  expiresAt           DateTime?
+  createdAt           DateTime
+  updatedAt           DateTime
+  permissions         String?
+  metadata            String?
+
+  @@index([key])
+  @@index([userId])
+  @@map("apikey")
 }
