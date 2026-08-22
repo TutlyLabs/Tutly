@@ -20,7 +20,7 @@ FROM base AS installer
 RUN apk update
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.25.0
 
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
