@@ -1,5 +1,6 @@
 import { createTRPCRouter } from "../../trpc";
 import { agentAssignmentsRouter } from "./assignments";
+import { agentAttendanceRouter } from "./attendance";
 import { agentClassesRouter } from "./classes";
 import { agentResolveRouter } from "./resolve";
 
@@ -14,5 +15,6 @@ import { agentResolveRouter } from "./resolve";
 export const agentRouter = createTRPCRouter({
   resolve: agentResolveRouter,
   classes: agentClassesRouter,
+  attendance: agentAttendanceRouter,
   assignments: agentAssignmentsRouter,
 });

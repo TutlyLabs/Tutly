@@ -1,0 +1,55 @@
+{
+  "name": "@tutly/mcp",
+  "version": "0.1.0",
+  "description": "Tutly MCP server - class, assignment and attendance tools for AI agents",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "tutly-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "/dist"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "homepage": "https://github.com/TutlyLabs/Tutly/tree/main/apps/mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TutlyLabs/Tutly.git",
+    "directory": "apps/mcp"
+  },
+  "keywords": [
+    "tutly",
+    "mcp",
+    "model-context-protocol",
+    "education"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "format": "prettier \"**/*.{ts,md}\" --cache",
+    "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@tutly/eslint-config": "workspace:*",
+    "@tutly/typescript-config": "workspace:*",
+    "@types/node": "^25.0.2",
+    "eslint": "^9.39.2",
+    "tsup": "^8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  }
+}
