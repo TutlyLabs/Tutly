@@ -33,6 +33,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "clean": "rm -rf dist",
+    "prepack": "rm -rf dist && npm run build",
     "format": "prettier \"**/*.{ts,md}\" --cache",
     "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
