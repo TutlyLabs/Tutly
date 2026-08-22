@@ -21,4 +21,7 @@ export const auth = createServerAuth({
   },
   sendResetPassword: () => Promise.resolve(),
   customSessionHandler: () => Promise.resolve({ user: null, session: null }),
+  // Present so the generated schema always includes the OAuth tables, whether
+  // or not a given deployment serves the MCP endpoint.
+  mcp: { resource: "http://localhost:3000/mcp" },
 });

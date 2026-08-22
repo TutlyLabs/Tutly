@@ -1,9 +1,9 @@
 import { randomUUID } from "crypto";
-import type { User } from "better-auth";
+import type { BetterAuthPlugin, User } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { apiKey } from "better-auth/plugins";
+import { apiKey, mcp } from "better-auth/plugins";
 import { admin } from "better-auth/plugins/admin";
 import { bearer } from "better-auth/plugins/bearer";
 import { customSession } from "better-auth/plugins/custom-session";
@@ -35,12 +35,40 @@ export interface CreateServerAuthOptions {
   };
   afterEmailVerification?: (user: User) => Promise<void>;
   trustedOrigins?: (request?: Request) => string[];
+  /**
+   * Makes this instance the OAuth authorization server for a remote MCP
+   * endpoint. Omit it where nothing serves one.
+   */
+  mcp?: {
+    /**
+     * Canonical MCP endpoint URL (RFC 8707), and the `aud` of every issued
+     * token — changing it invalidates existing grants.
+     */
+    resource: string;
+    loginPage?: string;
+    consentPage?: string;
+    /**
+     * Off by default: Claude and ChatGPT both accept pre-registered
+     * credentials, and DCR lets anyone who reaches the endpoint mint them.
+     */
+    allowDynamicClientRegistration?: boolean;
+  };
 }
 
 export const API_KEY_PREFIX = "tutly_sk_";
 
 /** 90 days, so a leaked key ages out. */
 export const API_KEY_DEFAULT_EXPIRY_MS = 90 * 24 * 60 * 60 * 1000;
+
+/**
+ * The only scopes the plugin advertises — it hardcodes `scopes_supported`, so a
+ * custom scope could never be discovered. Authorization is enforced by role
+ * grants in the router regardless.
+ *
+ * `offline_access` matters: without a refresh token ChatGPT loses access when
+ * the access token expires.
+ */
+export const MCP_SCOPES = ["openid", "profile", "email", "offline_access"];
 
 const NATIVE_TRUSTED_ORIGINS = [
   "tutly://",
@@ -151,6 +179,29 @@ export function createServerAuth(opts: CreateServerAuthOptions) {
         impersonationSessionDuration: 60 * 60,
         roles: ROLES,
       }),
+      ...(opts.mcp
+        ? [
+            // Widened deliberately: the plugin's types reference `MCPOptions`,
+            // which 1.4.22 only exposes on an unexported subpath, making this
+            // function's return type unnameable. `./mcp` re-declares what
+            // callers need.
+            mcp({
+              loginPage: opts.mcp.loginPage ?? "/sign-in",
+              resource: opts.mcp.resource,
+              oidcConfig: {
+                loginPage: opts.mcp.loginPage ?? "/sign-in",
+                consentPage: opts.mcp.consentPage,
+                scopes: MCP_SCOPES,
+                allowDynamicClientRegistration:
+                  opts.mcp.allowDynamicClientRegistration ?? false,
+                // So a database leak cannot impersonate a client.
+                storeClientSecret: "hashed",
+                requirePKCE: true,
+              },
+            }) as BetterAuthPlugin,
+          ]
+        : []),
+      // Must stay last: it overrides /get-session, which the MCP plugin reads.
       customSession(opts.customSessionHandler),
     ],
     trustedOrigins: (request) => {

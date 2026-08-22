@@ -8,7 +8,7 @@ import { enrichSession } from "./enrich-session";
 import { API_KEY_PREFIX } from "./server";
 
 /** How a request authenticated. Recorded for auditing. */
-export type AuthMethod = "session" | "api-key";
+export type AuthMethod = "session" | "api-key" | "oauth";
 
 export interface ResolvedSession {
   user: SessionWithUser["user"] | null;

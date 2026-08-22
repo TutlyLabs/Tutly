@@ -1,14 +1,16 @@
-import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
 import { createLogger } from "@tutly/logger";
-import { createTRPCRouter, superAdminProcedure } from "../trpc";
+
 import {
   createSubdomainRecord,
   deleteRecord,
-  verifyCustomDomain,
   getCnameTarget,
   getCustomDomainInstructions,
+  verifyCustomDomain,
 } from "../lib/cloudflare";
+import { createTRPCRouter, superAdminProcedure } from "../trpc";
 
 const logger = createLogger("api:superAdmin");
 
@@ -324,6 +326,9 @@ export const superAdminRouter = createTRPCRouter({
         "cname",
         "ns1",
         "ns2",
+        // Serves the remote MCP endpoint; an org claiming it would break every
+        // connector, and the URL is baked into issued tokens as `aud`.
+        "mcp",
       ];
       if (reserved.includes(input.subdomain)) {
         throw new TRPCError({

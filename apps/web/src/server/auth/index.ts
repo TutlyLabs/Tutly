@@ -2,7 +2,7 @@ import { compare, hash } from "bcryptjs";
 import { Resend } from "resend";
 
 import { enrichSession } from "@tutly/auth/enrich-session";
-import { createServerAuth } from "@tutly/auth/server";
+import { createServerAuth, type ServerAuth } from "@tutly/auth/server";
 
 import {
   RESEND_API_KEY,
@@ -14,13 +14,15 @@ import {
   ZOOM_CLIENT_SECRET,
   BETTER_AUTH_SECRET,
   BETTER_AUTH_URL,
+  MCP_ALLOW_DYNAMIC_CLIENT_REGISTRATION,
+  MCP_RESOURCE_URL,
 } from "@/lib/constants";
 import { db } from "@tutly/db";
 import ResetPasswordEmailTemplate from "@/components/email/ResetPasswordEmailTemplate";
 
 const resend = new Resend(RESEND_API_KEY);
 
-export const auth = createServerAuth({
+export const auth: ServerAuth = createServerAuth({
   secret: BETTER_AUTH_SECRET,
   baseURL: BETTER_AUTH_URL,
   db,
@@ -78,6 +80,11 @@ export const auth = createServerAuth({
     ZOOM_CLIENT_ID && ZOOM_CLIENT_SECRET
       ? { clientId: ZOOM_CLIENT_ID, clientSecret: ZOOM_CLIENT_SECRET }
       : undefined,
+  mcp: {
+    resource: MCP_RESOURCE_URL,
+    loginPage: "/sign-in",
+    allowDynamicClientRegistration: MCP_ALLOW_DYNAMIC_CLIENT_REGISTRATION,
+  },
   trustedOrigins: () => [
     "https://learn.tutly.in",
     "http://localhost:3000",

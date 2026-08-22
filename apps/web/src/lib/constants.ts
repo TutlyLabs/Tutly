@@ -49,6 +49,17 @@ export const FRONTEND_URL =
   process.env.BETTER_AUTH_URL ||
   "http://localhost:3000";
 
+/**
+ * Canonical remote MCP endpoint URL, and the `aud` of tokens issued for it.
+ * Set explicitly when clients reach a different host (e.g. mcp.tutly.in).
+ */
+export const MCP_RESOURCE_URL =
+  process.env.MCP_RESOURCE_URL || `${BETTER_AUTH_URL}/mcp`;
+
+/** Set to "true" to let unknown MCP clients self-register. Off by default. */
+export const MCP_ALLOW_DYNAMIC_CLIENT_REGISTRATION =
+  process.env.MCP_ALLOW_DYNAMIC_CLIENT_REGISTRATION === "true";
+
 export const getPreviewUrl = () => {
   if (typeof window !== "undefined") {
     const explicit = process.env.NEXT_PUBLIC_API_URL;
