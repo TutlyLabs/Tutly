@@ -1,5 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 import {
+  apiKeyClient,
   customSessionClient,
   inferAdditionalFields,
   usernameClient,
@@ -34,5 +35,6 @@ export const authClient = createAuthClient({
     inferAdditionalFields<typeof auth>(),
     usernameClient(),
     adminClient({ ac, roles: ROLES }),
+    apiKeyClient(),
   ],
 });

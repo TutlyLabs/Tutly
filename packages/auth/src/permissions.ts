@@ -108,6 +108,12 @@ export const statement = {
   portSession: ["create", "read", "list", "close"],
   integration: ["read", "update", "delete"],
   featureFlag: ["read"],
+  /**
+   * Long-lived credentials for agents and scripts. A key inherits its owner's
+   * role, so issuing one is as privileged as the account behind it — hence
+   * INSTRUCTOR+ only, enforced on the better-auth route, not just in the UI.
+   */
+  apiKey: ["create", "read", "list", "delete"],
 } as const;
 
 export const ac = createAccessControl(statement);
@@ -287,6 +293,7 @@ const INSTRUCTOR_GRANTS = {
   ],
   chat: [...MENTOR_GRANTS.chat, "manage"],
   ai: ["read", "execute"],
+  apiKey: ["create", "read", "list", "delete"],
 } satisfies Grants;
 
 // ADMIN adds nothing over INSTRUCTOR yet; it exists so the hierarchy is total.
