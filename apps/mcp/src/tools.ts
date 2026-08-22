@@ -3,21 +3,16 @@ import { z } from "zod";
 import type { TutlyClient } from "./client.js";
 
 /**
- * One MCP tool per `agent.*` procedure.
- *
- * The mapping is deliberately mechanical: the judgment lives in the tRPC router,
- * which enforces permissions and owns the transactions. Anything clever here
+ * One MCP tool per `agent.*` procedure. The mapping is mechanical on purpose:
+ * permissions and transactions belong to the router, so anything added here
  * would be logic the web app does not share.
- *
- * Descriptions are written for a model choosing between tools, so they say when
- * to reach for one and what it costs — not just what it does.
  */
 export interface ToolDefinition {
   name: string;
   title: string;
   description: string;
   inputSchema: z.ZodRawShape;
-  /** True for tools that never write, so hosts can auto-approve them. */
+  /** Non-writing tools, which hosts may auto-approve. */
   readOnly: boolean;
   run: (
     client: TutlyClient,

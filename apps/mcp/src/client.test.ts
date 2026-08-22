@@ -22,7 +22,7 @@ describe("base URL handling", () => {
   it.each([
     ["https://learn.tutly.in", "https://learn.tutly.in/api"],
     ["https://learn.tutly.in/", "https://learn.tutly.in/api"],
-    // Already an /api base — must not become /api/api.
+    // Must not become /api/api.
     ["https://learn.tutly.in/api", "https://learn.tutly.in/api"],
     ["https://learn.tutly.in/api/", "https://learn.tutly.in/api"],
   ])("normalises %s", async (input, expected) => {
@@ -75,7 +75,7 @@ describe("request shape", () => {
     const headers = init.headers as Record<string, string>;
     expect(headers["x-api-key"]).toBe(KEY);
     expect(headers["x-trpc-source"]).toBe("mcp");
-    // The key must never travel as a plain bearer token by accident.
+    // The key must not travel as a bearer token.
     expect(headers.Authorization).toBeUndefined();
   });
 });

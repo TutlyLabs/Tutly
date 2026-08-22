@@ -140,7 +140,7 @@ describe("attendance.import identity resolution", () => {
     const { db } = makeDb();
     const result = await caller(user(), db).attendance.import({
       ...base,
-      // What the old flow relied on: display name is the roll number.
+      // Display name is the roll number.
       participants: [{ name: "21CS002", durationMinutes: 60 }],
     });
 
@@ -148,7 +148,7 @@ describe("attendance.import identity resolution", () => {
       username: "21CS002",
       matchedBy: "name-prefix",
     });
-    // Weak matches are surfaced so a reviewer can eyeball them.
+    // Surfaced so a reviewer can check them.
     expect(result.counts.weakMatches).toBe(1);
   });
 
@@ -168,10 +168,7 @@ describe("attendance.import identity resolution", () => {
     ]);
   });
 
-  /**
-   * The regression that motivated this tool: a renamed participant used to
-   * vanish silently. Now the row is reported.
-   */
+  // A renamed participant must be reported, not dropped.
   it("reports a renamed participant instead of dropping them", async () => {
     const { db } = makeDb();
     const result = await caller(user(), db).attendance.import({
@@ -245,7 +242,7 @@ describe("attendance.import aggregation", () => {
       ],
     });
 
-    // 25 + 20 = 45, over the 40-minute threshold. Either row alone would be under.
+    // 25 + 20 = 45, over the threshold; either row alone would be under.
     expect(result.matched[0]).toMatchObject({ minutes: 45, attended: true });
 
     const written = tx.attendance.createMany.mock.calls[0]?.[0] as {
@@ -294,11 +291,7 @@ describe("attendance.import write behaviour", () => {
     expect(tx.attendance.createMany).not.toHaveBeenCalled();
   });
 
-  /**
-   * `postAttendance` used `createMany` against a unique (username, classId)
-   * with no conflict handling, so re-importing threw. Reconciling means
-   * re-importing, so overwrite is the default.
-   */
+  // Attendance is unique per (username, class), so a re-import must replace.
   it("deletes the rows it is about to replace", async () => {
     const { db, tx } = makeDb();
     await caller(user(), db).attendance.import({
@@ -359,7 +352,7 @@ describe("attendance.import write behaviour", () => {
 });
 
 describe("attendance authorization", () => {
-  // attendance:create is INSTRUCTOR+; MENTOR holds only read/list.
+  // attendance:create is INSTRUCTOR+; MENTOR holds read/list only.
   it("denies a mentor importing", async () => {
     const { db } = makeDb();
     expect(

@@ -1,10 +1,8 @@
 /**
- * Minimal tRPC-over-HTTP client for the `agent.*` router.
+ * tRPC-over-HTTP client for the `agent.*` router.
  *
  * The server uses the superjson transformer, so inputs are wrapped as
- * `{ json: ... }` and results unwrapped from `result.data.json`. Queries go over
- * GET with the input in the query string, mutations over POST — the same shape
- * `apps/cli` already speaks.
+ * `{ json: ... }` and results unwrapped from `result.data.json`.
  */
 
 export interface TutlyClientOptions {
@@ -13,7 +11,7 @@ export interface TutlyClientOptions {
   timeoutMs?: number;
 }
 
-/** Carries the tRPC error code so callers can distinguish auth from input. */
+/** Carries the tRPC error code so callers can tell auth from input errors. */
 export class TutlyApiError extends Error {
   constructor(
     message: string,
@@ -53,8 +51,7 @@ export class TutlyClient {
   private readonly timeoutMs: number;
 
   constructor({ baseUrl, apiKey, timeoutMs }: TutlyClientOptions) {
-    // Tolerate both "https://host" and "https://host/api" so the env var can be
-    // copied from either the CLI config or a browser URL.
+    // Accepts "https://host" or "https://host/api".
     const trimmed = baseUrl.replace(/\/+$/, "");
     this.baseUrl = trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
     this.apiKey = apiKey;

@@ -11,14 +11,8 @@ import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { dryRunSchema, requireGrant } from "./shared";
 
 /**
- * One row of a meeting participant report, already parsed out of whatever the
- * provider exported.
- *
- * Parsing is deliberately the caller's job. Zoom, Meet and Teams each export a
- * different shape, and the browser flow only ever handled one of them
- * (`XLSX.read` with a hardcoded header offset). A model reading a spreadsheet
- * is better at that than a fixed parser; identity resolution and the write are
- * what need to be trustworthy, so they live here.
+ * One row of a meeting participant report. Parsing is the caller's job, since
+ * every provider exports a different shape; resolution and writing happen here.
  */
 const participantSchema = z.object({
   name: z.string().trim().optional().describe("Display name from the report."),
@@ -31,7 +25,7 @@ const participantSchema = z.object({
 
 type Participant = z.infer<typeof participantSchema>;
 
-/** Ordered by confidence. Reported per row so a caller can spot weak matches. */
+/** Ordered by confidence; reported per row so weak matches are visible. */
 type MatchStrategy = "email" | "username" | "full-name" | "name-prefix";
 
 interface Candidate {
@@ -45,11 +39,7 @@ const NAME_PREFIX_LENGTH = 10;
 const norm = (value: string | null | undefined) =>
   value?.trim().toLowerCase() ?? "";
 
-/**
- * Builds one lookup per strategy. A key mapping to more than one enrolled user
- * is dropped from that index: guessing between two people is worse than
- * reporting the row as ambiguous.
- */
+/** One lookup per strategy. Keys matching several users resolve as ambiguous. */
 function buildIndexes(candidates: Candidate[]) {
   const make = (keyOf: (candidate: Candidate) => string) => {
     const index = new Map<string, Candidate[]>();
@@ -67,9 +57,8 @@ function buildIndexes(candidates: Candidate[]) {
     email: make((candidate) => norm(candidate.email)),
     username: make((candidate) => norm(candidate.username)),
     fullName: make((candidate) => norm(candidate.name)),
-    // The legacy heuristic: students who set their meeting name to their roll
-    // number. Kept last because a rename silently breaks it — which is how the
-    // browser flow used to lose people without saying so.
+    // For students whose meeting name is their roll number. Last, because a
+    // rename breaks it.
     namePrefix: make((candidate) =>
       norm(candidate.username.slice(0, NAME_PREFIX_LENGTH)),
     ),
@@ -106,7 +95,7 @@ function resolveParticipant(
 }
 
 export const agentAttendanceRouter = createTRPCRouter({
-  /** Who is already recorded for this class, and how the cohort compares. */
+  /** What is recorded for this class, against the enrolled cohort. */
   summary: protectedProcedure
     .input(z.object({ classId: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -144,13 +133,10 @@ export const agentAttendanceRouter = createTRPCRouter({
     }),
 
   /**
-   * Reconcile a participant report against the course roster and record
-   * attendance.
+   * Reconciles a participant report against the roster and records attendance.
    *
-   * Defaults to a dry run, because the interesting failure is silent: a student
-   * who renamed themselves in the meeting simply vanished from the old flow
-   * with no warning. Here every row lands in exactly one bucket — matched,
-   * ambiguous, unmatched, or notEnrolled — and absentees are listed explicitly.
+   * Dry run by default: mismatches are otherwise silent, so every row is
+   * reported as matched, ambiguous or unmatched, and absentees are listed.
    */
   import: protectedProcedure
     .input(
@@ -161,12 +147,7 @@ export const agentAttendanceRouter = createTRPCRouter({
           .number()
           .min(0)
           .describe("Minutes required to count as present."),
-        /**
-         * Attendance is unique per (username, class), and the existing
-         * `postAttendance` uses `createMany` with no conflict handling — so a
-         * re-import after fixing a name used to fail outright. Re-importing is
-         * the normal case when reconciling, so overwriting is the default.
-         */
+        /** Reconciling means re-importing, so overwriting is the default. */
         overwriteExisting: z.boolean().default(true),
         dryRun: dryRunSchema,
       }),
@@ -197,8 +178,8 @@ export const agentAttendanceRouter = createTRPCRouter({
       }));
       const indexes = buildIndexes(candidates);
 
-      // Several join rows per person is normal — a dropped connection produces
-      // one row per rejoin. Sum the minutes and keep every interval.
+      // A dropped connection yields one row per rejoin: sum the minutes and
+      // keep every interval.
       const aggregated = new Map<
         string,
         {
@@ -240,7 +221,7 @@ export const agentAttendanceRouter = createTRPCRouter({
         if (existing) {
           existing.minutes += participant.durationMinutes;
           existing.joins.push(join);
-          // Keep the strongest evidence seen for this person.
+          // Keep the strongest evidence for this person.
           if (matchedBy === "email") existing.matchedBy = "email";
         } else {
           aggregated.set(candidate.username, {
@@ -288,8 +269,7 @@ export const agentAttendanceRouter = createTRPCRouter({
         },
         matched,
         ambiguous,
-        // Rows naming nobody on the roster: a guest, a typo, or someone who
-        // should be enrolled and is not.
+        // Rows naming nobody enrolled: a guest, a typo, or a missing enrolment.
         unmatched,
         notInReport: absent,
       };
@@ -324,8 +304,7 @@ export const agentAttendanceRouter = createTRPCRouter({
         }
         return tx.attendance.createMany({
           data: rows,
-          // Belt and braces when overwriting is off: a partially-imported class
-          // should not make the whole retry fail.
+          // With overwrite off, a partial import must not fail the retry.
           skipDuplicates: !input.overwriteExisting,
         });
       });

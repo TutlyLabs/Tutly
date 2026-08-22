@@ -9,8 +9,7 @@ const DEFAULT_BASE_URL = "https://learn.tutly.in";
 function readConfig() {
   const apiKey = process.env.TUTLY_API_KEY?.trim();
   if (!apiKey) {
-    // stderr, never stdout: stdout is the JSON-RPC channel and any stray byte
-    // there breaks the transport.
+    // stdout is the JSON-RPC channel; a stray byte there breaks the transport.
     console.error(
       "TUTLY_API_KEY is not set. Create a key at <your-tutly>/tutor/api-keys and set it in the MCP server config.",
     );
@@ -23,9 +22,8 @@ function readConfig() {
 }
 
 /**
- * Errors are returned as tool results rather than thrown, so the model can read
- * what went wrong and correct itself instead of the call simply failing.
- * Permission and validation messages from tRPC are the useful part.
+ * Errors return as results rather than throwing, so the model can read the
+ * tRPC message and correct itself.
  */
 function toResult(value: unknown) {
   return {
@@ -93,8 +91,7 @@ async function main() {
       },
       async (input: Record<string, unknown>) => {
         try {
-          // Drop keys the model left explicitly null; tRPC's zod inputs treat
-          // an absent optional and a null one differently.
+          // zod treats an absent optional differently from an explicit null.
           const cleaned = Object.fromEntries(
             Object.entries(input ?? {}).filter(
               ([, value]) => value !== undefined,
