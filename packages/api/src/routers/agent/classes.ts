@@ -18,19 +18,12 @@ import {
   videoTypeSchema,
 } from "./shared";
 
-/**
- * `Class.videoId` is non-nullable, so every class owns a Video row even when
- * there is nothing to play — a live class before its recording exists, for
- * instance. This mirrors what `classes.createClass` does.
- */
+/** `Class.videoId` is non-nullable, so every class owns a Video row. */
 const videoSchema = z
   .object({
     type: videoTypeSchema.default("YOUTUBE"),
     link: z.string().trim().url().nullable().optional(),
-    /**
-     * Pre-created Video id. Required for HLS, whose row is created by the
-     * upload pipeline before the class exists.
-     */
+    /** Required for HLS, whose row the upload pipeline creates first. */
     videoId: z.string().optional(),
   })
   .optional();
@@ -47,7 +40,7 @@ const liveSchema = z
   .optional();
 
 export const agentClassesRouter = createTRPCRouter({
-  /** Compact class list — titles, ids, dates. Enough to pick one by name. */
+  /** Compact list: enough to pick a class by name. */
   list: protectedProcedure
     .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -131,11 +124,8 @@ export const agentClassesRouter = createTRPCRouter({
     }),
 
   /**
-   * Create or update a class in one call.
-   *
-   * Passing `classId` updates; omitting it creates. Folder is addressed by name
-   * (`folderName`) or id, and a name that does not exist yet is created — a
-   * caller working from "put this in the Week 3 folder" has no id to give.
+   * Passing `classId` updates; omitting it creates. `folderName` is created if
+   * absent, since a caller working from a folder's name has no id.
    */
   upsert: protectedProcedure
     .input(
@@ -148,7 +138,7 @@ export const agentClassesRouter = createTRPCRouter({
         folderName: z.string().trim().min(1).optional(),
         classType: classTypeSchema.default("RECORDED"),
         live: liveSchema,
-        /** Backdating an imported class; defaults to now on create. */
+        /** For backdating an import; defaults to now.  */
         createdAt: isoDateSchema.optional(),
         dryRun: dryRunSchema,
       }),
@@ -272,8 +262,7 @@ export const agentClassesRouter = createTRPCRouter({
           include: { video: true },
         });
 
-        // HLS re-points the class at the new Video row the pipeline created;
-        // every other type mutates the existing row in place.
+        // HLS re-points at the pipeline's new Video row; others mutate in place.
         if (
           videoType === "HLS" &&
           input.video?.videoId &&
@@ -295,8 +284,7 @@ export const agentClassesRouter = createTRPCRouter({
           data: {
             title: input.title,
             ...(input.createdAt ? { createdAt: input.createdAt } : {}),
-            // Only touch the folder when the caller said something about it;
-            // otherwise an update would silently orphan the class.
+            // Only touched when specified, so an update cannot orphan the class.
             ...(input.folderName || input.folderId ? { folderId } : {}),
             ...liveFields,
           },
@@ -319,10 +307,7 @@ export const agentClassesRouter = createTRPCRouter({
       };
     }),
 
-  /**
-   * Delete a class. Defaults to a dry run reporting what goes with it —
-   * attendance and attachments cascade, and submissions hang off attachments.
-   */
+  /** Attendance and attachments cascade, and submissions hang off attachments. */
   delete: protectedProcedure
     .input(z.object({ classId: z.string(), dryRun: dryRunSchema }))
     .mutation(async ({ ctx, input }) => {

@@ -37,10 +37,9 @@ export interface CreateServerAuthOptions {
   trustedOrigins?: (request?: Request) => string[];
 }
 
-/** Identifies a Tutly agent/automation key at a glance in logs and configs. */
 export const API_KEY_PREFIX = "tutly_sk_";
 
-/** 90 days. Long enough to be practical, short enough that leaks age out. */
+/** 90 days, so a leaked key ages out. */
 export const API_KEY_DEFAULT_EXPIRY_MS = 90 * 24 * 60 * 60 * 1000;
 
 const NATIVE_TRUSTED_ORIGINS = [
@@ -130,8 +129,7 @@ export function createServerAuth(opts: CreateServerAuthOptions) {
       apiKey({
         defaultPrefix: API_KEY_PREFIX,
         requireName: true,
-        // Records which client a key was minted for, so a stale key is
-        // identifiable at revocation time.
+        // Records which client a key was minted for, for revocation.
         enableMetadata: true,
         keyExpiration: {
           defaultExpiresIn: API_KEY_DEFAULT_EXPIRY_MS,
@@ -139,15 +137,12 @@ export function createServerAuth(opts: CreateServerAuthOptions) {
         },
         rateLimit: {
           enabled: true,
-          // The plugin default is 10 requests *per day*, which one agent run
-          // would exhaust.
+          // The plugin default of 10/day would not survive one agent run.
           timeWindow: 60 * 60 * 1000,
           maxRequests: 3600,
         },
-        // Enabling this installs a `before` hook that short-circuits
-        // /get-session, bypassing customSession below and yielding a user with
-        // no role/organization/adminForCourses. `resolveApiKeySession` handles
-        // key sessions instead, through the same enrichment path.
+        // Would short-circuit /get-session and bypass customSession below,
+        // yielding a user with no role. `resolveSession` handles keys instead.
         enableSessionForAPIKeys: false,
       }),
       admin({

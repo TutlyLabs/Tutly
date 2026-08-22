@@ -12,10 +12,7 @@ export interface EnrichSessionOptions {
   db: Db;
   user: AuthUser;
   session: Session;
-  /**
-   * Bump `User.lastSeen`. Off for API keys, where a background agent polling
-   * would otherwise make a user look permanently online.
-   */
+  /** Off for API keys, so background polling does not fake presence. */
   touchLastSeen?: boolean;
   onError?: (error: unknown) => void;
 }
@@ -23,15 +20,11 @@ export interface EnrichSessionOptions {
 const LAST_SEEN_THRESHOLD_MS = 60 * 1000;
 
 /**
- * Turns a bare better-auth user into the enriched `SessionUser` that every
- * authorization check in `@tutly/api` reads.
+ * Enriches a better-auth user into the `SessionUser` that authorization reads.
  *
- * Shared because only one of the two session paths runs through better-auth's
- * `customSession` plugin: cookie/bearer sessions hit `/get-session`, which the
- * plugin overrides, while API keys are verified directly against the `apikey`
- * table. A key session missing these fields is worse than degraded —
- * `permissionProcedure` fails closed on an undefined `role`, but
- * `isCourseAdmin` reads `user.adminForCourses.some(...)` and throws.
+ * Shared by both session paths. Cookie/bearer sessions get this via
+ * `customSession`; API keys bypass that plugin, and a session without `role` or
+ * `adminForCourses` makes `isCourseAdmin` throw rather than deny.
  */
 export async function enrichSession({
   db,
@@ -40,8 +33,7 @@ export async function enrichSession({
   touchLastSeen = true,
   onError,
 }: EnrichSessionOptions): Promise<CustomSessionResult> {
-  // The better-auth user lacks the enriched columns, so role-gated procedures
-  // fail closed.
+  // Unenriched: role-gated procedures fail closed.
   const passThrough = () => ({ user, session }) as unknown as SessionWithUser;
 
   try {
@@ -51,7 +43,7 @@ export async function enrichSession({
     });
     if (!prismaUser) return passThrough();
 
-    // A disabled account loses every live session, not just this request.
+    // Disabled accounts lose every session, not just this request.
     if (prismaUser.disabledAt) {
       await db.session.deleteMany({ where: { userId: user.id } });
       return { session: null, user: null };
@@ -69,9 +61,7 @@ export async function enrichSession({
       }
     }
 
-    // `oneTimePassword` is a live credential. `SessionUser` omits it by type;
-    // deleting it means the key is absent from the object too, rather than
-    // present-but-undefined.
+    // A live credential: delete it so the key is absent, not undefined.
     const safeUser: SessionUser & { oneTimePassword?: string } = {
       ...prismaUser,
     };

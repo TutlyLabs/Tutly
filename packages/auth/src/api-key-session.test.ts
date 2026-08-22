@@ -29,11 +29,8 @@ describe("extractApiKey", () => {
     );
   });
 
-  /**
-   * The important negative case: session bearer tokens also arrive in this
-   * header. Treating one as an API key would spend a verification round trip
-   * and, worse, make a valid session look like an invalid key.
-   */
+  // Session bearer tokens arrive in the same header; misreading one as a key
+  // would make a valid session look invalid.
   it("ignores a bearer token without the Tutly key prefix", () => {
     expect(
       extractApiKey(headers({ authorization: "Bearer some-session-token" })),
@@ -133,8 +130,7 @@ describe("resolveSession", () => {
 
     expect(verifyApiKey).toHaveBeenCalledWith({ body: { key: KEY } });
     expect(result.authMethod).toBe("api-key");
-    // The enriched fields are what every authorization check reads; a bare
-    // better-auth user would crash `isCourseAdmin`.
+    // A bare better-auth user would crash `isCourseAdmin`.
     expect(result.user?.role).toBe("MENTOR");
     expect(result.user?.organization).toEqual({ id: "org-1" });
     expect(result.user?.adminForCourses).toEqual([]);
@@ -257,7 +253,7 @@ describe("resolveSession", () => {
     });
 
     expect(onError).toHaveBeenCalled();
-    // A failed cookie lookup must still allow the key path to succeed.
+    // A failed cookie lookup must not block the key path.
     expect(result.authMethod).toBe("api-key");
   });
 });

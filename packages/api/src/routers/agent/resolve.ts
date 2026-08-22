@@ -5,15 +5,8 @@ import { createTRPCRouter, protectedProcedure } from "../../trpc";
 const LIMIT = 10;
 
 /**
- * Name-to-id lookup.
- *
- * Every other agent tool takes ids, and no human says "assignment
- * 3f9a-...". Without this the caller's only option is to pull a page-data blob
- * and scan it, which is exactly the token cost the agent surface exists to
- * avoid.
- *
- * Scoping is by enrolment and course membership rather than by role: a mentor
- * resolving a name must not learn about courses they are not part of.
+ * Name-to-id lookup. Every other agent tool takes ids, and no human quotes a
+ * uuid. Scoped by enrolment, not role, so a lookup cannot reveal other courses.
  */
 export const agentResolveRouter = createTRPCRouter({
   lookup: protectedProcedure
@@ -34,8 +27,7 @@ export const agentResolveRouter = createTRPCRouter({
       const wants = (kind: "course" | "class" | "assignment") =>
         input.kind === "any" || input.kind === kind;
 
-      // The set of courses this caller may see at all. Every other lookup is
-      // constrained to it, so a title match can never leak across courses.
+      // Constrains every lookup below, so a title match cannot cross courses.
       const visibleCourses = await ctx.db.course.findMany({
         where: {
           OR: [
@@ -125,7 +117,7 @@ export const agentResolveRouter = createTRPCRouter({
       };
     }),
 
-  /** Who the caller is and which courses they can act on. */
+  /** The caller and the courses they can act on. */
   whoami: protectedProcedure.query(async ({ ctx }) => {
     const { user } = ctx.session;
 

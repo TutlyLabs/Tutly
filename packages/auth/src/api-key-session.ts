@@ -7,7 +7,7 @@ import type { SessionWithUser } from "./session";
 import { enrichSession } from "./enrich-session";
 import { API_KEY_PREFIX } from "./server";
 
-/** How a request proved who it is. Recorded so writes can be audited. */
+/** How a request authenticated. Recorded for auditing. */
 export type AuthMethod = "session" | "api-key";
 
 export interface ResolvedSession {
@@ -23,11 +23,8 @@ const ANONYMOUS: ResolvedSession = {
 };
 
 /**
- * Reads an API key from the request.
- *
- * `x-api-key` is the plugin's own header. `Authorization: Bearer` is also
- * accepted, but only for values carrying the Tutly key prefix — otherwise a real
- * session bearer token would be misread as a key and fail verification.
+ * Bearer tokens are only treated as keys when they carry the Tutly prefix;
+ * otherwise a real session token would be misread as a key.
  */
 export function extractApiKey(headers: Headers): string | null {
   const direct = headers.get("x-api-key");
@@ -48,13 +45,11 @@ export interface ResolveSessionOptions {
 }
 
 /**
- * Resolves a request to an enriched session, from either a cookie/bearer
- * session or an API key.
+ * Resolves a cookie, bearer token or API key to an enriched session. The
+ * interactive path is tried first so browsers never pay for key verification.
  *
- * The interactive path is tried first so a browser request never pays for key
- * verification. The key path is handled here rather than by the plugin's
- * `enableSessionForAPIKeys` option because that option bypasses `customSession`
- * and yields a user with no role or organization; see `server.ts`.
+ * Keys are handled here rather than via `enableSessionForAPIKeys`, which
+ * bypasses `customSession`; see `server.ts`.
  */
 export async function resolveSession({
   auth,
@@ -93,8 +88,8 @@ export async function resolveSession({
   const user = await db.user.findUnique({ where: { id: apiKeyRecord.userId } });
   if (!user) return ANONYMOUS;
 
-  // The key stands in for a session. `token` holds the key's id, never the
-  // plaintext, so an accidentally logged context cannot be replayed.
+  // `token` holds the key's id, never the plaintext, so a logged context
+  // cannot be replayed.
   const syntheticSession: Session = {
     id: apiKeyRecord.id,
     token: apiKeyRecord.id,
@@ -109,8 +104,7 @@ export async function resolveSession({
 
   const enriched = await enrichSession({
     db,
-    // enrichSession only reads `id`; the rest of the better-auth User shape is
-    // re-read from Prisma.
+    // Only `id` is read; the rest is re-read from Prisma.
     user: { id: user.id } as Parameters<typeof enrichSession>[0]["user"],
     session: syntheticSession,
     touchLastSeen: false,

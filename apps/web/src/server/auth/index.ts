@@ -58,8 +58,7 @@ export const auth = createServerAuth({
       data: { emailVerified: new Date() },
     });
   },
-  // Shared with the API-key path in `resolveSession`, so both kinds of caller
-  // get identically enriched sessions.
+  // Shared with the API-key path in `resolveSession`.
   customSessionHandler: ({ user, session }) =>
     enrichSession({
       db,

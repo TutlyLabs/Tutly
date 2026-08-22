@@ -10,8 +10,7 @@ import { auth } from "@/server/auth";
 const logger = createLogger("web:api:trpc");
 
 const handler = async (req: NextRequest) => {
-  // Accepts a browser cookie, a session bearer token, or an API key. All three
-  // arrive here as an equally enriched session.
+  // Cookie, session bearer token or API key; all yield the same session shape.
   const { user, session, authMethod } = await resolveSession({
     auth,
     db,

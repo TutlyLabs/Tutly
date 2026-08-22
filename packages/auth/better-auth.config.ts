@@ -3,15 +3,12 @@ import type { Db } from "@tutly/db";
 import { createServerAuth } from "./src/server";
 
 /**
- * Config entry point for `@better-auth/cli`, which loads a plain TS module and
- * cannot resolve the web app's `@/*` path aliases or its React email imports.
+ * Entry point for `@better-auth/cli`, which cannot resolve the web app's `@/*`
+ * aliases. Reuses `createServerAuth` so the plugin list stays single-sourced.
  *
- * It reuses `createServerAuth` so the plugin list — and therefore the generated
- * schema — stays single-sourced in `src/server.ts`. Every option here is a stub:
- * the CLI only reads `auth.options` to derive tables, and never opens a
- * connection or serves a request.
+ * Options are stubs: the CLI only reads `auth.options` to derive tables.
  *
- *   pnpm --filter @tutly/auth db:generate-schema
+ *   pnpm --filter @tutly/auth auth:generate-schema
  */
 export const auth = createServerAuth({
   secret: "better-auth-cli-schema-generation",

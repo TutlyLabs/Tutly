@@ -25,7 +25,7 @@ import {
 } from "@tutly/ui/select";
 import { authClient } from "@/server/auth/client";
 
-/** Matches the plugin's `maxExpiresIn: 365`. Values are days. */
+/** Days. Capped by the plugin's `maxExpiresIn: 365`. */
 const EXPIRY_OPTIONS = [
   { label: "30 days", days: 30 },
   { label: "90 days", days: 90 },
@@ -70,8 +70,7 @@ export default function ApiKeys() {
   const [creating, setCreating] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
 
-  // Shown exactly once, right after creation. The server only ever stores a
-  // hash, so there is no way back to this value.
+  // Shown once: only a hash is stored, so this value is unrecoverable.
   const [newKey, setNewKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -92,14 +91,13 @@ export default function ApiKeys() {
     [],
   );
 
-  /** Refetch after a mutation. `loading` is already false by then. */
+  /** Refetch after a mutation; `loading` is already false by then. */
   const refresh = useCallback(async () => {
     applyList(await authClient.apiKey.list(), () => true);
   }, [applyList]);
 
-  // `loading` starts true, so the initial fetch must not set it again — doing so
-  // synchronously in the effect body causes a cascading render. The cancel flag
-  // keeps a slow response from writing state after unmount.
+  // `loading` starts true, so setting it here would cascade a render. The
+  // cancel flag stops a slow response writing state after unmount.
   useEffect(() => {
     let cancelled = false;
     void authClient.apiKey
@@ -112,8 +110,7 @@ export default function ApiKeys() {
 
   const handleCreate = async () => {
     const trimmed = name.trim();
-    // The plugin is configured with `requireName`, so an empty name is a
-    // server-side error; catch it here for a better message.
+    // `requireName` is set server-side; caught here for a better message.
     if (!trimmed) {
       toast.error("Give the key a name so you can recognise it later");
       return;

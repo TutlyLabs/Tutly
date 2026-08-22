@@ -11,11 +11,8 @@ import { hasPermission } from "@tutly/auth/access-control";
 import type { AuthedSessionContext } from "../../trpc";
 
 /**
- * Branch-aware grant check.
- *
- * `permissionProcedure` gates a whole procedure on one resource/action pair,
- * which an upsert cannot use: it needs `create` on one path and `update` on the
- * other, and gating on both would deny callers who legitimately hold only one.
+ * Branch-aware grant check. An upsert needs `create` on one path and `update` on
+ * the other, so it cannot use `permissionProcedure`, which gates on one pair.
  */
 export function requireGrant<R extends Resource>(
   session: AuthedSessionContext,
@@ -31,10 +28,7 @@ export function requireGrant<R extends Resource>(
   }
 }
 
-/**
- * Every write tool takes this. Agents retry and mis-resolve ids, so the default
- * is to report what *would* change and commit only when asked.
- */
+/** Agents retry and mis-resolve ids, so writes preview by default. */
 export const dryRunSchema = z
   .boolean()
   .default(false)
@@ -42,7 +36,7 @@ export const dryRunSchema = z
     "Preview the change and return the planned effect without writing.",
   );
 
-/** Trimmed, non-empty string — agents routinely pass padded values. */
+/** Trimmed: agents routinely pass padded values. */
 export const titleSchema = z.string().trim().min(1).max(300);
 
 export const videoTypeSchema = z.enum(["DRIVE", "YOUTUBE", "ZOOM", "HLS"]);
@@ -59,9 +53,8 @@ export const submissionModeSchema = z.enum([
 ]);
 
 /**
- * An ISO date or date-time. Accepts a bare `YYYY-MM-DD` because that is what a
- * model produces when a human says "due Friday"; `z.coerce.date` alone would
- * also accept nonsense like `"tomorrow"` as an Invalid Date.
+ * ISO date or date-time. `z.coerce.date` would accept "tomorrow" as an Invalid
+ * Date, so parseability is checked explicitly.
  */
 export const isoDateSchema = z
   .string()
@@ -95,12 +88,7 @@ export const workspaceConfigSchema = z.object({
   readonlyPaths: z.array(z.string().trim().min(1)).optional(),
 });
 
-/**
- * Rejects duplicate test-case titles.
- *
- * Titles are how a reported result is matched back to its case, and how a
- * student reads a failure. Two cases sharing one makes both unattributable.
- */
+/** Titles map a reported result back to its case, so they must be unique. */
 export function assertUniqueTestCaseTitles(testCases: TestCaseInput[]): void {
   const seen = new Set<string>();
   const duplicates = new Set<string>();

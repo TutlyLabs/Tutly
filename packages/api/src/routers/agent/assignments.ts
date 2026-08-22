@@ -81,7 +81,7 @@ export const agentAssignmentsRouter = createTRPCRouter({
       }));
     }),
 
-  /** Full authoring view: the assignment plus its workspace config and tests. */
+  /** Authoring view: the assignment plus its workspace config and tests. */
   get: protectedProcedure
     .input(z.object({ assignmentId: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -147,13 +147,8 @@ export const agentAssignmentsRouter = createTRPCRouter({
     }),
 
   /**
-   * Create or update an assignment, its workspace config and its whole test
-   * suite in one call.
-   *
-   * The UI needs three round trips for this (`createAttachment`,
-   * `updateWorkspaceConfig`, `linkAssignmentToClass`) and a half-finished
-   * assignment is a real state a mentor can get stuck in. Here it is one
-   * transaction: either the assignment exists fully configured, or not at all.
+   * Creates or updates an assignment, its workspace config and its whole test
+   * suite in one transaction, so it cannot be left half-configured.
    */
   upsert: protectedProcedure
     .input(
@@ -169,10 +164,7 @@ export const agentAssignmentsRouter = createTRPCRouter({
         maxSubmissions: z.number().int().min(1).max(100).optional(),
         submissionMode: submissionModeSchema.optional(),
         workspace: workspaceConfigSchema.optional(),
-        /**
-         * Replaces the suite wholesale when present. Omit to leave the existing
-         * suite untouched; pass `[]` to clear it.
-         */
+        /** Replaces the suite. Omit to keep it; pass `[]` to clear it. */
         testCases: z.array(testCaseSchema).optional(),
         dryRun: dryRunSchema,
       }),
@@ -198,7 +190,7 @@ export const agentAssignmentsRouter = createTRPCRouter({
         });
       }
 
-      // Authorize each scope the write actually touches.
+      // Authorize every scope the write touches.
       if (classId) {
         const cls = await requireClassManageAccess(ctx, classId);
         courseId ??= cls.courseId;
@@ -211,9 +203,8 @@ export const agentAssignmentsRouter = createTRPCRouter({
       }
       if (input.workspace) requireGrant(ctx.session, "workspace", "configure");
 
-      // Test cases only mean anything to a workspace assignment, and
-      // `updateWorkspaceConfig` already forces this mode. Made explicit so the
-      // caller sees it in the dry run instead of discovering it later.
+      // Test cases only apply to workspace assignments. Made explicit so the
+      // caller sees the mode in the dry run rather than discovering it later.
       const configuresWorkspace = Boolean(input.workspace || input.testCases);
       const submissionMode =
         input.submissionMode ?? (configuresWorkspace ? "WORKSPACE" : undefined);
@@ -274,8 +265,7 @@ export const agentAssignmentsRouter = createTRPCRouter({
                   ? { maxSubmissions: input.maxSubmissions }
                   : {}),
                 ...(submissionMode ? { submissionMode } : {}),
-                // Re-parenting is how an unlinked assignment gets attached to
-                // its class, which is a step the UI makes easy to forget.
+                // Re-parents an unlinked assignment onto its class.
                 ...(input.classId ? { classId: input.classId } : {}),
               },
             })
@@ -323,8 +313,7 @@ export const agentAssignmentsRouter = createTRPCRouter({
         }
 
         if (input.testCases) {
-          // Replace wholesale. Diffing by title would silently keep a stale
-          // case whose command the author meant to change.
+          // Replaced wholesale: diffing by title would keep a stale command.
           await tx.assignmentTestCase.deleteMany({
             where: { assignmentId: assignment.id },
           });

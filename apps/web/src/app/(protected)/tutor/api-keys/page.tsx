@@ -9,9 +9,8 @@ import PageLoader from "@/components/loader/PageLoader";
 import ApiKeys from "./_components/ApiKeys";
 
 /**
- * The tutor layout admits MENTOR, but issuing long-lived credentials is
- * INSTRUCTOR+. This is the display gate only — `/api/auth/api-key/*` enforces
- * the same rule server-side.
+ * The tutor layout admits MENTOR, so this narrows to INSTRUCTOR+. Display gate
+ * only; `/api/auth/api-key/*` enforces the same rule server-side.
  */
 export default function ApiKeysPage() {
   const { user, isPending } = useAuthSession();

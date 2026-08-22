@@ -8,16 +8,12 @@ import { auth } from "@/server/auth";
 const handlers = toNextJsHandler(auth);
 
 /**
- * The api-key plugin mounts `/api-key/create|list|delete|update|get|verify`
- * here, and its own only requirement is *a* session — so without this gate any
- * signed-in student could mint a key. Gating the UI would not help: the
- * endpoints are reachable directly.
+ * The api-key plugin mounts `/api-key/*` here and requires only *a* session, so
+ * without this any signed-in user could mint a key. Gating the UI alone would
+ * not help — the endpoints are reachable directly.
  *
- * A key inherits its owner's role, so this is not privilege escalation, but
- * issuing long-lived credentials is INSTRUCTOR+ by policy.
- *
- * `verifyApiKey` is covered too. It is an oracle for whether a key is valid,
- * and nothing needs it over HTTP: `resolveSession` calls it in-process.
+ * `/api-key/verify` is included: it reveals whether a key is valid, and
+ * `resolveSession` calls it in-process rather than over HTTP.
  */
 async function denyUnlessKeyIssuer(req: NextRequest) {
   if (!req.nextUrl.pathname.includes("/api-key/")) return null;

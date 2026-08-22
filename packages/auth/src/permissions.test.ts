@@ -71,7 +71,6 @@ const EXPECTED: {
     request: { attendance: ["create"] },
     allowed: ["INSTRUCTOR", "ADMIN", "SUPER_ADMIN"],
   },
-  // A key inherits its owner's role, so minting one must stay above MENTOR.
   {
     name: "apiKey:create",
     request: { apiKey: ["create"] },

@@ -26,7 +26,7 @@ export interface TRPCContext {
   token: string | null;
   source: string;
   headers: Headers;
-  /** How the caller authenticated. Lets procedures audit or gate agent traffic. */
+  /** How the caller authenticated, for auditing agent traffic. */
   authMethod: AuthMethod;
 }
 

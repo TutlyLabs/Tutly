@@ -31,10 +31,8 @@ function user(
 }
 
 /**
- * The db double returns whatever the happy path needs. Access helpers hit
- * `course.findUnique`, so it must always resolve a course this caller can
- * manage — otherwise every test would fail on authorization instead of the
- * behaviour under test.
+ * Access helpers hit `course.findUnique`, so the double must always resolve a
+ * manageable course; otherwise tests fail on authorization, not behaviour.
  */
 function makeDb(overrides: Record<string, unknown> = {}) {
   const course = {
@@ -124,8 +122,7 @@ describe("class write grants", () => {
     expect(result.action).toBe("create");
   });
 
-  // MENTOR_GRANTS holds class:["read","list"] only. Mentors doing class setup
-  // is a permissions question, not something these tools may quietly allow.
+  // MENTOR_GRANTS holds class:["read","list"] only.
   it("denies a mentor creating a class", async () => {
     expect(
       await codeOf(() =>
@@ -255,9 +252,8 @@ describe("classes.upsert validation", () => {
           .mockResolvedValue({ id: CLASS, courseId: "other-course" }),
       },
     });
-    // requireClassManageAccess resolves the class's *own* course, which this
-    // caller does administer, so it passes. Only the explicit cross-check
-    // catches a courseId that disagrees with the class.
+    // The access helper resolves the class's own course, which this caller does
+    // administer, so only the explicit cross-check catches the mismatch.
     expect(
       await messageOf(() =>
         caller(user("INSTRUCTOR"), db).classes.upsert({
@@ -324,8 +320,7 @@ describe("assignments.upsert validation", () => {
     ).toMatch(/require submissionMode WORKSPACE/);
   });
 
-  // Titles are how a reported result maps back to its case; duplicates make
-  // both unattributable.
+  // Titles map results back to cases, so duplicates are unattributable.
   it("rejects duplicate test case titles, case-insensitively", async () => {
     expect(
       await messageOf(() =>
@@ -456,10 +451,10 @@ describe("assignments.upsert commit", () => {
     expect(db.$transaction).toHaveBeenCalledOnce();
     expect(tx.attachment.create).toHaveBeenCalledOnce();
     expect(tx.assignmentConfig.upsert).toHaveBeenCalledOnce();
-    // Replaced wholesale, so a stale case cannot survive an edit.
+    // Replaced wholesale so a stale case cannot survive an edit.
     expect(tx.assignmentTestCase.deleteMany).toHaveBeenCalledOnce();
     expect(tx.assignmentTestCase.createMany).toHaveBeenCalledOnce();
-    // The result is a dryRun-discriminated union; narrow before reading.
+    // Discriminated union: narrow before reading.
     expect(result.dryRun).toBe(false);
     if (result.dryRun) throw new Error("expected a committed result");
     expect(result.assignment.id).toBe("a1");
@@ -574,7 +569,7 @@ describe("resolve.lookup", () => {
     expect(result.courses[0]?.id).toBe(COURSE);
   });
 
-  // A title match must never reach outside the caller's own courses.
+  // A title match must not reach outside the caller's courses.
   it("skips class and assignment lookups when no course is visible", async () => {
     const db = makeDb({
       course: { findUnique: vi.fn(), findMany: vi.fn().mockResolvedValue([]) },
