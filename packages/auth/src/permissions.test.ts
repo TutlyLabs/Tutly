@@ -72,6 +72,16 @@ const EXPECTED: {
     allowed: ["INSTRUCTOR", "ADMIN", "SUPER_ADMIN"],
   },
   {
+    name: "apiKey:create",
+    request: { apiKey: ["create"] },
+    allowed: ["INSTRUCTOR", "ADMIN", "SUPER_ADMIN"],
+  },
+  {
+    name: "apiKey:list",
+    request: { apiKey: ["list"] },
+    allowed: ["INSTRUCTOR", "ADMIN", "SUPER_ADMIN"],
+  },
+  {
     name: "doubt:delete",
     request: { doubt: ["delete"] },
     allowed: HIERARCHY,

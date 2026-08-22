@@ -1,9 +1,10 @@
 import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Role } from "@tutly/db/browser";
 import type { SessionUser } from "@tutly/auth/session";
+import type { Role } from "@tutly/db/browser";
 
+import type { SessionContext, TRPCContext } from "./trpc";
 import {
   isMentorOfStudent,
   requireCourseManageAccess,
@@ -11,7 +12,6 @@ import {
   requireSameOrganization,
   resolveTargetUsername,
 } from "./lib/authorization";
-import type { SessionContext, TRPCContext } from "./trpc";
 import {
   createCallerFactory,
   createTRPCRouter,
@@ -26,7 +26,10 @@ vi.mock("@tutly/db", () => ({ db: {} }));
 const ORG = "org-1";
 
 /** Only the fields any authorization path actually reads; the rest is irrelevant. */
-function user(role: Role, overrides: Record<string, unknown> = {}): SessionUser {
+function user(
+  role: Role,
+  overrides: Record<string, unknown> = {},
+): SessionUser {
   return {
     id: "user-1",
     username: "alice",
@@ -50,6 +53,7 @@ function makeCtx(
     token: null,
     source: "test",
     headers: new Headers(),
+    authMethod: "session",
   };
 }
 
@@ -98,7 +102,9 @@ describe("staffProcedure", () => {
   );
 
   it.each(["STUDENT", "MENTOR"] as const)("rejects %s", async (role) => {
-    expect(await codeOf(() => caller(user(role)).staffOnly())).toBe("FORBIDDEN");
+    expect(await codeOf(() => caller(user(role)).staffOnly())).toBe(
+      "FORBIDDEN",
+    );
   });
 
   it("rejects an unauthenticated caller with UNAUTHORIZED, not FORBIDDEN", async () => {
@@ -150,7 +156,9 @@ describe("permissionProcedure", () => {
   });
 
   it("rejects an unauthenticated caller with UNAUTHORIZED", async () => {
-    expect(await codeOf(() => caller(null).updateCourse())).toBe("UNAUTHORIZED");
+    expect(await codeOf(() => caller(null).updateCourse())).toBe(
+      "UNAUTHORIZED",
+    );
   });
 });
 

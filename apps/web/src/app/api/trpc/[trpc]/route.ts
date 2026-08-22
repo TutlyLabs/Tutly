@@ -2,13 +2,21 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { type NextRequest } from "next/server";
 
 import { appRouter, createTRPCContext } from "@tutly/api";
+import { resolveSession } from "@tutly/auth/api-key-session";
+import { db } from "@tutly/db";
 import { createLogger } from "@tutly/logger";
 import { auth } from "@/server/auth";
 
 const logger = createLogger("web:api:trpc");
 
 const handler = async (req: NextRequest) => {
-  const session = await auth.api.getSession({ headers: req.headers });
+  // Cookie, session bearer token or API key; all yield the same session shape.
+  const { user, session, authMethod } = await resolveSession({
+    auth,
+    db,
+    headers: req.headers,
+    onError: (err) => logger.error({ err }, "session resolution failed"),
+  });
 
   return fetchRequestHandler({
     endpoint: "/api/trpc",
@@ -17,11 +25,8 @@ const handler = async (req: NextRequest) => {
     createContext: () =>
       createTRPCContext({
         headers: req.headers,
-        // better-auth widens the customSession return to an index-signature
-        // object; project the two fields the tRPC context actually declares.
-        session: session
-          ? { user: session.user, session: session.session }
-          : null,
+        session: user && session ? { user, session } : null,
+        authMethod,
       }),
     onError:
       process.env.NODE_ENV === "development"

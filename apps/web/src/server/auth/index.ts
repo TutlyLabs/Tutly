@@ -1,8 +1,8 @@
 import { compare, hash } from "bcryptjs";
 import { Resend } from "resend";
 
+import { enrichSession } from "@tutly/auth/enrich-session";
 import { createServerAuth } from "@tutly/auth/server";
-import type { SessionWithUser } from "@tutly/auth/session";
 
 import {
   RESEND_API_KEY,
@@ -58,45 +58,14 @@ export const auth = createServerAuth({
       data: { emailVerified: new Date() },
     });
   },
-  customSessionHandler: async ({ user, session }) => {
-    // Degraded pass-through for the two unreachable-in-practice paths below:
-    // the better-auth user lacks the enriched columns, so every permission
-    // check fails closed. Kept as-is (with a cast) rather than changed here.
-    const passThrough = () => ({ user, session }) as unknown as SessionWithUser;
-    try {
-      const prismaUser = await db.user.findUnique({
-        where: { id: user.id },
-        include: { organization: true, adminForCourses: true },
-      });
-      if (!prismaUser) return passThrough();
-      if (prismaUser.disabledAt) {
-        await db.session.deleteMany({ where: { userId: user.id } });
-        return { session: null, user: null };
-      }
-      const now = new Date();
-      const lastSeenThreshold = 60 * 1000;
-      if (
-        !prismaUser.lastSeen ||
-        now.getTime() - prismaUser.lastSeen.getTime() > lastSeenThreshold
-      ) {
-        db.user
-          .update({ where: { id: user.id }, data: { lastSeen: now } })
-          .catch(console.error);
-      }
-      return {
-        user: {
-          ...prismaUser,
-          username: prismaUser.username,
-          password: undefined,
-          oneTimePassword: undefined,
-        },
-        session,
-      };
-    } catch (error) {
-      console.error("customSession error:", error);
-      return passThrough();
-    }
-  },
+  // Shared with the API-key path in `resolveSession`.
+  customSessionHandler: ({ user, session }) =>
+    enrichSession({
+      db,
+      user,
+      session,
+      onError: (error) => console.error("customSession error:", error),
+    }),
   google:
     GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET
       ? { clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET }

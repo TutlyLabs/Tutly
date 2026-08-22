@@ -1,14 +1,16 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
-import { hasPermission } from "@tutly/auth/access-control";
+import type { AuthMethod } from "@tutly/auth/api-key-session";
 import type {
   ActionsOf,
   PermissionRequest,
   Resource,
 } from "@tutly/auth/permissions";
 import type { SessionUser, SessionWithUser } from "@tutly/auth/session";
-import { db, type Db } from "@tutly/db";
+import type { Db } from "@tutly/db";
+import { hasPermission } from "@tutly/auth/access-control";
+import { db } from "@tutly/db";
 import { createLogger } from "@tutly/logger";
 
 const logger = createLogger("api:trpc");
@@ -24,6 +26,8 @@ export interface TRPCContext {
   token: string | null;
   source: string;
   headers: Headers;
+  /** How the caller authenticated, for auditing agent traffic. */
+  authMethod: AuthMethod;
 }
 
 /** Session narrowed to an authenticated user, as seen inside protected procedures. */
@@ -34,12 +38,14 @@ export interface AuthedSessionContext extends SessionContext {
 export const createTRPCContext = async (opts: {
   headers: Headers;
   session: SessionContext | null;
+  authMethod?: AuthMethod;
 }): Promise<TRPCContext> => {
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
   const token = opts.headers.get("authorization") ?? null;
+  const authMethod = opts.authMethod ?? "session";
 
   logger.debug(
-    { source, userId: opts.session?.user?.id ?? null },
+    { source, authMethod, userId: opts.session?.user?.id ?? null },
     "trpc request received",
   );
 
@@ -49,6 +55,7 @@ export const createTRPCContext = async (opts: {
     token,
     source,
     headers: opts.headers,
+    authMethod,
   };
 };
 
@@ -112,7 +119,10 @@ const STAFF_ROLES = new Set(["INSTRUCTOR", "ADMIN", "SUPER_ADMIN"]);
 /** Course-staff gate: INSTRUCTOR, ADMIN or SUPER_ADMIN. */
 export const staffProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (!STAFF_ROLES.has(ctx.session.user.role)) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Staff access required" });
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Staff access required",
+    });
   }
   return next();
 });

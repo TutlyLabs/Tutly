@@ -3,6 +3,7 @@ import type { User } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { apiKey } from "better-auth/plugins";
 import { admin } from "better-auth/plugins/admin";
 import { bearer } from "better-auth/plugins/bearer";
 import { customSession } from "better-auth/plugins/custom-session";
@@ -35,6 +36,11 @@ export interface CreateServerAuthOptions {
   afterEmailVerification?: (user: User) => Promise<void>;
   trustedOrigins?: (request?: Request) => string[];
 }
+
+export const API_KEY_PREFIX = "tutly_sk_";
+
+/** 90 days, so a leaked key ages out. */
+export const API_KEY_DEFAULT_EXPIRY_MS = 90 * 24 * 60 * 60 * 1000;
 
 const NATIVE_TRUSTED_ORIGINS = [
   "tutly://",
@@ -120,6 +126,25 @@ export function createServerAuth(opts: CreateServerAuthOptions) {
         },
       }),
       bearer(),
+      apiKey({
+        defaultPrefix: API_KEY_PREFIX,
+        requireName: true,
+        // Records which client a key was minted for, for revocation.
+        enableMetadata: true,
+        keyExpiration: {
+          defaultExpiresIn: API_KEY_DEFAULT_EXPIRY_MS,
+          maxExpiresIn: 365,
+        },
+        rateLimit: {
+          enabled: true,
+          // The plugin default of 10/day would not survive one agent run.
+          timeWindow: 60 * 60 * 1000,
+          maxRequests: 3600,
+        },
+        // Would short-circuit /get-session and bypass customSession below,
+        // yielding a user with no role. `resolveSession` handles keys instead.
+        enableSessionForAPIKeys: false,
+      }),
       admin({
         ac,
         adminRoles: ["ADMIN", "INSTRUCTOR", "SUPER_ADMIN"],

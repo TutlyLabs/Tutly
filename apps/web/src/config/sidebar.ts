@@ -191,6 +191,11 @@ const APP_NAV: NavItem[] = [
         url: "/tutor/manage-users",
         permission: { all: [{ user: ["list"] }] },
       },
+      {
+        title: "API Keys",
+        url: "/tutor/api-keys",
+        permission: { all: [{ apiKey: ["list"] }] },
+      },
     ],
   },
   {
