@@ -62,6 +62,7 @@ const LEGACY_NAV: Record<Role, NavShape[]> = {
       items: [
         { title: "Activity", url: "/tutor/activity" },
         { title: "Manage", url: "/tutor/manage-users" },
+        { title: "API Keys", url: "/tutor/api-keys" },
       ],
     },
     { title: "Bookmarks", url: "/bookmarks" },
@@ -108,6 +109,7 @@ const LEGACY_NAV: Record<Role, NavShape[]> = {
       items: [
         { title: "Activity", url: "/tutor/activity" },
         { title: "Manage", url: "/tutor/manage-users" },
+        { title: "API Keys", url: "/tutor/api-keys" },
       ],
     },
     { title: "Bookmarks", url: "/bookmarks" },
