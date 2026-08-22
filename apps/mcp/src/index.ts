@@ -1,8 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
+import { TOOLS } from "@tutly/mcp-tools";
+
 import { TutlyApiError, TutlyClient } from "./client.js";
-import { TOOLS } from "./tools.js";
 
 const DEFAULT_BASE_URL = "https://learn.tutly.in";
 
@@ -97,7 +98,11 @@ async function main() {
               ([, value]) => value !== undefined,
             ),
           );
-          return toResult(await tool.run(client, cleaned));
+          const invoke =
+            tool.kind === "query"
+              ? client.query.bind(client)
+              : client.mutate.bind(client);
+          return toResult(await invoke(tool.procedure, cleaned));
         } catch (error) {
           return toErrorResult(error);
         }

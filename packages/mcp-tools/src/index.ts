@@ -1,11 +1,8 @@
 import { z } from "zod";
 
-import type { TutlyClient } from "./client.js";
-
 /**
- * One MCP tool per `agent.*` procedure. The mapping is mechanical on purpose:
- * permissions and transactions belong to the router, so anything added here
- * would be logic the web app does not share.
+ * One MCP tool per `agent.*` procedure, declared without a transport so the
+ * stdio host (over HTTP) and the remote host (in-process) cannot drift.
  */
 export interface ToolDefinition {
   name: string;
@@ -14,10 +11,9 @@ export interface ToolDefinition {
   inputSchema: z.ZodRawShape;
   /** Non-writing tools, which hosts may auto-approve. */
   readOnly: boolean;
-  run: (
-    client: TutlyClient,
-    input: Record<string, unknown>,
-  ) => Promise<unknown>;
+  /** Dotted `agent.*` path on the tRPC router. */
+  procedure: string;
+  kind: "query" | "mutation";
 }
 
 const dryRun = z
@@ -64,7 +60,8 @@ export const TOOLS: ToolDefinition[] = [
       "Identify the authenticated user and list the courses they can teach or mentor. Call this first in a session to learn which courses are in scope.",
     inputSchema: {},
     readOnly: true,
-    run: (client) => client.query("agent.resolve.whoami"),
+    procedure: "agent.resolve.whoami",
+    kind: "query",
   },
   {
     name: "tutly_resolve",
@@ -79,7 +76,8 @@ export const TOOLS: ToolDefinition[] = [
         .describe("Narrow the search when the type is already known."),
     },
     readOnly: true,
-    run: (client, input) => client.query("agent.resolve.lookup", input),
+    procedure: "agent.resolve.lookup",
+    kind: "query",
   },
 
   /* ----------------------------- Classes ----------------------------- */
@@ -90,7 +88,8 @@ export const TOOLS: ToolDefinition[] = [
       "List a course's classes with assignment and attendance counts. Compact by design — use tutly_get_class for one class's detail.",
     inputSchema: { courseId: z.string() },
     readOnly: true,
-    run: (client, input) => client.query("agent.classes.list", input),
+    procedure: "agent.classes.list",
+    kind: "query",
   },
   {
     name: "tutly_get_class",
@@ -99,7 +98,8 @@ export const TOOLS: ToolDefinition[] = [
       "Full detail for one class: video, folder, attached assignments and attendance count.",
     inputSchema: { classId: z.string() },
     readOnly: true,
-    run: (client, input) => client.query("agent.classes.get", input),
+    procedure: "agent.classes.get",
+    kind: "query",
   },
   {
     name: "tutly_upsert_class",
@@ -143,7 +143,8 @@ export const TOOLS: ToolDefinition[] = [
       dryRun,
     },
     readOnly: false,
-    run: (client, input) => client.mutate("agent.classes.upsert", input),
+    procedure: "agent.classes.upsert",
+    kind: "mutation",
   },
   {
     name: "tutly_delete_class",
@@ -152,7 +153,8 @@ export const TOOLS: ToolDefinition[] = [
       "Delete a class. Attendance and attachments go with it. Call with dryRun true first — the response reports exactly what would be destroyed.",
     inputSchema: { classId: z.string(), dryRun },
     readOnly: false,
-    run: (client, input) => client.mutate("agent.classes.delete", input),
+    procedure: "agent.classes.delete",
+    kind: "mutation",
   },
 
   /* --------------------------- Assignments --------------------------- */
@@ -166,7 +168,8 @@ export const TOOLS: ToolDefinition[] = [
       classId: z.string().optional(),
     },
     readOnly: true,
-    run: (client, input) => client.query("agent.assignments.list", input),
+    procedure: "agent.assignments.list",
+    kind: "query",
   },
   {
     name: "tutly_get_assignment",
@@ -175,7 +178,8 @@ export const TOOLS: ToolDefinition[] = [
       "Full authoring view: details, workspace config and every test case with its command and points. Read this before editing an assignment so the test suite is not lost.",
     inputSchema: { assignmentId: z.string() },
     readOnly: true,
-    run: (client, input) => client.query("agent.assignments.get", input),
+    procedure: "agent.assignments.get",
+    kind: "query",
   },
   {
     name: "tutly_upsert_assignment",
@@ -221,7 +225,8 @@ export const TOOLS: ToolDefinition[] = [
       dryRun,
     },
     readOnly: false,
-    run: (client, input) => client.mutate("agent.assignments.upsert", input),
+    procedure: "agent.assignments.upsert",
+    kind: "mutation",
   },
   {
     name: "tutly_delete_assignment",
@@ -230,7 +235,8 @@ export const TOOLS: ToolDefinition[] = [
       "Delete an assignment and its test cases. Call with dryRun true first to see how many submissions are attached.",
     inputSchema: { assignmentId: z.string(), dryRun },
     readOnly: false,
-    run: (client, input) => client.mutate("agent.assignments.delete", input),
+    procedure: "agent.assignments.delete",
+    kind: "mutation",
   },
 
   /* ---------------------------- Attendance --------------------------- */
@@ -241,7 +247,8 @@ export const TOOLS: ToolDefinition[] = [
       "What is already recorded for a class, and how it compares to the enrolled cohort.",
     inputSchema: { classId: z.string() },
     readOnly: true,
-    run: (client, input) => client.query("agent.attendance.summary", input),
+    procedure: "agent.attendance.summary",
+    kind: "query",
   },
   {
     name: "tutly_import_attendance",
@@ -266,7 +273,8 @@ export const TOOLS: ToolDefinition[] = [
       dryRun,
     },
     readOnly: false,
-    run: (client, input) => client.mutate("agent.attendance.import", input),
+    procedure: "agent.attendance.import",
+    kind: "mutation",
   },
   {
     name: "tutly_clear_attendance",
@@ -275,6 +283,7 @@ export const TOOLS: ToolDefinition[] = [
       "Delete every attendance record for a class. Rarely needed — tutly_import_attendance already overwrites. Call with dryRun true first.",
     inputSchema: { classId: z.string(), dryRun },
     readOnly: false,
-    run: (client, input) => client.mutate("agent.attendance.clear", input),
+    procedure: "agent.attendance.clear",
+    kind: "mutation",
   },
 ];
