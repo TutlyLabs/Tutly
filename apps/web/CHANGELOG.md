@@ -1,5 +1,23 @@
 # web
 
+## 4.9.0
+
+### Minor Changes
+
+- [#163](https://github.com/TutlyLabs/Tutly/pull/163) [`764624c`](https://github.com/TutlyLabs/Tutly/commit/764624ce5e7e99ae25cbd972e62f3421b13435b8) Thanks [@UdaySagar-Git](https://github.com/UdaySagar-Git)! - Add a remote MCP server so Claude and ChatGPT can connect over OAuth.
+
+  `POST /mcp` serves the same 13 tools as `@tutly/mcp` using Streamable HTTP,
+  authorized by OAuth 2.1 rather than an API key. better-auth acts as the
+  authorization server, so a connector never holds a long-lived credential:
+  users click Connect, sign in with their Tutly account, and access is revoked
+  by revoking the grant. Adds the RFC 9728 and RFC 8414 discovery documents the
+  MCP spec requires.
+
+  Tool definitions move to `@tutly/mcp-tools` so the stdio and remote hosts
+  cannot drift; procedures run in-process here, so there is no second network
+  hop. Also reserves the `mcp` subdomain, which an organization could otherwise
+  claim.
+
 ## 4.8.0
 
 ### Minor Changes
