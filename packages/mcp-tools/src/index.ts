@@ -286,4 +286,49 @@ export const TOOLS: ToolDefinition[] = [
     procedure: "agent.attendance.clear",
     kind: "mutation",
   },
+
+  /* ------------------------------ Courses ------------------------------ */
+  {
+    name: "tutly_list_courses",
+    title: "List courses",
+    description:
+      "List courses the authenticated user can manage, with class, assignment and enrolment counts. Call this to discover course IDs.",
+    inputSchema: {},
+    readOnly: true,
+    procedure: "agent.courses.list",
+    kind: "query",
+  },
+  {
+    name: "tutly_upsert_course",
+    title: "Create or update a course",
+    description:
+      "Create a course (omit courseId) or update one (pass it). On create the caller is auto-enrolled. Requires instructor permissions.",
+    inputSchema: {
+      courseId: z.string().optional().describe("Omit to create."),
+      title: z.string().describe("Course title."),
+      isPublished: z
+        .boolean()
+        .optional()
+        .describe("Whether the course is visible to non-instructors."),
+      image: z
+        .string()
+        .nullable()
+        .optional()
+        .describe("Banner image URL, or null to remove."),
+      dryRun,
+    },
+    readOnly: false,
+    procedure: "agent.courses.upsert",
+    kind: "mutation",
+  },
+  {
+    name: "tutly_delete_course",
+    title: "Delete a course",
+    description:
+      "Delete a course and all its classes, assignments and enrolments. Call with dryRun true first — the response reports exactly what would be destroyed.",
+    inputSchema: { courseId: z.string(), dryRun },
+    readOnly: false,
+    procedure: "agent.courses.delete",
+    kind: "mutation",
+  },
 ];
