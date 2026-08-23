@@ -1,9 +1,16 @@
 import { z } from "zod";
 
 /**
- * One MCP tool per `agent.*` procedure, declared without a transport so the
- * stdio host (over HTTP) and the remote host (in-process) cannot drift.
+ * Declarative tool definitions for the Tutly MCP server.
+ *
+ * Each tool maps to one `agent.*` tRPC procedure. The server loops over this
+ * array to register tools, so adding a tool here is all that's needed — no
+ * handler code required.
+ *
+ * This is a standalone copy of the definitions from @tutly/mcp-tools, since
+ * tutly-mcp is not a monorepo workspace package.
  */
+
 export interface ToolDefinition {
   name: string;
   title: string;
@@ -53,6 +60,7 @@ const participant = z.object({
 });
 
 export const TOOLS: ToolDefinition[] = [
+  /* ------------------------------ Identity ------------------------------ */
   {
     name: "tutly_whoami",
     title: "Who am I",
@@ -78,6 +86,51 @@ export const TOOLS: ToolDefinition[] = [
     readOnly: true,
     procedure: "agent.resolve.lookup",
     kind: "query",
+  },
+
+  /* ------------------------------ Courses ------------------------------ */
+  {
+    name: "tutly_list_courses",
+    title: "List courses",
+    description:
+      "List courses the authenticated user can manage, with class, assignment and enrolment counts. Call this to discover course IDs.",
+    inputSchema: {},
+    readOnly: true,
+    procedure: "agent.courses.list",
+    kind: "query",
+  },
+  {
+    name: "tutly_upsert_course",
+    title: "Create or update a course",
+    description:
+      "Create a course (omit courseId) or update one (pass it). On create the caller is auto-enrolled. Requires instructor permissions.",
+    inputSchema: {
+      courseId: z.string().optional().describe("Omit to create."),
+      title: z.string().describe("Course title."),
+      isPublished: z
+        .boolean()
+        .optional()
+        .describe("Whether the course is visible to non-instructors."),
+      image: z
+        .string()
+        .nullable()
+        .optional()
+        .describe("Banner image URL, or null to remove."),
+      dryRun,
+    },
+    readOnly: false,
+    procedure: "agent.courses.upsert",
+    kind: "mutation",
+  },
+  {
+    name: "tutly_delete_course",
+    title: "Delete a course",
+    description:
+      "Delete a course and all its classes, assignments and enrolments. Call with dryRun true first — the response reports exactly what would be destroyed.",
+    inputSchema: { courseId: z.string(), dryRun },
+    readOnly: false,
+    procedure: "agent.courses.delete",
+    kind: "mutation",
   },
 
   /* ----------------------------- Classes ----------------------------- */
@@ -185,7 +238,7 @@ export const TOOLS: ToolDefinition[] = [
     name: "tutly_upsert_assignment",
     title: "Create or update an assignment",
     description:
-      "Create or update an assignment together with its workspace config and its whole test suite, in one transaction. Passing testCases REPLACES the existing suite — read the assignment first and resend the cases you want to keep. Omit testCases to leave the suite untouched. Requires instructor permissions.",
+      "Create or update an assignment together with its workspace config and its whole test suite, in one transaction. Passing testCases REPLACES the existing suite — read the assignment first and resend the cases you want to keep. Omit testCases to leave the suite untouched. Pass classId to link an assignment to a class. Requires instructor permissions.",
     inputSchema: {
       assignmentId: z.string().optional().describe("Omit to create."),
       classId: z.string().optional(),
@@ -284,51 +337,6 @@ export const TOOLS: ToolDefinition[] = [
     inputSchema: { classId: z.string(), dryRun },
     readOnly: false,
     procedure: "agent.attendance.clear",
-    kind: "mutation",
-  },
-
-  /* ------------------------------ Courses ------------------------------ */
-  {
-    name: "tutly_list_courses",
-    title: "List courses",
-    description:
-      "List courses the authenticated user can manage, with class, assignment and enrolment counts. Call this to discover course IDs.",
-    inputSchema: {},
-    readOnly: true,
-    procedure: "agent.courses.list",
-    kind: "query",
-  },
-  {
-    name: "tutly_upsert_course",
-    title: "Create or update a course",
-    description:
-      "Create a course (omit courseId) or update one (pass it). On create the caller is auto-enrolled. Requires instructor permissions.",
-    inputSchema: {
-      courseId: z.string().optional().describe("Omit to create."),
-      title: z.string().describe("Course title."),
-      isPublished: z
-        .boolean()
-        .optional()
-        .describe("Whether the course is visible to non-instructors."),
-      image: z
-        .string()
-        .nullable()
-        .optional()
-        .describe("Banner image URL, or null to remove."),
-      dryRun,
-    },
-    readOnly: false,
-    procedure: "agent.courses.upsert",
-    kind: "mutation",
-  },
-  {
-    name: "tutly_delete_course",
-    title: "Delete a course",
-    description:
-      "Delete a course and all its classes, assignments and enrolments. Call with dryRun true first — the response reports exactly what would be destroyed.",
-    inputSchema: { courseId: z.string(), dryRun },
-    readOnly: false,
-    procedure: "agent.courses.delete",
     kind: "mutation",
   },
 ];

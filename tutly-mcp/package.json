@@ -1,0 +1,22 @@
+{
+  "name": "tutly-mcp",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server for Tutly — courses, classes, assignments and attendance tools for AI agents",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "dotenv": "^17.4.2",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "tsx": "^4.20.3",
+    "typescript": "5.9.3"
+  }
+}
