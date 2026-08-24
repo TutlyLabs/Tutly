@@ -36,8 +36,11 @@ RUN mkdir -p /tmp/tutly-runner
 EXPOSE 3010
 
 ENV WORK_DIR=/tmp/tutly-runner
-ENV RUNTIME_DIR=/app/apps/runner-orchestrator/runtime
+ENV RUNTIME_DIR=/app/apps/runner-orchestrator/runtime/jest
 ENV USE_DOCKER=true
+# Flip to "browser" to run the real Sandpack bundler instead (slower, more RAM).
+ENV RUNNER_MODE=jest
+ENV JEST_IMAGE=ghcr.io/tutlylabs/tutly-jest-runner:latest
 ENV BROWSER_IMAGE=ghcr.io/tutlylabs/tutly-browser-runner:latest
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

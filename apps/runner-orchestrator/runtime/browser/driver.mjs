@@ -56,8 +56,7 @@ const page = await context.newPage();
 
 const consoleLog = [];
 page.on("console", (msg) => {
-  if (consoleLog.length < 100)
-    consoleLog.push(`[${msg.type()}] ${msg.text()}`);
+  if (consoleLog.length < 100) consoleLog.push(`[${msg.type()}] ${msg.text()}`);
 });
 page.on("requestfailed", (req) => {
   if (consoleLog.length < 100)

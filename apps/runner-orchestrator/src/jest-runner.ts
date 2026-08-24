@@ -2,16 +2,31 @@ import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { JestJsonReport } from "./jest-result-mapper.js";
+import type { MappedReport, RunOutcome } from "./report.js";
 import { env } from "./env.js";
+import { mapJestReport } from "./jest-result-mapper.js";
 import { logger } from "./logger.js";
-import { mapDriverOutcome } from "./result-mapper.js";
-import type { DriverOutcome, MappedReport } from "./result-mapper.js";
 
-export type RunOutcome =
-  | { kind: "completed"; report: MappedReport; stderrTail: string }
-  | { kind: "timeout"; stderrTail: string }
-  | { kind: "oom"; stderrTail: string }
-  | { kind: "spawn-failed"; error: string };
+function jestArgs(): string[] {
+  return [
+    "--json",
+    "--outputFile=/work/report.json",
+    "--testTimeout=15000",
+    "--maxWorkers=1",
+    "--workerIdleMemoryLimit=256MB",
+    "--colors=false",
+    "--ci",
+  ];
+}
+
+function jestArgsHost(reportPath: string): string[] {
+  return jestArgs().map((arg) =>
+    arg === "--outputFile=/work/report.json"
+      ? `--outputFile=${reportPath}`
+      : arg,
+  );
+}
 
 function dockerArgs(hostCwd: string, containerName: string): string[] {
   return [
@@ -19,9 +34,10 @@ function dockerArgs(hostCwd: string, containerName: string): string[] {
     "--rm",
     "--name",
     containerName,
+    "--network=none",
     "--read-only",
     "--tmpfs",
-    "/tmp:rw,noexec,nosuid,size=128m",
+    "/tmp:rw,noexec,nosuid,size=64m",
     `--memory=${env.JOB_MEMORY_MB}m`,
     `--memory-swap=${env.JOB_MEMORY_MB}m`,
     `--cpus=${env.JOB_CPU_LIMIT}`,
@@ -30,10 +46,12 @@ function dockerArgs(hostCwd: string, containerName: string): string[] {
     "--cap-drop=ALL",
     "-v",
     `${hostCwd}:/work:rw`,
-    env.BROWSER_IMAGE,
+    env.JEST_IMAGE,
+    ...jestArgs(),
   ];
 }
 
+// Docker bind-mount paths must resolve on the host, not inside the orchestrator container.
 function toHostPath(localPath: string): string {
   if (!env.WORK_DIR_HOST || env.WORK_DIR_HOST === env.WORK_DIR) {
     return localPath;
@@ -51,45 +69,67 @@ export async function runJest(cwd: string): Promise<RunOutcome> {
   ) {
     return { kind: "spawn-failed", error: "cwd outside WORK_DIR" };
   }
-  if (!env.USE_DOCKER) {
-    return {
-      kind: "spawn-failed",
-      error: "browser runner requires USE_DOCKER=true",
-    };
-  }
-  const resultsPathLocal = path.join(resolvedCwd, "results.json");
+  const reportPathLocal = path.join(resolvedCwd, "report.json");
+  const useDocker = env.USE_DOCKER;
   const hostCwd = toHostPath(resolvedCwd);
-  const containerName = `tutly-browser-${path.basename(resolvedCwd).replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const containerName = `tutly-jest-${path.basename(resolvedCwd).replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
-  const cmd = "docker";
-  const cmdArgs = dockerArgs(hostCwd, containerName);
-  logger.debug({ cmd, cmdArgs, hostCwd }, "spawning browser runner");
+  const cmd = useDocker ? "docker" : "node";
+  const cmdArgs = useDocker
+    ? dockerArgs(hostCwd, containerName)
+    : [
+        path.join(resolvedCwd, "node_modules", ".bin", "jest"),
+        ...jestArgsHost(reportPathLocal),
+      ];
+
+  logger.debug({ cmd, cmdArgs, hostCwd, useDocker }, "spawning jest");
 
   return await new Promise<RunOutcome>((resolve) => {
     const child = spawn(cmd, cmdArgs, {
-      env: process.env,
+      cwd: useDocker ? undefined : resolvedCwd,
+      detached: !useDocker,
+      env: useDocker
+        ? process.env
+        : {
+            ...process.env,
+            NODE_OPTIONS: "--max-old-space-size=384",
+            CI: "1",
+          },
       stdio: ["ignore", "pipe", "pipe"],
     });
 
     let stderrBuf = "";
     let resolved = false;
 
-    const killContainer = async () => {
-      await new Promise<void>((done) => {
-        const killer = spawn("docker", ["kill", containerName], {
-          stdio: "ignore",
-        });
-        killer.on("exit", () => done());
-        killer.on("error", () => done());
-        setTimeout(() => done(), 3000);
-      });
+    const killChild = async () => {
+      try {
+        if (useDocker) {
+          await new Promise<void>((done) => {
+            const killer = spawn("docker", ["kill", containerName], {
+              stdio: "ignore",
+            });
+            killer.on("exit", () => done());
+            killer.on("error", () => done());
+            setTimeout(() => done(), 3000);
+          });
+        } else if (child.pid) {
+          try {
+            process.kill(-child.pid, "SIGKILL");
+          } catch {
+            /* group may already be gone */
+          }
+        }
+      } catch {
+        /* best-effort */
+      }
     };
 
     const finalize = async (outcome: RunOutcome) => {
       if (resolved) return;
       resolved = true;
       clearTimeout(timeoutTimer);
-      await killContainer();
+      if (memoryTimer) clearInterval(memoryTimer);
+      await killChild();
       resolve(outcome);
     };
 
@@ -103,36 +143,60 @@ export async function runJest(cwd: string): Promise<RunOutcome> {
     });
 
     child.on("exit", async (code, signal) => {
-      if (code === 137) {
+      // Exit 137 from Docker = OOM-killed by cgroup.
+      if (useDocker && code === 137) {
         finalize({ kind: "oom", stderrTail: stderrBuf });
         return;
       }
-      if (signal === "SIGKILL" && !resolved) {
+      if (useDocker && signal === "SIGKILL" && !resolved) {
         finalize({ kind: "timeout", stderrTail: stderrBuf });
         return;
       }
+
       let report: MappedReport;
       try {
-        const raw = await readFile(resultsPathLocal, "utf-8");
-        const parsed = JSON.parse(raw) as DriverOutcome;
-        report = mapDriverOutcome(parsed);
+        const raw = await readFile(reportPathLocal, "utf-8");
+        report = mapJestReport(JSON.parse(raw) as JestJsonReport);
       } catch (err) {
-        logger.warn({ err, stderr: stderrBuf }, "could not read results.json");
+        logger.warn({ err, stderr: stderrBuf }, "could not parse report.json");
         report = {
           status: "ERROR",
           results: [],
           errorMessage:
             stderrBuf.slice(-1000) ||
-            `runner exited code=${code ?? "?"} signal=${signal ?? "-"} without results.json`,
-          raw: { ok: false, error: "no results.json" },
+            `jest exited code=${code ?? "?"} signal=${signal ?? "-"} without a report`,
+          raw: null,
         };
       }
       finalize({ kind: "completed", report, stderrTail: stderrBuf });
     });
 
     const timeoutTimer = setTimeout(() => {
-      logger.warn({ containerName }, "browser run timed out");
+      logger.warn({ containerName }, "jest run timed out");
       finalize({ kind: "timeout", stderrTail: stderrBuf });
     }, env.JOB_TIMEOUT_MS);
+
+    // Non-Docker mode only: cgroup enforces the cap when Docker is in use.
+    const memoryTimer: ReturnType<typeof setInterval> | null = useDocker
+      ? null
+      : setInterval(async () => {
+          if (!child.pid) return;
+          try {
+            const stat = await readFile(`/proc/${child.pid}/status`, "utf-8");
+            const match = /VmRSS:\s+(\d+)\s+kB/.exec(stat);
+            if (match) {
+              const kb = Number(match[1]);
+              if (kb > env.JOB_MEMORY_MB * 1024) {
+                logger.warn(
+                  { pid: child.pid, vmRssKb: kb },
+                  "exceeded memory limit",
+                );
+                finalize({ kind: "oom", stderrTail: stderrBuf });
+              }
+            }
+          } catch {
+            /* /proc may not exist on non-Linux dev; skip */
+          }
+        }, 2000);
   });
 }

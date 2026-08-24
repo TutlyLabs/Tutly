@@ -1,10 +1,11 @@
 import { claimRun, postResults } from "./callback.js";
-import { runJest } from "./jest-runner.js";
+import { env } from "./env.js";
 import { logger } from "./logger.js";
+import { runTests } from "./runner.js";
 import { assembleWorkspace, cleanupWorkspace } from "./sandbox.js";
 
 export async function processJob(testRunId: string): Promise<void> {
-  const log = logger.child({ testRunId });
+  const log = logger.child({ testRunId, mode: env.RUNNER_MODE });
   let cwd: string | undefined;
 
   try {
@@ -24,11 +25,11 @@ export async function processJob(testRunId: string): Promise<void> {
     });
     cwd = workspace.cwd;
 
-    log.info({ cwd }, "running browser tests");
-    const outcome = await runJest(cwd);
+    log.info({ cwd }, "running tests");
+    const outcome = await runTests(workspace);
 
     if (outcome.kind === "spawn-failed") {
-      log.error({ error: outcome.error }, "browser spawn failed");
+      log.error({ error: outcome.error }, "runner spawn failed");
       await postResults({
         testRunId,
         status: "ERROR",
@@ -38,7 +39,7 @@ export async function processJob(testRunId: string): Promise<void> {
     }
 
     if (outcome.kind === "timeout") {
-      log.warn("browser run timed out");
+      log.warn("run timed out");
       await postResults({
         testRunId,
         status: "ERROR",
@@ -48,7 +49,7 @@ export async function processJob(testRunId: string): Promise<void> {
     }
 
     if (outcome.kind === "oom") {
-      log.warn("browser run hit memory cap");
+      log.warn("run hit memory cap");
       await postResults({
         testRunId,
         status: "ERROR",
@@ -64,7 +65,7 @@ export async function processJob(testRunId: string): Promise<void> {
         passed: report.results.filter((r) => r.passed).length,
         status: report.status,
       },
-      "browser run complete",
+      "run complete",
     );
 
     await postResults({

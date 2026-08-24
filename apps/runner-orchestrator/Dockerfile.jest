@@ -1,0 +1,37 @@
+FROM node:22-alpine
+
+RUN apk add --no-cache tini
+
+WORKDIR /runtime
+COPY apps/runner-orchestrator/runtime/jest/package.json ./package.json
+RUN apk add --no-cache --virtual .build-deps python3 make g++ \
+  && npm install --omit=dev --prefer-offline --no-audit --no-fund \
+  && apk del .build-deps \
+  && rm -rf /root/.npm
+
+COPY apps/runner-orchestrator/runtime/jest/jest.config.cjs ./jest.config.cjs
+COPY apps/runner-orchestrator/runtime/jest/babel.config.cjs ./babel.config.cjs
+COPY apps/runner-orchestrator/runtime/jest/jest.setup.js ./jest.setup.js
+COPY apps/runner-orchestrator/runtime/jest/tsconfig.json ./tsconfig.json
+
+RUN printf '%s\n' \
+  '#!/bin/sh' \
+  'set -e' \
+  'cd /work' \
+  '[ -e node_modules ] || ln -s /runtime/node_modules node_modules' \
+  '[ -e jest.config.cjs ] || ln -s /runtime/jest.config.cjs jest.config.cjs' \
+  '[ -e babel.config.cjs ] || ln -s /runtime/babel.config.cjs babel.config.cjs' \
+  '[ -e jest.setup.js ] || ln -s /runtime/jest.setup.js jest.setup.js' \
+  '[ -e tsconfig.json ] || ln -s /runtime/tsconfig.json tsconfig.json' \
+  'exec node /runtime/node_modules/.bin/jest "$@"' \
+  > /entrypoint.sh \
+  && chmod +x /entrypoint.sh
+
+USER node
+WORKDIR /work
+
+ENV NODE_OPTIONS=--max-old-space-size=384
+ENV CI=1
+
+ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
+CMD ["--json", "--outputFile=/work/report.json", "--testTimeout=15000", "--maxWorkers=1", "--workerIdleMemoryLimit=256MB", "--colors=false", "--ci"]
