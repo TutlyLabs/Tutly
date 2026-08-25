@@ -1,100 +1,180 @@
 SHELL := /bin/bash
 
-.PHONY: up down services services-down init dev clean check-env load-dummy-data check-db prod-deploy
+# Configuration & Paths
+COMPOSE_FILE := docker-compose.local.yml
+PNPM := pnpm
+DOCKER := docker
+DOCKER_COMPOSE := $(DOCKER) compose -f $(COMPOSE_FILE)
 
-check-env:
+# Default target
+.DEFAULT_GOAL := help
+
+.PHONY: help setup init up install env build dev start stop down restart logs status clean \
+        db-up db-down db-migrate db-seed db-reset studio db-studio services services-down check-deps check-env check-db
+
+## help: Display available Make targets and descriptions
+help:
+	@echo ""
+	@echo "  ========================================================"
+	@echo "    Tutly Local Development Environment Makefile"
+	@echo "  ========================================================"
+	@echo ""
+	@echo "  Usage: make [target]"
+	@echo ""
+	@echo "  Main Targets:"
+	@echo "    setup       Run full local setup (env, install, db-up, db-migrate, db-seed)"
+	@echo "    dev         Start the development server (Next.js app)"
+	@echo "    start       Start infrastructure services and launch dev server"
+	@echo "    stop        Stop local infrastructure services and dev background tasks"
+	@echo "    restart     Restart local infrastructure containers"
+	@echo "    status      Show status of infrastructure services and database"
+	@echo "    logs        Stream logs from local infrastructure containers"
+	@echo "    build       Build all monorepo packages and applications"
+	@echo "    install     Install workspace dependencies via pnpm"
+	@echo "    env         Create .env from .env.example if missing"
+	@echo "    clean       Stop containers and clean Docker volumes"
+	@echo ""
+	@echo "  Database Targets:"
+	@echo "    db-up       Start PostgreSQL, MinIO, Redis containers"
+	@echo "    db-down     Stop PostgreSQL, MinIO, Redis containers"
+	@echo "    db-migrate  Generate Prisma client and push schema to database"
+	@echo "    db-seed     Load initial dummy data into database"
+	@echo "    db-reset    Reset database schema and re-seed dummy data"
+	@echo "    studio      Open Prisma Studio database management GUI"
+	@echo ""
+	@echo "  Aliases:"
+	@echo "    up, init    Alias for 'make setup'"
+	@echo "    down        Alias for 'make stop'"
+	@echo "    services    Alias for 'make db-up'"
+	@echo ""
+
+## check-deps: Verify that required tools (node, pnpm, docker) are installed
+check-deps:
+	@command -v node >/dev/null 2>&1 || { echo "Error: Node.js is required but not installed."; exit 1; }
+	@command -v $(PNPM) >/dev/null 2>&1 || { echo "Error: pnpm is required but not installed."; exit 1; }
+	@command -v $(DOCKER) >/dev/null 2>&1 || { echo "Error: Docker is required but not installed."; exit 1; }
+	@$(DOCKER_COMPOSE) version >/dev/null 2>&1 || { echo "Error: Docker Compose is required but not installed."; exit 1; }
+
+## env: Copy .env.example to .env if .env does not already exist
+env:
 	@if [ ! -f .env ]; then \
-		echo "No .env found. Running initialization..."; \
-		$(MAKE) init; \
+		echo "Creating .env from .env.example..."; \
+		cp .env.example .env; \
+		echo ".env created successfully."; \
 	else \
-		echo ".env exists, skipping initialization"; \
+		echo ".env already exists, skipping copy."; \
 	fi
 
-check-db:
-	@echo "Checking database..."
-	@set -a && . .env && set +a && \
-	if ! pnpm --filter @tutly/db with-env prisma db execute --stdin <<< "SELECT 1" >/dev/null 2>&1; then \
-		echo "Database connection failed. Setting up database..." && \
-		pnpm --filter @tutly/db with-env prisma db push || exit 1 && \
-		$(MAKE) load-dummy-data; \
-	else \
-		echo "Database connection successful. Checking for data..." && \
-		USER_COUNT=$$(pnpm --filter @tutly/db with-env prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"User\";" 2>/dev/null | grep -o '[0-9]*') && \
-		if [ "$$USER_COUNT" = "0" ]; then \
-			echo "Database is empty. Loading dummy data..." && \
-			$(MAKE) load-dummy-data; \
-		else \
-			echo "Database already populated with $$USER_COUNT users"; \
-		fi \
-	fi
+check-env: env
 
-services:
-	mkdir -p data/localstack
-	docker compose -f docker-compose.local.yml up -d
-	@echo "Waiting for Localstack to be ready..."
-	@while ! docker compose -f docker-compose.local.yml exec -T localstack awslocal s3 ls >/dev/null 2>&1; do \
-		echo "Waiting for Localstack..."; \
-		sleep 3; \
-	done
-	@echo "Localstack is ready!"
-	docker compose -f docker-compose.local.yml exec -T localstack awslocal s3 mb s3://tutly-local || true
-	docker compose -f docker-compose.local.yml exec -T localstack awslocal s3api put-bucket-acl --bucket tutly-local --acl public-read
-	@echo "Waiting for PostgreSQL to be ready..."
-	@until docker compose -f docker-compose.local.yml exec -T db pg_isready; do \
-		echo "Waiting for PostgreSQL..."; \
-		sleep 2; \
-	done
-	@echo "PostgreSQL is ready!"
+## install: Install all dependencies using pnpm
+install: check-deps
+	@echo "Installing workspace dependencies..."
+	$(PNPM) install
 
-services-down:
-	docker compose -f docker-compose.local.yml down
+## db-up: Start local infrastructure containers (PostgreSQL, MinIO, Redis)
+db-up: check-deps
+	@echo "Starting local infrastructure services..."
+	$(DOCKER_COMPOSE) up -d
+	@echo "All infrastructure services are started."
 
-clean:
-	docker compose -f docker-compose.local.yml down -v
-	rm -rf data/localstack
-	rm -f .env
+services: db-up
 
-init:
-	@echo "Initializing Tutly..."
-	cp .env.example .env
-	@echo "Installing dependencies..."
-	pnpm install
-	mkdir -p data/localstack
-	@echo "Setting up services..."
-	make services
-	@echo "Setting up database..."
-	pnpm --filter @tutly/db with-env prisma generate
-	pnpm --filter @tutly/db with-env prisma db push
-	@echo "Loading initial data..."
-	make load-dummy-data
-	@echo "Initialization complete!"
+## db-down: Stop local infrastructure containers
+db-down: check-deps
+	@echo "Stopping infrastructure services..."
+	$(DOCKER_COMPOSE) down
 
-dev:
-	@echo "Starting development server..."
-	pnpm run dev:web
+services-down: db-down
 
-studio:
+## db-migrate: Generate Prisma client and push schema to database
+db-migrate: env check-deps
+	@echo "Generating Prisma Client and pushing database schema..."
+	$(PNPM) --filter @tutly/db db:generate
+	$(PNPM) --filter @tutly/db db:push
+
+## db-seed: Seed database with initial dummy data
+db-seed: env check-deps
+	@echo "Loading initial seed data into database..."
+	$(PNPM) --filter @tutly/db db:seed
+
+## db-reset: Force reset database schema and re-seed data
+db-reset: env check-deps
+	@echo "Resetting database schema and re-seeding..."
+	$(PNPM) --filter @tutly/db exec prisma db push --force-reset
+	$(PNPM) --filter @tutly/db db:seed
+
+## studio: Start Prisma Studio for database browsing
+studio: env check-deps
 	@echo "Starting Prisma Studio..."
-	pnpm --filter @tutly/db with-env prisma studio
+	$(PNPM) --filter @tutly/db db:studio
 
-load-dummy-data:
-	@echo "Loading dummy data..."
-	@pnpm --filter @tutly/db seed && echo "Dummy data loaded successfully" || echo "Failed to load dummy data"
+db-studio: studio
 
-up: check-env services check-db
+## setup: Perform complete local development environment setup
+setup: check-deps env install db-up db-migrate db-seed
 	@echo ""
-	@echo "All services are ready. Now you can run one of these commands in a new terminal:"
-	@echo "  make dev     - Start the web application"
-	@echo "  make studio  - Start Prisma Studio for database management"
+	@echo "========================================================"
+	@echo "  Tutly local setup completed successfully!"
+	@echo "========================================================"
+	@echo ""
+	@echo "  Run 'make dev' to start the web application."
+	@echo "  Run 'make studio' to open Prisma Studio."
 	@echo ""
 
-down:
-	$(MAKE) services-down
-	@pkill -f "prisma studio" || true
-	@echo "All services have been stopped"
+init: setup
+up: setup
 
-prod-deploy:
-	@echo "Building and deploying production Docker image..."
-	@# Check if the network exists, create it if not
-	@docker network inspect app_network >/dev/null 2>&1 || docker network create app_network
-	docker compose -f docker-compose.prod.yml up -d --build 
+## dev: Start the web application in development mode
+dev: check-deps env
+	@echo "Starting development server..."
+	$(PNPM) run dev:web
+
+## start: Start infrastructure services and launch dev server
+start: db-up dev
+
+## stop: Stop infrastructure services and background studio processes
+stop: db-down
+	@pkill -f "prisma studio" 2>/dev/null || true
+	@echo "All local services stopped."
+
+down: stop
+
+## restart: Restart infrastructure containers
+restart: check-deps
+	@echo "Restarting infrastructure containers..."
+	$(DOCKER_COMPOSE) restart
+
+## logs: View logs from infrastructure containers
+logs: check-deps
+	$(DOCKER_COMPOSE) logs -f
+
+## check-db: Verify database connection and reporting status
+check-db: env check-deps
+	@echo "Checking database connection..."
+	@if $(PNPM) --filter @tutly/db exec prisma db execute --stdin <<< "SELECT 1" >/dev/null 2>&1; then \
+		echo "Database connection successful."; \
+	else \
+		echo "Database connection failed. Run 'make db-up' and 'make db-migrate'."; \
+		exit 1; \
+	fi
+
+## status: Show status of infrastructure services and database
+status: check-deps
+	@echo "--- Container Status ---"
+	@$(DOCKER_COMPOSE) ps
+	@echo ""
+	@echo "--- Database Status ---"
+	@$(MAKE) check-db
+
+## build: Build all monorepo workspace packages
+build: check-deps
+	@echo "Building all workspace packages..."
+	$(PNPM) run build
+
+## clean: Stop infrastructure containers and remove volumes
+clean: check-deps
+	@echo "Cleaning local infrastructure containers and volumes..."
+	$(DOCKER_COMPOSE) down -v
+	@rm -rf data/localstack
+	@echo "Clean completed."

@@ -24,9 +24,9 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js**: >= 22.14.0
+- **Node.js**: v22.x
 - **pnpm**: >= 9.6.0
-- **Docker** and **Docker Compose**: For running local services (PostgreSQL and Localstack)
+- **Docker** and **Docker Compose**: For running local services (PostgreSQL 17, MinIO, Redis)
 
 ## Development Setup
 
@@ -40,15 +40,16 @@ Before you begin, ensure you have the following installed:
 
 3. **Set up the development environment**:
    ```bash
-   make up
+   make setup
    ```
    
    This command will:
-   - Copy the example environment file to `.env`
-   - Install all dependencies
-   - Set up local Docker services (PostgreSQL and Localstack for S3)
-   - Initialize the database schema
-   - Load initial dummy data
+   - Check system prerequisites
+   - Copy `.env.example` to `.env` if missing
+   - Install all workspace dependencies via `pnpm`
+   - Set up local Docker services (PostgreSQL, MinIO for S3, Redis)
+   - Initialize database schema via Prisma
+   - Load initial seed data
 
 4. **Start the development server**:
    ```bash
@@ -61,11 +62,13 @@ Before you begin, ensure you have the following installed:
 
 The project provides several Make commands for common tasks:
 
+- `make help` - Show all available targets and descriptions
+- `make setup` - Complete local setup sequence
 - `make dev` - Start the development server
 - `make studio` - Open Prisma Studio for database management
-- `make down` - Stop all services
-- `make clean` - Clean all services, volumes, and .env
-- `make init` - Re-initialize the project (after cleaning)
+- `make status` - Check status of Docker services and database connection
+- `make stop` - Stop all local services
+- `make clean` - Clean Docker containers and volumes
 
 ### Additional npm Scripts
 

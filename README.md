@@ -48,59 +48,61 @@ tooling
 
 ### Prerequisites
 
-- Node.js (version specified in .nvmrc)
-- pnpm
+- **Node.js**: v22.x (specified in `.nvmrc`)
+- **pnpm**: >= 9.6.0 (or `corepack enable pnpm`)
+- **Docker** & **Docker Compose**: For running local services (PostgreSQL 17, MinIO, Redis)
 
 ### Installation and Development Setup
 
-1. Fork the repository
-2. Clone your forked repository
+1. Fork and clone the repository:
 
 ```bash
 git clone https://github.com/yourusername/tutly.git
 cd tutly
 ```
 
-3. Set up the development environment
+2. Set up the development environment:
 
 ```bash
-make up
+make setup
 ```
 
 This will:
+- Check required system tools (`node`, `pnpm`, `docker`)
+- Copy `.env.example` to `.env` (if not already present)
+- Install workspace dependencies (`pnpm install`)
+- Start local Docker infrastructure services (PostgreSQL, MinIO for S3, Redis)
+- Generate Prisma client & push database schema
+- Seed initial development data
 
-- Copy the example environment file to `.env`
-- Install all dependencies
-- Set up local Docker services (PostgreSQL and Localstack for S3)
-- Initialize the database schema
-- Load initial dummy data
-
-4. Start the development server
+3. Start the development server:
 
 ```bash
 make dev
 ```
 
-The development server will be running at `http://localhost:3000`
+The web application will be available at `http://localhost:3000`.
 
 ### Useful Commands
 
-```bash
-# Start the development server
-make dev
-
-# Open Prisma Studio for database management
-make studio
-
-# Stop all services
-make down
-
-# Clean all services, volumes, and .env
-make clean
-
-# Re-initialize the project (after cleaning)
-make init
-```
+| Command | Description |
+| ------- | ----------- |
+| `make help` | Display available Make targets and descriptions |
+| `make setup` | Run full local environment setup |
+| `make dev` | Start web application development server |
+| `make start` | Start infrastructure services and launch dev server |
+| `make stop` | Stop local infrastructure services and dev background tasks |
+| `make restart` | Restart infrastructure services |
+| `make status` | View container status and database connection health |
+| `make logs` | Stream logs from local infrastructure containers |
+| `make studio` | Open Prisma Studio GUI for database management |
+| `make db-up` | Start local Docker services (PostgreSQL, MinIO, Redis) |
+| `make db-down` | Stop local Docker services |
+| `make db-migrate` | Generate Prisma client and push schema updates |
+| `make db-seed` | Load initial dummy data into database |
+| `make db-reset` | Force reset database schema and re-seed |
+| `make build` | Build all monorepo packages |
+| `make clean` | Stop containers and remove local Docker volumes |
 
 ## License
 

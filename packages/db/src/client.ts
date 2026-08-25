@@ -3,7 +3,10 @@ import { PrismaClient } from "../prisma/generated/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const createPrismaClient = () => {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  const connectionString =
+    process.env.DATABASE_URL ||
+    "postgresql://postgres:postgres@localhost:5432/tutly_local";
+  const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 };
 
