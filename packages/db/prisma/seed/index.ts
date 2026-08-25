@@ -1,6 +1,12 @@
-import type { Course, Role, User } from "@prisma/client";
-import { PrismaClient } from "@prisma/client";
+import path from "node:path";
+import { config } from "dotenv";
+import { PrismaPg } from "@prisma/adapter-pg";
+import type { Course, Role, User } from "../generated/client.js";
+import { PrismaClient } from "../generated/client.js";
 import bcrypt from "bcryptjs";
+
+config({ path: path.resolve(import.meta.dirname, "../../../../.env") });
+config();
 
 import {
   courses,
@@ -11,7 +17,8 @@ import {
 
 const userPasswords: Record<string, string> = rawUserPasswords;
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 async function cleanDatabase() {
   await prisma.enrolledUsers.deleteMany();
@@ -39,7 +46,7 @@ async function seedUsers(organizationId: string) {
         role: user.role as Role,
         organizationId,
         isProfilePublic: true,
-        emailVerified: true,
+        emailVerified: new Date(),
       },
     });
     // Create Account for credentials

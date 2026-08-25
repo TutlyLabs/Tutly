@@ -25,6 +25,8 @@
   "scripts": {
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed/index.ts",
+    "seed": "tsx prisma/seed/index.ts",
     "db:studio": "prisma studio",
     "db:sync-groups": "bun run scripts/sync-community-groups.ts",
     "postinstall": "prisma generate",

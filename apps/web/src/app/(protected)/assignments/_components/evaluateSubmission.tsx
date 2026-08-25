@@ -9,6 +9,9 @@ import { useRouter } from "next/navigation";
 import day from "@tutly/utils/dayjs";
 import { api } from "@/trpc/react";
 
+import { Input } from "@tutly/ui/input";
+import { Textarea } from "@tutly/ui/textarea";
+
 import { ScoreFormulaHint } from "./ScoreFormulaHint";
 
 const EvaluateSubmission = ({
@@ -226,8 +229,7 @@ const EvaluateSubmission = ({
               </td>
               <td className="px-2 py-1 whitespace-nowrap">
                 {isEditing ? (
-                  <input
-                    title="null"
+                  <Input
                     type="number"
                     value={editedScores.other}
                     onChange={(e) => {
@@ -241,7 +243,7 @@ const EvaluateSubmission = ({
                     }}
                     min={0}
                     max={10}
-                    className="text-background w-20 rounded-lg border-2 border-black bg-transparent px-2"
+                    className="h-8 w-20 mx-auto text-center"
                   />
                 ) : (
                   oValue?.score || "NA"
@@ -255,16 +257,15 @@ const EvaluateSubmission = ({
               <td className="px-2 py-1 whitespace-nowrap">
                 {oValue?.score || testValue?.score ? totalScore : "NA"}
               </td>
-              <td>
+              <td className="px-2 py-1">
                 {isEditing ? (
-                  <textarea
-                    title="null"
+                  <Textarea
                     value={feedback || ""}
                     onChange={(e) => {
                       setFeedback(e.target.value);
                     }}
-                    className="text-background m-2 block min-w-16 overflow-y-hidden rounded-lg border-2 border-black bg-transparent px-2 text-start"
-                  ></textarea>
+                    className="min-h-9 min-w-32 my-1 text-start"
+                  />
                 ) : (
                   submission.overallFeedback || "NA"
                 )}
